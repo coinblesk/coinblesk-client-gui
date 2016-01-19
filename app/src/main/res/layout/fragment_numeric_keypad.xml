@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/numeric_keypad_grid"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:divider="@color/main_color_grey_700"
+    android:orientation="vertical"
+    android:showDividers="middle|beginning|end">
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@color/main_color_grey_700"
+        android:gravity="center"
+        android:showDividers="middle">
+
+        <TextView
+            android:id="@+id/keypad_first_row_first_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_first_row_first_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_first_row_second_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_first_row_second_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_first_row_third_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_first_row_third_col"
+            android:textIsSelectable="false" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@color/main_color_grey_700"
+        android:gravity="center"
+        android:showDividers="middle">
+
+        <TextView
+            android:id="@+id/keypad_second_row_first_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_second_row_first_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_second_row_second_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_second_row_second_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_second_row_third_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_second_row_third_col"
+            android:textIsSelectable="false" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@color/main_color_grey_700"
+        android:gravity="center"
+        android:showDividers="middle">
+
+        <TextView
+            android:id="@+id/keypad_third_row_first_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_third_row_first_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_third_row_second_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_third_row_second_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_third_row_third_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_third_row_third_col"
+            android:textIsSelectable="false" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@color/main_color_grey_700"
+        android:gravity="center"
+        android:showDividers="middle">
+
+
+        <TextView
+            android:id="@+id/keypad_fourth_row_first_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_fourth_row_first_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_fourth_row_second_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_fourth_row_second_col"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/keypad_fourth_row_third_col"
+            style="@style/numeric_keypad"
+            android:text="@string/keypad_fourth_row_second_col"
+            android:textIsSelectable="false" />
+
+        <!-- <ImageView
+             android:id="@+id/keypad_fourth_row_third_col"
+             style="@style/numeric_keypad"
+             android:contentDescription="@string/app_name"
+             android:src="@drawable/ic_action_qr_code"
+             android:textIsSelectable="false" />-->
+
+        <!--<TextView
+    android:id="@+id/keypad_fourth_row_first_col"
+    style="@style/numeric_keypad"
+    android:contentDescription="@string/app_name"
+    android:src="@drawable/ic_action_qr_code"
+    android:textIsSelectable="false" />-->
+
+    </TableRow>
+
+
+</TableLayout>

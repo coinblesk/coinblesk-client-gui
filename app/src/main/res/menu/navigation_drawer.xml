@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/address_book"
+            android:checked="false"
+            android:title="@string/address_book" />
+
+        <item
+            android:id="@+id/general_settings"
+            android:checked="false"
+            android:title="@string/general_settings"/>
+
+        <item
+            android:id="@+id/wallet_backup"
+            android:checked="false"
+            android:title="@string/wallet_backup"/>
+
+        <item
+            android:id="@+id/activate_vendor_mode"
+            android:checked="false"
+            android:title="@string/activate_vendor_mode" />
+
+        <item
+            android:id="@+id/about_coinblesk"
+            android:checked="false"
+            android:title="@string/about_coinblesk" />
+
+        <item
+            android:id="@+id/share_coinblesk"
+            android:checked="false"
+            android:title="@string/share_coinblesk" />
+
+    </group>
+</menu>

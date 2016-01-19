@@ -1,0 +1,37 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.uzh.ckiller.coinblesk_client_gui">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppThemeMaterial">
+
+        <activity
+            android:name="com.uzh.ckiller.coinblesk_client_gui.MainActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.uzh.ckiller.coinblesk_client_gui.DummyDataDetailActivity"
+            android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.uzh.ckiller.coinblesk_client_gui.MainActivity" />
+        </activity>
+
+        <activity
+            android:name="com.uzh.ckiller.coinblesk_client_gui.SettingsActivity"
+            android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.uzh.ckiller.coinblesk_client_gui.MainActivity" />
+        </activity>
+
+    </application>
+
+</manifest>

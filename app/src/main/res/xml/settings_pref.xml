@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="pref_general_settings"
+        android:title="@string/pref_general_settings_category_title">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogMessage="@string/pref_update_username_dialog_message"
+            android:dialogTitle="@string/pref_update_username_dialog_title"
+            android:key="pref_general_username"
+            android:summary="@string/pref_update_username_description"
+            android:title="@string/pref_update_username_title" />
+
+        <ListPreference
+            android:dialogTitle="@string/pref_bitcoin_rep_dialog_title"
+            android:entries="@array/pref_bitcoin_rep_values"
+            android:entryValues="@array/pref_bitcoin_rep_values"
+            android:key="pref_bitcoin_rep_list"
+            android:summary="@string/pref_bitcoin_rep_description"
+            android:title="@string/pref_bitcoin_rep_title" />
+
+        <ListPreference
+            android:dialogTitle="@string/pref_transaction_history_title"
+            android:entries="@array/pref_transaction_history_values"
+            android:entryValues="@array/pref_transaction_history_values"
+            android:key="pref_transaction_history_list"
+            android:summary="@string/pref_transaction_history_description"
+            android:title="@string/pref_transaction_history_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_payment_settings"
+        android:title="@string/pref_payment_settings_category_title">
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_include_fee"
+            android:summary="@string/pref_fee_description"
+            android:title="@string/pref_fee_title" />
+
+        <EditTextPreference
+            android:defaultValue="@string/pref_fee_amount_default_value"
+            android:dependency="pref_include_fee"
+            android:inputType="number"
+            android:key="pref_fee_amount"
+            android:maxLength="2"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/pref_fee_amount_description"
+            android:title="@string/pref_fee_amount_title" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_auto_accept"
+            android:summary="@string/pref_auto_accept_description"
+            android:title="@string/pref_auto_accept_title"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/pref_auto_accept_amount_default_value"
+            android:dependency="pref_auto_accept"
+            android:numeric="decimal"
+            android:inputType="numberDecimal"
+            android:key="pref_auto_accept_amount"
+            android:maxLength="10"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/pref_auto_accept_amount_title" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

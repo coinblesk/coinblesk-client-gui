@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pref_bitcoin_rep_values">
+        <item>Bitcoin (BTC)</item>
+        <item>mili-Bitcoin (mBTC)</item>
+        <item>micro-Bitcoin (μBTC)</item>
+    </string-array>
+    <string-array name="pref_transaction_history_values">
+        <item>5</item>
+        <item>10</item>
+        <item>50</item>
+        <item>Show all transactions</item>
+    </string-array>
+</resources>

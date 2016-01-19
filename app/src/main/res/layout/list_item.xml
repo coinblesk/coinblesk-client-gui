@@ -1,0 +1,62 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/touch_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/material_grey_800"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/transaction_icon"
+            android:layout_width="@dimen/transaction_icon_size"
+            android:layout_height="@dimen/transaction_icon_size"
+            android:layout_marginBottom="@dimen/transaction_icon_horizontal_padding"
+            android:layout_marginLeft="@dimen/transaction_icon_horizontal_padding"
+            android:layout_marginRight="@dimen/transaction_icon_horizontal_padding"
+            android:layout_marginTop="@dimen/transaction_icon_horizontal_padding"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/transaction_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:layout_marginRight="24dp"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:textColor="@color/white"
+                android:textSize="@dimen/text_size_medium" />
+
+            <TextView
+                android:id="@+id/transaction_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/white_30_percent"
+                android:textSize="@dimen/text_size_medium" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/main_color_grey_700" />
+
+</LinearLayout>

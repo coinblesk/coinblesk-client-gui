@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="312dp"
+    android:layout_height="312dp"
+    android:background="@color/material_grey_800"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/qr_code"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_margin="@dimen/card_margin"
+        android:src="@drawable/qr_code_sample" />
+
+</LinearLayout>
