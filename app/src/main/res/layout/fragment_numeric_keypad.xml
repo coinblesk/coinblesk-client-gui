@@ -1,114 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/numeric_keypad_grid"
+    android:id="@+id/numeric_keypad_tablelayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@color/main_color_grey_700"
-        android:gravity="center"
-        android:showDividers="middle">
+    <TableRow style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_first_row_first_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_first_row_first_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_first_row_first_col" />
 
         <TextView
             android:id="@+id/keypad_first_row_second_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_first_row_second_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_first_row_second_col" />
 
         <TextView
             android:id="@+id/keypad_first_row_third_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_first_row_third_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_first_row_third_col" />
     </TableRow>
 
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:divider="@color/main_color_grey_700"
-        android:gravity="center"
-        android:showDividers="middle">
+    <TableRow style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_second_row_first_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_second_row_first_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_second_row_first_col" />
 
         <TextView
             android:id="@+id/keypad_second_row_second_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_second_row_second_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_second_row_second_col" />
 
         <TextView
             android:id="@+id/keypad_second_row_third_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_second_row_third_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_second_row_third_col" />
     </TableRow>
 
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:divider="@color/main_color_grey_700"
-        android:gravity="center"
-        android:showDividers="middle">
+    <TableRow style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_third_row_first_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_third_row_first_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_third_row_first_col" />
 
         <TextView
             android:id="@+id/keypad_third_row_second_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_third_row_second_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_third_row_second_col" />
 
         <TextView
             android:id="@+id/keypad_third_row_third_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_third_row_third_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_third_row_third_col" />
     </TableRow>
 
-    <TableRow
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:divider="@color/main_color_grey_700"
-        android:gravity="center"
-        android:showDividers="middle">
-
+    <TableRow style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_fourth_row_first_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_fourth_row_first_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_fourth_row_first_col" />
 
         <TextView
             android:id="@+id/keypad_fourth_row_second_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_fourth_row_second_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_fourth_row_second_col" />
 
         <TextView
             android:id="@+id/keypad_fourth_row_third_col"
-            style="@style/numeric_keypad"
-            android:text="@string/keypad_fourth_row_second_col"
-            android:textIsSelectable="false" />
+            style="@style/keypad_textview"
+            android:text="@string/keypad_fourth_row_second_col" />
 
         <!-- <ImageView
              android:id="@+id/keypad_fourth_row_third_col"
@@ -125,6 +92,5 @@
     android:textIsSelectable="false" />-->
 
     </TableRow>
-
 
 </TableLayout>
