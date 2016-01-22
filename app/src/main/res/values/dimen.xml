@@ -40,7 +40,7 @@
     <dimen name="text_size_xxlarge">24sp</dimen>
     <dimen name="text_size_diff_large_small">6sp</dimen>
 
-    <dimen name="text_size_numeric_keypad">42dp</dimen>
+    <dimen name="text_size_numeric_keypad">36dp</dimen>
 
 
 </resources>
