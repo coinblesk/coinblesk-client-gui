@@ -31,14 +31,35 @@
     </style>
 
     <style name="numeric_keypad">
-        <item name="android:layout_width">120dp</item>
-        <item name="android:layout_height">72dp</item>
         <item name="android:layout_weight">1</item>
         <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/cell_shape</item>
         <item name="android:gravity">center</item>
         <item name="android:scaleType">centerInside</item>
-        <item name="android:textSize">@dimen/app_text_size_xlarge</item>
-        <item name="android:background">@color/material_grey_800</item>
+        <item name="android:textSize">@dimen/text_size_numeric_keypad</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="card_view">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_margin">@dimen/card_view_margin</item>
+        <item name="cardBackgroundColor">@color/material_grey_800</item>
+        <item name="cardElevation">@dimen/card_view_elevation</item>
+        <item name="cardCornerRadius">@dimen/card_view_corner_radius</item>
+    </style>
+
+    <style name="card_view_large_textview">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_centerInParent">true</item>
+    </style>
+
+    <style name="card_view_small_textview">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_centerHorizontal">true</item>
     </style>
 
     <style name="AppCompatAlertDialogStyle" parent="AppThemeMaterial">
@@ -46,5 +67,6 @@
         <item name="android:textColorPrimary">#FFFFFF</item>
         <item name="android:background">@color/colorPrimary</item>
     </style>
+
 
 </resources>

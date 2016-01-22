@@ -3,14 +3,12 @@
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/numeric_keypad_grid"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:divider="@color/main_color_grey_700"
-    android:orientation="vertical"
-    android:showDividers="middle|beginning|end">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <TableRow
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:divider="@color/main_color_grey_700"
         android:gravity="center"
         android:showDividers="middle">
@@ -35,7 +33,7 @@
     </TableRow>
 
     <TableRow
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:divider="@color/main_color_grey_700"
         android:gravity="center"
@@ -61,7 +59,7 @@
     </TableRow>
 
     <TableRow
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:divider="@color/main_color_grey_700"
         android:gravity="center"

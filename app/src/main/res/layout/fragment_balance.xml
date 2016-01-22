@@ -6,12 +6,15 @@
 
     <FrameLayout
         android:id="@+id/current_balance_fragment"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
 
     <FrameLayout
         android:id="@+id/history_fragment"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="1.2857" />
 
 </LinearLayout>
+
