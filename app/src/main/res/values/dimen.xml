@@ -41,6 +41,7 @@
     <dimen name="text_size_diff_large_small">6sp</dimen>
 
     <dimen name="text_size_numeric_keypad">36dp</dimen>
+    <dimen name="switch_currencies_size">48dp</dimen>
 
 
 </resources>

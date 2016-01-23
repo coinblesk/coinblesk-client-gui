@@ -43,6 +43,16 @@
         <item name="android:textIsSelectable">false</item>
     </style>
 
+    <style name="keypad_imageview">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/cell_shape</item>
+        <item name="android:gravity">center</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
     <style name="keypad_row">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">0dp</item>
@@ -70,6 +80,14 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_centerHorizontal">true</item>
+    </style>
+
+    <style name="switch_currencies_imageview">
+        <item name="android:layout_height">@dimen/switch_currencies_size</item>
+        <item name="android:layout_width">@dimen/switch_currencies_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:src">@drawable/ic_switch_currencies_54</item>
+        <item name="android:paddingLeft">12dp</item>
     </style>
 
     <style name="AppCompatAlertDialogStyle" parent="AppThemeMaterial">

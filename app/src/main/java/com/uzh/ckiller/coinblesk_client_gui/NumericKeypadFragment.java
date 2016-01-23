@@ -13,12 +13,6 @@ import android.widget.Toast;
  * Created by ckiller
  */
 
-/**
- * TODO In the Emulator the bottom row of keypad elements is not correctly shown
- * (Because the emulator device doesnt have hardware buttons) -> whole layout calculations are wrong...
- */
-
-
 
 public class NumericKeypadFragment extends Fragment implements View.OnClickListener {
 

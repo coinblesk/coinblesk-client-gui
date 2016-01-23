@@ -25,6 +25,11 @@
                 style="@style/card_view_small_textview"
                 android:layout_below="@+id/send_amount_large" />
 
+            <ImageView
+                android:id="@+id/send_switch_currencies"
+                style="@style/switch_currencies_imageview"
+                android:layout_toRightOf="@id/send_amount_large" />
+
         </RelativeLayout>
     </android.support.v7.widget.CardView>
 

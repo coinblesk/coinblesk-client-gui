@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/numeric_keypad_tablelayout"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/numeric_keypad_linearlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TableRow style="@style/keypad_row">
+    <LinearLayout style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_first_row_first_col"
@@ -22,9 +22,11 @@
             android:id="@+id/keypad_first_row_third_col"
             style="@style/keypad_textview"
             android:text="@string/keypad_first_row_third_col" />
-    </TableRow>
 
-    <TableRow style="@style/keypad_row">
+    </LinearLayout>
+
+    <LinearLayout style="@style/keypad_row">
+
 
         <TextView
             android:id="@+id/keypad_second_row_first_col"
@@ -40,9 +42,9 @@
             android:id="@+id/keypad_second_row_third_col"
             style="@style/keypad_textview"
             android:text="@string/keypad_second_row_third_col" />
-    </TableRow>
+    </LinearLayout>
 
-    <TableRow style="@style/keypad_row">
+    <LinearLayout style="@style/keypad_row">
 
         <TextView
             android:id="@+id/keypad_third_row_first_col"
@@ -58,9 +60,12 @@
             android:id="@+id/keypad_third_row_third_col"
             style="@style/keypad_textview"
             android:text="@string/keypad_third_row_third_col" />
-    </TableRow>
 
-    <TableRow style="@style/keypad_row">
+    </LinearLayout>
+
+
+    <LinearLayout style="@style/keypad_row">
+
 
         <TextView
             android:id="@+id/keypad_fourth_row_first_col"
@@ -72,25 +77,16 @@
             style="@style/keypad_textview"
             android:text="@string/keypad_fourth_row_second_col" />
 
-        <TextView
+        <ImageView
             android:id="@+id/keypad_fourth_row_third_col"
-            style="@style/keypad_textview"
-            android:text="@string/keypad_fourth_row_second_col" />
+            style="@style/keypad_imageview"
+            android:src="@drawable/ic_checkmark_36_nopad"
+            android:textIsSelectable="false" />
 
-        <!-- <ImageView
-             android:id="@+id/keypad_fourth_row_third_col"
-             style="@style/numeric_keypad"
-             android:contentDescription="@string/app_name"
-             android:src="@drawable/ic_action_qr_code"
-             android:textIsSelectable="false" />-->
+    </LinearLayout>
 
-        <!--<TextView
-    android:id="@+id/keypad_fourth_row_first_col"
-    style="@style/numeric_keypad"
-    android:contentDescription="@string/app_name"
-    android:src="@drawable/ic_action_qr_code"
-    android:textIsSelectable="false" />-->
+</LinearLayout>
 
-    </TableRow>
 
-</TableLayout>
+
+
