@@ -46,7 +46,9 @@
     <style name="keypad_imageview">
         <item name="android:layout_weight">1</item>
         <item name="android:layout_height">match_parent</item>
+        <item name="android:maxHeight">@dimen/text_size_numeric_keypad</item>
         <item name="android:layout_width">match_parent</item>
+        <item name="android:maxWidth">@dimen/text_size_numeric_keypad</item>
         <item name="android:clickable">true</item>
         <item name="android:background">@drawable/cell_shape</item>
         <item name="android:gravity">center</item>

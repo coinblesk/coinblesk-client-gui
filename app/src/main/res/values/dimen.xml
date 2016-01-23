@@ -43,5 +43,13 @@
     <dimen name="text_size_numeric_keypad">36dp</dimen>
     <dimen name="switch_currencies_size">48dp</dimen>
 
+    <!--QR-Dialog Fragment Portrait Dimensions-->
+    <dimen name="qr_dialog_ll_width">312dp</dimen>
+    <dimen name="qr_dialog_ll_height">312dp</dimen>
+    <dimen name="qr_dialog_iv_width">280dp</dimen>
+    <dimen name="qr_dialog_iv_height">280dp</dimen>
+    <dimen name="qr_dialog_iv_margin">@dimen/card_margin</dimen>
+
+
 
 </resources>

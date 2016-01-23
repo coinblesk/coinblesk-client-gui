@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="312dp"
-    android:layout_height="312dp"
+    android:layout_width="@dimen/qr_dialog_ll_width"
+    android:layout_height="@dimen/qr_dialog_ll_height"
     android:background="@color/material_grey_800"
+    android:gravity="center"
     android:orientation="vertical">
 
     <ImageView
         android:id="@+id/qr_code"
-        android:layout_width="280dp"
-        android:layout_height="280dp"
-        android:layout_margin="@dimen/card_margin"
+        android:layout_width="@dimen/qr_dialog_iv_width"
+        android:layout_height="@dimen/qr_dialog_iv_height"
+        android:layout_margin="@dimen/qr_dialog_iv_margin"
         android:src="@drawable/qr_code_sample" />
 
 </LinearLayout>
