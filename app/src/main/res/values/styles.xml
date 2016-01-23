@@ -84,12 +84,24 @@
         <item name="android:layout_centerHorizontal">true</item>
     </style>
 
-    <style name="switch_currencies_imageview">
-        <item name="android:layout_height">@dimen/switch_currencies_size</item>
-        <item name="android:layout_width">@dimen/switch_currencies_size</item>
+    <style name="send_switch_currencies_imageview">
+        <item name="android:layout_height">@dimen/send_switch_currencies_size</item>
+        <item name="android:layout_width">@dimen/send_switch_currencies_size</item>
         <item name="android:layout_centerVertical">true</item>
-        <item name="android:src">@drawable/ic_switch_currencies_54</item>
+        <item name="android:src">@drawable/ic_switch_currencies_48_nopad</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_toLeftOf">@id/send_amount_large</item>
+    </style>
+
+    <style name="send_backspace_imageview">
+        <item name="android:layout_height">@dimen/send_backspace_size</item>
+        <item name="android:layout_width">@dimen/send_backspace_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:src">@drawable/ic_backspace_48_nopad</item>
         <item name="android:paddingLeft">12dp</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_toRightOf">@id/send_amount_large</item>
     </style>
 
     <style name="AppCompatAlertDialogStyle" parent="AppThemeMaterial">

@@ -80,7 +80,7 @@
         <ImageView
             android:id="@+id/keypad_fourth_row_third_col"
             style="@style/keypad_imageview"
-            android:src="@drawable/ic_checkmark_36_nopad"
+            android:src="@drawable/ic_checkmark_accent_36_nopad"
             android:textIsSelectable="false" />
 
     </LinearLayout>

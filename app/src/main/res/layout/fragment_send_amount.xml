@@ -27,8 +27,12 @@
 
             <ImageView
                 android:id="@+id/send_switch_currencies"
-                style="@style/switch_currencies_imageview"
-                android:layout_toRightOf="@id/send_amount_large" />
+                style="@style/send_switch_currencies_imageview" />
+
+            <ImageView
+                android:id="@+id/send_backspace"
+                style="@style/send_backspace_imageview" />
+
 
         </RelativeLayout>
     </android.support.v7.widget.CardView>

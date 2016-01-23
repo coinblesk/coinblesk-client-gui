@@ -1,2 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <style name="send_switch_currencies_imageview">
+        <item name="android:layout_height">@dimen/send_switch_currencies_size</item>
+        <item name="android:layout_width">@dimen/send_switch_currencies_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:src">@drawable/ic_switch_currencies_48_nopad</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:layout_above">@id/send_amount_large</item>
+    </style>
+
+    <style name="send_backspace_imageview">
+        <item name="android:layout_height">@dimen/send_backspace_size</item>
+        <item name="android:layout_width">@dimen/send_backspace_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:src">@drawable/ic_backspace_48_nopad</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_below">@id/send_amount_large</item>
+    </style>
+
+</resources>
