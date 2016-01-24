@@ -104,6 +104,29 @@
         <item name="android:layout_toRightOf">@id/send_amount_large</item>
     </style>
 
+    <style name="send_keyboard_switch_currencies_imageview">
+        <item name="android:layout_height">@dimen/send_switch_currencies_size</item>
+        <item name="android:layout_width">@dimen/send_switch_currencies_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:src">@drawable/ic_switch_currencies_48_nopad</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_toLeftOf">@id/send_keyboard_amount_large</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <style name="send_keyboard_backspace_imageview">
+        <item name="android:layout_height">@dimen/send_backspace_size</item>
+        <item name="android:layout_width">@dimen/send_backspace_size</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:src">@drawable/ic_backspace_48_nopad</item>
+        <item name="android:clickable">true</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_toRightOf">@id/send_keyboard_amount_large</item>
+    </style>
+
+
     <style name="AppCompatAlertDialogStyle" parent="AppThemeMaterial">
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorPrimary">#FFFFFF</item>

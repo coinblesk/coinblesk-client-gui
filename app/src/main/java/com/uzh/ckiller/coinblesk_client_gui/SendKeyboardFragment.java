@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 /**
  * Created by ckiller on 16/01/16.
@@ -45,9 +46,8 @@ public class SendKeyboardFragment extends Fragment {
     private void insertNestedFragment() {
         Fragment childFragment = new KeyboardFragment();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.replace(R.id.send_keyboard, childFragment,"FRAGMENT_SEND_KEYBOARD").commit();
+        transaction.replace(R.id.send_keyboard_framelayout, childFragment,"FRAGMENT_SEND_KEYBOARD").commit();
     }
-
 
 
 }

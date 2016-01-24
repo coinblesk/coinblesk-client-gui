@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <FrameLayout
-        android:id="@+id/send_keyboard"
+        android:id="@+id/send_keyboard_framelayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

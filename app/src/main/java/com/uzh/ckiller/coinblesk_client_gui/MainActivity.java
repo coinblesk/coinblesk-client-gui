@@ -14,12 +14,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -27,8 +32,9 @@ import android.widget.Toast;
  * Created by ckiller
  */
 
-public class MainActivity extends AppCompatActivity implements NumericKeypadFragment.KeypadClicked {
+public class MainActivity extends AppCompatActivity implements NumericKeypadFragment.KeypadClicked, KeyboardFragment.KeyboardClicked {
 
+    private AmountSingleton amountSingleton = AmountSingleton.getInstance();
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
@@ -211,6 +217,88 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
         SendAmountFragment sendAmountFragment = (SendAmountFragment) sendFrag.getChildFragmentManager().findFragmentById(R.id.send_amount);
         sendAmountFragment.updateSendAmount(bundle);
 
+    }
+
+
+    private void initAmount() {
+
+        SendKeyboardFragment sendKeyboardFragment = (SendKeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(2);
+        //TODO causes NullPointer Exception...
+        KeyboardFragment keyboardFragment = (KeyboardFragment) sendKeyboardFragment.getChildFragmentManager().findFragmentById(R.id.send_keyboard_framelayout);
+
+        final TextView tvSmall = (TextView) sendKeyboardFragment.getActivity().findViewById(R.id.send_keyboard_amount_small);
+        final TextView tvLarge = (TextView) sendKeyboardFragment.getActivity().findViewById(R.id.send_keyboard_amount_large);
+
+        if (amountSingleton.getDisplayBitcoinMode()) {
+            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getBitcoinAmount()), true);
+            SpannableString fiatAmount = new SpannableString(amountSingleton.getFiatAmount());
+            keyboardFragment.updateAmount(fiatAmount, false);
+        } else {
+            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getFiatAmount()), true);
+            SpannableString bitcoinAmount = new SpannableString(amountSingleton.getBitcoinAmount());
+            keyboardFragment.updateAmount(bitcoinAmount, false);
+        }
+    }
+
+    @Override
+    public void onKeyboardClicked(String input) {
+
+        StringBuilder newAmount = new StringBuilder(amountSingleton.getBitcoinAmount());
+
+        switch (input) {
+            case "0":
+            case "1":
+            case "2":
+            case "3":
+            case "4":
+            case "5":
+            case "6":
+            case "7":
+            case "8":
+            case "9":
+                newAmount.append(input);
+                break;
+            case ".":
+                if (newAmount.toString().contains(".")) {
+                    newAmount.setLength(0);
+                    break;
+                } else {
+                    newAmount.append(input);
+                    break;
+                }
+            case "backspace":
+                if (newAmount.length() > 0) {
+                    newAmount.setLength(newAmount.length() - 1);
+                }
+                break;
+            case "switch":
+                break;
+            default:
+                break;
+        }
+
+        amountSingleton.setBitcoinAmount(newAmount.toString());
+        initAmount();
+    }
+
+    private SpannableString formatCurrency(String string) {
+        // Get variables for RelativeSizeSpan
+        final int start = 0;
+        final int end = string.length();
+
+        // Append BTC
+        StringBuffer sb = new StringBuffer(string);
+        sb.append(" BTC");
+
+        // Create spannable String
+        SpannableString spannableString = new SpannableString(sb);
+
+        // Set size and colors
+        spannableString.setSpan(new RelativeSizeSpan(2), start, end, 0); // set size
+        spannableString.setSpan(new ForegroundColorSpan(Color.WHITE), start, end, 0);// set color
+        spannableString.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorAccent)), end, (end + 4), 0);// set color
+
+        return spannableString;
     }
 }
 
