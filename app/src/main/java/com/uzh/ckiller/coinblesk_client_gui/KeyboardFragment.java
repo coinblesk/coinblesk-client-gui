@@ -20,19 +20,31 @@ import android.widget.Toast;
  */
 public class KeyboardFragment extends Fragment implements View.OnClickListener {
 
+    public static final String ARG_PAGE = "ARG_PAGE";
     KeyboardClicked mCallback;
     View view;
+    private int mPage;
+
+    public static KeyboardFragment newInstance(int page) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_PAGE, page);
+        KeyboardFragment fragment = new KeyboardFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mPage = getArguments().getInt(ARG_PAGE);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.send_keyboard, container, false);
-        mCallback.onKeyboardClicked("init");
+//        mCallback.onKeyboardClicked("init");
 
         // Numbers 0 through 9
         TextView tvOne = (TextView) view.findViewById(R.id.keyboard_first_row_first_col);
@@ -183,7 +195,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
             mCallback = (KeyboardClicked) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement KeypadClicked");
+                    + " must implement KeyboardClicked");
         }
     }
 
@@ -193,14 +205,23 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         super.onDetach();
     }
 
-    public void updateAmount(SpannableString string, boolean value) {
+    public void updateAmount(SpannableString formattedSpannable, String currency) {
 
-        if (value) {
-            final TextView tvLarge = (TextView) view.findViewById(R.id.send_keyboard_amount_large);
-            tvLarge.setText(string);
-        } else {
-            final TextView tvSmall = (TextView) view.findViewById(R.id.send_keyboard_amount_small);
-            tvSmall.setText(string);
+        switch (currency) {
+            case "":
+                break;
+            case "btc":
+                final TextView tvLarge = (TextView) view.findViewById(R.id.send_keyboard_amount_large);
+                tvLarge.setText(formattedSpannable);
+                break;
+            case "fiat":
+                final TextView tvSmall = (TextView) view.findViewById(R.id.send_keyboard_amount_small);
+                tvSmall.setText(formattedSpannable);
+                break;
+
+            default:
+                break;
+
         }
 
     }

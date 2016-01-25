@@ -40,7 +40,7 @@ public class SampleFragmentPagerAdapter extends FragmentPagerAdapter {
                 return SendFragment.newInstance(position + 1);
 
             case 2:
-                return SendKeyboardFragment.newInstance(position + 1);
+                return KeyboardFragment.newInstance(position + 1);
 
             default:
                 return BalanceFragment.newInstance(position + 1);

@@ -3,6 +3,7 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -222,28 +223,27 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
 
     private void initAmount() {
 
-        SendKeyboardFragment sendKeyboardFragment = (SendKeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(2);
-        //TODO causes NullPointer Exception...
-        KeyboardFragment keyboardFragment = (KeyboardFragment) sendKeyboardFragment.getChildFragmentManager().findFragmentById(R.id.send_keyboard_framelayout);
+        KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(2);
 
-        final TextView tvSmall = (TextView) sendKeyboardFragment.getActivity().findViewById(R.id.send_keyboard_amount_small);
-        final TextView tvLarge = (TextView) sendKeyboardFragment.getActivity().findViewById(R.id.send_keyboard_amount_large);
-
-        if (amountSingleton.getDisplayBitcoinMode()) {
-            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getBitcoinAmount()), true);
-            SpannableString fiatAmount = new SpannableString(amountSingleton.getFiatAmount());
-            keyboardFragment.updateAmount(fiatAmount, false);
-        } else {
-            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getFiatAmount()), true);
-            SpannableString bitcoinAmount = new SpannableString(amountSingleton.getBitcoinAmount());
-            keyboardFragment.updateAmount(bitcoinAmount, false);
+        if (amountSingleton.getDisplayBitcoinMode() && keyboardFragment != null) {
+            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getBitcoinAmount()), "btc");
+            StringBuffer fiatAmount = new StringBuffer(amountSingleton.getFiatAmount());
+            fiatAmount.append(" CHF");
+            SpannableString fiatAmountSpannable = new SpannableString(fiatAmount);
+            keyboardFragment.updateAmount(fiatAmountSpannable, "fiat");
         }
+
     }
 
     @Override
     public void onKeyboardClicked(String input) {
 
         StringBuilder newAmount = new StringBuilder(amountSingleton.getBitcoinAmount());
+
+        if (amountSingleton.getBitcoinAmount().length() > 6) {
+            newAmount.setLength(0);
+        }
+
 
         switch (input) {
             case "0":
@@ -257,19 +257,30 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
             case "8":
             case "9":
                 newAmount.append(input);
+                amountSingleton.setBitcoinAmount(newAmount.toString());
                 break;
             case ".":
-                if (newAmount.toString().contains(".")) {
+                if (newAmount.toString().contains(".") && newAmount.length() == 1) {
+                    newAmount.setLength(0);
+                    amountSingleton.setBitcoinAmount(newAmount.toString());
+                    break;
+                } else if (amountSingleton.getBitcoinAmount().contains(".")) {
                     newAmount.setLength(0);
                     break;
                 } else {
                     newAmount.append(input);
+                    amountSingleton.setBitcoinAmount(newAmount.toString());
                     break;
                 }
             case "backspace":
-                if (newAmount.length() > 0) {
+                if (newAmount.length() > 1) {
                     newAmount.setLength(newAmount.length() - 1);
+                    amountSingleton.setBitcoinAmount(newAmount.toString());
+                } else if (amountSingleton.getBitcoinAmount().length() == 1) {
+                    newAmount.setLength(0);
+                    amountSingleton.resetAmount();
                 }
+
                 break;
             case "switch":
                 break;
@@ -277,8 +288,8 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
                 break;
         }
 
-        amountSingleton.setBitcoinAmount(newAmount.toString());
         initAmount();
+
     }
 
     private SpannableString formatCurrency(String string) {
