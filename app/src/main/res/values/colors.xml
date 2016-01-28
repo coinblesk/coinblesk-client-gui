@@ -10,7 +10,7 @@
 
     <color name="divider_color">@color/main_color_500</color>
 
-    <!--Change main color from purple to Lime!-->
+    <!--Main color theme with accent Colors as well-->
     <color name="main_color_500">@color/material_grey_500</color>
     <color name="main_color_50">@color/material_grey_50</color>
     <color name="main_color_100">@color/material_grey_100</color>

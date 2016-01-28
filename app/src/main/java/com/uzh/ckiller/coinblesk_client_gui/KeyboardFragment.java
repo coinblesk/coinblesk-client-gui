@@ -1,13 +1,9 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +39,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.send_keyboard, container, false);
+        view = inflater.inflate(R.layout.fragment_keyboard, container, false);
 //        mCallback.onKeyboardClicked("init");
 
         // Numbers 0 through 9
@@ -70,10 +66,10 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         TextView tvZero = (TextView) view.findViewById(R.id.keyboard_fourth_row_second_col);
         tvZero.setOnClickListener(this);
 
-        ImageView ivBackspace = (ImageView) view.findViewById(R.id.send_keyboard_backspace);
+        ImageView ivBackspace = (ImageView) view.findViewById(R.id.amount_backspace_image_view);
         ivBackspace.setOnClickListener(this);
 
-        ImageView ivSwitchCurrencies = (ImageView) view.findViewById(R.id.send_keyboard_switch_currencies);
+        ImageView ivSwitchCurrencies = (ImageView) view.findViewById(R.id.amount_switch_image_view);
         ivSwitchCurrencies.setOnClickListener(this);
 
         // Special characters (ImageViews)
@@ -167,12 +163,12 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
 //                mCallback.sendBundle(createBundle("keypad_fourth_row_second_col"));
                 break;
 
-            case R.id.send_keyboard_backspace:
+            case R.id.amount_backspace_image_view:
                 Toast.makeText(getActivity(), "Backspace", Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("backspace");
                 break;
 
-            case R.id.send_keyboard_switch_currencies:
+            case R.id.amount_switch_image_view:
                 Toast.makeText(getActivity(), "Switch Currencies", Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("switch");
                 break;
@@ -212,11 +208,11 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
             case "":
                 break;
             case "btc":
-                final TextView tvLarge = (TextView) view.findViewById(R.id.send_keyboard_amount_large);
+                final TextView tvLarge = (TextView) view.findViewById(R.id.amount_large_text_view);
                 tvLarge.setText(formattedSpannable);
                 break;
             case "fiat":
-                final TextView tvSmall = (TextView) view.findViewById(R.id.send_keyboard_amount_small);
+                final TextView tvSmall = (TextView) view.findViewById(R.id.amount_small_text_view);
                 tvSmall.setText(formattedSpannable);
                 break;
 

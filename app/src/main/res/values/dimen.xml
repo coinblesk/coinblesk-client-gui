@@ -41,8 +41,8 @@
     <dimen name="text_size_diff_large_small">6sp</dimen>
 
     <dimen name="text_size_numeric_keypad">36dp</dimen>
-    <dimen name="send_switch_currencies_size">36dp</dimen>
-    <dimen name="send_backspace_size">24dp</dimen>
+    <dimen name="ic_switch_currencies_size">36dp</dimen>
+    <dimen name="ic_backspace_size">24dp</dimen>
 
     <!--QR-Dialog Fragment Portrait Dimensions-->
     <dimen name="qr_dialog_ll_width">312dp</dimen>

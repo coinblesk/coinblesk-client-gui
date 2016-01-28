@@ -16,7 +16,7 @@
 
             <TextView
                 android:id="@+id/balance_large"
-                style="@style/card_view_large_textview"
+                style="@style/card_view_large_text_view"
                 android:textSize="@dimen/text_size_xxlarge" />
 
             <TextView

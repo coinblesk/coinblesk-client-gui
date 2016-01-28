@@ -1,0 +1,89 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/keyboard_frame_layout">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/keyboard_first_row_first_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_first_row_first_col" />
+
+            <TextView
+                android:id="@+id/keyboard_first_row_second_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_first_row_second_col" />
+
+            <TextView
+                android:id="@+id/keyboard_first_row_third_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_first_row_third_col" />
+
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+
+            <TextView
+                android:id="@+id/keyboard_second_row_first_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_second_row_first_col" />
+
+            <TextView
+                android:id="@+id/keyboard_second_row_second_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_second_row_second_col" />
+
+            <TextView
+                android:id="@+id/keyboard_second_row_third_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_second_row_third_col" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/keyboard_third_row_first_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_third_row_first_col" />
+
+            <TextView
+                android:id="@+id/keyboard_third_row_second_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_third_row_second_col" />
+
+            <TextView
+                android:id="@+id/keyboard_third_row_third_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_third_row_third_col" />
+
+        </LinearLayout>
+
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/keyboard_fourth_row_first_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_fourth_row_first_col" />
+
+            <TextView
+                android:id="@+id/keyboard_fourth_row_second_col"
+                style="@style/keyboard_text_view"
+                android:text="@string/keypad_fourth_row_second_col" />
+
+            <ImageView
+                android:id="@+id/keyboard_fourth_row_third_col"
+                style="@style/keyboard_imageview"
+                android:src="@drawable/ic_checkmark_accent_36_nopad"
+                android:textIsSelectable="false" />
+
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
+

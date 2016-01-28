@@ -33,7 +33,7 @@ import android.widget.Toast;
  * Created by ckiller
  */
 
-public class MainActivity extends AppCompatActivity implements NumericKeypadFragment.KeypadClicked, KeyboardFragment.KeyboardClicked {
+public class MainActivity extends AppCompatActivity implements KeyboardFragment.KeyboardClicked {
 
     private AmountSingleton amountSingleton = AmountSingleton.getInstance();
     private NavigationView navigationView;
@@ -209,18 +209,6 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
         mQrDialogFragment = new QrDialogFragment();
         mQrDialogFragment.show(getFragmentManager(), "sample");
     }
-
-
-    @Override
-    public void sendBundle(Bundle bundle) {
-        //TODO Maybe find more elegant solution without using the childFragmentManager
-        //TODO Make sure the fragmentPagerAdapter.getRegisteredFragment(1) is really the SendFragment (Maybe some future states of the app will provoke a null pointer right here..)
-        SendFragment sendFrag = (SendFragment) fragmentPagerAdapter.getRegisteredFragment(1);
-        SendAmountFragment sendAmountFragment = (SendAmountFragment) sendFrag.getChildFragmentManager().findFragmentById(R.id.send_amount);
-        sendAmountFragment.updateSendAmount(bundle);
-
-    }
-
 
     private void initAmount() {
 

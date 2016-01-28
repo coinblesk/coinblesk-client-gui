@@ -1,24 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="send_switch_currencies_imageview">
-        <item name="android:layout_height">@dimen/send_switch_currencies_size</item>
-        <item name="android:layout_width">@dimen/send_switch_currencies_size</item>
+
+    <style name="amount_switch_image_view">
+        <item name="android:layout_height">@dimen/ic_switch_currencies_size</item>
+        <item name="android:layout_width">@dimen/ic_switch_currencies_size</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_centerHorizontal">true</item>
         <item name="android:src">@drawable/ic_switch_currencies_48_nopad</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:layout_above">@id/amount_large_text_view</item>
         <item name="android:paddingBottom">12dp</item>
-        <item name="android:layout_above">@id/send_amount_large</item>
+        <item name="android:clickable">true</item>
     </style>
 
-    <style name="send_backspace_imageview">
-        <item name="android:layout_height">@dimen/send_backspace_size</item>
-        <item name="android:layout_width">@dimen/send_backspace_size</item>
+    <style name="amount_backspace_image_view">
+        <item name="android:layout_height">@dimen/ic_backspace_size</item>
+        <item name="android:layout_width">@dimen/ic_backspace_size</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_centerHorizontal">true</item>
         <item name="android:src">@drawable/ic_backspace_48_nopad</item>
+        <item name="android:clickable">true</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:layout_alignParentBottom">true</item>
-        <item name="android:layout_below">@id/send_amount_large</item>
+        <item name="android:layout_below">@id/amount_large_text_view</item>
     </style>
+
+    <style name="keyboard_frame_layout">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">2</item>
+    </style>
+
+    <style name="amount_frame_layout">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+
 
 </resources>
