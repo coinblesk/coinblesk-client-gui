@@ -3,9 +3,9 @@
 
     <!-- Navigation Drawer Navigation View Redesign -->
     <string name="username">Please define your username</string>
-    <string name="address_book">Address Book</string>
-    <string name="general_settings">General Settings</string>
-    <string name="wallet_backup">Wallet Backup</string>
+    <string name="verified_users">Verified Users</string>
+    <string name="settings">Settings</string>
+    <string name="backup">Backup</string>
     <string name="activate_vendor_mode">Activate Vendor Mode</string>
     <string name="about_coinblesk">About Coinblesk</string>
     <string name="share_coinblesk">Share Coinblesk</string>

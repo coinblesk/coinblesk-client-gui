@@ -72,26 +72,8 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         ImageView ivSwitchCurrencies = (ImageView) view.findViewById(R.id.amount_switch_image_view);
         ivSwitchCurrencies.setOnClickListener(this);
 
-        // Special characters (ImageViews)
-
         return view;
     }
-
-    // TODO Move to Main Activity
-/*    private void initAmount() {
-
-        final TextView tvSmall = (TextView) this.getView().findViewById(R.id.send_keyboard_amount_small);
-        final TextView tvLarge = (TextView) this.getView().findViewById(R.id.send_keyboard_amount_large);
-
-        if (mDisplayBitcoinMode) {
-            tvLarge.setText(formatCurrency(getBitcoinAmount()));
-            tvSmall.setText(formatCurrency(getFiatAmount()));
-        } else {
-            tvLarge.setText(formatCurrency(getFiatAmount()));
-            tvSmall.setText(formatCurrency(getBitcoinAmount()));
-        }
-    }*/
-
 
     @Override
     public void onClick(View v) {

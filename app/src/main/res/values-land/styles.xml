@@ -38,5 +38,36 @@
         <item name="android:background">@color/colorPrimary</item>
     </style>
 
+    <style name="nav_drawer_header">
+        <item name="android:layout_height">@dimen/nav_drawer_header_height</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="nav_drawer_header_logo_image_view">
+        <item name="android:layout_height">@dimen/nav_drawer_header_logo_size</item>
+        <item name="android:layout_width">@dimen/nav_drawer_header_logo_size</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_marginLeft">@dimen/nav_drawer_header_logo_marginLeft</item>
+        <item name="android:src">@drawable/logotype_coinblesk_white</item>
+    </style>
+
+    <style name="nav_drawer_header_username_textview">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignLeft">@id/nav_drawer_logo</item>
+        <item name="android:layout_alignStart">@id/nav_drawer_logo</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:text">@string/username</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:textSize">@dimen/nav_drawer_username_textview_size</item>
+    </style>
+
 
 </resources>

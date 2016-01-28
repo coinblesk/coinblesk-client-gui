@@ -4,19 +4,19 @@
     <group android:checkableBehavior="single">
 
         <item
-            android:id="@+id/address_book"
+            android:id="@+id/verified_users"
             android:checked="false"
-            android:title="@string/address_book" />
+            android:title="@string/verified_users" />
 
         <item
-            android:id="@+id/general_settings"
+            android:id="@+id/backup"
             android:checked="false"
-            android:title="@string/general_settings"/>
+            android:title="@string/backup" />
 
         <item
-            android:id="@+id/wallet_backup"
+            android:id="@+id/settings"
             android:checked="false"
-            android:title="@string/wallet_backup"/>
+            android:title="@string/settings" />
 
         <item
             android:id="@+id/activate_vendor_mode"
@@ -28,10 +28,6 @@
             android:checked="false"
             android:title="@string/about_coinblesk" />
 
-        <item
-            android:id="@+id/share_coinblesk"
-            android:checked="false"
-            android:title="@string/share_coinblesk" />
 
     </group>
 </menu>

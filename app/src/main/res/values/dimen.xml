@@ -8,6 +8,12 @@
     <dimen name="card_view_elevation">2dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="list_item_avatar_size">40dp</dimen>
+    <dimen name="nav_drawer_header_height">190dp</dimen>
+    <dimen name="nav_drawer_header_logo_size">76dp</dimen>
+    <dimen name="nav_drawer_username_textview_size">14sp</dimen>
+    <dimen name="nav_drawer_header_logo_marginLeft">16dp</dimen>
+    <dimen name="nav_drawer_header_logo_marginStart">16dp</dimen>
+
 
     <dimen name="keyline_1">16dp</dimen>
     <dimen name="keyline_1_minus_8dp">8dp</dimen>

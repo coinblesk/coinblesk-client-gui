@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--For some reason this attribute can not be set via @dimen/.. instead it only works with string reference-->
+    <string name="nav_drawer_visibility">gone</string>
+</resources>
