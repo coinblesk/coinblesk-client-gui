@@ -36,26 +36,6 @@
     <color name="main_color_grey_800">@color/material_grey_800</color>
     <color name="main_color_grey_900">@color/material_grey_900</color>
 
-
-    <!-- PLEASE NOTE: Since adding transparency to already
-    defined colors is not supported through xml, we have
-    to add them manually. This means: we have used purple
-    color scheme, and this is where we use Purple500 color
-    to add transparency. If you were about to change color
-    scheme, also change Purple500 color from here. -->
-    <!-- 10 percent transparent Purple500 -->
-    <color name="main_color_500_10_percent">#1a8f3e97</color>
-    <!-- 20 percent transparent Purple500 -->
-    <color name="main_color_500_20_percent">#338f3e97</color>
-    <!-- 50 percent transparent Purple500 -->
-    <color name="main_color_500_50_percent">#808f3e97</color>
-    <!-- Ex. If you use red color scheme, write down (#ef4437 is Red500 color):
-    <color name="main_color_500_10_percent">#1aef4437</color>
-    <color name="main_color_500_20_percent">#33ef4437</color>
-    <color name="main_color_500_50_percent">#80ef4437</color>
-    -->
-
-
     <color name="cpb_grey">#ffdedede</color>
     <color name="cpb_blue">#ff0099cc</color>
     <color name="cpb_blue_dark">#ff00719b</color>
