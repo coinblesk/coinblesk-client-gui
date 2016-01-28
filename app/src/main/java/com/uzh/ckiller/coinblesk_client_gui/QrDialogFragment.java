@@ -28,9 +28,6 @@ public class QrDialogFragment extends DialogFragment implements
 
         return (builder.setView(pView).setPositiveButton(R.string.qr_code_close, this).create());
 
-//        return(builder.setTitle(R.string.qr_code_dialog_title).setView(pView)
-//                .setPositiveButton(android.R.string.ok, this)
-//                .setNegativeButton(android.R.string.cancel, null).create());
     }
 
     @Override

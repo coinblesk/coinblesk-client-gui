@@ -98,78 +98,54 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
 
         switch (v.getId()) {
             case R.id.keyboard_first_row_first_col:
-                Toast.makeText(getActivity(), R.string.keypad_first_row_first_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("1");
-//                mCallback.sendBundle(createBundle("keypad_first_row_first_col"));
                 break;
 
             case R.id.keyboard_first_row_second_col:
-                Toast.makeText(getActivity(), R.string.keypad_first_row_second_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("2");
-//                mCallback.sendBundle(createBundle("keypad_first_row_second_col"));
                 break;
 
             case R.id.keyboard_first_row_third_col:
-                Toast.makeText(getActivity(), R.string.keypad_first_row_third_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("3");
-//                mCallback.sendBundle(createBundle("keypad_first_row_third_col"));
                 break;
 
             case R.id.keyboard_second_row_first_col:
-                Toast.makeText(getActivity(), R.string.keypad_second_row_first_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("4");
-//                mCallback.sendBundle(createBundle("keypad_second_row_first_col"));
                 break;
 
             case R.id.keyboard_second_row_second_col:
-                Toast.makeText(getActivity(), R.string.keypad_second_row_second_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("5");
-//                mCallback.sendBundle(createBundle("keypad_second_row_second_col"));
                 break;
 
             case R.id.keyboard_second_row_third_col:
-                Toast.makeText(getActivity(), R.string.keypad_second_row_third_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("6");
-//                mCallback.sendBundle(createBundle("keypad_second_row_third_col"));
                 break;
 
             case R.id.keyboard_third_row_first_col:
-                Toast.makeText(getActivity(), R.string.keypad_third_row_first_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("7");
-//                mCallback.sendBundle(createBundle("keypad_third_row_first_col"));
                 break;
 
             case R.id.keyboard_third_row_second_col:
-                Toast.makeText(getActivity(), R.string.keypad_third_row_second_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("8");
-//                mCallback.sendBundle(createBundle("keypad_third_row_second_col"));
                 break;
 
             case R.id.keyboard_third_row_third_col:
-                Toast.makeText(getActivity(), R.string.keypad_third_row_third_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("9");
-//                mCallback.sendBundle(createBundle("keypad_third_row_third_col"));
                 break;
 
             case R.id.keyboard_fourth_row_first_col:
-                Toast.makeText(getActivity(), R.string.keypad_fourth_row_first_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked(".");
-//                mCallback.sendBundle(createBundle("keypad_fourth_row_first_col"));
                 break;
 
             case R.id.keyboard_fourth_row_second_col:
-                Toast.makeText(getActivity(), R.string.keypad_fourth_row_second_col, Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("0");
-//                mCallback.sendBundle(createBundle("keypad_fourth_row_second_col"));
                 break;
 
             case R.id.amount_backspace_image_view:
-                Toast.makeText(getActivity(), "Backspace", Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("backspace");
                 break;
 
             case R.id.amount_switch_image_view:
-                Toast.makeText(getActivity(), "Switch Currencies", Toast.LENGTH_LONG).show();
                 mCallback.onKeyboardClicked("switch");
                 break;
 
