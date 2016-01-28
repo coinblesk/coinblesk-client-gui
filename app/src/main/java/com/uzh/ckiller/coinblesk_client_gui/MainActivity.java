@@ -3,7 +3,6 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -18,14 +17,12 @@ import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -118,25 +115,22 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
 
                 switch (menuItem.getItemId()) {
 
-                    case R.id.address_book:
-                        Toast.makeText(getApplicationContext(), "Address Book Selected", Toast.LENGTH_SHORT).show();
+                    case R.id.verified_users:
+                        Toast.makeText(getApplicationContext(), "Verified UsersSelected", Toast.LENGTH_SHORT).show();
                         return true;
-                    case R.id.general_settings:
-                        Toast.makeText(getApplicationContext(), "General Settings Selected", Toast.LENGTH_SHORT).show();
-                        Intent newAct = new Intent(getApplicationContext(), SettingsActivity.class);
-                        startActivity(newAct);
-                        return (true);
-                    case R.id.wallet_backup:
-                        Toast.makeText(getApplicationContext(), "Wallet Backup Selected", Toast.LENGTH_SHORT).show();
+                    case R.id.backup:
+                        Toast.makeText(getApplicationContext(), "Backup Selected", Toast.LENGTH_SHORT).show();
                         return true;
                     case R.id.activate_vendor_mode:
                         Toast.makeText(getApplicationContext(), "Activate Vendor Mode Selected", Toast.LENGTH_SHORT).show();
                         return true;
+                    case R.id.settings:
+                        Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_SHORT).show();
+                        Intent newAct = new Intent(getApplicationContext(), SettingsActivity.class);
+                        startActivity(newAct);
+                        return (true);
                     case R.id.about_coinblesk:
                         Toast.makeText(getApplicationContext(), "About Coinblesk Selected", Toast.LENGTH_SHORT).show();
-                        return true;
-                    case R.id.share_coinblesk:
-                        Toast.makeText(getApplicationContext(), "Share Coinblesk Selected", Toast.LENGTH_SHORT).show();
                         return true;
                     default:
                         Toast.makeText(getApplicationContext(), "Somethings Wrong", Toast.LENGTH_SHORT).show();
