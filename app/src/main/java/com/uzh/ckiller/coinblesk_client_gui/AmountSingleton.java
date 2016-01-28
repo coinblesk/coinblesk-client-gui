@@ -11,7 +11,7 @@ public class AmountSingleton {
 
     private static final AmountSingleton instance = new AmountSingleton();
 
-    protected AmountSingleton() {
+    private AmountSingleton() {
         this.mBitcoinAmount = "";
         this.mFiatAmount = "";
         this.mDisplayBitcoinMode = true;

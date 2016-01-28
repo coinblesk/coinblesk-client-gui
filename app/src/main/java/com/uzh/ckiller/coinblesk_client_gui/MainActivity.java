@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
     private ProgressBar mProgressBar;
     private CharSequence mTitle;
     private QrDialogFragment mQrDialogFragment;
+    ViewPager viewPager;
 
 //TODO Create Landscape views for all Fragments. E.g. Landscape View for send / receive with smaller representation of the Balance fragment.
 
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
     private void initViewPager() {
 
         // Get the ViewPager and set its PagerAdapter so that it can display items
-        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager = (ViewPager) findViewById(R.id.viewpager);
         fragmentPagerAdapter = new SampleFragmentPagerAdapter(getSupportFragmentManager(), MainActivity.this);
         viewPager.setAdapter(fragmentPagerAdapter);
 
@@ -223,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements NumericKeypadFrag
 
     private void initAmount() {
 
-        KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(2);
+        KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(viewPager.getCurrentItem());
 
         if (amountSingleton.getDisplayBitcoinMode() && keyboardFragment != null) {
             keyboardFragment.updateAmount(formatCurrency(amountSingleton.getBitcoinAmount()), "btc");

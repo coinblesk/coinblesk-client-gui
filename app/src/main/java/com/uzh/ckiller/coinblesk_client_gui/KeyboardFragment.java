@@ -182,6 +182,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    //TODO rausnehmen OnKeyboardClickedListener
     public interface KeyboardClicked {
         public void onKeyboardClicked(String string);
     }
