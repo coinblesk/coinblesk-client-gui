@@ -15,6 +15,8 @@ public class AmountSingleton {
         this.mBitcoinAmount = "";
         this.mFiatAmount = "";
         this.mDisplayBitcoinMode = true;
+
+        //TODO Currency Conversion Factory
         this.mExchangeRate = 400;
     }
 
@@ -51,6 +53,7 @@ public class AmountSingleton {
 
     private void onChangedBitcoinAmount() {
         if (!getBitcoinAmount().equalsIgnoreCase("") | !getBitcoinAmount().equalsIgnoreCase(".") | !(getBitcoinAmount().length() == 0)) {
+            // TODO Replace Float with BigDecimal because of accuracy!
             float btcAmount = Float.parseFloat((getBitcoinAmount()));
             float newFiat = btcAmount * getExchangeRate();
             String afterFiatString = String.valueOf(newFiat);

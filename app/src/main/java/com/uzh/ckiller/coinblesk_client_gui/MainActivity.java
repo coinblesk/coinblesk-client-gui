@@ -276,6 +276,10 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     }
 
     private SpannableString formatCurrency(String string) {
+
+        //TODO Amount Object with ISO 4217
+
+
         // Get variables for RelativeSizeSpan
         final int start = 0;
         final int end = string.length();
