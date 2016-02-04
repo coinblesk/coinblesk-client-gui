@@ -14,7 +14,7 @@ public class Amount {
 
     public static final String BTC = "BTC";
     public static final String CHF = "CHF";
-    public static final String DEFAULT_AMOUNT = "0.00";
+    public static final String DEFAULT_AMOUNT = "";
     public static final BigDecimal DEFAULT_EXCHANGE_RATE = new BigDecimal(400);
 
     public String mLargeCurrency;
@@ -41,7 +41,6 @@ public class Amount {
 
     public void setBitcoinAmount(String bitcoinAmount) {
         this.mBitcoinAmount = bitcoinAmount;
-        onChangedAmount(BTC);
     }
 
     public String getFiatAmount() {
@@ -50,8 +49,6 @@ public class Amount {
 
     public void setFiatAmount(String fiatAmount) {
         this.mFiatAmount = fiatAmount;
-        onChangedAmount(CHF);
-
     }
 
     private void onChangedAmount(String code) {
@@ -73,15 +70,6 @@ public class Amount {
         }
 
     }
-
-//    private void onChangedBitcoinAmount() {
-//        // If bitcoinAmount is not empty "", or bitcoinamount does not equal "."
-//        if (!getBitcoinAmount().equalsIgnoreCase("") | !getBitcoinAmount().equalsIgnoreCase(".") | !(getBitcoinAmount().length() == 0)) {
-//            BigDecimal newFiat = new BigDecimal(getBitcoinAmount()).multiply(getExchangeRate());
-//            String afterFiatString = String.valueOf(newFiat);
-//            setFiatAmount(afterFiatString);
-//        }
-//    }
 
 
     public void processInput(String value) {
@@ -121,7 +109,7 @@ public class Amount {
         }
 
         setAmountOf(currentAmount.toString(), getLargeCurrencyId());
-
+        onChangedAmount(getLargeCurrencyId());
     }
 
     public String getAmountOf(String currency) {
@@ -158,8 +146,11 @@ public class Amount {
         String formerSmall = getAmountOf(getSmallCurrencyId());
         String formerLarge = getAmountOf(getLargeCurrencyId());
 
-        setAmountOf(formerSmall, getLargeCurrencyId());
-        setAmountOf(formerLarge, getSmallCurrencyId());
+        String formerSmallId = getSmallCurrencyId();
+        String formerLargeId = getLargeCurrencyId();
+
+        setAmountOf(formerSmall, formerLargeId);
+        setAmountOf(formerLarge, formerSmallId);
 
         // Switch Identifiers
         String temp = getLargeCurrencyId();
