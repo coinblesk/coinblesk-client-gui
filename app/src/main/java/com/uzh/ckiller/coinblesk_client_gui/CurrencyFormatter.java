@@ -47,7 +47,7 @@ public class CurrencyFormatter {
         // Set size and colors
         spannableString.setSpan(new RelativeSizeSpan(2), start, end, 0); // set size
         spannableString.setSpan(new ForegroundColorSpan(Color.WHITE), start, end, 0);// set color
-        spannableString.setSpan(new ForegroundColorSpan(mContext.getColor(R.color.colorAccent)), end, (end + 4), 0); // set color
+        spannableString.setSpan(new ForegroundColorSpan(mContext.getApplicationContext().getResources().getColor(R.color.colorAccent)), end, (end + 4), 0); // set color
 
         return spannableString;
 

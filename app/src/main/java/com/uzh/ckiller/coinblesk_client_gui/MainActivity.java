@@ -212,10 +212,10 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(viewPager.getCurrentItem());
 
         if (keyboardFragment != null) {
-            String largeCurrency = keyboardFragment.getLargeCurrency();
-            String smallCurrency = keyboardFragment.getSmallCurrency();
-            keyboardFragment.onAmountUpdate(currencyFormatter.formatLargeText(amount.getAmountOf(largeCurrency), largeCurrency), largeCurrency);
-            keyboardFragment.onAmountUpdate(currencyFormatter.formatSmallText(amount.getAmountOf(smallCurrency), smallCurrency), smallCurrency);
+            String largeCurrency = amount.getLargeCurrency();
+            String smallCurrency = amount.getSmallCurrency();
+            keyboardFragment.onAmountUpdate(currencyFormatter.formatLargeText(amount.getAmountOf(largeCurrency), largeCurrency), "large");
+            keyboardFragment.onAmountUpdate(currencyFormatter.formatSmallText(amount.getAmountOf(smallCurrency), smallCurrency), "small");
         }
 
     }

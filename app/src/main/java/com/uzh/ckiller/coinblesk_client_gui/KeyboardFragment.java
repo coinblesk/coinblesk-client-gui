@@ -17,12 +17,6 @@ import android.widget.Toast;
 public class KeyboardFragment extends Fragment implements View.OnClickListener {
 
     public static final String ARG_PAGE = "ARG_PAGE";
-
-    public static final String BTC = "BTC";
-    public static final String CHF = "CHF";
-    public String mLargeCurrency;
-    public String mSmallCurrency;
-
     KeyboardClicked mCallback;
     View view;
     private int mPage;
@@ -40,9 +34,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPage = getArguments().getInt(ARG_PAGE);
-        mLargeCurrency = BTC;
-        mSmallCurrency = CHF;
-
     }
 
     @Override
@@ -183,28 +174,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
                 break;
 
         }
-    }
-
-
-    public void switchCurrencies() {
-        String temp = getLargeCurrency();
-        setLargeCurrency(getSmallCurrency());
-        setSmallCurrency(temp);
-    }
-
-    public String getLargeCurrency() {
-        return mLargeCurrency;
-    }
-
-    public String getSmallCurrency() {
-        return mSmallCurrency;
-    }
-
-    private void setSmallCurrency(String value){
-        mSmallCurrency = value;
-    }
-    private void setLargeCurrency(String value){
-        mLargeCurrency = value;
     }
 
 }

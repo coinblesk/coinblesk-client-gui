@@ -14,11 +14,18 @@ public class Amount {
     private String mFiatAmount;
     private BigDecimal mExchangeRate;
 
+    public static final String BTC = "BTC";
+    public static final String CHF = "CHF";
+    public String mLargeCurrency;
+    public String mSmallCurrency;
+
     private static final Amount instance = new Amount();
 
     private Amount() {
         this.mBitcoinAmount = "";
         this.mFiatAmount = "";
+        this.mLargeCurrency = BTC;
+        this.mSmallCurrency = CHF;
 
         //TODO Currency Conversion Factory
         this.mExchangeRate = new BigDecimal(400);
@@ -127,13 +134,36 @@ public class Amount {
         switch (currency) {
             case "BTC":
                 result = getBitcoinAmount();
-            break;
+                break;
             case "CHF":
                 result = getFiatAmount();
-            break;
+                break;
             default:
                 break;
         }
         return result;
+    }
+
+
+    public void switchCurrencies() {
+        String temp = getLargeCurrency();
+        setLargeCurrency(getSmallCurrency());
+        setSmallCurrency(temp);
+    }
+
+    public String getLargeCurrency() {
+        return mLargeCurrency;
+    }
+
+    public String getSmallCurrency() {
+        return mSmallCurrency;
+    }
+
+    private void setSmallCurrency(String value) {
+        mSmallCurrency = value;
+    }
+
+    private void setLargeCurrency(String value) {
+        mLargeCurrency = value;
     }
 }
