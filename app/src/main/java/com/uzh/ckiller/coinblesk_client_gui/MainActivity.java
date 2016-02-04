@@ -34,9 +34,6 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
 
     private SampleFragmentPagerAdapter fragmentPagerAdapter;
 
-//    private final int mIndicatorColor = Color.BLACK;
-//    private final int mDividerColor = Color.BLUE;
-
     private CurrencyFormatter currencyFormatter;
     private FragmentManager fragmentManager = getSupportFragmentManager();
 
