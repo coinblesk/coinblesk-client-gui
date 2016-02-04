@@ -1,34 +1,34 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import com.bumptech.glide.load.resource.transcode.BitmapToGlideDrawableTranscoder;
+
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Currency;
 
 /**
- * Created by ckiller on 24/01/16.
+ * Created by ckiller
  */
 public class Amount {
 
     private String mBitcoinAmount;
     private String mFiatAmount;
-    private BigDecimal mExchangeRate;
 
     public static final String BTC = "BTC";
     public static final String CHF = "CHF";
+    public static final String DEFAULT_AMOUNT = "0.00";
+    public static final BigDecimal DEFAULT_EXCHANGE_RATE = new BigDecimal(400);
+
     public String mLargeCurrency;
     public String mSmallCurrency;
 
     private static final Amount instance = new Amount();
 
     private Amount() {
-        this.mBitcoinAmount = "";
-        this.mFiatAmount = "";
+        this.mBitcoinAmount = DEFAULT_AMOUNT;
+        this.mFiatAmount = DEFAULT_AMOUNT;
         this.mLargeCurrency = BTC;
         this.mSmallCurrency = CHF;
 
         //TODO Currency Conversion Factory
-        this.mExchangeRate = new BigDecimal(400);
     }
 
     public static Amount getInstance() {
@@ -41,9 +41,7 @@ public class Amount {
 
     public void setBitcoinAmount(String bitcoinAmount) {
         this.mBitcoinAmount = bitcoinAmount;
-        if (!bitcoinAmount.equalsIgnoreCase("")) {
-            onChangedBitcoinAmount();
-        }
+        onChangedAmount(BTC);
     }
 
     public String getFiatAmount() {
@@ -52,39 +50,45 @@ public class Amount {
 
     public void setFiatAmount(String fiatAmount) {
         this.mFiatAmount = fiatAmount;
+        onChangedAmount(CHF);
+
     }
 
-    private void onChangedBitcoinAmount() {
-        // If bitcoinAmount is not empty "", or bitcoinamount does not equal "."
-        if (!getBitcoinAmount().equalsIgnoreCase("") | !getBitcoinAmount().equalsIgnoreCase(".") | !(getBitcoinAmount().length() == 0)) {
-            BigDecimal newFiat = new BigDecimal(getBitcoinAmount()).multiply(getExchangeRate());
-            String afterFiatString = String.valueOf(newFiat);
-            setFiatAmount(afterFiatString);
-        }
-    }
+    private void onChangedAmount(String code) {
+        switch (code) {
+            case CHF:
+                // TODO Conversion Factory
+                BigDecimal bigDecimalBtc = new BigDecimal(getFiatAmount()).divide(DEFAULT_EXCHANGE_RATE);
+                setBitcoinAmount(String.valueOf(bigDecimalBtc));
+                break;
 
-    public void setExchangeRate(BigDecimal exchangeRate) {
-        this.mExchangeRate = exchangeRate;
-    }
+            case BTC:
+                // TODO Conversion Factory
+                BigDecimal bigDecimalFiat = new BigDecimal(getBitcoinAmount()).multiply(DEFAULT_EXCHANGE_RATE);
+                setFiatAmount(String.valueOf(bigDecimalFiat));
+                break;
+            default:
+                break;
 
-    public BigDecimal getExchangeRate() {
-        return mExchangeRate;
-    }
-
-    public void resetAmount() {
-        setBitcoinAmount("");
-        setFiatAmount("");
-    }
-
-    public void processInput(String input) {
-
-        StringBuilder amount = new StringBuilder(getBitcoinAmount());
-
-        if (getBitcoinAmount().length() > 6) {
-            amount.setLength(0);
         }
 
-        switch (input) {
+    }
+
+//    private void onChangedBitcoinAmount() {
+//        // If bitcoinAmount is not empty "", or bitcoinamount does not equal "."
+//        if (!getBitcoinAmount().equalsIgnoreCase("") | !getBitcoinAmount().equalsIgnoreCase(".") | !(getBitcoinAmount().length() == 0)) {
+//            BigDecimal newFiat = new BigDecimal(getBitcoinAmount()).multiply(getExchangeRate());
+//            String afterFiatString = String.valueOf(newFiat);
+//            setFiatAmount(afterFiatString);
+//        }
+//    }
+
+
+    public void processInput(String value) {
+
+        StringBuilder currentAmount = new StringBuilder(getAmountOf(getLargeCurrencyId()));
+
+        switch (value) {
             case "0":
             case "1":
             case "2":
@@ -95,47 +99,38 @@ public class Amount {
             case "7":
             case "8":
             case "9":
-                amount.append(input);
-                setBitcoinAmount(amount.toString());
+                currentAmount.append(value);
                 break;
             case ".":
-                if (amount.toString().contains(".") && amount.length() == 1) {
-                    amount.setLength(0);
-                    setBitcoinAmount(amount.toString());
-                    break;
-                } else if (getBitcoinAmount().contains(".")) {
-                    amount.setLength(0);
-                    break;
-                } else {
-                    amount.append(input);
-                    setBitcoinAmount(amount.toString());
-                    break;
+                if (!currentAmount.toString().contains(".")) {
+                    currentAmount.append(value);
                 }
+                break;
             case "backspace":
-                if (amount.length() > 1) {
-                    amount.setLength(amount.length() - 1);
-                    setBitcoinAmount(amount.toString());
-                } else if (getBitcoinAmount().length() == 1) {
-                    amount.setLength(0);
-                    resetAmount();
+                if (currentAmount.length() > 0) {
+                    currentAmount.setLength(currentAmount.length() - 1);
+                } else if (currentAmount.length() == 0) {
+                    currentAmount.setLength(0);
                 }
-
                 break;
             case "switch":
+                switchCurrencies();
                 break;
             default:
                 break;
         }
+
+        setAmountOf(currentAmount.toString(), getLargeCurrencyId());
 
     }
 
     public String getAmountOf(String currency) {
         String result = "";
         switch (currency) {
-            case "BTC":
+            case BTC:
                 result = getBitcoinAmount();
                 break;
-            case "CHF":
+            case CHF:
                 result = getFiatAmount();
                 break;
             default:
@@ -144,26 +139,47 @@ public class Amount {
         return result;
     }
 
-
-    public void switchCurrencies() {
-        String temp = getLargeCurrency();
-        setLargeCurrency(getSmallCurrency());
-        setSmallCurrency(temp);
+    private void setAmountOf(String value, String currency) {
+        switch (currency) {
+            case BTC:
+                setBitcoinAmount(value);
+                break;
+            case CHF:
+                setFiatAmount(value);
+                break;
+            default:
+                break;
+        }
     }
 
-    public String getLargeCurrency() {
+
+    public void switchCurrencies() {
+        // Switch values
+        String formerSmall = getAmountOf(getSmallCurrencyId());
+        String formerLarge = getAmountOf(getLargeCurrencyId());
+
+        setAmountOf(formerSmall, getLargeCurrencyId());
+        setAmountOf(formerLarge, getSmallCurrencyId());
+
+        // Switch Identifiers
+        String temp = getLargeCurrencyId();
+        setLargeCurrencyId(getSmallCurrencyId());
+        setSmallCurrencyId(temp);
+    }
+
+    public String getLargeCurrencyId() {
         return mLargeCurrency;
     }
 
-    public String getSmallCurrency() {
+    public String getSmallCurrencyId() {
         return mSmallCurrency;
     }
 
-    private void setSmallCurrency(String value) {
+    private void setSmallCurrencyId(String value) {
         mSmallCurrency = value;
     }
 
-    private void setLargeCurrency(String value) {
+    private void setLargeCurrencyId(String value) {
         mLargeCurrency = value;
     }
 }

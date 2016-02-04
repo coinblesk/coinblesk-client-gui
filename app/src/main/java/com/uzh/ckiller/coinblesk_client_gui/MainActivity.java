@@ -203,24 +203,24 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         mQrDialogFragment.show(getFragmentManager(), "sample");
     }
 
+
+    @Override
+    public void onKeyboardClicked(String value) {
+        amount.processInput(value);
+        updateAmount();
+    }
+
     private void updateAmount() {
 
         KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(viewPager.getCurrentItem());
 
         if (keyboardFragment != null) {
-            String largeCurrency = amount.getLargeCurrency();
-            String smallCurrency = amount.getSmallCurrency();
+            String largeCurrency = amount.getLargeCurrencyId();
+            String smallCurrency = amount.getSmallCurrencyId();
             keyboardFragment.onLargeAmountUpdate(currencyFormatter.formatLarge(amount.getAmountOf(largeCurrency), largeCurrency));
             keyboardFragment.onSmallAmountUpdate(currencyFormatter.formatSmall(amount.getAmountOf(smallCurrency), smallCurrency));
         }
 
     }
-
-    @Override
-    public void onKeyboardClicked(String input) {
-        amount.processInput(input);
-        updateAmount();
-    }
-
 }
 
