@@ -7,6 +7,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.util.SparseArray;
 import android.view.ViewGroup;
 
+import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationFragment;
+
 
 /**
  * Created by ckiller
@@ -40,8 +42,8 @@ public class SampleFragmentPagerAdapter extends FragmentPagerAdapter {
                 return KeyboardFragment.newInstance(position + 1);
 
             case 2:
-                return KeyboardFragment.newInstance(position + 1);
-
+//                return KeyboardFragment.newInstance(position + 1);
+                return AuthenticationFragment.newInstance();
             default:
                 return BalanceFragment.newInstance(position + 1);
 

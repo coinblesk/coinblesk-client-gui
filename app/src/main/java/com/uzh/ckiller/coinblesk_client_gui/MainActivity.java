@@ -32,15 +32,16 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements KeyboardFragment.KeyboardClicked {
 
-    private AmountSingleton amountSingleton = AmountSingleton.getInstance();
+    private Amount amount = Amount.getInstance();
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
     private SampleFragmentPagerAdapter fragmentPagerAdapter;
 
-    private final int mIndicatorColor = Color.BLACK;
-    private final int mDividerColor = Color.BLUE;
+//    private final int mIndicatorColor = Color.BLACK;
+//    private final int mDividerColor = Color.BLUE;
 
+    private CurrencyFormatter currencyFormatter;
     private FragmentManager fragmentManager = getSupportFragmentManager();
 
     private String[] mDrawerItems;
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        currencyFormatter = new CurrencyFormatter(this);
 
         initToolbar();
         initNavigationView();
@@ -204,99 +207,24 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         mQrDialogFragment.show(getFragmentManager(), "sample");
     }
 
-    private void initAmount() {
+    private void updateAmount() {
 
         KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(viewPager.getCurrentItem());
 
-        if (amountSingleton.getDisplayBitcoinMode() && keyboardFragment != null) {
-            keyboardFragment.updateAmount(formatCurrency(amountSingleton.getBitcoinAmount()), "btc");
-            StringBuffer fiatAmount = new StringBuffer(amountSingleton.getFiatAmount());
-            fiatAmount.append(" CHF");
-            SpannableString fiatAmountSpannable = new SpannableString(fiatAmount);
-            keyboardFragment.updateAmount(fiatAmountSpannable, "fiat");
+        if (keyboardFragment != null) {
+            String largeCurrency = keyboardFragment.getLargeCurrency();
+            String smallCurrency = keyboardFragment.getSmallCurrency();
+            keyboardFragment.onAmountUpdate(currencyFormatter.formatLargeText(amount.getAmountOf(largeCurrency), largeCurrency), largeCurrency);
+            keyboardFragment.onAmountUpdate(currencyFormatter.formatSmallText(amount.getAmountOf(smallCurrency), smallCurrency), smallCurrency);
         }
 
     }
 
     @Override
     public void onKeyboardClicked(String input) {
-
-        StringBuilder newAmount = new StringBuilder(amountSingleton.getBitcoinAmount());
-
-        if (amountSingleton.getBitcoinAmount().length() > 6) {
-            newAmount.setLength(0);
-        }
-
-
-        switch (input) {
-            case "0":
-            case "1":
-            case "2":
-            case "3":
-            case "4":
-            case "5":
-            case "6":
-            case "7":
-            case "8":
-            case "9":
-                newAmount.append(input);
-                amountSingleton.setBitcoinAmount(newAmount.toString());
-                break;
-            case ".":
-                if (newAmount.toString().contains(".") && newAmount.length() == 1) {
-                    newAmount.setLength(0);
-                    amountSingleton.setBitcoinAmount(newAmount.toString());
-                    break;
-                } else if (amountSingleton.getBitcoinAmount().contains(".")) {
-                    newAmount.setLength(0);
-                    break;
-                } else {
-                    newAmount.append(input);
-                    amountSingleton.setBitcoinAmount(newAmount.toString());
-                    break;
-                }
-            case "backspace":
-                if (newAmount.length() > 1) {
-                    newAmount.setLength(newAmount.length() - 1);
-                    amountSingleton.setBitcoinAmount(newAmount.toString());
-                } else if (amountSingleton.getBitcoinAmount().length() == 1) {
-                    newAmount.setLength(0);
-                    amountSingleton.resetAmount();
-                }
-
-                break;
-            case "switch":
-                break;
-            default:
-                break;
-        }
-
-        initAmount();
-
+        amount.processInput(input);
+        updateAmount();
     }
 
-    private SpannableString formatCurrency(String string) {
-
-        //TODO Amount Object with ISO 4217
-
-
-        // Get variables for RelativeSizeSpan
-        final int start = 0;
-        final int end = string.length();
-
-        // Append BTC
-        StringBuffer sb = new StringBuffer(string);
-        sb.append(" BTC");
-
-        // Create spannable String
-        SpannableString spannableString = new SpannableString(sb);
-
-        // Set size and colors
-        spannableString.setSpan(new RelativeSizeSpan(2), start, end, 0); // set size
-        spannableString.setSpan(new ForegroundColorSpan(Color.WHITE), start, end, 0);// set color
-        spannableString.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorAccent)), end, (end + 4), 0);// set color
-
-        return spannableString;
-    }
 }
 

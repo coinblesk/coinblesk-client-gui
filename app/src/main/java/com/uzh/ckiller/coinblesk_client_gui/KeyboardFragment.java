@@ -17,9 +17,16 @@ import android.widget.Toast;
 public class KeyboardFragment extends Fragment implements View.OnClickListener {
 
     public static final String ARG_PAGE = "ARG_PAGE";
+
+    public static final String BTC = "BTC";
+    public static final String CHF = "CHF";
+    public String mLargeCurrency;
+    public String mSmallCurrency;
+
     KeyboardClicked mCallback;
     View view;
     private int mPage;
+
 
     public static KeyboardFragment newInstance(int page) {
         Bundle args = new Bundle();
@@ -33,6 +40,8 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPage = getArguments().getInt(ARG_PAGE);
+        mLargeCurrency = BTC;
+        mSmallCurrency = CHF;
 
     }
 
@@ -40,7 +49,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_keyboard, container, false);
-//        mCallback.onKeyboardClicked("init");
 
         // Numbers 0 through 9
         TextView tvOne = (TextView) view.findViewById(R.id.keyboard_first_row_first_col);
@@ -136,7 +144,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    //TODO rausnehmen OnKeyboardClickedListener
     public interface KeyboardClicked {
         public void onKeyboardClicked(String string);
     }
@@ -160,16 +167,14 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         super.onDetach();
     }
 
-    public void updateAmount(SpannableString formattedSpannable, String currency) {
+    public void onAmountUpdate(SpannableString formattedSpannable, String size) {
 
-        switch (currency) {
-            case "":
-                break;
-            case "btc":
+        switch (size) {
+            case "large":
                 final TextView tvLarge = (TextView) view.findViewById(R.id.amount_large_text_view);
                 tvLarge.setText(formattedSpannable);
                 break;
-            case "fiat":
+            case "small":
                 final TextView tvSmall = (TextView) view.findViewById(R.id.amount_small_text_view);
                 tvSmall.setText(formattedSpannable);
                 break;
@@ -178,6 +183,29 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
                 break;
 
         }
-
     }
+
+
+    public void switchCurrencies() {
+        String temp = getLargeCurrency();
+        setLargeCurrency(getSmallCurrency());
+        setSmallCurrency(temp);
+    }
+
+    public String getLargeCurrency() {
+        return mLargeCurrency;
+    }
+
+    public String getSmallCurrency() {
+        return mSmallCurrency;
+    }
+
+    private void setSmallCurrency(String value){
+        mSmallCurrency = value;
+    }
+    private void setLargeCurrency(String value){
+        mLargeCurrency = value;
+    }
+
 }
+
