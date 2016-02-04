@@ -158,22 +158,14 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         super.onDetach();
     }
 
-    public void onAmountUpdate(SpannableString formattedSpannable, String size) {
+    public void onSmallAmountUpdate(SpannableString value) {
+        final TextView tvSmall = (TextView) view.findViewById(R.id.amount_small_text_view);
+        tvSmall.setText(value);
+    }
 
-        switch (size) {
-            case "large":
-                final TextView tvLarge = (TextView) view.findViewById(R.id.amount_large_text_view);
-                tvLarge.setText(formattedSpannable);
-                break;
-            case "small":
-                final TextView tvSmall = (TextView) view.findViewById(R.id.amount_small_text_view);
-                tvSmall.setText(formattedSpannable);
-                break;
-
-            default:
-                break;
-
-        }
+    public void onLargeAmountUpdate(SpannableString value) {
+        final TextView tvLarge = (TextView) view.findViewById(R.id.amount_large_text_view);
+        tvLarge.setText(value);
     }
 
 }

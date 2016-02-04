@@ -2,7 +2,6 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -14,9 +13,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -214,8 +210,8 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         if (keyboardFragment != null) {
             String largeCurrency = amount.getLargeCurrency();
             String smallCurrency = amount.getSmallCurrency();
-            keyboardFragment.onAmountUpdate(currencyFormatter.formatLargeText(amount.getAmountOf(largeCurrency), largeCurrency), "large");
-            keyboardFragment.onAmountUpdate(currencyFormatter.formatSmallText(amount.getAmountOf(smallCurrency), smallCurrency), "small");
+            keyboardFragment.onLargeAmountUpdate(currencyFormatter.formatLarge(amount.getAmountOf(largeCurrency), largeCurrency));
+            keyboardFragment.onSmallAmountUpdate(currencyFormatter.formatSmall(amount.getAmountOf(smallCurrency), smallCurrency));
         }
 
     }

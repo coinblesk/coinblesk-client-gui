@@ -18,7 +18,7 @@ public class CurrencyFormatter {
         this.mContext = context;
     }
 
-    public SpannableString formatSmallText(String amount, String currency) {
+    public SpannableString formatSmall(String amount, String currency) {
 
         // Append Currency
         mCurrencyString = " " + currency;
@@ -31,7 +31,7 @@ public class CurrencyFormatter {
 
     }
 
-    public SpannableString formatLargeText(String amount, String currency) {
+    public SpannableString formatLarge(String amount, String currency) {
 
         final int start = 0;
         final int end = amount.length();
