@@ -9,6 +9,27 @@
         android:id="@+id/balance_card_view"
         style="@style/card_view">
 
+
+        <LinearLayout style="@style/card_view_connection">
+
+            <ImageView
+                android:id="@+id/bluetooth_balance"
+                style="@style/card_view_connection_icon"
+                android:src="@drawable/ic_bluetooth_24_nopad" />
+
+            <ImageView
+                android:id="@+id/nfc_balance"
+                style="@style/card_view_connection_icon"
+                android:layout_alignRight="@id/bluetooth_balance"
+                android:src="@drawable/ic_nfc_24_nopad" />
+
+            <ImageView
+                android:id="@+id/wifidirect_balance"
+                style="@style/card_view_connection_icon"
+                android:layout_alignRight="@id/nfc_balance"
+                android:src="@drawable/ic_wifidirect_24_nopad" />
+        </LinearLayout>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,7 +45,9 @@
                 style="@style/card_view_small_textview"
                 android:layout_below="@+id/balance_large" />
 
+
         </RelativeLayout>
+
     </android.support.v7.widget.CardView>
 
 </LinearLayout>
