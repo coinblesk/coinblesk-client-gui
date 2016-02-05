@@ -1,21 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!--Bitcoin Representation Settings-->
     <string-array name="pref_bitcoin_rep_values">
         <item>Bitcoin (BTC)</item>
         <item>mili-Bitcoin (mBTC)</item>
         <item>micro-Bitcoin (μBTC)</item>
     </string-array>
+
+    <!--Transaction History Settings-->
     <string-array name="pref_transaction_history_values">
         <item>5</item>
         <item>10</item>
         <item>50</item>
         <item>Show all transactions</item>
     </string-array>
-    <string-array name="pref_connection_values">
+
+    <!--Connection Settings-->
+    <string-array name="pref_connection_entries">
         <item>NFC</item>
         <item>Bluetooth LE</item>
         <item>WiFi Direct</item>
     </string-array>
-    <string-array name="empty_array">
+    <string-array name="pref_connection_values">
+        <item>nfc-checked</item>
+        <item>bt-checked</item>
+        <item>wifi-checked</item>
     </string-array>
+    <string-array name="pref_connection_default">
+        <item>nfc-default</item>
+        <item>bt-default</item>
+        <item>wifi-default</item>
+    </string-array>
+
+    <!--Empty Array-->
+    <string-array name="empty_array"></string-array>
+
+
 </resources>
