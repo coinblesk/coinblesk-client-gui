@@ -129,6 +129,13 @@
     <string name="pref_transaction_history_dialog_title">Change number of transactions.</string>
     <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history layout.</string>
 
+    <!--Connection Checkbox Screen-->
+    <string name="pref_connection_settings_title">Contactless Payment Settings</string>
+    <string name="pref_connection_settings_summary">Define contactless payment protocols.</string>
+    <string name="pref_connection_nfc_summary">Use NFC for Contactless Payment</string>
+    <string name="pref_connection_nfc_title">Activate NFC </string>
+
+
     <!--Transaction Fee-->
     <string name="pref_fee_description">Activate transaction fee when receiving a payment</string>
     <string name="pref_fee_title">Transaction Fee</string>
