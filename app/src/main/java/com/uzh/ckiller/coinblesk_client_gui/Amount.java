@@ -14,7 +14,7 @@ public class Amount {
 
     public static final String BTC = "BTC";
     public static final String CHF = "CHF";
-    public static final String DEFAULT_AMOUNT = "";
+    public static final String DEFAULT_AMOUNT = "0";
     public static final BigDecimal DEFAULT_EXCHANGE_RATE = new BigDecimal(400);
 
     public String mLargeCurrency;
@@ -55,15 +55,24 @@ public class Amount {
         switch (code) {
             case CHF:
                 // TODO Conversion Factory
-                BigDecimal bigDecimalBtc = new BigDecimal(getFiatAmount()).divide(DEFAULT_EXCHANGE_RATE);
-                setBitcoinAmount(String.valueOf(bigDecimalBtc));
-                break;
+                try {
+                    BigDecimal bigDecimalBtc = new BigDecimal(getFiatAmount()).divide(DEFAULT_EXCHANGE_RATE);
+                    setBitcoinAmount(String.valueOf(bigDecimalBtc));
+                    break;
+                } catch (NumberFormatException e) {
+
+                }
 
             case BTC:
                 // TODO Conversion Factory
-                BigDecimal bigDecimalFiat = new BigDecimal(getBitcoinAmount()).multiply(DEFAULT_EXCHANGE_RATE);
-                setFiatAmount(String.valueOf(bigDecimalFiat));
-                break;
+                try {
+                    BigDecimal bigDecimalFiat = new BigDecimal(getBitcoinAmount()).multiply(DEFAULT_EXCHANGE_RATE);
+                    setFiatAmount(String.valueOf(bigDecimalFiat));
+                    break;
+                } catch (NumberFormatException e) {
+
+                }
+
             default:
                 break;
 
@@ -87,7 +96,11 @@ public class Amount {
             case "7":
             case "8":
             case "9":
-                currentAmount.append(value);
+                if (currentAmount.toString().equals(DEFAULT_AMOUNT)) {
+                    currentAmount = new StringBuilder(value);
+                } else {
+                    currentAmount.append(value);
+                }
                 break;
             case ".":
                 if (!currentAmount.toString().contains(".")) {
@@ -95,10 +108,10 @@ public class Amount {
                 }
                 break;
             case "backspace":
-                if (currentAmount.length() > 0) {
+                if (currentAmount.length() > 1) {
                     currentAmount.setLength(currentAmount.length() - 1);
-                } else if (currentAmount.length() == 0) {
-                    currentAmount.setLength(0);
+                } else if (currentAmount.length() == 1) {
+                    currentAmount = new StringBuilder(DEFAULT_AMOUNT);
                 }
                 break;
             case "switch":

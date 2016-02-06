@@ -77,7 +77,7 @@ public class BalanceCurrentFragment extends Fragment {
             }
 
         } catch (NullPointerException e) {
-            Log.i(e.toString(),"...");
+            Log.i(e.toString(), "...");
         }
 
 
