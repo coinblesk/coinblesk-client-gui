@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -41,6 +43,79 @@ public class BalanceCurrentFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.i("onResume", "we are inside the balance current fragment");
+
+        View view = getView();
+        final ImageView nfcConn = (ImageView) view.findViewById(R.id.nfc_balance);
+        final ImageView bluetoothConn = (ImageView) view.findViewById(R.id.bluetooth_balance);
+        final ImageView wifiConn = (ImageView) view.findViewById(R.id.wifidirect_balance);
+
+        SharedPreferences preferences = getActivity().getSharedPreferences("pref_payment_settings", Context.MODE_PRIVATE);
+
+        if (preferences == null) {
+            Log.i("preferences", "we are null");
+        }
+
+
+        float fifty = new Float(0.25);
+        nfcConn.setAlpha(fifty);
+
+        float seventyfive = new Float(0.75);
+        bluetoothConn.setAlpha(seventyfive);
+        wifiConn.setAlpha(seventyfive);
+
+
+        try {
+
+            if (preferences.getString(NFC_ACTIVATED, null).equals(NFC_ACTIVATED)) {
+                nfcConn.setAlpha(fifty);
+//                    nfcConn.setImageAlpha(100);
+                Log.i("NFC", "NFC ACTIVATED");
+            }
+
+        } catch (NullPointerException e) {
+            Log.i(e.toString(),"...");
+        }
+
+
+/*
+        Set<String> connectionSettings = preferences.getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
+
+
+        if (connectionSettings == null) {
+            Log.i("connectionSettings", "we are null");
+        }
+*/
+
+
+      /*  if (connectionSettings != null) {
+            for (String s : connectionSettings) {
+                if (s.equals(NFC_ACTIVATED)) {
+                    nfcConn.setAlpha(value);
+//                    nfcConn.setImageAlpha(100);
+                    Log.i("NFC", "NFC ACTIVATED");
+                }
+
+                if (s.equals(BLUETOOTH_ACTIVATED)) {
+                    bluetoothConn.setAlpha(value);
+//                    bluetoothConn.setImageAlpha(100);
+                    Log.i("BT", "BT ACTIVATED");
+                }
+                if (s.equals(WIFIDIRECT_ACTIVATED)) {
+                    wifiConn.setAlpha(value);
+//                    wifiConn.setImageAlpha(100);
+                    Log.i("WIFI", "WIFI ACTIVATED");
+
+
+                }
+            }*/
+    }
+
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         currencyFormatter = new CurrencyFormatter(getContext());
@@ -53,35 +128,6 @@ public class BalanceCurrentFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_balance_current, container, false);
         final TextView smallBalance = (TextView) view.findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) view.findViewById(R.id.balance_large);
-
-        // TODO Move this code to the approporiate section / fragment method?
-        final ImageView nfcConn = (ImageView) view.findViewById(R.id.nfc_balance);
-        final ImageView bluetoothConn = (ImageView) view.findViewById(R.id.bluetooth_balance);
-        final ImageView wifiConn = (ImageView) view.findViewById(R.id.wifidirect_balance);
-
-        SharedPreferences preferences = getActivity().getSharedPreferences(CONNECTION_SETTINGS,Context.MODE_PRIVATE);
-        Set<String> connectionSettings = preferences.getStringSet(CONNECTION_SETTINGS, null);
-        // defValues
-        if (connectionSettings != null) {
-            for (String s : connectionSettings) {
-                if (s.equals(NFC_ACTIVATED)) {
-                    nfcConn.setImageAlpha(100);
-                    System.out.println("[NFC]HELLO WE ARE INSIDE HERE HEHEHEH");
-                }
-
-                if (s.equals(BLUETOOTH_ACTIVATED)) {
-                    bluetoothConn.setImageAlpha(100);
-                    System.out.println("[BT]HELLO WE ARE INSIDE HERE HEHEHEH");
-
-                }
-                if (s.equals(WIFIDIRECT_ACTIVATED)) {
-                    wifiConn.setImageAlpha(100);
-                    System.out.println("[WIFI]HELLO WE ARE INSIDE HERE HEHEHEH");
-
-                }
-            }
-        }
-
 
         //TODO Get the actual Balance instead of dummy data
         largeBalance.setText(currencyFormatter.formatLarge("2.4431", "BTC"));
