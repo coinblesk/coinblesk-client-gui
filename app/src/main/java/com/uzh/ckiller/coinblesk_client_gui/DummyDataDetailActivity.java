@@ -28,7 +28,7 @@ import com.bumptech.glide.Glide;
 
 public class DummyDataDetailActivity extends AppCompatActivity {
 
-    public static final String EXTRA_NAME = "Transaction_Name";
+    public static final String EXTRA_NAME = "transaction-amount";
 
 
     @Override
@@ -37,21 +37,21 @@ public class DummyDataDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dummy_data_detail);
 
         Intent intent = getIntent();
-        final String cheeseName = intent.getStringExtra(EXTRA_NAME);
+        final String transactionAmount = intent.getStringExtra(EXTRA_NAME);
 
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         CollapsingToolbarLayout collapsingToolbar =
-                (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        collapsingToolbar.setTitle(cheeseName);
+                (CollapsingToolbarLayout) findViewById(R.id.detail_transaction_collapsing_toolbar);
+        collapsingToolbar.setTitle(transactionAmount);
 
         loadBackdrop();
     }
 
     private void loadBackdrop() {
-        final ImageView imageView = (ImageView) findViewById(R.id.backdrop);
+        final ImageView imageView = (ImageView) findViewById(R.id.detail_transaction_backdropimage);
         Glide.with(this).load(R.drawable.bitcoin_stack_dark).centerCrop().into(imageView);
     }
 

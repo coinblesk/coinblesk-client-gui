@@ -112,7 +112,7 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
                     Context context = v.getContext();
 
                     Intent intent = new Intent(context, DummyDataDetailActivity.class);
-                    intent.putExtra(DummyDataDetailActivity.EXTRA_NAME, holder.mBoundDummy.getTx());
+                    intent.putExtra(DummyDataDetailActivity.EXTRA_NAME, holder.mBoundDummy.getAmount());
 
                     context.startActivity(intent);
                 }

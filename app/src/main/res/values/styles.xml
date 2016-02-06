@@ -170,4 +170,42 @@
         <item name="android:layout_weight">1</item>
     </style>
 
+    <!--Detail Transaction Styles-->
+    <style name="detail_transaction_main_content">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+    <style name="detail_transaction_appbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/detail_backdrop_height</item>
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+    </style>
+
+    <style name="detail_transaction_collapsing_toolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="contentScrim">@color/colorPrimary</item>
+        <item name="expandedTitleMarginEnd">64dp</item>
+        <item name="expandedTitleMarginStart">48dp</item>
+        <item name="layout_scrollFlags">scroll|exitUntilCollapsed</item>
+    </style>
+
+    <style name="detail_transaction_backdropimage">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:scaleType">centerCrop</item>
+        <item name="layout_collapseMode">parallax</item>
+    </style>
+
+    <style name="detail_transaction_toolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?android:attr/actionBarSize</item>
+        <item name="layout_collapseMode">pin</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
+    </style>
+
 </resources>
