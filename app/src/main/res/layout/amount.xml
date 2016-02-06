@@ -7,6 +7,8 @@
         android:id="@+id/amount_card_view"
         style="@style/card_view">
 
+        <include layout="@layout/connections" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"

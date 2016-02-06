@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/card_view_connection">
+
+    <ImageView
+        android:id="@+id/bluetooth_balance"
+        style="@style/card_view_connection_icon"
+        android:src="@drawable/ic_bluetooth_24_nopad" />
+
+    <ImageView
+        android:id="@+id/nfc_balance"
+        style="@style/card_view_connection_icon"
+        android:layout_alignRight="@id/bluetooth_balance"
+        android:src="@drawable/ic_nfc_24_nopad" />
+
+    <ImageView
+        android:id="@+id/wifidirect_balance"
+        style="@style/card_view_connection_icon"
+        android:layout_alignRight="@id/nfc_balance"
+        android:src="@drawable/ic_wifidirect_24_nopad" />
+
+</LinearLayout>

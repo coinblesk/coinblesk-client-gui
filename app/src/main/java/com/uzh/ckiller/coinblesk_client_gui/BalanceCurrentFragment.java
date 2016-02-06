@@ -60,18 +60,22 @@ public class BalanceCurrentFragment extends Fragment {
         }
 
 
-        float fifty = new Float(0.25);
-        nfcConn.setAlpha(fifty);
 
-        float seventyfive = new Float(0.75);
-        bluetoothConn.setAlpha(seventyfive);
-        wifiConn.setAlpha(seventyfive);
+        float inactive = new Float(0.25);
+        nfcConn.setAlpha(inactive);
+
+        float activated = new Float(0.75);
+        bluetoothConn.setAlpha(activated);
+        bluetoothConn.setColorFilter(getResources().getColor(R.color.colorAccent));
+
+        wifiConn.setAlpha(activated);
+        wifiConn.setColorFilter(getResources().getColor(R.color.colorAccent));
 
 
         try {
 
             if (preferences.getString(NFC_ACTIVATED, null).equals(NFC_ACTIVATED)) {
-                nfcConn.setAlpha(fifty);
+                nfcConn.setAlpha(inactive);
 //                    nfcConn.setImageAlpha(100);
                 Log.i("NFC", "NFC ACTIVATED");
             }
