@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/coinblesk-client-gui.iml" filepath="$PROJECT_DIR$/coinblesk-client-gui.iml" />
       <module fileurl="file://$PROJECT_DIR$/objectstorage/objectstorage.iml" filepath="$PROJECT_DIR$/objectstorage/objectstorage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/payments/payments.iml" filepath="$PROJECT_DIR$/payments/payments.iml" />
     </modules>
   </component>
 </project>
