@@ -8,6 +8,8 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.view.View;
 
+import com.uzh.ckiller.coinblesk_client_gui.R;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class AuthenticationView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawColor(this.generateDigestColor());
+        canvas.drawColor(getContext().getResources().getColor(R.color.colorPrimary));//this.generateDigestColor());
 
         int squareSize = Math.min(canvas.getHeight(), canvas.getWidth());
 
@@ -58,7 +60,7 @@ public class AuthenticationView extends View {
         int circleSize = cellPadding / 8;
 
 
-        this.patternPaint.setColor(this.getComplementColor(this.generateDigestColor()));
+        this.patternPaint.setColor(getContext().getResources().getColor(R.color.colorAccent));//this.getComplementColor(this.generateDigestColor()));
         this.patternPaint.setStrokeWidth(circleSize * 2);
 
         for (int i = 0; i < 4; i++) {

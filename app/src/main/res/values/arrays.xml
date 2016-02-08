@@ -28,9 +28,9 @@
         <item>wifi-checked</item>
     </string-array>
     <string-array name="pref_connection_default">
-        <item>nfc-default</item>
-        <item>bt-default</item>
-        <item>wifi-default</item>
+        <item>nfc-checked</item>
+        <item>bt-checked</item>
+        <item>wifi-checked</item>
     </string-array>
 
     <!--Empty Array-->
