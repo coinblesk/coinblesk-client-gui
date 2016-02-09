@@ -1,13 +1,12 @@
-package com.uzh.ckiller.coinblesk_client_gui;
-
-import com.bumptech.glide.load.resource.transcode.BitmapToGlideDrawableTranscoder;
+package com.uzh.ckiller.coinblesk_client_gui.helpers;
 
 import java.math.BigDecimal;
+
 
 /**
  * Created by ckiller
  */
-public class Amount {
+public class AmountSingleton {
 
     private String mBitcoinAmount;
     private String mFiatAmount;
@@ -20,9 +19,9 @@ public class Amount {
     public String mLargeCurrency;
     public String mSmallCurrency;
 
-    private static final Amount instance = new Amount();
+    private static final AmountSingleton instance = new AmountSingleton();
 
-    private Amount() {
+    private AmountSingleton() {
         this.mBitcoinAmount = DEFAULT_AMOUNT;
         this.mFiatAmount = DEFAULT_AMOUNT;
         this.mLargeCurrency = BTC;
@@ -31,7 +30,7 @@ public class Amount {
         //TODO Currency Conversion Factory
     }
 
-    public static Amount getInstance() {
+    public static AmountSingleton getInstance() {
         return instance;
     }
 
@@ -56,7 +55,8 @@ public class Amount {
             case CHF:
                 // TODO Conversion Factory
                 try {
-                    BigDecimal bigDecimalBtc = new BigDecimal(getFiatAmount()).divide(DEFAULT_EXCHANGE_RATE);
+                    BigDecimal bigDecimalBtc = new BigDecimal(getFiatAmount())
+                            .divide(DEFAULT_EXCHANGE_RATE);
                     setBitcoinAmount(String.valueOf(bigDecimalBtc));
                     break;
                 } catch (NumberFormatException e) {
@@ -66,7 +66,8 @@ public class Amount {
             case BTC:
                 // TODO Conversion Factory
                 try {
-                    BigDecimal bigDecimalFiat = new BigDecimal(getBitcoinAmount()).multiply(DEFAULT_EXCHANGE_RATE);
+                    BigDecimal bigDecimalFiat = new BigDecimal(getBitcoinAmount())
+                            .multiply(DEFAULT_EXCHANGE_RATE);
                     setFiatAmount(String.valueOf(bigDecimalFiat));
                     break;
                 } catch (NumberFormatException e) {

@@ -1,10 +1,12 @@
-package com.uzh.ckiller.coinblesk_client_gui;
+package com.uzh.ckiller.coinblesk_client_gui.helpers;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+
+import com.uzh.ckiller.coinblesk_client_gui.R;
 
 /**
  * Created by ckiller on 04/02/16.

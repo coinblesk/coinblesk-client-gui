@@ -21,6 +21,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.uzh.ckiller.coinblesk_client_gui.helpers.AmountSingleton;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+
 
 /**
  * Created by ckiller
@@ -28,7 +31,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements KeyboardFragment.KeyboardClicked {
 
-    private Amount amount = Amount.getInstance();
+    private AmountSingleton amount = AmountSingleton.getInstance();
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 

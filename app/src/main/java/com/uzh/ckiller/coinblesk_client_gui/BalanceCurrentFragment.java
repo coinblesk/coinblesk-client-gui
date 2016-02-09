@@ -1,10 +1,5 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-
-/**
- * Created by ckiller on 12/01/16.
- */
-
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -17,6 +12,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,7 +25,7 @@ import java.util.Set;
 public class BalanceCurrentFragment extends Fragment {
 
     private CurrencyFormatter currencyFormatter;
-    public static final Float ICON_TRANSPARENT = new Float(0.25);
+    private ConnectionIconFormatter connectionIconFormatter;
     public static final Float ICON_VISIBLE = new Float(0.8);
 
     public static final String NFC_ACTIVATED = "nfc-checked";
@@ -45,45 +43,23 @@ public class BalanceCurrentFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        Log.i("onResume", "we are inside the balance current fragment");
-
         // Get all the ImageViews
         View view = getView();
-        final ImageView mNfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
-        final ImageView mBluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
-        final ImageView mWifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
+        final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
+        final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
+        final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        // Get shared Preferences
-        SharedPreferences preferences = PreferenceManager
-                .getDefaultSharedPreferences(this.getContext());
-        Set<String> connectionSettings = preferences.getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
+        connectionIconFormatter.format(nfcIcon, NFC_ACTIVATED);
+        connectionIconFormatter.format(bluetoothIcon, BT_ACTIVATED);
+        connectionIconFormatter.format(wifiIcon, WIFIDIRECT_ACTIVATED);
 
-        // Set the Icon Color and Visibility
-        if (connectionSettings != null) {
-            for (String s : connectionSettings) {
-                switch (s) {
-                    case NFC_ACTIVATED:
-                        this.formatImageView(mNfcIcon, NFC_ACTIVATED);
-                        break;
-                    case BT_ACTIVATED:
-                        this.formatImageView(mBluetoothIcon, BT_ACTIVATED);
-                        break;
-                    case WIFIDIRECT_ACTIVATED:
-                        this.formatImageView(mWifiIcon, WIFIDIRECT_ACTIVATED);
-                        break;
-                }
-
-            }
-
-        }
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         currencyFormatter = new CurrencyFormatter(getContext());
-
+        connectionIconFormatter = new ConnectionIconFormatter((getContext()));
     }
 
     @Override
@@ -101,19 +77,6 @@ public class BalanceCurrentFragment extends Fragment {
 
     }
 
-    private void formatImageView(ImageView imageView, String status) {
-        switch (status) {
-            case NFC_ACTIVATED:
-            case BT_ACTIVATED:
-            case WIFIDIRECT_ACTIVATED:
-                imageView.setAlpha(ICON_VISIBLE);
-                imageView.setColorFilter(getResources().getColor(R.color.colorAccent));
-                break;
-            default:
-                break;
-        }
-
-    }
 }
 
 
