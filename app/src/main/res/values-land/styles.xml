@@ -7,9 +7,9 @@
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_centerHorizontal">true</item>
         <item name="android:src">@drawable/ic_switch_currencies_48_nopad</item>
-        <item name="android:paddingRight">12dp</item>
         <item name="android:layout_above">@id/amount_large_text_view</item>
         <item name="android:paddingBottom">12dp</item>
+        <item name="android:layout_alignParentTop">true</item>
         <item name="android:clickable">true</item>
     </style>
 
@@ -69,6 +69,14 @@
         <item name="android:textSize">@dimen/nav_drawer_username_textview_size</item>
     </style>
 
+    <style name="card_view_connection">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_gravity">top</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_margin">6dp</item>
+    </style>
 
 
 </resources>

@@ -36,7 +36,7 @@ public class AuthenticationView extends View {
         } catch (NoSuchAlgorithmException e) {
         }
         this.digest = digest;
-        this.dotPaint.setColor(Color.BLACK);
+        this.dotPaint.setColor(getContext().getResources().getColor(R.color.colorPrimaryDark));
         this.dotPaint.setAntiAlias(true);
         this.dotPaint.setStyle(Paint.Style.FILL);
 
@@ -51,7 +51,7 @@ public class AuthenticationView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawColor(getContext().getResources().getColor(R.color.colorPrimary));//this.generateDigestColor());
+        canvas.drawColor(getContext().getResources().getColor(R.color.main_color_700));//this.generateDigestColor());
 
         int squareSize = Math.min(canvas.getHeight(), canvas.getWidth());
 

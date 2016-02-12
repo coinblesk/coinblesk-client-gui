@@ -30,6 +30,7 @@
         <item name="android:orientation">vertical</item>
     </style>
 
+    <!--Keyboard related styles-->
     <style name="keyboard_text_view">
         <item name="android:layout_weight">1</item>
         <item name="android:layout_height">match_parent</item>
@@ -62,6 +63,7 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <!--Custom Card View-->
     <style name="card_view">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
@@ -208,5 +210,25 @@
         <item name="layout_collapseMode">pin</item>
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
     </style>
+
+    <style name="qr_dialog">
+        <item name="android:layout_width">@dimen/qr_dialog_size</item>
+        <item name="android:layout_height">@dimen/qr_dialog_size</item>
+        <item name="android:maxWidth">@dimen/qr_dialog_size</item>
+        <item name="android:maxHeight">@dimen/qr_dialog_size</item>
+        <item name="android:background">@color/material_grey_800</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="qr_code">
+        <item name="android:layout_width">@dimen/qr_code_size</item>
+        <item name="android:layout_height">@dimen/qr_code_size</item>
+        <item name="android:maxWidth">@dimen/qr_code_size</item>
+        <item name="android:maxHeight">@dimen/qr_code_size</item>
+        <item name="android:layout_margin">@dimen/card_margin</item>
+    </style>
+
+
 
 </resources>

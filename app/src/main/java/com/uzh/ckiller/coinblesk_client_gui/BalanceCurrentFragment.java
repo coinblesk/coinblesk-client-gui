@@ -43,9 +43,9 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        connectionIconFormatter.format(nfcIcon, NFC_ACTIVATED);
-        connectionIconFormatter.format(bluetoothIcon, BT_ACTIVATED);
-        connectionIconFormatter.format(wifiIcon, WIFIDIRECT_ACTIVATED);
+        connectionIconFormatter.setIconColor(nfcIcon, NFC_ACTIVATED);
+        connectionIconFormatter.setIconColor(bluetoothIcon, BT_ACTIVATED);
+        connectionIconFormatter.setIconColor(wifiIcon, WIFIDIRECT_ACTIVATED);
 
     }
 

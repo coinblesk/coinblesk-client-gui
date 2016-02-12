@@ -23,7 +23,7 @@ public class ConnectionIconFormatter implements IPreferenceStrings {
         this.mContext = context;
     }
 
-    public void format(ImageView imageView, String status) {
+    public void setIconColor(ImageView imageView, String status) {
 
         // Get shared Preferences
         SharedPreferences preferences = PreferenceManager

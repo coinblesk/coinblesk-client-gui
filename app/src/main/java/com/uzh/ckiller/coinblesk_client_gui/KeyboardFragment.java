@@ -2,14 +2,16 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 /**
@@ -19,6 +21,8 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
 
     public static final String ARG_PAGE = "ARG_PAGE";
     KeyboardClicked mCallback;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    private Handler handler = new Handler();
     View view;
     private int mPage;
 
@@ -31,6 +35,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +46,20 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_keyboard, container, false);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.keyboard_swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                //TODO: Refresh Exchange Rate Here
+                handler.post(refreshing);
+            }
+        });
+
+        // sets the colors used in the refresh animation
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorAccent, R.color.material_lime_A100,
+                R.color.material_lime_A400, R.color.material_lime_A400);
+
 
         // Numbers 0 through 9
         TextView tvOne = (TextView) view.findViewById(R.id.keyboard_first_row_first_col);
@@ -169,5 +188,22 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
         tvLarge.setText(value);
     }
 
+    // Code partly from https://yassirh.com/2014/05/how-to-use-swiperefreshlayout-the-right-way/
+    // and here: http://stackoverflow.com/a/28173911
+
+    private final Runnable refreshing = new Runnable() {
+        public void run() {
+            try {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 5000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
 }
 

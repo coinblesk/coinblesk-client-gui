@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/send_keyboard_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
 
-    <include layout="@layout/amount"/>
-    <include layout="@layout/keyboard"/>
+<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboard_swipe_refresh_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-</LinearLayout>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/keyboard_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:orientation="vertical">
+
+        <include layout="@layout/amount" />
+
+        <include layout="@layout/keyboard" />
+
+    </LinearLayout>
+
+</android.support.v4.widget.SwipeRefreshLayout>

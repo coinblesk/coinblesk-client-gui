@@ -1,6 +1,7 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 //import android.support.v7.app.AlertDialog;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -21,12 +22,12 @@ public class QrDialogFragment extends DialogFragment implements
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
         // TODO Add "generate QR Code" to the View (replace the sample qr code image with the real QR code)
         pView = getActivity().getLayoutInflater().inflate(R.layout.fragment_qr_dialog, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-        return (builder.setView(pView).setPositiveButton(R.string.qr_code_close, this).create());
+        builder.setView(pView);
+        builder.setPositiveButton(R.string.qr_code_close, this);
+        return (builder.create());
 
     }
 
