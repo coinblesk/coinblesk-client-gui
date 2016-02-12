@@ -13,14 +13,9 @@ import java.util.Set;
 /**
  * Created by ckiller on 08/02/16.
  */
-public class ConnectionIconFormatter {
+public class ConnectionIconFormatter implements IPreferenceStrings {
 
-    public static final Float ICON_VISIBLE = new Float(0.8);
 
-    public static final String NFC_ACTIVATED = "nfc-checked";
-    public static final String BT_ACTIVATED = "bt-checked";
-    public static final String WIFIDIRECT_ACTIVATED = "wifi-checked";
-    public static final String CONNECTION_SETTINGS = "pref_connection_settings";
     private Context mContext;
     private Set<String> mConnectionSettings;
 
@@ -41,27 +36,18 @@ public class ConnectionIconFormatter {
             for (String s : mConnectionSettings) {
                 switch (s) {
                     case NFC_ACTIVATED:
-//                        this.formatImageView(nfcIcon, NFC_ACTIVATED);
                         if (status == NFC_ACTIVATED) {
-                            imageView.setAlpha(ICON_VISIBLE);
-                            imageView.setColorFilter(mContext.getResources()
-                                    .getColor(R.color.colorAccent));
+                            this.makeVisible(imageView);
                         }
                         break;
                     case BT_ACTIVATED:
-//                        this.formatImageView(bluetoothIcon, BT_ACTIVATED);
                         if (status == BT_ACTIVATED) {
-                            imageView.setAlpha(ICON_VISIBLE);
-                            imageView.setColorFilter(mContext.getResources()
-                                    .getColor(R.color.colorAccent));
+                            this.makeVisible(imageView);
                         }
                         break;
                     case WIFIDIRECT_ACTIVATED:
-//                        this.formatImageView(wifiIcon, WIFIDIRECT_ACTIVATED);
                         if (status == WIFIDIRECT_ACTIVATED) {
-                            imageView.setAlpha(ICON_VISIBLE);
-                            imageView.setColorFilter(mContext.getResources()
-                                    .getColor(R.color.colorAccent));
+                            this.makeVisible(imageView);
                         }
                         break;
                 }
@@ -70,5 +56,11 @@ public class ConnectionIconFormatter {
 
         }
 
+    }
+
+    private void makeVisible(ImageView imageView) {
+        imageView.setAlpha(ICON_VISIBLE);
+        imageView.setColorFilter(mContext.getResources()
+                .getColor(R.color.colorAccent));
     }
 }

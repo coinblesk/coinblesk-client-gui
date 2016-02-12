@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,17 +23,10 @@ import java.util.Set;
  * Created by ckiller on 10/01/16.
  */
 
-public class BalanceCurrentFragment extends Fragment {
+public class BalanceCurrentFragment extends Fragment implements IPreferenceStrings {
 
     private CurrencyFormatter currencyFormatter;
     private ConnectionIconFormatter connectionIconFormatter;
-    public static final Float ICON_VISIBLE = new Float(0.8);
-
-    public static final String NFC_ACTIVATED = "nfc-checked";
-    public static final String BT_ACTIVATED = "bt-checked";
-    public static final String WIFIDIRECT_ACTIVATED = "wifi-checked";
-    public static final String CONNECTION_SETTINGS = "pref_connection_settings";
-
 
     public static BalanceCurrentFragment newInstance(int page) {
         BalanceCurrentFragment fragment = new BalanceCurrentFragment();
