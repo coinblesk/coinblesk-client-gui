@@ -1,11 +1,7 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.media.IMediaBrowserServiceCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,20 +12,17 @@ import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Created by ckiller on 10/01/16.
  */
 
-public class BalanceCurrentFragment extends Fragment implements IPreferenceStrings {
+public class CurrentBalanceFragment extends Fragment implements IPreferenceStrings {
 
     private CurrencyFormatter currencyFormatter;
     private ConnectionIconFormatter connectionIconFormatter;
 
-    public static BalanceCurrentFragment newInstance(int page) {
-        BalanceCurrentFragment fragment = new BalanceCurrentFragment();
+    public static CurrentBalanceFragment newInstance(int page) {
+        CurrentBalanceFragment fragment = new CurrentBalanceFragment();
         return fragment;
     }
 

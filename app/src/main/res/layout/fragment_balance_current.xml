@@ -9,17 +9,20 @@
         android:id="@+id/balance_card_view"
         style="@style/card_view">
 
-        <include layout="@layout/connections"/>
+        <include layout="@layout/connections" />
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical">
 
+            <ImageView
+                android:id="@+id/balance_switch_image_view"
+                style="@style/balance_switch_image_view" />
+
             <TextView
                 android:id="@+id/balance_large"
-                style="@style/card_view_large_text_view"
-                android:textSize="@dimen/text_size_xxlarge" />
+                style="@style/card_view_large_text_view" />
 
             <TextView
                 android:id="@+id/balance_small"
