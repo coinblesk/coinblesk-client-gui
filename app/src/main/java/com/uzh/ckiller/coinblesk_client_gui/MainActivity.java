@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -22,12 +21,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.AmountSingleton;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.QrDialogFragment;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -38,28 +34,14 @@ import ch.papers.payments.WalletService;
  * Created by ckiller
  */
 
-public class MainActivity extends AppCompatActivity implements KeyboardFragment.KeyboardClicked {
+public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getName();
-
-    private AmountSingleton amount = AmountSingleton.getInstance();
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
-
     private SampleFragmentPagerAdapter fragmentPagerAdapter;
-
-    private CurrencyFormatter currencyFormatter;
-    private FragmentManager fragmentManager = getSupportFragmentManager();
-
-    private String[] mDrawerItems;
-    private ListView mDrawerList;
-    private DrawerLayout mDrawerLayout;
-    private Toolbar mToolbar;
-    private ActionBarDrawerToggle mDrawerToggle;
-    private CharSequence mDrawerTitle;
-    private ProgressBar mProgressBar;
     private CharSequence mTitle;
     private QrDialogFragment mQrDialogFragment;
-    ViewPager viewPager;
+    private ViewPager viewPager;
 
 
 //TODO Create Landscape views for all Fragments. E.g. Landscape View for send / receive with smaller representation of the Balance fragment.
@@ -68,13 +50,13 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        currencyFormatter = new CurrencyFormatter(this);
-
+        setContentView(R.layout.activity_main);
+        initToolbar();
+        initNavigationView();
+        initViewPager();
     }
 
     private void initViewPager() {
-
         // Get the ViewPager and set its PagerAdapter so that it can display items
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         fragmentPagerAdapter = new SampleFragmentPagerAdapter(getSupportFragmentManager(), MainActivity.this);
@@ -86,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         tabLayout.setTabMode(TabLayout.MODE_FIXED);
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
         tabLayout.setupWithViewPager(viewPager);
-
-
     }
 
     private void initToolbar() {
@@ -148,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
 
         // Initializing Drawer Layout and ActionBarToggle
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, mToolbar, R.string.openDrawer, R.string.closeDrawer) {
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, null, R.string.openDrawer, R.string.closeDrawer) {
 
             @Override
             public void onDrawerClosed(View drawerView) {
@@ -207,29 +187,8 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
 
     public void showQrDialog() {
         mQrDialogFragment = new QrDialogFragment();
-        mQrDialogFragment.show(getFragmentManager(), "sample");
+        mQrDialogFragment.show(this.getSupportFragmentManager(), "qr_dialog_fragment");
     }
-
-
-    @Override
-    public void onKeyboardClicked(String value) {
-        amount.processInput(value);
-        updateAmount();
-    }
-
-    private void updateAmount() {
-
-        KeyboardFragment keyboardFragment = (KeyboardFragment) fragmentPagerAdapter.getRegisteredFragment(viewPager.getCurrentItem());
-
-        if (keyboardFragment != null) {
-            String largeCurrency = amount.getLargeCurrencyId();
-            String smallCurrency = amount.getSmallCurrencyId();
-            keyboardFragment.onLargeAmountUpdate(currencyFormatter.formatLarge(amount.getAmountOf(largeCurrency), largeCurrency));
-            keyboardFragment.onSmallAmountUpdate(currencyFormatter.formatSmall(amount.getAmountOf(smallCurrency), smallCurrency));
-        }
-
-    }
-
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
 
@@ -264,9 +223,9 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG,"onDestroy");
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG,"onStop");
         Intent intent = new Intent(this, WalletService.class);
         this.stopService(intent);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(walletProgressBroadcastReceiver);

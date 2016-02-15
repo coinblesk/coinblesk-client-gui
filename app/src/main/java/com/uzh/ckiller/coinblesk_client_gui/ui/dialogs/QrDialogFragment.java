@@ -1,25 +1,24 @@
-package com.uzh.ckiller.coinblesk_client_gui;
+package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 
 //import android.support.v7.app.AlertDialog;
 
-import android.app.DialogFragment;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.zxing.WriterException;
+import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.QREncoder;
 
 import ch.papers.payments.WalletService;
@@ -28,8 +27,7 @@ import ch.papers.payments.WalletService;
  * Created by ckiller
  */
 
-public class QrDialogFragment extends DialogFragment implements
-        DialogInterface.OnClickListener {
+public class QrDialogFragment extends DialogFragment {
 
     private final static String TAG = QrDialogFragment.class.getName();
 
@@ -39,25 +37,6 @@ public class QrDialogFragment extends DialogFragment implements
         this.getDialog().setTitle(R.string.qr_code_dialog_title);
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
         return view;
-    }
-
-    @Override
-    public void onClick(DialogInterface dialog, int which) {
-        // TODO Implement Copy to Clipboard of the QR Code
-        Toast.makeText(getActivity(), R.string.qr_code_copied, Toast.LENGTH_LONG).show();
-    }
-
-
-    @Override
-    public void onDismiss(DialogInterface unused) {
-        super.onDismiss(unused);
-        Log.d(getClass().getSimpleName(), "Goodbye!");
-    }
-
-    @Override
-    public void onCancel(DialogInterface unused) {
-        super.onCancel(unused);
-        Toast.makeText(getActivity(), R.string.app_name, Toast.LENGTH_LONG).show();
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */

@@ -65,7 +65,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final TransactionWrapper transaction = mValues.get(position);
-        holder.mTextViewTitle.setText(transaction.getAmount()+"");
+        holder.mTextViewTitle.setText(transaction.getAmount().toFriendlyString());
         holder.mTextViewDescription.setText(transaction.getTransaction().getUpdateTime()+", conf:"+transaction.getTransaction().getConfidence().getDepthInBlocks());
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

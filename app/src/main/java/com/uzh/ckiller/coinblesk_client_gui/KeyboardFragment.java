@@ -1,62 +1,51 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-import android.app.Activity;
 import android.content.res.Configuration;
-import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
+
+import java.math.BigDecimal;
 
 /**
  * Created by ckiller on 24/01/16.
  */
 
-public class KeyboardFragment extends Fragment implements View.OnClickListener {
-
-    public static final String ARG_PAGE = "ARG_PAGE";
-    int mScreenLayout;
-    KeyboardClicked mCallback;
+public class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
     SwipeRefreshLayout mSwipeRefreshLayout;
     private Handler handler = new Handler();
-    View view;
-    private int mPage;
 
+    private String amountString = "0";
 
-    public static KeyboardFragment newInstance(int page) {
-        Bundle args = new Bundle();
-        args.putInt(ARG_PAGE, page);
-        KeyboardFragment fragment = new KeyboardFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+    // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
+    private String currencyCode = "CHF";
+    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat(currencyCode, "430"));
+    private boolean isBitcoinLargeAmount = true;
 
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mPage = getArguments().getInt(ARG_PAGE);
+    public static KeyboardFragment newInstance() {
+        return new KeyboardFragment();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_keyboard, container, false);
+        final View view = inflater.inflate(R.layout.fragment_keyboard, container, false);
 
-        mScreenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
-        switch (mScreenLayout) {
-            case Configuration.SCREENLAYOUT_SIZE_SMALL:
-            case Configuration.SCREENLAYOUT_SIZE_NORMAL:
-            case Configuration.SCREENLAYOUT_UNDEFINED:
-                initStandard(view);
-                break;
+        final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
+        switch (screenLayout) {
             case Configuration.SCREENLAYOUT_SIZE_LARGE:
             case Configuration.SCREENLAYOUT_SIZE_XLARGE:
                 initLarge(view);
@@ -64,7 +53,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
             default:
                 initStandard(view);
                 break;
-
         }
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.keyboard_swipe_refresh_layout);
@@ -85,6 +73,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
             e.printStackTrace();
         }
 
+        this.onKeyboardListener = this;
         return view;
     }
 /*
@@ -103,183 +92,150 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
     private void initStandard(View view) {
 
         // Numbers '0 1 2 3 4 5 6 7 8 9,' and '.'
-        TextView tvOne = (TextView) view.findViewById(R.id.key_one);
-        tvOne.setOnClickListener(this);
-        TextView tvTwo = (TextView) view.findViewById(R.id.key_two);
-        tvTwo.setOnClickListener(this);
-        TextView tvThree = (TextView) view.findViewById(R.id.key_three);
-        tvThree.setOnClickListener(this);
-        TextView tvFour = (TextView) view.findViewById(R.id.key_four);
-        tvFour.setOnClickListener(this);
-        TextView tvFive = (TextView) view.findViewById(R.id.key_five);
-        tvFive.setOnClickListener(this);
-        TextView tvSix = (TextView) view.findViewById(R.id.key_six);
-        tvSix.setOnClickListener(this);
-        TextView tvSeven = (TextView) view.findViewById(R.id.key_seven);
-        tvSeven.setOnClickListener(this);
-        TextView tvEight = (TextView) view.findViewById(R.id.key_eight);
-        tvEight.setOnClickListener(this);
-        TextView tvNine = (TextView) view.findViewById(R.id.key_nine);
-        tvNine.setOnClickListener(this);
-        TextView tvDot = (TextView) view.findViewById(R.id.key_dot);
-        tvDot.setOnClickListener(this);
-        TextView tvZero = (TextView) view.findViewById(R.id.key_zero);
-        tvZero.setOnClickListener(this);
+        view.findViewById(R.id.key_one).setOnClickListener(this);
+        view.findViewById(R.id.key_two).setOnClickListener(this);
+        view.findViewById(R.id.key_three).setOnClickListener(this);
+        view.findViewById(R.id.key_four).setOnClickListener(this);
+        view.findViewById(R.id.key_five).setOnClickListener(this);
+        view.findViewById(R.id.key_six).setOnClickListener(this);
+        view.findViewById(R.id.key_seven).setOnClickListener(this);
+        view.findViewById(R.id.key_eight).setOnClickListener(this);
+        view.findViewById(R.id.key_nine).setOnClickListener(this);
+        view.findViewById(R.id.key_dot).setOnClickListener(this);
+        view.findViewById(R.id.key_zero).setOnClickListener(this);
+        view.findViewById(R.id.key_accept).setOnClickListener(this);
 
         // Backspace Button
-        ImageView ivBackspace = (ImageView) view.findViewById(R.id.amount_backspace_image_view);
-        ivBackspace.setOnClickListener(this);
+        view.findViewById(R.id.amount_backspace_image_view).setOnClickListener(this);
 
         // Switch Currency Button
-        ImageView ivSwitchCurrencies = (ImageView) view.findViewById(R.id.amount_switch_image_view);
-        ivSwitchCurrencies.setOnClickListener(this);
-
-        ImageView ivAccept = (ImageView) view.findViewById(R.id.key_accept);
-        ivAccept.setOnClickListener(this);
+        view.findViewById(R.id.amount_switch_image_view).setOnClickListener(this);
     }
 
     private void initLarge(View view) {
-
         // Numbers '00 0 1 2 3 4 5 6 7 8 9,' and '.'
-        TextView tvOne = (TextView) view.findViewById(R.id.key_one);
-        tvOne.setOnClickListener(this);
-        TextView tvTwo = (TextView) view.findViewById(R.id.key_two);
-        tvTwo.setOnClickListener(this);
-        TextView tvThree = (TextView) view.findViewById(R.id.key_three);
-        tvThree.setOnClickListener(this);
-        TextView tvFour = (TextView) view.findViewById(R.id.key_four);
-        tvFour.setOnClickListener(this);
-        TextView tvFive = (TextView) view.findViewById(R.id.key_five);
-        tvFive.setOnClickListener(this);
-        TextView tvSix = (TextView) view.findViewById(R.id.key_six);
-        tvSix.setOnClickListener(this);
-        TextView tvSeven = (TextView) view.findViewById(R.id.key_seven);
-        tvSeven.setOnClickListener(this);
-        TextView tvEight = (TextView) view.findViewById(R.id.key_eight);
-        tvEight.setOnClickListener(this);
-        TextView tvNine = (TextView) view.findViewById(R.id.key_nine);
-        tvNine.setOnClickListener(this);
-        TextView tvDot = (TextView) view.findViewById(R.id.key_dot);
-        tvDot.setOnClickListener(this);
-        TextView tvZero = (TextView) view.findViewById(R.id.key_zero);
-        tvZero.setOnClickListener(this);
-        TextView tvZeroZero = (TextView) view.findViewById(R.id.key_zero_zero);
-        tvZeroZero.setOnClickListener(this);
+        view.findViewById(R.id.key_one).setOnClickListener(this);
+        view.findViewById(R.id.key_two).setOnClickListener(this);
+        view.findViewById(R.id.key_three).setOnClickListener(this);
+        view.findViewById(R.id.key_four).setOnClickListener(this);
+        view.findViewById(R.id.key_five).setOnClickListener(this);
+        view.findViewById(R.id.key_six).setOnClickListener(this);
+        view.findViewById(R.id.key_seven).setOnClickListener(this);
+        view.findViewById(R.id.key_eight).setOnClickListener(this);
+        view.findViewById(R.id.key_nine).setOnClickListener(this);
+        view.findViewById(R.id.key_dot).setOnClickListener(this);
+        view.findViewById(R.id.key_zero).setOnClickListener(this);
+        view.findViewById(R.id.key_zero_zero).setOnClickListener(this);
+        view.findViewById(R.id.key_accept).setOnClickListener(this);
+        view.findViewById(R.id.key_clear).setOnClickListener(this);
+        view.findViewById(R.id.key_multiply).setOnClickListener(this);
+        view.findViewById(R.id.key_plus).setOnClickListener(this);
 
         // Backspace Button
-        ImageView ivBackspace = (ImageView) view.findViewById(R.id.amount_backspace_image_view);
-        ivBackspace.setOnClickListener(this);
-
+        view.findViewById(R.id.amount_backspace_image_view).setOnClickListener(this);
         // Switch Currency Button
-        ImageView ivSwitchCurrencies = (ImageView) view.findViewById(R.id.amount_switch_image_view);
-        ivSwitchCurrencies.setOnClickListener(this);
-
-        // CLEAR, multiply, plus and accept
-        TextView tvClear = (TextView) view.findViewById(R.id.key_clear);
-        tvClear.setOnClickListener(this);
-        TextView tvMultiply = (TextView) view.findViewById(R.id.key_multiply);
-        tvMultiply.setOnClickListener(this);
-        TextView tvPlus = (TextView) view.findViewById(R.id.key_plus);
-        tvPlus.setOnClickListener(this);
-
+        view.findViewById(R.id.amount_switch_image_view).setOnClickListener(this);
     }
 
+    private OnKeyboardListener onKeyboardListener;
 
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
             case R.id.key_one:
-                mCallback.onKeyboardClicked("1");
+                onKeyboardListener.onDigit(1);
                 break;
 
             case R.id.key_two:
-                mCallback.onKeyboardClicked("2");
+                onKeyboardListener.onDigit(2);
                 break;
 
             case R.id.key_three:
-                mCallback.onKeyboardClicked("3");
+                onKeyboardListener.onDigit(3);
                 break;
 
             case R.id.key_four:
-                mCallback.onKeyboardClicked("4");
+                onKeyboardListener.onDigit(4);
                 break;
 
             case R.id.key_five:
-                mCallback.onKeyboardClicked("5");
+                onKeyboardListener.onDigit(5);
                 break;
 
             case R.id.key_six:
-                mCallback.onKeyboardClicked("6");
+                onKeyboardListener.onDigit(6);
                 break;
 
             case R.id.key_seven:
-                mCallback.onKeyboardClicked("7");
+                onKeyboardListener.onDigit(7);
                 break;
 
             case R.id.key_eight:
-                mCallback.onKeyboardClicked("8");
+                onKeyboardListener.onDigit(8);
                 break;
 
             case R.id.key_nine:
-                mCallback.onKeyboardClicked("9");
+                onKeyboardListener.onDigit(9);
                 break;
 
             case R.id.key_dot:
-                mCallback.onKeyboardClicked(".");
+                onKeyboardListener.onDot();
                 break;
 
             case R.id.key_zero:
-                mCallback.onKeyboardClicked("0");
+                onKeyboardListener.onDigit(0);
                 break;
 
             case R.id.amount_backspace_image_view:
-                mCallback.onKeyboardClicked("backspace");
+                if (this.amountString.length() == 1) {
+                    this.amountString = "0";
+                } else {
+                    this.amountString = this.amountString.substring(0, this.amountString.length() - 1);
+                }
+                this.updateAmount();
                 break;
 
             case R.id.amount_switch_image_view:
-                mCallback.onKeyboardClicked("switch");
+                this.isBitcoinLargeAmount =! this.isBitcoinLargeAmount;
+                this.updateAmount();
                 break;
 
             case R.id.key_accept:
-                mCallback.onKeyboardClicked("accept");
-
-            default:
+                onKeyboardListener.onEnter();
                 break;
         }
     }
 
-    public interface KeyboardClicked {
-        public void onKeyboardClicked(String string);
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        // This makes sure that the container activity has implemented
-        // the callback interface. If not, it throws an exception
-        try {
-            mCallback = (KeyboardClicked) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement KeyboardClicked");
+    private Coin getCoin(){
+        if(isBitcoinLargeAmount){
+            return Coin.parseCoin(this.amountString);
+        } else {
+            return exchangeRate.fiatToCoin(this.getFiat());
         }
     }
 
-    @Override
-    public void onDetach() {
-        mCallback = null; // => avoid leaking
-        super.onDetach();
+    private Fiat getFiat(){
+        if(!isBitcoinLargeAmount){
+            return Fiat.parseFiat(currencyCode,this.amountString);
+        } else {
+            return exchangeRate.coinToFiat(this.getCoin());
+        }
     }
 
-    public void onSmallAmountUpdate(SpannableString value) {
-        final TextView tvSmall = (TextView) view.findViewById(R.id.amount_small_text_view);
-        tvSmall.setText(value);
-    }
-
-    public void onLargeAmountUpdate(SpannableString value) {
-        final TextView tvLarge = (TextView) view.findViewById(R.id.amount_large_text_view);
-        tvLarge.setText(value);
+    private void updateAmount() {
+        final CurrencyFormatter currencyFormatter = new CurrencyFormatter(this.getActivity());
+        final Coin coin = this.getCoin();
+        final Fiat fiat = this.getFiat();
+        final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
+        final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
+        if(this.isBitcoinLargeAmount){
+            largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "BTC"));
+            smallTextView.setText(currencyFormatter.formatLarge(fiat.toPlainString(), "CHF"));
+        } else {
+            largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "CHF"));
+            smallTextView.setText(currencyFormatter.formatLarge(coin.toPlainString(), "BTC"));
+        }
     }
 
     // Code partly from https://yassirh.com/2014/05/how-to-use-swiperefreshlayout-the-right-way/
@@ -299,6 +255,34 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener {
             }
         }
     };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        this.updateAmount();
+    }
+
+    @Override
+    public void onDigit(int digit) {
+        this.amountString += digit;
+        this.amountString = new BigDecimal(amountString).toString();
+        this.updateAmount();
+    }
+
+    @Override
+    public void onDot() {
+        if (!this.amountString.contains(".")) {
+            this.amountString += ".";
+        }
+        this.updateAmount();
+    }
+
+    @Override
+    public void onEnter() {
+        if(this.getCoin().isPositive()){
+            new SendDialogFragment().show(this.getFragmentManager(),"send_dialog_fragment");
+        }
+    }
 }
 
 

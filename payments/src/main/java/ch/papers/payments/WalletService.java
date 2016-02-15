@@ -41,13 +41,17 @@ public class WalletService extends Service{
 
     private final static String TAG = WalletService.class.getName();
 
-
+    private boolean isWalletReady = false;
     private ExchangeRate exchangeRate;
     private WalletAppKit kit;
 
     public class WalletServiceBinder extends Binder {
         public Address getCurrentReceiveAddress(){
             return WalletService.this.kit.wallet().currentReceiveAddress();
+        }
+
+        public boolean isWalletReady(){
+            return isWalletReady;
         }
 
         public void setExchangeRate(ExchangeRate exchangeRate){
@@ -129,8 +133,7 @@ public class WalletService extends Service{
                     }
                 });
 
-                Intent walletProgressIntent = new Intent(Constants.WALLET_READY_ACTION);
-                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                isWalletReady = true;
             }
         };
 
@@ -179,6 +182,10 @@ public class WalletService extends Service{
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG,"on bind");
+        if(this.isWalletReady){
+            Intent walletProgressIntent = new Intent(Constants.WALLET_READY_ACTION);
+            LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+        }
         return this.walletServiceBinder;
     }
 }

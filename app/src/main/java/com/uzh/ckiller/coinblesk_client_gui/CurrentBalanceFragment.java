@@ -74,8 +74,8 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().getValue() + "", "BTC"));
-        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().getValue() + "", walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().toPlainString(), "BTC"));
+        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
@@ -94,6 +94,12 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
         this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        this.getActivity().unbindService(serviceConnection);
+    }
+
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
@@ -101,10 +107,13 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
-            CurrentBalanceFragment.this.setBalance();
             IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            filter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            if(walletServiceBinder.isWalletReady()){
+                setBalance();
+            }
         }
 
         @Override
