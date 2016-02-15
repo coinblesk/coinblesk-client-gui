@@ -1,24 +1,23 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 
 /**
  * Created by ckiller
@@ -26,107 +25,49 @@ import java.util.Random;
 
 public class HistoryFragment extends android.support.v4.app.Fragment {
 
-    private FragmentActivity faActivity;
+    private RecyclerView recyclerView;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        RecyclerView rv = (RecyclerView) inflater.inflate(
+        recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.fragment_history, container, false);
-        setupRecyclerView(rv);
-        faActivity = (FragmentActivity) this.getActivity();
-        return rv;
-    }
-
-    private void setupRecyclerView(RecyclerView recyclerView) {
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-        recyclerView.setAdapter(new SimpleStringRecyclerViewAdapter(getActivity(),
-                getRandomSublist(DummyData.sDummyDataStrings, 30)));
+        return recyclerView;
     }
 
-    private List<Dummy> getRandomSublist(Dummy[] array, int amount) {
-        ArrayList<Dummy> list = new ArrayList<>(amount);
-        Random random = new Random();
-        while (list.size() < amount) {
-            list.add(array[random.nextInt(array.length)]);
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(getActivity(), walletServiceBinder.getTransactionsByTime()));
         }
-        return list;
+    };
+
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this.getActivity(), WalletService.class);
+        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    public static class SimpleStringRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleStringRecyclerViewAdapter.ViewHolder> {
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
 
-        private final TypedValue mTypedValue = new TypedValue();
-        private int mBackground;
-        private List<Dummy> mValues;
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            public Dummy mBoundDummy;
-
-            public final View mView;
-            public final ImageView mImageView;
-            public final TextView mTextViewTitle;
-            public final TextView mTextViewDescription;
-
-            public ViewHolder(View view) {
-                super(view);
-                mView = view;
-                mImageView = (ImageView) view.findViewById(R.id.transaction_icon);
-                mTextViewTitle = (TextView) view.findViewById(R.id.transaction_title);
-                mTextViewDescription = (TextView) view.findViewById(R.id.transaction_description);
-            }
-
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mTextViewTitle.getText();
-            }
-        }
-
-        public Dummy getValueAt(int position) {
-            return mValues.get(position);
-        }
-
-        public SimpleStringRecyclerViewAdapter(Context context, List<Dummy> items) {
-            context.getTheme().resolveAttribute(R.attr.selectableItemBackground, mTypedValue, true);
-            mBackground = mTypedValue.resourceId;
-            mValues = items;
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(getActivity(), walletServiceBinder.getTransactionsByTime()));
         }
 
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.list_item, parent, false);
-            view.setBackgroundResource(mBackground);
-            return new ViewHolder(view);
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
         }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mBoundDummy = mValues.get(position);
-            holder.mTextViewTitle.setText(mValues.get(position).getAmount());
-            holder.mTextViewDescription.setText((mValues.get(position).getDate() + " " + mValues.get(position).getmUsername()));
-
-            holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Context context = v.getContext();
-
-                    Intent intent = new Intent(context, DummyDataDetailActivity.class);
-                    intent.putExtra(DummyDataDetailActivity.EXTRA_NAME, holder.mBoundDummy.getAmount());
-
-                    context.startActivity(intent);
-                }
-            });
-
-            Glide.with(holder.mImageView.getContext())
-                    .load(DummyData.getRandomDummyDrawable())
-                    .fitCenter()
-                    .into(holder.mImageView);
-        }
-
-        @Override
-        public int getItemCount() {
-            return mValues.size();
-        }
-    }
+    };
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 }

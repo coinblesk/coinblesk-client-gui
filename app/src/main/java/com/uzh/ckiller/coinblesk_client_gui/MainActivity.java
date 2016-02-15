@@ -67,13 +67,10 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
 
         currencyFormatter = new CurrencyFormatter(this);
 
-        initToolbar();
-        initNavigationView();
-        initViewPager();
     }
 
     private void initViewPager() {
@@ -235,6 +232,17 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
 
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+
+    private final BroadcastReceiver walletReadyBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setContentView(R.layout.activity_main);
+            initToolbar();
+            initNavigationView();
+            initViewPager();
+        }
+    };
+
     private final BroadcastReceiver walletProgressBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -248,9 +256,9 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         Log.d(TAG,"onStart");
 
         IntentFilter filter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
-
+        IntentFilter walletReadyFilter = new IntentFilter(Constants.WALLET_READY_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(walletProgressBroadcastReceiver, filter);
-
+        LocalBroadcastManager.getInstance(this).registerReceiver(walletReadyBroadcastReceiver, walletReadyFilter);
         Intent intent = new Intent(this, WalletService.class);
         this.startService(intent);
     }

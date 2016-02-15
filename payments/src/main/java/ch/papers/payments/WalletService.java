@@ -21,6 +21,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.models.ECKeyWrapper;
+import ch.papers.payments.models.TransactionWrapper;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 
 /**
@@ -60,8 +62,12 @@ public class WalletService extends Service{
             return WalletService.this.exchangeRate.coinToFiat(WalletService.this.kit.wallet().getBalance());
         }
 
-        public List<Transaction> getTransactionsByTime(){
-            return WalletService.this.kit.wallet().getTransactionsByTime();
+        public List<TransactionWrapper> getTransactionsByTime(){
+            final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
+            for (Transaction transaction:WalletService.this.kit.wallet().getTransactionsByTime()) {
+                transactions.add(new TransactionWrapper(transaction,WalletService.this.kit.wallet()));
+            }
+            return transactions;
         }
     }
 
