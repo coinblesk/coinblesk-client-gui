@@ -30,14 +30,13 @@ import ch.papers.payments.WalletService;
  * Created by ckiller on 10/01/16.
  */
 
-public class BalanceCurrentFragment extends Fragment implements IPreferenceStrings {
+public class CurrentBalanceFragment extends Fragment implements IPreferenceStrings {
 
     private CurrencyFormatter currencyFormatter;
     private ConnectionIconFormatter connectionIconFormatter;
 
-
-    public static BalanceCurrentFragment newInstance(int page) {
-        BalanceCurrentFragment fragment = new BalanceCurrentFragment();
+    public static CurrentBalanceFragment newInstance(int page) {
+        CurrentBalanceFragment fragment = new CurrentBalanceFragment();
         return fragment;
     }
 
@@ -72,11 +71,11 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    private void setBalance(){
+    private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().getValue()+"", "BTC"));
-        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().getValue()+"", walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().getValue() + "", "BTC"));
+        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().getValue() + "", walletServiceBinder.getBalanceFiat().getCurrencyCode()));
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
@@ -85,7 +84,7 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
             setBalance();
         }
     };
-    
+
     private WalletService.WalletServiceBinder walletServiceBinder;
 
     @Override
@@ -101,11 +100,11 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF","430")));
-            BalanceCurrentFragment.this.setBalance();
+            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
+            CurrentBalanceFragment.this.setBalance();
             IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            LocalBroadcastManager.getInstance(BalanceCurrentFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
         }
 
         @Override

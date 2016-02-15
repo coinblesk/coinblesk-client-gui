@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--<string name="input_values_sample">5.50 CHF + 20 CHF + 5.50 CHF + 2.50 CHF + 44.30 CHF + 2.50 CHF + 2.50 CHF + 2.50 CHF + 5.50 CHF + 20 CHF + 5.50 CHF + 2.50 CHF + 44.30 CHF</string>-->
+    <string name="input_values_sample">5.50 CHF + 20 CHF + 5.50 CHF + 2.50 CHF + 44.30 CHF + 2.50 CHF</string>
+
+</resources>

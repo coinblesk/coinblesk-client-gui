@@ -1,0 +1,160 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/keyboard_frame_layout">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/key_custom_one"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_one" />
+
+            <TextView
+                android:id="@+id/key_custom_two"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_two" />
+
+            <TextView
+                android:id="@+id/key_custom_three"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_three" />
+
+            <TextView
+                android:id="@+id/key_custom_four"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_four" />
+
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+
+            <TextView
+                android:id="@+id/key_custom_five"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_five" />
+
+            <TextView
+                android:id="@+id/key_custom_six"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_six" />
+
+            <TextView
+                android:id="@+id/key_custom_seven"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_seven" />
+
+            <TextView
+                android:id="@+id/key_custom_eight"
+                style="@style/keyboard_custom_text_view"
+                android:text="@string/key_custom_eight" />
+
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/key_seven"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_seven" />
+
+            <TextView
+                android:id="@+id/key_eight"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_eight" />
+
+            <TextView
+                android:id="@+id/key_nine"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_nine" />
+
+            <TextView
+                android:id="@+id/key_clear"
+                style="@style/keyboard_clear_text_view"
+                android:text="@string/key_clear" />
+
+        </LinearLayout>
+
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/key_four"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_four" />
+
+            <TextView
+                android:id="@+id/key_five"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_five" />
+
+            <TextView
+                android:id="@+id/key_six"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_six" />
+
+            <TextView
+                android:id="@+id/key_multiply"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_multiply" />
+
+
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/key_one"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_one" />
+
+            <TextView
+                android:id="@+id/key_two"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_two" />
+
+            <TextView
+                android:id="@+id/key_three"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_three" />
+
+            <TextView
+                android:id="@+id/key_plus"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_plus" />
+
+        </LinearLayout>
+
+        <LinearLayout style="@style/keyboard_row">
+
+            <TextView
+                android:id="@+id/key_zero"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_zero" />
+
+            <TextView
+                android:id="@+id/key_zero_zero"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_zero_zero" />
+
+            <TextView
+                android:id="@+id/key_dot"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_dot" />
+
+            <ImageView
+                android:id="@+id/key_accept"
+                style="@style/keyboard_imageview"
+                android:src="@drawable/ic_checkmark_accent_36_nopad"
+                android:textIsSelectable="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>
+

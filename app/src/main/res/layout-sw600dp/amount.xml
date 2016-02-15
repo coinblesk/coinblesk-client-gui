@@ -14,10 +14,12 @@
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical">
 
+            <include layout="@layout/input_values" />
+
             <TextView
                 android:id="@+id/amount_large_text_view"
                 style="@style/card_view_large_text_view"
-                android:textSize="@dimen/text_size_large" />
+                android:textSize="@dimen/text_size_xxlarge" />
 
             <TextView
                 android:id="@+id/amount_small_text_view"

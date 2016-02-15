@@ -1,42 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+
+    <!--Detail Activity-->
+    <dimen name="fab_margin">16dp</dimen>
     <dimen name="detail_backdrop_height">256dp</dimen>
+
+    <!--Card Sizes-->
     <dimen name="card_margin">16dp</dimen>
     <dimen name="card_view_margin">10dp</dimen>
     <dimen name="card_view_corner_radius">8dp</dimen>
     <dimen name="card_view_elevation">2dp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="list_item_avatar_size">40dp</dimen>
+
+    <!--Navigation Drawer Sizes-->
     <dimen name="nav_drawer_header_height">190dp</dimen>
     <dimen name="nav_drawer_header_logo_size">76dp</dimen>
     <dimen name="nav_drawer_username_textview_size">14sp</dimen>
     <dimen name="nav_drawer_header_logo_marginLeft">16dp</dimen>
     <dimen name="nav_drawer_header_logo_marginStart">16dp</dimen>
 
-
+    <!--Material Design Keylines-->
     <dimen name="keyline_1">16dp</dimen>
     <dimen name="keyline_1_minus_8dp">8dp</dimen>
     <dimen name="keyline_2">72dp</dimen>
     <dimen name="keyline_2_minus_16dp">56dp</dimen>
     <dimen name="keyline_2_session_detail">@dimen/keyline_2</dimen>
 
-    <!-- standard metrics -->
+    <!-- Standard Metrics -->
     <dimen name="spacing_normal">8dp</dimen>
     <dimen name="spacing_micro">4dp</dimen>
     <dimen name="padding_normal">16dp</dimen>
 
     <!-- App Primary Text Sizes -->
-    <dimen name="app_text_size_xsmall">11sp</dimen>
-    <dimen name="app_text_size_small">12sp</dimen>
-    <dimen name="app_text_size_medium">14sp</dimen>
-    <dimen name="app_text_size_large">18sp</dimen>
-    <dimen name="app_text_size_xlarge">20sp</dimen>
-    <dimen name="app_text_size_diff_large_small">6sp</dimen>
-
-    <dimen name="transaction_icon_size">24dp</dimen>
-    <dimen name="transaction_icon_horizontal_padding">24dp</dimen>
-
     <dimen name="text_size_xsmall">11dp</dimen>
     <dimen name="text_size_small">12dp</dimen>
     <dimen name="text_size_body">13dp</dimen>
@@ -46,22 +41,17 @@
     <dimen name="text_size_xxlarge">24dp</dimen>
     <dimen name="text_size_diff_large_small">6dp</dimen>
 
-    <!--<dimen name="text_size_xsmall">11sp</dimen>
-    <dimen name="text_size_small">12sp</dimen>
-    <dimen name="text_size_body">13sp</dimen>
-    <dimen name="text_size_medium">14sp</dimen>
-    <dimen name="text_size_large">18sp</dimen>
-    <dimen name="text_size_xlarge">20sp</dimen>
-    <dimen name="text_size_xxlarge">24sp</dimen>
-    <dimen name="text_size_diff_large_small">6sp</dimen>-->
-
-
+    <!--Amount and Keyboard Sizes-->
     <dimen name="text_size_numeric_keypad">36dp</dimen>
     <dimen name="ic_switch_currencies_size">36dp</dimen>
     <dimen name="ic_backspace_size">24dp</dimen>
 
+    <!--Transaction History Sizes-->
+    <dimen name="transaction_icon_size">24dp</dimen>
+    <dimen name="transaction_icon_horizontal_padding">24dp</dimen>
+
+    <!--QR-Dialog Fragment Sizes-->
     <dimen name="qr_code_size">280dp</dimen>
     <dimen name="qr_dialog_size">312dp</dimen>
-
 
 </resources>

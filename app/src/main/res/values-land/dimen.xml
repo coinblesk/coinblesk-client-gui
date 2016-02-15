@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="text_size_xxlarge">@dimen/text_size_large</dimen>
+
+    <!--Navigation Drawer Sizes-->
     <dimen name="nav_drawer_header_height">80dp</dimen>
     <dimen name="nav_drawer_header_logo_size">76dp</dimen>
 
-    <!--QR-Dialog Fragment Landscape Dimensions-->
+    <!--QR-Dialog Fragment Landscape Sizes-->
     <dimen name="qr_dialog_size">150dp</dimen>
     <dimen name="qr_code_size">118dp</dimen>
 
