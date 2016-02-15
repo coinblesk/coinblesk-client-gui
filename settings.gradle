@@ -1,1 +1,1 @@
-include ':app',':objectstorage',':payments'
+include ':objectstorage',':payments',':app'

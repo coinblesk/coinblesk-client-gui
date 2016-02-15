@@ -1,11 +1,15 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -13,6 +17,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,12 +29,17 @@ import android.widget.Toast;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.AmountSingleton;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
 
+import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
+
+
 
 /**
  * Created by ckiller
  */
 
 public class MainActivity extends AppCompatActivity implements KeyboardFragment.KeyboardClicked {
+    private final static String TAG = MainActivity.class.getName();
 
     private AmountSingleton amount = AmountSingleton.getInstance();
     private NavigationView navigationView;
@@ -51,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
     private QrDialogFragment mQrDialogFragment;
     ViewPager viewPager;
 
+
 //TODO Create Landscape views for all Fragments. E.g. Landscape View for send / receive with smaller representation of the Balance fragment.
 
     @Override
@@ -63,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         initToolbar();
         initNavigationView();
         initViewPager();
-
     }
 
     private void initViewPager() {
@@ -222,5 +232,37 @@ public class MainActivity extends AppCompatActivity implements KeyboardFragment.
         }
 
     }
+
+
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private final BroadcastReceiver walletProgressBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG,"onReceive progress: "+intent.getExtras().getDouble("progress"));
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG,"onStart");
+
+        IntentFilter filter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(walletProgressBroadcastReceiver, filter);
+
+        Intent intent = new Intent(this, WalletService.class);
+        this.startService(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG,"onDestroy");
+        Intent intent = new Intent(this, WalletService.class);
+        this.stopService(intent);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(walletProgressBroadcastReceiver);
+    }
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 }
 

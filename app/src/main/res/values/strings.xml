@@ -105,7 +105,7 @@
     <string name="material_icon_unfold_more">&#xeb2f;</string>
 
     <string name="qr_code_dialog_title">Your QR Code</string>
-    <string name="qr_code_close">Copy to Clipboard</string>
+    <string name="qr_code_copy_to_clipboard">Copy to Clipboard</string>
     <string name="qr_code_copied">Successfully copied to your Clipboard.</string>
 
     <!--Preference Strings-->

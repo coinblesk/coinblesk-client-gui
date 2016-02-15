@@ -4,12 +4,27 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
+    productFlavors {
+        // Define separate dev and prod product flavors.
+        dev {
+            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+            // to pre-dex each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming dex merging processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the application.
+            minSdkVersion 14
+        }
+    }
+
     defaultConfig {
         applicationId "com.uzh.ckiller.coinblesk_client_clean_start"
-        minSdkVersion 20
+        minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -21,6 +36,9 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+
+    compile project(':payments')
+    compile 'com.google.zxing:core:3.2.1'
     compile 'com.android.support:support-v13:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:cardview-v7:23.1.1'
@@ -28,4 +46,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'com.github.bumptech.glide:glide:3.6.1'
+
+    // bitcoinj forces us to multidex
+    compile 'com.android.support:multidex:1.0.0'
 }

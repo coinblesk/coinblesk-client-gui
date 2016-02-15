@@ -5,12 +5,12 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        multiDexEnabled true
+
     }
     buildTypes {
         release {
@@ -23,12 +23,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':objectstorage')
-
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.squareup.retrofit2:retrofit-mock:2.0.0-beta4'
-    testCompile project(':objectstorage')
-
-
     compile 'com.squareup.retrofit2:retrofit:2.0.0-beta4'
     compile 'org.bitcoinj:bitcoinj-core:0.13.3'
     compile 'com.android.support:appcompat-v7:23.1.1'
@@ -37,8 +31,11 @@ dependencies {
     compile 'com.madgag.spongycastle:core:1.54.0.0'
     compile 'com.madgag.spongycastle:prov:1.54.0.0'
 
-    // bitcoinj forces us to multidex
-    compile 'com.android.support:multidex:1.0.0'
+
+    testCompile project(':objectstorage')
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.squareup.retrofit2:retrofit-mock:2.0.0-beta4'
+
 
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support:support-annotations:23.0.1'

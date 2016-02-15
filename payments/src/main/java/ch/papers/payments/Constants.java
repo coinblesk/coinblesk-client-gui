@@ -15,5 +15,13 @@ public class Constants {
     public final static long UNIX_TIME_MONTH = 60*60*24*30;
     public final static int LOCK_TIME_MONTHS = 3;
     public final static int LOCK_THRESHOLD = 60*4;//https://bitcoin.org/en/developer-reference#block-headers
+    public final static String WALLET_FILES_PREFIX = "cb_wallet_";
+    public final static String WALLET_KEY_NAME = "wallet_key";
 
+    // communication via broadcast receiver, these are the actions
+    public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
+    public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
+    public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";
+    public final static String WALLET_TRANSACTIONS_CHANGED_ACTION = "WALLET_TRANSACTIONS_CHANGED_ACTION";
+    public final static String WALLET_SCRIPTS_CHANGED_ACTION = "WALLET_SCRIPTS_CHANGED_ACTION";
 }

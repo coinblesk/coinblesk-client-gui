@@ -1,11 +1,15 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-import android.content.SharedPreferences;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
-import android.support.v4.media.IMediaBrowserServiceCompat;
-import android.util.Log;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,8 +20,11 @@ import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
+
+import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 
 /**
  * Created by ckiller on 10/01/16.
@@ -27,6 +34,7 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
 
     private CurrencyFormatter currencyFormatter;
     private ConnectionIconFormatter connectionIconFormatter;
+
 
     public static BalanceCurrentFragment newInstance(int page) {
         BalanceCurrentFragment fragment = new BalanceCurrentFragment();
@@ -60,16 +68,52 @@ public class BalanceCurrentFragment extends Fragment implements IPreferenceStrin
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_balance_current, container, false);
-        final TextView smallBalance = (TextView) view.findViewById(R.id.balance_small);
-        final TextView largeBalance = (TextView) view.findViewById(R.id.balance_large);
-
-        //TODO Get the actual Balance instead of dummy data
-        largeBalance.setText(currencyFormatter.formatLarge("2.4431", "BTC"));
-        smallBalance.setText(currencyFormatter.formatSmall("655.01", "CHF"));
-
         return view;
-
     }
+
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private void setBalance(){
+        final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
+        final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
+        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().getValue()+"", "BTC"));
+        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().getValue()+"", walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+    }
+
+    private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setBalance();
+        }
+    };
+    
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this.getActivity(), WalletService.class);
+        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF","430")));
+            BalanceCurrentFragment.this.setBalance();
+            IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
+            filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(BalanceCurrentFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 }
 

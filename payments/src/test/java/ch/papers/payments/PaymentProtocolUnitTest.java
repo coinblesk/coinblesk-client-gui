@@ -27,13 +27,13 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.filters.Filter;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.objectstorage.listeners.OnResultListener;
-import ch.papers.objectstorage.models.AbstractUuidObject;
 import ch.papers.payments.communications.http.MockServerInterface;
 import ch.papers.payments.communications.http.ServerInterface;
+import ch.papers.payments.models.ECKeyWrapper;
 import ch.papers.payments.models.User;
+import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 
 /**
  * To work on unit tests, switch the Test Artifact in the Build Variants view.
@@ -52,38 +52,6 @@ public class PaymentProtocolUnitTest {
     private ECKey publicServerKey;
     private ECKey publicClientKey;
 
-    public class KeyWrapper extends AbstractUuidObject {
-        private final byte[] privateKey;
-        private final String name;
-
-        public KeyWrapper(byte[] privateKey, String name) {
-            this.privateKey = privateKey;
-            this.name = name;
-        }
-
-        public ECKey getKey() {
-            return ECKey.fromPrivate(this.privateKey);
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public class NameFilter implements Filter<KeyWrapper> {
-
-        private final String matchName;
-
-        public NameFilter(String matchName) {
-            this.matchName = matchName;
-        }
-
-        @Override
-        public boolean matches(KeyWrapper object) {
-            return object.getName().equals(this.matchName);
-        }
-    }
-
 
     private final TransactionBroadcast.ProgressCallback progressCallback = new TransactionBroadcast.ProgressCallback() {
         @Override
@@ -99,9 +67,9 @@ public class PaymentProtocolUnitTest {
 
 
         final CountDownLatch bootstrapCountdownLatch = new CountDownLatch(4);
-        UuidObjectStorage.getInstance().getFirstMatchEntry(new NameFilter(CLIENT_KEY_NAME), new OnResultListener<KeyWrapper>() {
+        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
             @Override
-            public void onSuccess(KeyWrapper result) {
+            public void onSuccess(ECKeyWrapper result) {
                 System.out.println("importin client key");
                 clientKey = result.getKey();
                 publicClientKey = ECKey.fromPublicOnly(clientKey.getPubKey());
@@ -111,17 +79,17 @@ public class PaymentProtocolUnitTest {
             @Override
             public void onError(String message) {
                 System.out.println("creating new client key");
-                KeyWrapper keyWrapper = new KeyWrapper(new ECKey().getPrivKeyBytes(), CLIENT_KEY_NAME);
+                ECKeyWrapper keyWrapper = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), CLIENT_KEY_NAME);
                 clientKey = keyWrapper.getKey();
                 publicClientKey = ECKey.fromPublicOnly(clientKey.getPubKey());
-                UuidObjectStorage.getInstance().addEntry(keyWrapper, DummyOnResultListener.getInstance(), KeyWrapper.class);
+                UuidObjectStorage.getInstance().addEntry(keyWrapper, DummyOnResultListener.getInstance(), ECKeyWrapper.class);
                 bootstrapCountdownLatch.countDown();
             }
-        }, KeyWrapper.class);
+        }, ECKeyWrapper.class);
 
-        UuidObjectStorage.getInstance().getFirstMatchEntry(new NameFilter(SERVER_KEY_NAME), new OnResultListener<KeyWrapper>() {
+        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(SERVER_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
             @Override
-            public void onSuccess(KeyWrapper result) {
+            public void onSuccess(ECKeyWrapper result) {
                 System.out.println("importin server key");
                 serverKey = result.getKey();
                 publicServerKey = ECKey.fromPublicOnly(serverKey.getPubKey());
@@ -131,13 +99,13 @@ public class PaymentProtocolUnitTest {
             @Override
             public void onError(String message) {
                 System.out.println("creating new server key");
-                KeyWrapper keyWrapper = new KeyWrapper(new ECKey().getPrivKeyBytes(), SERVER_KEY_NAME);
+                ECKeyWrapper keyWrapper = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), SERVER_KEY_NAME);
                 serverKey = keyWrapper.getKey();
                 publicServerKey = ECKey.fromPublicOnly(serverKey.getPubKey());
-                UuidObjectStorage.getInstance().addEntry(keyWrapper, DummyOnResultListener.getInstance(), KeyWrapper.class);
+                UuidObjectStorage.getInstance().addEntry(keyWrapper, DummyOnResultListener.getInstance(), ECKeyWrapper.class);
                 bootstrapCountdownLatch.countDown();
             }
-        }, KeyWrapper.class);
+        }, ECKeyWrapper.class);
 
 
         final WalletAppKit kit = new WalletAppKit(Constants.PARAMS, FILE_ROOT, FILE_PREFIX) {
@@ -145,9 +113,9 @@ public class PaymentProtocolUnitTest {
             protected void onSetupCompleted() {
                 if (wallet().getKeychainSize() < 1) {
                     System.out.println("importing new key");
-                    UuidObjectStorage.getInstance().getFirstMatchEntry(new NameFilter(WALLET_KEY_NAME), new OnResultListener<KeyWrapper>() {
+                    UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(WALLET_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
                         @Override
-                        public void onSuccess(KeyWrapper result) {
+                        public void onSuccess(ECKeyWrapper result) {
                             System.out.println("imported key from storage");
                             wallet().importKey(result.getKey());
                         }
@@ -155,11 +123,11 @@ public class PaymentProtocolUnitTest {
                         @Override
                         public void onError(String message) {
                             System.out.println("generated new key");
-                            KeyWrapper walletKey = new KeyWrapper(new ECKey().getPrivKeyBytes(), WALLET_KEY_NAME);
+                            ECKeyWrapper walletKey = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), WALLET_KEY_NAME);
                             wallet().importKey(walletKey.getKey());
-                            UuidObjectStorage.getInstance().addEntry(walletKey, DummyOnResultListener.getInstance(), KeyWrapper.class);
+                            UuidObjectStorage.getInstance().addEntry(walletKey, DummyOnResultListener.getInstance(), ECKeyWrapper.class);
                         }
-                    }, KeyWrapper.class);
+                    }, ECKeyWrapper.class);
                 }
 
 
