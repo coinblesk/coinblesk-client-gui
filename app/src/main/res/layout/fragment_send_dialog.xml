@@ -25,49 +25,48 @@
             android:layout_margin="@dimen/card_margin"
             card_view:cardBackgroundColor="@color/material_grey_800">
 
+            <include
+                android:id="@+id/card_action_bar"
+                layout="@layout/tool_bar" />
+
+            <!--<ImageButton-->
+            <!--android:id="@+id/qr_scan_button"-->
+            <!--style="?android:attr/borderlessButtonStyle"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="top"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:src="@drawable/ic_qrcode_scan_white_18dp" />-->
+
             <LinearLayout
                 style="@style/Widget.CardContent"
+                android:layout_marginBottom="@dimen/card_margin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TableLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingTop="@dimen/card_margin"
+                    android:layout_marginTop="@dimen/card_margin"
                     android:orientation="horizontal">
 
-                    <TextView
+
+                    <EditText
+                        android:id="@+id/address_edit_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/card_margin"
-                        android:text="Recipients Address"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-
-                    <TableRow
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <EditText
-                            android:id="@+id/address_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/address_hint"
-                            android:inputType="textNoSuggestions"
-                            android:textSize="@dimen/text_size_small" />
-
-                        <ImageButton
-                            android:id="@+id/qr_scan_button"
-                            style="?android:attr/borderlessButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ic_action_camera" />
-                    </TableRow>
+                        android:layout_alignParentLeft="true"
+                        android:layout_weight="1"
+                        android:inputType="textNoSuggestions"
+                        android:textSize="@dimen/text_size_small" />
 
                     <Button
                         android:id="@+id/send_button"
                         style="?android:attr/borderlessButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:gravity="center"
                         android:text="SEND" />
 
                 </TableLayout>

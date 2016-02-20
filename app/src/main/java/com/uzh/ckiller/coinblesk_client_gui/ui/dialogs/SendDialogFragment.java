@@ -6,7 +6,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.view.MenuItemCompat;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -39,12 +42,12 @@ public class SendDialogFragment extends DialogFragment {
 
         this.getDialog().setTitle(R.string.send_dialog_title);
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
-        view.findViewById(R.id.qr_scan_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
-            }
-        });
+//        view.findViewById(R.id.qr_scan_button).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+//            }
+//        });
 
         Toolbar actionBar = (Toolbar) view.findViewById(R.id.fake_action_bar);
         if (actionBar!=null) {
@@ -57,6 +60,22 @@ public class SendDialogFragment extends DialogFragment {
             });
         }
 
+        Toolbar cardActionBar = (Toolbar) view.findViewById(R.id.card_action_bar);
+        if (cardActionBar!=null) {
+            cardActionBar.setTitle("Address");
+            MenuItem qrScanItem = cardActionBar.getMenu().add(0, R.id.action_qr_code, 0, R.string.action_qr_code);
+            qrScanItem.setIcon(R.drawable.ic_qrcode_scan_white_18dp);
+            MenuItemCompat.setShowAsAction(qrScanItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+            cardActionBar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+                    return true;
+                }
+            });
+
+        }
 
         return view;
     }
