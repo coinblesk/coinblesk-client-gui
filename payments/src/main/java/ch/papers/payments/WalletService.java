@@ -13,6 +13,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Wallet;
@@ -73,6 +74,16 @@ public class WalletService extends Service{
             }
             return transactions;
         }
+
+        public void sendCoins(Address address, Coin amount) {
+            try {
+                final Transaction transaction  = WalletService.this.kit.wallet().createSend(address,amount);
+                WalletService.this.kit.peerGroup().broadcastTransaction(transaction);
+            } catch (InsufficientMoneyException e) {
+                final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
+                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
+            }
+        }
     }
 
     private final WalletServiceBinder walletServiceBinder = new WalletServiceBinder();
@@ -108,6 +119,10 @@ public class WalletService extends Service{
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+
+                        Intent walletCoinsSentIntent = new Intent(Constants.WALLET_COINS_SENT);
+                        walletCoinsSentIntent.putExtra("balance", newBalance.value);
+                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsSentIntent);
                     }
 
                     @Override
@@ -130,6 +145,11 @@ public class WalletService extends Service{
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+
+
+                        Intent walletCoinsReceivedIntent = new Intent(Constants.WALLET_COINS_RECEIVED);
+                        walletCoinsReceivedIntent.putExtra("balance", newBalance.value);
+                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsReceivedIntent);
                     }
                 });
 

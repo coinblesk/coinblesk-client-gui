@@ -280,7 +280,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
     @Override
     public void onEnter() {
         if(this.getCoin().isPositive()){
-            new SendDialogFragment().show(this.getFragmentManager(),"send_dialog_fragment");
+            SendDialogFragment.newInstance(this.getCoin()).show(this.getFragmentManager(),"send_dialog_fragment");
         }
     }
 }

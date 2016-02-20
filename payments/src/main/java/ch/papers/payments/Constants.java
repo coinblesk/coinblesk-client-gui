@@ -24,4 +24,7 @@ public class Constants {
     public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";
     public final static String WALLET_TRANSACTIONS_CHANGED_ACTION = "WALLET_TRANSACTIONS_CHANGED_ACTION";
     public final static String WALLET_SCRIPTS_CHANGED_ACTION = "WALLET_SCRIPTS_CHANGED_ACTION";
+    public static final String WALLET_INSUFFICIENT_BALANCE = "WALLET_INSUFFICIENT_BALANCE";
+    public static final String WALLET_COINS_SENT = "WALLET_COINS_SENT";
+    public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
 }

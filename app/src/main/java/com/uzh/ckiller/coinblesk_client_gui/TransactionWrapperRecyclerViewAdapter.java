@@ -3,14 +3,11 @@ package com.uzh.ckiller.coinblesk_client_gui;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -24,68 +21,54 @@ import ch.papers.payments.models.TransactionWrapper;
 public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<TransactionWrapperRecyclerViewAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
-        public final ImageView mImageView;
-        public final TextView mTextViewTitle;
-        public final TextView mTextViewDescription;
+        public final View view;
+        public final ImageView imageView;
+        public final TextView textViewTitle;
+        public final TextView textViewDescription;
 
         public ViewHolder(View view) {
             super(view);
-            mView = view;
-            mImageView = (ImageView) view.findViewById(R.id.transaction_icon);
-            mTextViewTitle = (TextView) view.findViewById(R.id.transaction_title);
-            mTextViewDescription = (TextView) view.findViewById(R.id.transaction_description);
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + " '" + mTextViewTitle.getText();
+            this.view = view;
+            this.imageView = (ImageView) view.findViewById(R.id.transaction_icon);
+            this.textViewTitle = (TextView) view.findViewById(R.id.transaction_title);
+            this.textViewDescription = (TextView) view.findViewById(R.id.transaction_description);
         }
     }
 
+    private final List<TransactionWrapper> transactionWrappers;
 
-    private final TypedValue mTypedValue = new TypedValue();
-    private int mBackground;
-    private List<TransactionWrapper> mValues;
-
-    public TransactionWrapperRecyclerViewAdapter(Context context, List<TransactionWrapper> items) {
-        context.getTheme().resolveAttribute(R.attr.selectableItemBackground, mTypedValue, true);
-        mBackground = mTypedValue.resourceId;
-        mValues = items;
+    public TransactionWrapperRecyclerViewAdapter(List<TransactionWrapper> items) {
+        transactionWrappers = items;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.list_item, parent, false);
-        view.setBackgroundResource(mBackground);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        final TransactionWrapper transaction = mValues.get(position);
-        holder.mTextViewTitle.setText(transaction.getAmount().toFriendlyString());
-        holder.mTextViewDescription.setText(transaction.getTransaction().getUpdateTime()+", conf:"+transaction.getTransaction().getConfidence().getDepthInBlocks());
+        final TransactionWrapper transaction = transactionWrappers.get(position);
+        holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
+        holder.textViewDescription.setText(transaction.getTransaction().getUpdateTime()+"");
+        holder.imageView.setImageResource(transaction.getAmount().isNegative()?R.drawable.ic_send_arrow_48px:R.drawable.ic_receive_arrow_48px);
 
-        holder.mView.setOnClickListener(new View.OnClickListener() {
+        holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Context context = v.getContext();
-                Intent intent = new Intent(context, DummyDataDetailActivity.class);
-                intent.putExtra(DummyDataDetailActivity.EXTRA_NAME, transaction.getAmount());
+                Intent intent = new Intent(context, TransactionDetailActivity.class);
+                intent.putExtra(TransactionDetailActivity.EXTRA_NAME, transaction.getUuid());
                 context.startActivity(intent);
             }
         });
 
-        Glide.with(holder.mImageView.getContext())
-                .load(transaction.getAmount().isNegative()?R.drawable.ic_send_arrow_48px:R.drawable.ic_receive_arrow_48px)
-                .fitCenter()
-                .into(holder.mImageView);
     }
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return transactionWrappers.size();
     }
 }

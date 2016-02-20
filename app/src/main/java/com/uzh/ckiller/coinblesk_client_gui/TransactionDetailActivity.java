@@ -22,11 +22,9 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.widget.ImageView;
 
-import com.bumptech.glide.Glide;
 
-public class DummyDataDetailActivity extends AppCompatActivity {
+public class TransactionDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_NAME = "transaction-amount";
 
@@ -46,13 +44,6 @@ public class DummyDataDetailActivity extends AppCompatActivity {
         CollapsingToolbarLayout collapsingToolbar =
                 (CollapsingToolbarLayout) findViewById(R.id.detail_transaction_collapsing_toolbar);
         collapsingToolbar.setTitle(transactionAmount);
-
-        loadBackdrop();
-    }
-
-    private void loadBackdrop() {
-        final ImageView imageView = (ImageView) findViewById(R.id.detail_transaction_backdropimage);
-        Glide.with(this).load(R.drawable.bitcoin_stack_dark).centerCrop().into(imageView);
     }
 
     @Override

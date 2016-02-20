@@ -95,9 +95,10 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
         this.getActivity().unbindService(serviceConnection);
+        LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

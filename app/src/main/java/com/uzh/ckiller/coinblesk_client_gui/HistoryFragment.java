@@ -40,7 +40,7 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(getActivity(), walletServiceBinder.getTransactionsByTime()));
+            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(walletServiceBinder.getTransactionsByTime()));
         }
     };
 
@@ -54,9 +54,10 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
         this.getActivity().unbindService(serviceConnection);
+        LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -69,7 +70,7 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
             filter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
             if(walletServiceBinder.isWalletReady()){
-                recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(getActivity(), walletServiceBinder.getTransactionsByTime()));
+                recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(walletServiceBinder.getTransactionsByTime()));
             }
         }
 

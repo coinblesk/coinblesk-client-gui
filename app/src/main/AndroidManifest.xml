@@ -30,7 +30,7 @@
         </activity>
 
         <activity
-            android:name="com.uzh.ckiller.coinblesk_client_gui.DummyDataDetailActivity"
+            android:name=".TransactionDetailActivity"
             android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

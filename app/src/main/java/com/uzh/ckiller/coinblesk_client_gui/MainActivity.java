@@ -25,6 +25,8 @@ import android.widget.Toast;
 
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.QrDialogFragment;
 
+import org.bitcoinj.utils.BriefLogFormatter;
+
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 
@@ -49,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        BriefLogFormatter.init();
 
         setContentView(R.layout.activity_main);
         initToolbar();
@@ -192,14 +196,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-
     private final BroadcastReceiver walletReadyBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            setContentView(R.layout.activity_main);
-            initToolbar();
-            initNavigationView();
-            initViewPager();
         }
     };
 
