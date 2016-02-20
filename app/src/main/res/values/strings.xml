@@ -180,5 +180,6 @@
     laborum.
     </string>
     <string name="send_dialog_title">Enter recipient\'s address</string>
+    <string name="address_hint">Enter the address of the recipient</string>
 
 </resources>

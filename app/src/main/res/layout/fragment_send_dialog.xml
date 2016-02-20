@@ -1,40 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/qr_dialog"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:layout_gravity="center"
     android:orientation="vertical">
 
-    <TableLayout
+    <include
+        android:id="@+id/fake_action_bar"
+        layout="@layout/dialog_tool_bar" />
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
+        android:orientation="vertical"
+        android:paddingTop="24dp">
 
-        <TableRow
+
+        <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/card_margin"
+            card_view:cardBackgroundColor="@color/material_grey_800">
 
-            <EditText
-                android:id="@+id/address_edit_text"
+            <LinearLayout
+                style="@style/Widget.CardContent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_height="wrap_content">
 
-            <ImageButton
-                android:id="@+id/qr_scan_button"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera" />
-        </TableRow>
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-    </TableLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/card_margin"
+                        android:text="Recipients Address"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
 
-    <Button
-        android:id="@+id/send_button"
-        style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="send" />
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/address_edit_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/address_hint"
+                            android:inputType="textNoSuggestions"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <ImageButton
+                            android:id="@+id/qr_scan_button"
+                            style="?android:attr/borderlessButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_action_camera" />
+                    </TableRow>
+
+                    <Button
+                        android:id="@+id/send_button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SEND" />
+
+                </TableLayout>
+                >
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </LinearLayout>
+
 </LinearLayout>
