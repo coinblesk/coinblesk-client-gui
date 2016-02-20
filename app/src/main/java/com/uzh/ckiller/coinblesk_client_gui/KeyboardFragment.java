@@ -231,10 +231,10 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
         if(this.isBitcoinLargeAmount){
             largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "BTC"));
-            smallTextView.setText(currencyFormatter.formatLarge(fiat.toPlainString(), "CHF"));
+            smallTextView.setText(currencyFormatter.formatSmall(fiat.toPlainString(), "CHF"));
         } else {
             largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "CHF"));
-            smallTextView.setText(currencyFormatter.formatLarge(coin.toPlainString(), "BTC"));
+            smallTextView.setText(currencyFormatter.formatSmall(coin.toPlainString(), "BTC"));
         }
     }
 

@@ -39,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
     private SampleFragmentPagerAdapter fragmentPagerAdapter;
-    private CharSequence mTitle;
-    private QrDialogFragment mQrDialogFragment;
+    private CharSequence Title;
+    private QrDialogFragment qrDialogFragment;
     private ViewPager viewPager;
 
 
@@ -79,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void setTitle(CharSequence title) {
-        mTitle = title;
-        getActionBar().setTitle(mTitle);
+        Title = title;
+        getActionBar().setTitle(Title);
     }
 
 
@@ -186,8 +186,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showQrDialog() {
-        mQrDialogFragment = new QrDialogFragment();
-        mQrDialogFragment.show(this.getSupportFragmentManager(), "qr_dialog_fragment");
+        qrDialogFragment = new QrDialogFragment();
+        qrDialogFragment.show(this.getSupportFragmentManager(), "qr_dialog_fragment");
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */

@@ -225,13 +225,17 @@
     </style>
 
     <style name="qr_dialog">
-        <item name="android:layout_width">@dimen/qr_dialog_size</item>
-        <item name="android:layout_height">@dimen/qr_dialog_size</item>
-        <item name="android:maxWidth">@dimen/qr_dialog_size</item>
-        <item name="android:maxHeight">@dimen/qr_dialog_size</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@color/material_grey_800</item>
         <item name="android:gravity">center</item>
         <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="address_textview">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
     </style>
 
     <style name="qr_code">
