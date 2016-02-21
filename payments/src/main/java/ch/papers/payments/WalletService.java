@@ -23,6 +23,9 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -157,12 +160,14 @@ public class WalletService extends Service{
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsReceivedIntent);
                     }
                 });
-
                 isWalletReady = true;
+                try {
+                    kit.peerGroup().addAddress(Inet4Address.getByName("176.9.24.110"));
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
             }
         };
-
-
 
         kit.setDownloadListener(new DownloadProgressTracker() {
 
@@ -190,11 +195,18 @@ public class WalletService extends Service{
             }
         });
 
+        try {
+            kit.setCheckpoints(this.getAssets().open("checkpoints-testnet"));
+        } catch (IOException e) {
+
+        }
+
         kit.startAsync();
+
 
         Log.d(TAG,"wallet started");
 
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
