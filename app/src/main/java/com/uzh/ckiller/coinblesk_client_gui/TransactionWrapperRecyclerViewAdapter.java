@@ -60,7 +60,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
             public void onClick(View v) {
                 Context context = v.getContext();
                 Intent intent = new Intent(context, TransactionDetailActivity.class);
-                intent.putExtra(TransactionDetailActivity.EXTRA_NAME, transaction.getUuid());
+                intent.putExtra(TransactionDetailActivity.EXTRA_NAME, transaction.getTransaction().getHash());
                 context.startActivity(intent);
             }
         });

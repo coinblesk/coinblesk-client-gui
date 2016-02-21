@@ -15,6 +15,7 @@ import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.kits.WalletAppKit;
@@ -83,6 +84,10 @@ public class WalletService extends Service{
                 final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
             }
+        }
+
+        public TransactionWrapper getTransaction(String transactionHash) {
+            return new TransactionWrapper(WalletService.this.kit.wallet().getTransaction(Sha256Hash.wrap(transactionHash)),WalletService.this.kit.wallet());
         }
     }
 
