@@ -2,4 +2,5 @@
 <resources>
     <!-- Generate an id which can be used when the location menu item is added in MainActivity -->
     <item name="action_qr_code" type="id" />
+    <item name="confirm_send_dialog" type="id"/>
 </resources>

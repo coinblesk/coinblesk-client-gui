@@ -17,7 +17,7 @@ public class ConnectionIconFormatter implements IPreferenceStrings {
 
 
     private Context mContext;
-    private Set<String> mConnectionSettings;
+    private Set<String> connectionSettings;
 
     public ConnectionIconFormatter(Context context) {
         this.mContext = context;
@@ -28,12 +28,12 @@ public class ConnectionIconFormatter implements IPreferenceStrings {
         // Get shared Preferences
         SharedPreferences preferences = PreferenceManager
                 .getDefaultSharedPreferences(mContext);
-        mConnectionSettings = preferences.
+        this.connectionSettings = preferences.
                 getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
 
         // Set the Icon Color and Visibility
-        if (mConnectionSettings != null) {
-            for (String s : mConnectionSettings) {
+        if (connectionSettings != null) {
+            for (String s : connectionSettings) {
                 switch (s) {
                     case NFC_ACTIVATED:
                         if (status == NFC_ACTIVATED) {

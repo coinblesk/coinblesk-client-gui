@@ -179,7 +179,7 @@
     sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
     laborum.
     </string>
-    <string name="send_dialog_title">Enter recipient\'s address</string>
-    <string name="address_hint">Enter the address of the recipient</string>
+    <string name="address_edit_text_hint">Recipient\s address</string>
+    <string name="amount_edit_text_hint">Amount</string>
 
 </resources>
