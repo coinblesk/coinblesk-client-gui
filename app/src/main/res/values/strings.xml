@@ -125,6 +125,7 @@
     <string name="qr_code_dialog_title">Your QR Code</string>
     <string name="qr_code_copy_to_clipboard">Copy to Clipboard</string>
     <string name="qr_code_copied">Successfully copied to your Clipboard.</string>
+    <string name="qr_code_close">Close</string>
 
     <!--Preference Strings-->
     <string name="pref_general_settings_category_title">General Settings</string>

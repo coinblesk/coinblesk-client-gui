@@ -234,6 +234,8 @@
     <style name="address_textview">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
 

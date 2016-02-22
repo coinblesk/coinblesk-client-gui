@@ -4,24 +4,14 @@
     <group android:checkableBehavior="single">
 
         <item
-            android:id="@+id/verified_users"
-            android:checked="false"
-            android:title="@string/verified_users" />
-
-        <item
-            android:id="@+id/backup"
-            android:checked="false"
-            android:title="@string/backup" />
-
-        <item
             android:id="@+id/settings"
             android:checked="false"
             android:title="@string/settings" />
 
         <item
-            android:id="@+id/activate_vendor_mode"
+            android:id="@+id/backup"
             android:checked="false"
-            android:title="@string/activate_vendor_mode" />
+            android:title="@string/backup" />
 
         <item
             android:id="@+id/about_coinblesk"

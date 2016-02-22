@@ -76,18 +76,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
         this.onKeyboardListener = this;
         return view;
     }
-/*
-    // http://stackoverflow.com/a/27073879
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        if (mSwipeRefreshLayout != null) {
-            mSwipeRefreshLayout.setRefreshing(false);
-            mSwipeRefreshLayout.destroyDrawingCache();
-            mSwipeRefreshLayout.clearAnimation();
-        }
-    }*/
 
     private void initStandard(View view) {
 

@@ -4,5 +4,5 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/abc_action_bar_default_height_material"
     android:elevation="4dp"
-    app:navigationIcon="@drawable/ic_arrow_left_white_24dp"
+    app:navigationIcon="@drawable/ic_close_white_24dp"
     app:theme="@style/AppThemeMaterial"/>

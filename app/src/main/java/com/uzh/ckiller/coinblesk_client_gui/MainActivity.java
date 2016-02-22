@@ -95,14 +95,8 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (menuItem.getItemId()) {
 
-                    case R.id.verified_users:
-                        Toast.makeText(getApplicationContext(), "Verified UsersSelected", Toast.LENGTH_SHORT).show();
-                        return true;
                     case R.id.backup:
                         Toast.makeText(getApplicationContext(), "Backup Selected", Toast.LENGTH_SHORT).show();
-                        return true;
-                    case R.id.activate_vendor_mode:
-                        Toast.makeText(getApplicationContext(), "Activate Vendor Mode Selected", Toast.LENGTH_SHORT).show();
                         return true;
                     case R.id.settings:
                         Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_SHORT).show();
