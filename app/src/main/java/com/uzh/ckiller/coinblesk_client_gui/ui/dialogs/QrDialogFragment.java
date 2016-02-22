@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +37,17 @@ public class QrDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         this.getDialog().setTitle(R.string.qr_code_dialog_title);
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
+
+        Toolbar dialogToolbar = (Toolbar) view.findViewById(R.id.fake_qr_action_bar);
+        if (dialogToolbar!=null) {
+            final QrDialogFragment window = this;
+            dialogToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    window.dismiss();
+                }
+            });
+        }
+
         return view;
     }
 

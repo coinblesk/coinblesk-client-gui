@@ -1,22 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/qr_dialog">
+    style="@style/qr_dialog_fragment"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/fake_qr_action_bar"
+        layout="@layout/dialog_tool_bar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:minWidth="400dp"
+        android:background="@color/colorPrimary"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/padding_normal">
 
     <ImageView
         android:id="@+id/qr_code"
-        style="@style/qr_code"
-        android:src="@drawable/qr_code_sample" />
+        style="@style/qr_code" />
 
     <TextView
         android:id="@+id/address_textview"
-        style="@style/address_textview"
-        />
+        style="@style/address_textview" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="right"
         android:orientation="horizontal">
+
         <Button
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
@@ -24,5 +37,6 @@
             android:text="@string/qr_code_copy_to_clipboard" />
     </LinearLayout>
 
+     </LinearLayout>
 
 </LinearLayout>

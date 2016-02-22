@@ -79,25 +79,9 @@ public class SendDialogFragment extends DialogFragment {
 
         this.addressEditText =((EditText)view.findViewById(R.id.address_edit_text));
 
-        Toolbar dialogToolbar = (Toolbar) view.findViewById(R.id.fake_action_bar);
+        Toolbar dialogToolbar = (Toolbar) view.findViewById(R.id.fake_send_action_bar);
         if (dialogToolbar!=null) {
             final SendDialogFragment window = this;
-
-            /* ------------------- OPTIONAL SEND ICON TOP RIGHT BEGIN ------------------- *//*
-            MenuItem sendItem = dialogToolbar.getMenu().add(0, R.id.confirm_send_dialog, 0, "SEND");
-            sendItem.setIcon(R.drawable.ic_send_arrow_48px);
-            MenuItemCompat.setShowAsAction(sendItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-            dialogToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    sendCoins();
-                    return true;
-                }
-            });
-            *//* ------------------- OPTIONAL SEND ICON TOP RIGHT END ------------------- */
-
-
             dialogToolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     window.dismiss();
