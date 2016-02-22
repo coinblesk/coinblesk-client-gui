@@ -10,16 +10,26 @@ import ch.papers.objectstorage.models.AbstractUuidObject;
  * a.decarli@papers.ch
  */
 public class ECKeyWrapper extends AbstractUuidObject {
-    private final byte[] privateKey;
+    private final byte[] keyPayload;
+    private final boolean isPublicOnly;
     private final String name;
 
-    public ECKeyWrapper(byte[] privateKey, String name) {
-        this.privateKey = privateKey;
+    public ECKeyWrapper(byte[] keyPayload, String name, boolean isPublicOnly) {
+        this.isPublicOnly = isPublicOnly;
+        this.keyPayload = keyPayload;
         this.name = name;
     }
 
+    public ECKeyWrapper(byte[] keyPayload, String name) {
+        this(keyPayload,name,false);
+    }
+
     public ECKey getKey() {
-        return ECKey.fromPrivate(this.privateKey);
+        if(this.isPublicOnly){
+            return ECKey.fromPublicOnly(this.keyPayload);
+        } else {
+            return ECKey.fromPrivate(this.keyPayload);
+        }
     }
 
     public String getName() {

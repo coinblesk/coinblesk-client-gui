@@ -48,12 +48,16 @@ public class PaymentProtocol {
         return toMultisigTransaction;
     }
 
+    public Script createMultisigScript(List<ECKey> keys){
+        return ScriptBuilder.createP2SHOutputScript(2, keys);
+    }
+
     public Transaction generateFromMultisigTransaction(TransactionOutput multisigOutput, ECKey publicServerKey, ECKey publicClientKey, Coin amount, Address address) {
         Coin remainingAmount = multisigOutput.getValue();
         remainingAmount = remainingAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
         remainingAmount = remainingAmount.subtract(amount);
         final List<ECKey> keys = ImmutableList.of(publicClientKey, publicServerKey);
-        final Script script = ScriptBuilder.createMultiSigOutputScript(2, keys);
+        final Script script = this.createMultisigScript(keys);
 
         final Transaction externalTransaction = new Transaction(Constants.PARAMS);
         externalTransaction.addInput(multisigOutput);

@@ -1,3 +1,5 @@
+*.spvchain
+*.wallet
 .gradle
 /local.properties
 /.idea/workspace.xml

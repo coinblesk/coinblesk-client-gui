@@ -112,9 +112,7 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
             filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
-            if(walletServiceBinder.isWalletReady()){
-                setBalance();
-            }
+            setBalance();
         }
 
         @Override

@@ -1,14 +1,10 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -25,9 +21,6 @@ import android.widget.Toast;
 
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.QrDialogFragment;
 
-import org.bitcoinj.utils.BriefLogFormatter;
-
-import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 
 
@@ -51,9 +44,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        BriefLogFormatter.init();
-
         setContentView(R.layout.activity_main);
         initToolbar();
         initNavigationView();
@@ -196,28 +186,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    private final BroadcastReceiver walletReadyBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-        }
-    };
-
-    private final BroadcastReceiver walletProgressBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG,"onReceive progress: "+intent.getExtras().getDouble("progress"));
-        }
-    };
-
     @Override
     protected void onStart() {
         super.onStart();
         Log.d(TAG,"onStart");
 
-        IntentFilter filter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
-        IntentFilter walletReadyFilter = new IntentFilter(Constants.WALLET_READY_ACTION);
-        LocalBroadcastManager.getInstance(this).registerReceiver(walletProgressBroadcastReceiver, filter);
-        LocalBroadcastManager.getInstance(this).registerReceiver(walletReadyBroadcastReceiver, walletReadyFilter);
         Intent intent = new Intent(this, WalletService.class);
         this.startService(intent);
     }
@@ -228,7 +201,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG,"onStop");
         Intent intent = new Intent(this, WalletService.class);
         this.stopService(intent);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(walletProgressBroadcastReceiver);
     }
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 }

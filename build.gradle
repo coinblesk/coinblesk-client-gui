@@ -17,5 +17,8 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        mavenLocal()
+        mavenCentral()
+        maven {url 'http://tomp2p.net/dev/mvn'}
     }
 }

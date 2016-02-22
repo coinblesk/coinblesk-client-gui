@@ -1,4 +1,4 @@
-package ch.papers.payments;
+package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.SmallTest;
@@ -7,6 +7,8 @@ import org.bitcoinj.core.ECKey;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import ch.papers.payments.Crypto;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 06/02/16.

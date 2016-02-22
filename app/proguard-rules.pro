@@ -15,3 +15,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-keep public class * implements ch.papers.objectstorage.models.UuidObject
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver

@@ -70,7 +70,7 @@ public class PaymentProtocolUnitTest {
         UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
             @Override
             public void onSuccess(ECKeyWrapper result) {
-                System.out.println("importin client key");
+                System.out.println("importing client key");
                 clientKey = result.getKey();
                 publicClientKey = ECKey.fromPublicOnly(clientKey.getPubKey());
                 bootstrapCountdownLatch.countDown();

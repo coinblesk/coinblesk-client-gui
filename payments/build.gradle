@@ -12,6 +12,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -22,24 +23,22 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':objectstorage')
     compile 'com.squareup.retrofit2:retrofit:2.0.0-beta4'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta4'
     compile 'org.bitcoinj:bitcoinj-core:0.13.3'
     compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'ch.papers:objectstorage:1.0.1'
+    compile 'com.coinblesk:coinblesk-shared-resources:1.3.25'
 
-    compile group: 'com.github.tony19', name: 'logback-android-core', version: '1.1.1-4'
-    compile group: 'com.github.tony19', name: 'logback-android-classic', version: '1.1.1-4'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.6'
+    // needed for base64
+    testCompile 'commons-codec:commons-codec:1.9'
 
     //needed for ECDH
     compile 'com.madgag.spongycastle:core:1.54.0.0'
     compile 'com.madgag.spongycastle:prov:1.54.0.0'
 
-
-    testCompile project(':objectstorage')
     testCompile 'junit:junit:4.12'
     testCompile 'com.squareup.retrofit2:retrofit-mock:2.0.0-beta4'
-
 
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support:support-annotations:23.0.1'

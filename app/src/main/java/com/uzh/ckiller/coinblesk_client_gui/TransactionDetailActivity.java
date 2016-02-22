@@ -107,9 +107,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
             walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
             IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
-            if(walletServiceBinder.isWalletReady()){
-                setTransactionDetails();
-            }
+            setTransactionDetails();
         }
 
         @Override

@@ -18,6 +18,9 @@ public class Constants {
     public final static String WALLET_FILES_PREFIX = "cb_wallet_";
     public final static String WALLET_KEY_NAME = "wallet_key";
 
+    public static final String MULTISIG_CLIENT_KEY_NAME = "client_public_key";
+    public static final String MULTISIG_SERVER_KEY_NAME = "server_public_key";
+
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
     public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
@@ -27,4 +30,7 @@ public class Constants {
     public static final String WALLET_INSUFFICIENT_BALANCE = "WALLET_INSUFFICIENT_BALANCE";
     public static final String WALLET_COINS_SENT = "WALLET_COINS_SENT";
     public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
+
+    // coinblesk server communication
+    public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.0.101:8080";
 }

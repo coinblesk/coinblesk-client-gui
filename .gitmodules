@@ -1,3 +1,6 @@
 [submodule "objectstorage"]
 	path = objectstorage
 	url = https://github.com/dcale/Simple-Object-Storage.git
+[submodule "shared-resources"]
+	path = shared-resources
+	url = https://github.com/coinblesk/coinblesk-shared-resources.git

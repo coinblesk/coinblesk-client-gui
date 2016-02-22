@@ -6,7 +6,11 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Base64;
 import android.util.Log;
+
+import com.coinblesk.json.KeyTO;
+import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -25,7 +29,6 @@ import org.bitcoinj.utils.Fiat;
 
 import java.io.IOException;
 import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,55 +36,60 @@ import java.util.List;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.objectstorage.listeners.OnResultListener;
+import ch.papers.payments.communications.http.CoinbleskWebService;
 import ch.papers.payments.models.ECKeyWrapper;
 import ch.papers.payments.models.TransactionWrapper;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 14/02/16.
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class WalletService extends Service{
+public class WalletService extends Service {
 
     private final static String TAG = WalletService.class.getName();
 
-    private boolean isWalletReady = false;
     private ExchangeRate exchangeRate;
     private WalletAppKit kit;
 
+    private Script multisigAddressScript;
+
+
     public class WalletServiceBinder extends Binder {
-        public Address getCurrentReceiveAddress(){
-            return WalletService.this.kit.wallet().currentReceiveAddress();
+        public Address getCurrentReceiveAddress() {
+            if (multisigAddressScript != null) {
+                return multisigAddressScript.getToAddress(Constants.PARAMS);
+            } else {
+                return WalletService.this.kit.wallet().currentReceiveAddress();
+            }
         }
 
-        public boolean isWalletReady(){
-            return isWalletReady;
-        }
-
-        public void setExchangeRate(ExchangeRate exchangeRate){
+        public void setExchangeRate(ExchangeRate exchangeRate) {
             WalletService.this.exchangeRate = exchangeRate;
         }
 
-        public Coin getBalance(){
+        public Coin getBalance() {
             return WalletService.this.kit.wallet().getBalance();
         }
 
-        public Fiat getBalanceFiat(){
+        public Fiat getBalanceFiat() {
             return WalletService.this.exchangeRate.coinToFiat(WalletService.this.kit.wallet().getBalance());
         }
 
-        public List<TransactionWrapper> getTransactionsByTime(){
+        public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
-            for (Transaction transaction:WalletService.this.kit.wallet().getTransactionsByTime()) {
-                transactions.add(new TransactionWrapper(transaction,WalletService.this.kit.wallet()));
+            for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {
+                transactions.add(new TransactionWrapper(transaction, WalletService.this.kit.wallet()));
             }
             return transactions;
         }
 
         public void sendCoins(Address address, Coin amount) {
             try {
-                final Transaction transaction  = WalletService.this.kit.wallet().createSend(address,amount);
+                final Transaction transaction = WalletService.this.kit.wallet().createSend(address, amount);
                 WalletService.this.kit.peerGroup().broadcastTransaction(transaction);
             } catch (InsufficientMoneyException e) {
                 final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
@@ -90,7 +98,7 @@ public class WalletService extends Service{
         }
 
         public TransactionWrapper getTransaction(String transactionHash) {
-            return new TransactionWrapper(WalletService.this.kit.wallet().getTransaction(Sha256Hash.wrap(transactionHash)),WalletService.this.kit.wallet());
+            return new TransactionWrapper(WalletService.this.kit.wallet().getTransaction(Sha256Hash.wrap(transactionHash)), WalletService.this.kit.wallet());
         }
     }
 
@@ -116,6 +124,7 @@ public class WalletService extends Service{
                             ECKeyWrapper walletKey = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), Constants.WALLET_KEY_NAME);
                             wallet().importKey(walletKey.getKey());
                             UuidObjectStorage.getInstance().addEntry(walletKey, DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
                         }
                     }, ECKeyWrapper.class);
                 }
@@ -160,11 +169,60 @@ public class WalletService extends Service{
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsReceivedIntent);
                     }
                 });
-                isWalletReady = true;
+
+                UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
+                    @Override
+                    public void onSuccess(final ECKeyWrapper serverKey) {
+                        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
+                            @Override
+                            public void onSuccess(ECKeyWrapper clientKey) {
+                                setupMultiSigAddress(ImmutableList.of(clientKey.getKey(),
+                                        serverKey.getKey()));
+                            }
+
+                            @Override
+                            public void onError(String s) {
+
+                            }
+                        }, ECKeyWrapper.class);
+                    }
+
+
+                    @Override
+                    public void onError(String message) {
+                        try {
+                            Retrofit retrofit = new Retrofit.Builder()
+                                    .addConverterFactory(GsonConverterFactory.create())
+                                    .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
+                                    .build();
+                            CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
+
+                            final ECKey clientMultiSigKey = new ECKey();
+                            final KeyTO clientKey = new KeyTO();
+                            clientKey.publicKey(Base64.encodeToString(clientMultiSigKey.getPubKey(), Base64.NO_WRAP));
+
+                            final KeyTO serverKey = service.keyExchange(clientKey).execute().body();
+                            final ECKey serverMultiSigKey = ECKey.fromPublicOnly(Base64.decode(serverKey.publicKey(), Base64.NO_WRAP));
+
+                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
+
+                            setupMultiSigAddress(ImmutableList.of(clientMultiSigKey, serverMultiSigKey));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, ECKeyWrapper.class);
+
                 try {
+                    kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
+                    kit.peerGroup().addAddress(Inet4Address.getByName("88.198.20.152"));
+                    kit.peerGroup().addAddress(Inet4Address.getByName("52.4.156.236"));
                     kit.peerGroup().addAddress(Inet4Address.getByName("176.9.24.110"));
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
+                    kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
+                } catch (IOException e) {
+
                 }
             }
         };
@@ -174,7 +232,7 @@ public class WalletService extends Service{
             @Override
             public void onChainDownloadStarted(Peer peer, int blocksLeft) {
                 super.onChainDownloadStarted(peer, blocksLeft);
-                Log.d(TAG,"started download of block:" + blocksLeft);
+                Log.d(TAG, "started download of block:" + blocksLeft);
             }
 
             @Override
@@ -185,28 +243,33 @@ public class WalletService extends Service{
                 walletProgressIntent.putExtra("blocksSoFar", blocksSoFar);
                 walletProgressIntent.putExtra("date", date);
                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
-                Log.d(TAG,"progress "+pct);
+                Log.d(TAG, "progress " + pct);
             }
 
             @Override
             protected void doneDownload() {
                 super.doneDownload();
-                Log.d(TAG,"done download");
+                Log.d(TAG, "done download");
             }
         });
 
         try {
+
             kit.setCheckpoints(this.getAssets().open("checkpoints-testnet"));
         } catch (IOException e) {
 
         }
 
-        kit.startAsync();
+        kit.setBlockingStartup(false);
+        kit.startAsync().awaitRunning();
 
+        Log.d(TAG, "wallet started");
+        return Service.START_NOT_STICKY;
+    }
 
-        Log.d(TAG,"wallet started");
-
-        return Service.START_STICKY;
+    private void setupMultiSigAddress(List<ECKey> keys) {
+        this.multisigAddressScript = PaymentProtocol.getInstance().createMultisigScript(keys);
+        kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }
 
     @Override
@@ -218,11 +281,7 @@ public class WalletService extends Service{
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG,"on bind");
-        if(this.isWalletReady){
-            Intent walletProgressIntent = new Intent(Constants.WALLET_READY_ACTION);
-            LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
-        }
+        Log.d(TAG, "on bind");
         return this.walletServiceBinder;
     }
 }
