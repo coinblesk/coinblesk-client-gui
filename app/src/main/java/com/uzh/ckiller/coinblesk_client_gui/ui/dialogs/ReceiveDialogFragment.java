@@ -1,6 +1,11 @@
+/*
 package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 
-//import android.support.v7.app.AlertDialog;
+*/
+/**
+ * Created by ckiller on 22/02/16.
+ *//*
+
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -31,27 +36,19 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.w3c.dom.Text;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 
-/**
- * Created by ckiller
- */
+public class ReceiveDialogFragment extends DialogFragment{
 
-public class SendDialogFragment extends DialogFragment {
     public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
-    private final static String TAG = SendDialogFragment.class.getName();
+    private final static String TAG = ReceiveDialogFragment.class.getName();
 
-    private EditText addressEditText;
-    private EditText amountEditText;
-    private TextInputLayout addressTextInputLayout;
-    private TextInputLayout amountTextInputLayout;
     private Coin amount;
 
     public static DialogFragment newInstance(Coin amount){
-        DialogFragment fragment = new SendDialogFragment();
+        DialogFragment fragment = new ReceiveDialogFragment();
         Bundle arguments = new Bundle();
         arguments.putLong("amount",amount.value);
         fragment.setArguments(arguments);
@@ -61,7 +58,7 @@ public class SendDialogFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setStyle(DialogFragment.STYLE_NO_TITLE, android.R.style.ThemeOverlay_Material_Dark);
+        setStyle(DialogFragment.STYLE_NORMAL, android.R.style.ThemeOverlay_Material_Dark);
         this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
     }
 
@@ -83,7 +80,9 @@ public class SendDialogFragment extends DialogFragment {
         if (dialogToolbar!=null) {
             final SendDialogFragment window = this;
 
-            /* ------------------- OPTIONAL SEND ICON TOP RIGHT BEGIN ------------------- *//*
+            */
+/* ------------------- OPTIONAL SEND ICON TOP RIGHT BEGIN ------------------- *//*
+
             MenuItem sendItem = dialogToolbar.getMenu().add(0, R.id.confirm_send_dialog, 0, "SEND");
             sendItem.setIcon(R.drawable.ic_send_arrow_48px);
             MenuItemCompat.setShowAsAction(sendItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
@@ -95,7 +94,9 @@ public class SendDialogFragment extends DialogFragment {
                     return true;
                 }
             });
-            *//* ------------------- OPTIONAL SEND ICON TOP RIGHT END ------------------- */
+            */
+/* ------------------- OPTIONAL SEND ICON TOP RIGHT END ------------------- *//*
+
 
 
             dialogToolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -121,13 +122,17 @@ public class SendDialogFragment extends DialogFragment {
             });
         }
 
-        /* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING BEGIN ------------------- */
+        */
+/* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING BEGIN ------------------- *//*
+
         this.addressTextInputLayout = (TextInputLayout) view.findViewById(R.id.address_text_input_layout);
         this.amountTextInputLayout = (TextInputLayout) view.findViewById(R.id.amount_text_input_layout);
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
 
         amountEditText.setText(amount.toString());
-        /* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING END ------------------- */
+        */
+/* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING END ------------------- *//*
+
 
 
         return view;
@@ -145,7 +150,9 @@ public class SendDialogFragment extends DialogFragment {
     }
 
 
-    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    */
+/* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- *//*
+
     private final BroadcastReceiver walletCoinsSentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -195,5 +202,11 @@ public class SendDialogFragment extends DialogFragment {
             walletServiceBinder = null;
         }
     };
-    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
+    */
+/* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- *//*
+
 }
+
+
+}
+*/
