@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import org.bitcoinj.core.Coin;
@@ -268,6 +269,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
     @Override
     public void onEnter() {
         if(this.getCoin().isPositive()){
+//            ReceiveDialogFragment.newInstance(this.getCoin()).show(this.getFragmentManager(),"receive_dialog_fragment");
             SendDialogFragment.newInstance(this.getCoin()).show(this.getFragmentManager(),"send_dialog_fragment");
         }
     }
