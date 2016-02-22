@@ -74,13 +74,14 @@ public class SendDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         // QR Code
-//        IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+        // IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         final View view = inflater.inflate(R.layout.fragment_send_alertdialog, null);
-        this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
 
         this.addressTextInputLayout = (TextInputLayout) view.findViewById(R.id.address_text_input_layout);
+        this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
+
         this.amountTextInputLayout = (TextInputLayout) view.findViewById(R.id.amount_text_input_layout);
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
 
@@ -94,6 +95,12 @@ public class SendDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         sendCoins();
+                    }
+                })
+                .setNeutralButton("QR-Scan", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
