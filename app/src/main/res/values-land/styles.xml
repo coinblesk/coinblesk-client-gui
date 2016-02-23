@@ -50,7 +50,8 @@
         <item name="android:layout_width">@dimen/nav_drawer_header_logo_size</item>
         <item name="android:layout_alignParentLeft">true</item>
         <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:layout_centerVertical">true</item>
+        <item name="android:useDefaultMargins">true</item>
+        <item name="android:paddingTop">@dimen/padding_normal</item>
         <item name="android:layout_marginLeft">@dimen/nav_drawer_header_logo_marginLeft</item>
         <item name="android:src">@drawable/logotype_coinblesk_white</item>
     </style>

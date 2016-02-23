@@ -42,8 +42,8 @@ public class SampleFragmentPagerAdapter extends FragmentPagerAdapter {
                 return KeyboardFragment.newInstance();
 
             case 2:
-//                return KeyboardFragment.newInstance(position + 1);
-                return AuthenticationFragment.newInstance();
+                return KeyboardFragment.newInstance();
+//                return AuthenticationFragment.newInstance();
             default:
                 return BalanceFragment.newInstance(position + 1);
 

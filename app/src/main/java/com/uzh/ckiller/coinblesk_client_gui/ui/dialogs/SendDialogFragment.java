@@ -3,19 +3,24 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 //import android.support.v7.app.AlertDialog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.Toolbar;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,10 +55,10 @@ public class SendDialogFragment extends DialogFragment {
     private TextInputLayout amountTextInputLayout;
     private Coin amount;
 
-    public static DialogFragment newInstance(Coin amount){
+    public static DialogFragment newInstance(Coin amount) {
         DialogFragment fragment = new SendDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putLong("amount",amount.value);
+        arguments.putLong("amount", amount.value);
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -61,77 +66,51 @@ public class SendDialogFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setStyle(DialogFragment.STYLE_NO_TITLE, android.R.style.ThemeOverlay_Material_Dark);
         this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
     }
 
+    @NonNull
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_send_dialog, container);
-        view.findViewById(R.id.send_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendCoins();
-            }
-        });
+        // QR Code
+        // IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
 
-        this.addressEditText =((EditText)view.findViewById(R.id.address_edit_text));
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        final View view = inflater.inflate(R.layout.fragment_send_alertdialog, null);
 
-        Toolbar dialogToolbar = (Toolbar) view.findViewById(R.id.fake_action_bar);
-        if (dialogToolbar!=null) {
-            final SendDialogFragment window = this;
-
-            /* ------------------- OPTIONAL SEND ICON TOP RIGHT BEGIN ------------------- *//*
-            MenuItem sendItem = dialogToolbar.getMenu().add(0, R.id.confirm_send_dialog, 0, "SEND");
-            sendItem.setIcon(R.drawable.ic_send_arrow_48px);
-            MenuItemCompat.setShowAsAction(sendItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-            dialogToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    sendCoins();
-                    return true;
-                }
-            });
-            *//* ------------------- OPTIONAL SEND ICON TOP RIGHT END ------------------- */
-
-
-            dialogToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    window.dismiss();
-                }
-            });
-        }
-
-        Toolbar cardToolbar = (Toolbar) view.findViewById(R.id.card_action_bar);
-        if (cardToolbar!=null) {
-            MenuItem qrScanItem = cardToolbar.getMenu().add(0, R.id.action_qr_code, 0, R.string.action_qr_code);
-            qrScanItem.setIcon(R.drawable.ic_qrcode_scan_white_18dp);
-
-            MenuItemCompat.setShowAsAction(qrScanItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-            cardToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
-                    return true;
-                }
-            });
-        }
-
-        /* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING BEGIN ------------------- */
         this.addressTextInputLayout = (TextInputLayout) view.findViewById(R.id.address_text_input_layout);
+        this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
+
         this.amountTextInputLayout = (TextInputLayout) view.findViewById(R.id.amount_text_input_layout);
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
 
         amountEditText.setText(amount.toString());
-        /* ------------------- TEXTINPUTLAYOUT REFERENCES FOR VALIDATION AND ERROR HANDLING END ------------------- */
 
-
-        return view;
+        return new AlertDialog.Builder(getActivity())
+                .setTitle("Send Bitcoins")
+                .setView(view)
+                .setCancelable(true)
+                .setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sendCoins();
+                    }
+                })
+                .setNeutralButton("QR-Scan", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                }).create();
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -153,9 +132,9 @@ public class SendDialogFragment extends DialogFragment {
         }
     };
 
-    private void sendCoins(){
+    private void sendCoins() {
         try {
-            walletServiceBinder.sendCoins(new Address(Constants.PARAMS, addressEditText.getText().toString()),amount);
+            walletServiceBinder.sendCoins(new Address(Constants.PARAMS, addressEditText.getText().toString()), amount);
         } catch (AddressFormatException e) {
             e.printStackTrace();
         }
