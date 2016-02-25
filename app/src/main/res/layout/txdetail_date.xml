@@ -17,11 +17,11 @@
         android:textColor="@color/colorAccent"
         android:textSize="@dimen/text_size_small" />
 
-    <View
+<!--    <View
         android:id="@+id/separator_exchangerate"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/main_color_grey_700" />
+        android:background="@color/main_color_grey_700" />-->
 
     <TextView
         android:id="@+id/txdetail_exchangerate_content"

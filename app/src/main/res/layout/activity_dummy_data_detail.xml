@@ -26,11 +26,21 @@
 
                 <include layout="@layout/txdetail_amounts" />
 
-                <include layout="@layout/txdetail_confidence"/>
+                <include layout="@layout/separator_line" />
 
-                <include layout="@layout/txdetail_date"/>
+                <include layout="@layout/txdetail_confidence" />
 
-                <include layout="@layout/txdetail_exchangerate"/>
+                <include layout="@layout/separator_line" />
+
+                <include layout="@layout/txdetail_date" />
+
+                <include layout="@layout/separator_line" />
+
+                <include layout="@layout/txdetail_exchangerate" />
+
+                <include layout="@layout/separator_line" />
+
+                <include layout="@layout/txdetail_fee" />
 
                 <include layout="@layout/txdetail_transaction" />
 
@@ -41,6 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right|bottom"
+                android:paddingTop="@dimen/card_margin"
                 android:text="Copy TX" />
         </android.support.v7.widget.CardView>
     </LinearLayout>

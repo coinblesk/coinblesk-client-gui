@@ -84,21 +84,31 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private void setTransactionDetails() {
         TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
 
-        ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
-        ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(currencyFormatter.formatLarge(transaction.getAmount().toPlainString(), "BTC"));
+        try {
 
-        //TODO Get Exchange Rate from transaction
-        //((TextView)this.findViewById(R.id.txdetail_exchangerate_content)).setText(transaction.getTransaction().getExchangeRate().toString());
-        ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText("433.43 CHF");
+            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
+            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(currencyFormatter.formatLarge(transaction.getAmount().toPlainString(), "BTC"));
 
-        // TODO Format the Date properly (make it shorter, without MEZ indication)
-        ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
+            //TODO Get Exchange Rate from transaction
+            //((TextView)this.findViewById(R.id.txdetail_exchangerate_content)).setText(transaction.getTransaction().getExchangeRate().toString());
+            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText("433.43 CHF");
 
-        transaction.getTransaction().getConfidence();
-        Log.d(TAG, "hash: " + transaction.getTransaction().getHashAsString());
+            // TODO Format the Date properly (make it shorter, without MEZ indication)
+            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
 
-        ((TextView)this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
+            try {
+                Log.d(TAG, "[Confidence] " + transaction.getTransaction().getConfidence()
+                        + "[UpdateTime]" + transaction.getTransaction().getUpdateTime().toString() +
+                        "[Fee]" + transaction.getTransaction().getFee().toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
+            ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
+            ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
 
