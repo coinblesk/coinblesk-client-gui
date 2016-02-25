@@ -28,8 +28,12 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.transition.Fade;
+import android.transition.Slide;
 import android.view.Menu;
 import android.widget.TextView;
+
+import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
 
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -42,21 +46,28 @@ import ch.papers.payments.models.TransactionWrapper;
 public class TransactionDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_NAME = "transaction-hash";
+    private CurrencyFormatter currencyFormatter;
+
 
     private String transactionHash;
+
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dummy_data_detail);
+        currencyFormatter = new CurrencyFormatter(this.getApplicationContext());
+
+        setupWindowAnimations();
 
         Intent intent = getIntent();
         this.transactionHash = intent.getStringExtra(EXTRA_NAME);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
+
         setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
@@ -73,18 +84,16 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
     private void setTransactionDetails() {
         TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
-        ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
-//        ((TextView)this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
 
+        ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
+        ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(currencyFormatter.formatLarge(transaction.getAmount().toPlainString(), "BTC"));
+//        ((TextView)this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
         // TODO transaction.getFiatAmount()
 //        ((TextView)this.findViewById(R.id.txdetail_fiat_content)).setText(transaction.getAmount().toFriendlyString());
-
         // TODO Format the Date properly (make it shorter, without MEZ indication)
-        ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
-
+//        ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
 //        transaction.getTransaction().getExchangeRate();
-
-        ((CollapsingToolbarLayout) this.findViewById(R.id.detail_transaction_collapsing_toolbar)).setTitle(transaction.getAmount().toFriendlyString());
+//        ((CollapsingToolbarLayout) this.findViewById(R.id.detail_transaction_collapsing_toolbar)).setTitle(transaction.getAmount().toFriendlyString());
 
     }
 
@@ -131,4 +140,14 @@ public class TransactionDetailActivity extends AppCompatActivity {
         }
     };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
+
+    private void setupWindowAnimations() {
+        Fade fade = new Fade();
+        fade.setDuration(1000);
+        getWindow().setEnterTransition(fade);
+
+        Slide slide = new Slide();
+        slide.setDuration(1000);
+        getWindow().setReturnTransition(slide);
+    }
 }

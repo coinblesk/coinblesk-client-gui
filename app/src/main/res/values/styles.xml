@@ -217,13 +217,6 @@
         <item name="layout_collapseMode">parallax</item>
     </style>
 
-    <style name="detail_transaction_toolbar">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">?android:attr/actionBarSize</item>
-        <item name="layout_collapseMode">pin</item>
-        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
-    </style>
-
     <style name="qr_dialog_fragment">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>

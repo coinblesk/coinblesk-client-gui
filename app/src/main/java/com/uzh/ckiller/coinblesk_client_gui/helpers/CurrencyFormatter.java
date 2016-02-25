@@ -20,8 +20,6 @@ public class CurrencyFormatter {
         this.mContext = context;
     }
 
-
-
     public SpannableString formatSmall(String amount, String currency) {
 
         // Append Currency

@@ -185,9 +185,9 @@
 
     <!--Transaction Detail-->
     <string name="txdetail_coin_amount_title">Amount</string>
-    <string name="txdetail_fiat_title">Amount in CHF</string>
+    <string name="txdetail_fiat_title">Amount</string>
     <string name="txdetail_confidence_title">Confirmations</string>
-    <string name="txdetail_txhash_title">Tx</string>
+    <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
 
 </resources>

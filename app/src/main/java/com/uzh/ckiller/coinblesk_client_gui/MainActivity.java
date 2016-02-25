@@ -12,6 +12,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.transition.Slide;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
         initNavigationView();
         initViewPager();
+        setupWindowAnimations();
+
     }
 
     private void initViewPager() {
@@ -196,5 +199,12 @@ public class MainActivity extends AppCompatActivity {
         this.stopService(intent);
     }
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
+
+
+    private void setupWindowAnimations() {
+        Slide slide = new Slide();
+        slide.setDuration(1000);
+        getWindow().setExitTransition(slide);
+    }
 }
 

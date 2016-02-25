@@ -1,87 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/detail_transaction_main_content"
-    style="@style/detail_transaction_main_content">
+    <include
+        android:id="@+id/detail_transaction_toolbar"
+        layout="@layout/tool_bar" />
 
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/detail_transaction_appbar"
-        style="@style/detail_transaction_appbar">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary">
 
-        <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/detail_transaction_collapsing_toolbar"
-            style="@style/detail_transaction_collapsing_toolbar">
+        <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/card_margin"
+            card_view:cardBackgroundColor="@color/material_grey_800">
 
             <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                style="@style/Widget.CardContent"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fitsSystemWindows="true"
-                android:orientation="vertical"
-                android:paddingLeft="50dp"
-                android:paddingRight="10dp">
+                android:layout_height="wrap_content">
 
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="112dp">
+                <include layout="@layout/txdetail_amounts" />
 
-                    <TextView
-                        android:id="@+id/txdetail_date_title"
-                        style="@style/detail_textview_title"
-                        android:text="@string/txdetail_date_title" />
+                <!--<include layout="@layout/txdetail_amount_exchangerate"/>-->
 
-                    <TextView
-                        android:id="@+id/txdetail_date_content"
-                        style="@style/detail_textview_content_top"
-                        android:layout_below="@id/txdetail_date_title"
-                        android:paddingTop="4dp" />
+                <include layout="@layout/txdetail_transaction" />
 
-                    <TextView
-                        style="@style/detail_textview_title"
-                        android:layout_below="@id/txdetail_date_content"
-                        android:paddingTop="24dp"
-                        android:text="@string/txdetail_coin_amount_title" />
+                <!--<include layout="@layout/txdetail_date"/>-->
 
-                </RelativeLayout>
+                <!--<include layout="@layout/txdetail_status"-->
+
 
             </LinearLayout>
 
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/detail_transaction_toolbar"
-                style="@style/detail_transaction_toolbar"
-                android:elevation="6dp" />
+            <Button
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|bottom"
+                android:text="Copy TX" />
+        </android.support.v7.widget.CardView>
+    </LinearLayout>
 
-        </android.support.design.widget.CollapsingToolbarLayout>
 
-    </android.support.design.widget.AppBarLayout>
-
-    <android.support.v4.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingTop="24dp">
-
-            <include layout="@layout/cardview_txdetail" />
-
-            <include layout="@layout/listview_txdetail" />
-
-        </LinearLayout>
-
-    </android.support.v4.widget.NestedScrollView>
-
-    <!--<android.support.design.widget.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        android:clickable="true"
-        android:src="@drawable/ic_link_black_18dp"
-        app:layout_anchor="@id/detail_transaction_appbar"
-        app:layout_anchorGravity="bottom|right|end" />-->
-
-</android.support.design.widget.CoordinatorLayout>
+</LinearLayout>
