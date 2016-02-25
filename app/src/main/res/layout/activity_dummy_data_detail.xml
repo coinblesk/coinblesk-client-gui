@@ -26,14 +26,13 @@
 
                 <include layout="@layout/txdetail_amounts" />
 
-                <!--<include layout="@layout/txdetail_amount_exchangerate"/>-->
+                <include layout="@layout/txdetail_confidence"/>
+
+                <include layout="@layout/txdetail_date"/>
+
+                <include layout="@layout/txdetail_exchangerate"/>
 
                 <include layout="@layout/txdetail_transaction" />
-
-                <!--<include layout="@layout/txdetail_date"/>-->
-
-                <!--<include layout="@layout/txdetail_status"-->
-
 
             </LinearLayout>
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/txdetail_date_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:text="@string/txdetail_date_title"
+        android:textColor="@color/colorAccent"
+        android:textSize="@dimen/text_size_small" />
+
+    <View
+        android:id="@+id/separator_date"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/main_color_grey_700" />
+
+    <TextView
+        android:id="@+id/txdetail_date_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/white"
+        android:textSize="@dimen/text_size_medium" />
+
+
+</LinearLayout>
