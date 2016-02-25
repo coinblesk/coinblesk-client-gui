@@ -24,6 +24,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -55,7 +56,9 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
         setSupportActionBar(toolbar);
+//        getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
  /*       CollapsingToolbarLayout collapsingToolbar =
                 (CollapsingToolbarLayout) findViewById(R.id.detail_transaction_collapsing_toolbar);
@@ -68,9 +71,21 @@ public class TransactionDetailActivity extends AppCompatActivity {
         return true;
     }
 
-    private void setTransactionDetails(){
+    private void setTransactionDetails() {
         TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
-        ((TextView)this.findViewById(R.id.transaction_detail_title)).setText(transaction.getTransaction().getHashAsString());
+        ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
+//        ((TextView)this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
+
+        // TODO transaction.getFiatAmount()
+//        ((TextView)this.findViewById(R.id.txdetail_fiat_content)).setText(transaction.getAmount().toFriendlyString());
+
+        // TODO Format the Date properly (make it shorter, without MEZ indication)
+        ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
+
+//        transaction.getTransaction().getExchangeRate();
+
+        ((CollapsingToolbarLayout) this.findViewById(R.id.detail_transaction_collapsing_toolbar)).setTitle(transaction.getAmount().toFriendlyString());
+
     }
 
 

@@ -13,16 +13,44 @@
             android:id="@+id/detail_transaction_collapsing_toolbar"
             style="@style/detail_transaction_collapsing_toolbar">
 
-            <ImageView
-                android:id="@+id/detail_transaction_backdropimage"
-                style="@style/detail_transaction_backdropimage"
-                android:src="@drawable/bitcoin_stack_dark"
-                android:adjustViewBounds="true"
-                android:scaleType="centerCrop"/>
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true"
+                android:orientation="vertical"
+                android:paddingLeft="50dp"
+                android:paddingRight="10dp">
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="112dp">
+
+                    <TextView
+                        android:id="@+id/txdetail_date_title"
+                        style="@style/detail_textview_title"
+                        android:text="@string/txdetail_date_title" />
+
+                    <TextView
+                        android:id="@+id/txdetail_date_content"
+                        style="@style/detail_textview_content_top"
+                        android:layout_below="@id/txdetail_date_title"
+                        android:paddingTop="4dp" />
+
+                    <TextView
+                        style="@style/detail_textview_title"
+                        android:layout_below="@id/txdetail_date_content"
+                        android:paddingTop="24dp"
+                        android:text="@string/txdetail_coin_amount_title" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/detail_transaction_toolbar"
-                style="@style/detail_transaction_toolbar" />
+                style="@style/detail_transaction_toolbar"
+                android:elevation="6dp" />
 
         </android.support.design.widget.CollapsingToolbarLayout>
 
@@ -39,51 +67,21 @@
             android:orientation="vertical"
             android:paddingTop="24dp">
 
-            <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:card_view="http://schemas.android.com/apk/res-auto"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin"
-                card_view:cardBackgroundColor="@color/material_grey_800">
+            <include layout="@layout/cardview_txdetail" />
 
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        style="@style/Widget.CardContent"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:id="@+id/transaction_detail_title"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Info"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lorem_ipsum" />
-
-                    </LinearLayout>
-                </LinearLayout>
-
-            </android.support.v7.widget.CardView>
+            <include layout="@layout/listview_txdetail" />
 
         </LinearLayout>
 
     </android.support.v4.widget.NestedScrollView>
 
-    <android.support.design.widget.FloatingActionButton
+    <!--<android.support.design.widget.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
         android:clickable="true"
-        android:src="@drawable/ic_receive_arrow_48px"
+        android:src="@drawable/ic_link_black_18dp"
         app:layout_anchor="@id/detail_transaction_appbar"
-        app:layout_anchorGravity="bottom|right|end" />
+        app:layout_anchorGravity="bottom|right|end" />-->
 
 </android.support.design.widget.CoordinatorLayout>

@@ -183,4 +183,11 @@
     <string name="address_edit_text_hint">Recipient\s address</string>
     <string name="amount_edit_text_hint">Amount</string>
 
+    <!--Transaction Detail-->
+    <string name="txdetail_coin_amount_title">Amount</string>
+    <string name="txdetail_fiat_title">Amount in CHF</string>
+    <string name="txdetail_confidence_title">Confirmations</string>
+    <string name="txdetail_txhash_title">Tx</string>
+    <string name="txdetail_date_title">Date</string>
+
 </resources>

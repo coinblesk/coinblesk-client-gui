@@ -39,6 +39,7 @@
     <dimen name="text_size_large">18dp</dimen>
     <dimen name="text_size_xlarge">20dp</dimen>
     <dimen name="text_size_xxlarge">24dp</dimen>
+    <dimen name="text_size_xxxlarge">28dp</dimen>
     <dimen name="text_size_diff_large_small">6dp</dimen>
 
     <!--Amount and Keyboard Sizes-->
