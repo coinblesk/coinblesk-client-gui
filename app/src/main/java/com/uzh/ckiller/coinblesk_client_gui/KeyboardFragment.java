@@ -11,8 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import org.bitcoinj.core.Coin;
@@ -213,17 +212,17 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void updateAmount() {
-        final CurrencyFormatter currencyFormatter = new CurrencyFormatter(this.getActivity());
+        final SpannableStringFormatter spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
         if(this.isBitcoinLargeAmount){
-            largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "BTC"));
-            smallTextView.setText(currencyFormatter.formatSmall(fiat.toPlainString(), "CHF"));
+            largeTextView.setText(spannableStringFormatter.toLargeSpannable(this.amountString, "BTC"));
+            smallTextView.setText(spannableStringFormatter.toSmallSpannable(fiat.toPlainString(), "CHF"));
         } else {
-            largeTextView.setText(currencyFormatter.formatLarge(this.amountString, "CHF"));
-            smallTextView.setText(currencyFormatter.formatSmall(coin.toPlainString(), "BTC"));
+            largeTextView.setText(spannableStringFormatter.toLargeSpannable(this.amountString, "CHF"));
+            smallTextView.setText(spannableStringFormatter.toSmallSpannable(coin.toPlainString(), "BTC"));
         }
     }
 

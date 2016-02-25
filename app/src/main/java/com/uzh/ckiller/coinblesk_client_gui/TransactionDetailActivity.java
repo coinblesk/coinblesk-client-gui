@@ -24,21 +24,18 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.Slide;
-import android.util.Log;
 import android.view.Menu;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.w3c.dom.Text;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -48,19 +45,16 @@ import ch.papers.payments.models.TransactionWrapper;
 public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
 
-
     public static final String EXTRA_NAME = "transaction-hash";
-    private CurrencyFormatter currencyFormatter;
-
+    private SpannableStringFormatter spannableStringFormatter;
 
     private String transactionHash;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dummy_data_detail);
-        currencyFormatter = new CurrencyFormatter(this.getApplicationContext());
+        spannableStringFormatter = new SpannableStringFormatter(this.getApplicationContext());
 
         setupWindowAnimations();
 
@@ -86,26 +80,19 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         try {
 
-            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
-            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(currencyFormatter.formatLarge(transaction.getAmount().toPlainString(), "BTC"));
+            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(spannableStringFormatter.toFriendlyAmountString(transaction));
+
+            ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
 
             //TODO Get Exchange Rate from transaction
-            //((TextView)this.findViewById(R.id.txdetail_exchangerate_content)).setText(transaction.getTransaction().getExchangeRate().toString());
             ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText("433.43 CHF");
 
             // TODO Format the Date properly (make it shorter, without MEZ indication)
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
 
-            try {
-                Log.d(TAG, "[Confidence] " + transaction.getTransaction().getConfidence()
-                        + "[UpdateTime]" + transaction.getTransaction().getUpdateTime().toString() +
-                        "[Fee]" + transaction.getTransaction().getFee().toString());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
             ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
-            ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
+            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
+
         }catch(Exception e){
             e.printStackTrace();
         }

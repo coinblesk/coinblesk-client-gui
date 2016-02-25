@@ -17,7 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.CurrencyFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 
 import org.bitcoinj.utils.ExchangeRate;
@@ -32,7 +32,7 @@ import ch.papers.payments.WalletService;
 
 public class CurrentBalanceFragment extends Fragment implements IPreferenceStrings {
 
-    private CurrencyFormatter currencyFormatter;
+    private SpannableStringFormatter spannableStringFormatter;
     private ConnectionIconFormatter connectionIconFormatter;
 
     public static CurrentBalanceFragment newInstance(int page) {
@@ -59,8 +59,8 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        currencyFormatter = new CurrencyFormatter(getContext());
-        connectionIconFormatter = new ConnectionIconFormatter((getContext()));
+        spannableStringFormatter = new SpannableStringFormatter(getContext());
+        connectionIconFormatter = new ConnectionIconFormatter(getContext());
     }
 
     @Override
@@ -74,8 +74,8 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(currencyFormatter.formatLarge(walletServiceBinder.getBalance().toPlainString(), "BTC"));
-        smallBalance.setText(currencyFormatter.formatSmall(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+        largeBalance.setText(spannableStringFormatter.toLargeSpannable(walletServiceBinder.getBalance().toPlainString(), "BTC"));
+        smallBalance.setText(spannableStringFormatter.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
