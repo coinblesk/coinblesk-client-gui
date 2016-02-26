@@ -12,9 +12,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -30,6 +32,7 @@ import android.widget.EditText;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.uzh.ckiller.coinblesk_client_gui.R;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -48,6 +51,7 @@ import ch.papers.payments.WalletService;
 public class SendDialogFragment extends DialogFragment {
     public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
     private final static String TAG = SendDialogFragment.class.getName();
+    private SpannableStringFormatter spannableStringFormatter;
 
     private EditText addressEditText;
     private EditText amountEditText;
@@ -67,6 +71,7 @@ public class SendDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
+        this.spannableStringFormatter = new SpannableStringFormatter(getContext());
     }
 
     @NonNull
@@ -95,6 +100,9 @@ public class SendDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         sendCoins();
+                        Snackbar.make(view, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                                .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
+                                .show();
                     }
                 })
                 .setNeutralButton("QR-Scan", new DialogInterface.OnClickListener() {

@@ -10,11 +10,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +30,7 @@ import android.widget.TextView;
 import com.google.zxing.WriterException;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.QREncoder;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 
 import ch.papers.payments.WalletService;
 
@@ -36,11 +41,13 @@ import ch.papers.payments.WalletService;
 public class QrDialogFragment extends DialogFragment {
 
     private final static String TAG = QrDialogFragment.class.getName();
+    private SpannableStringFormatter spannableStringFormatter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         this.getDialog().setTitle(R.string.qr_code_dialog_title);
+        this.spannableStringFormatter = new SpannableStringFormatter(getContext());
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
         return view;
     }
@@ -71,6 +78,9 @@ public class QrDialogFragment extends DialogFragment {
                     ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(getContext().CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("Your address", walletServiceBinder.getCurrentReceiveAddress().toString());
                     clipboard.setPrimaryClip(clip);
+                    Snackbar.make(getView(), spannableStringFormatter.toFriendlySnackbarString((getResources()
+                            .getString(R.string.snackbar_address_copied))), Snackbar.LENGTH_SHORT)
+                            .show();
                 }
             });
 

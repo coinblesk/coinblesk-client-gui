@@ -22,14 +22,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.transition.Fade;
 import android.transition.Slide;
 import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
@@ -53,8 +61,21 @@ public class TransactionDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dummy_data_detail);
+        setContentView(R.layout.activity_txdetail);
         spannableStringFormatter = new SpannableStringFormatter(this.getApplicationContext());
+
+        final Button copyTxButton = (Button) this.findViewById(R.id.txdetail_copytx_button);
+
+        copyTxButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Snackbar.make(v, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                        .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
+                .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
+                        .setAction("Action", null).show();
+
+            }
+        });
 
         setupWindowAnimations();
 
@@ -62,12 +83,12 @@ public class TransactionDetailActivity extends AppCompatActivity {
         this.transactionHash = intent.getStringExtra(EXTRA_NAME);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
-
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

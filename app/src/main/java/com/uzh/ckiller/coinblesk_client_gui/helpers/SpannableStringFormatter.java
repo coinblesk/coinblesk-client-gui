@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 
@@ -81,6 +83,12 @@ public class SpannableStringFormatter {
 
     }
 
-
-
+    public SpannableString toFriendlySnackbarString(String input) {
+        final ForegroundColorSpan whiteSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent));
+        final SpannableString snackbarText = new SpannableString(input);
+        snackbarText.setSpan(whiteSpan, 0, snackbarText.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        return snackbarText;
     }
+
+
+}
