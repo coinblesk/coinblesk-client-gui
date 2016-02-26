@@ -3,6 +3,8 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 //import android.support.v7.app.AlertDialog;
 
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -39,17 +42,6 @@ public class QrDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         this.getDialog().setTitle(R.string.qr_code_dialog_title);
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
-
-        Toolbar dialogToolbar = (Toolbar) view.findViewById(R.id.fake_qr_action_bar);
-        if (dialogToolbar!=null) {
-            final QrDialogFragment window = this;
-            dialogToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    window.dismiss();
-                }
-            });
-        }
-
         return view;
     }
 
@@ -69,17 +61,27 @@ public class QrDialogFragment extends DialogFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            final TextView addressTextView = (TextView)QrDialogFragment.this.getView().findViewById(R.id.address_textview);
+            final TextView addressTextView = (TextView) QrDialogFragment.this.getView().findViewById(R.id.address_textview);
             addressTextView.setText(walletServiceBinder.getCurrentReceiveAddress().toString());
 
-            final ImageView qrCodeImageView = (ImageView)QrDialogFragment.this.getView().findViewById(R.id.qr_code);
+            final Button clipboardButton = (Button) QrDialogFragment.this.getView().findViewById(R.id.qr_dialog_copytoclipboard);
+            clipboardButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(getContext().CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("Your address", walletServiceBinder.getCurrentReceiveAddress().toString());
+                    clipboard.setPrimaryClip(clip);
+                }
+            });
+
+            final ImageView qrCodeImageView = (ImageView) QrDialogFragment.this.getView().findViewById(R.id.qr_code);
             try {
                 Bitmap qrBitmap = QREncoder.encodeAsBitmap(walletServiceBinder.getCurrentReceiveAddress().toString());
                 qrCodeImageView.setImageBitmap(qrBitmap);
             } catch (WriterException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG,"address: "+walletServiceBinder.getCurrentReceiveAddress().toString());
+            Log.d(TAG, "address: " + walletServiceBinder.getCurrentReceiveAddress().toString());
         }
 
         @Override

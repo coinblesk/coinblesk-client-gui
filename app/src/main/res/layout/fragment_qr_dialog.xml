@@ -4,39 +4,36 @@
     android:layout_gravity="center"
     android:orientation="vertical">
 
-    <include
-        android:id="@+id/fake_qr_action_bar"
-        layout="@layout/dialog_tool_bar" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:minWidth="400dp"
         android:background="@color/colorPrimary"
+        android:minWidth="400dp"
         android:orientation="vertical"
         android:paddingTop="@dimen/padding_normal">
 
-    <ImageView
-        android:id="@+id/qr_code"
-        style="@style/qr_code" />
+        <ImageView
+            android:id="@+id/qr_code"
+            style="@style/qr_code" />
 
-    <TextView
-        android:id="@+id/address_textview"
-        style="@style/address_textview" />
+        <TextView
+            android:id="@+id/address_textview"
+            style="@style/address_textview" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="right"
-        android:orientation="horizontal">
-
-        <Button
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/qr_code_copy_to_clipboard" />
-    </LinearLayout>
+            android:gravity="right"
+            android:orientation="horizontal">
 
-     </LinearLayout>
+            <Button
+                android:id="@+id/qr_dialog_copytoclipboard"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/qr_code_copy_to_clipboard" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
