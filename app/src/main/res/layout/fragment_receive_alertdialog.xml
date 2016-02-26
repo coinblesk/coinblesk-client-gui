@@ -23,12 +23,12 @@
         layout="@layout/receive_contactless_item" />
 
     <include
-        android:id="@+id/receive_contactless_button"
-        layout="@layout/receive_contactless_item" />
+        android:id="@+id/receive_email_button"
+        layout="@layout/receive_email_item" />
 
     <include
-        android:id="@+id/receive_contactless_button"
-        layout="@layout/receive_contactless_item" />
+        android:id="@+id/receive_qrcode_button"
+        layout="@layout/receive_qrcode_item" />
 
 
 </LinearLayout>

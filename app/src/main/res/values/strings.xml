@@ -192,4 +192,12 @@
     <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
 
+    <!--Receive Dialog Strings-->
+    <string name="receive_email_title">E-Mail</string>
+    <string name="receive_email_description">Request via E-Mail</string>
+    <string name="receive_qrcode_title">QR Code</string>
+    <string name="receive_qrcode_description">Generate a QR Code</string>
+    <string name="receive_contactless_title">Contactless</string>
+    <string name="receive_contactless_description">Use NFC, BT or Wifi Direct</string>
+
 </resources>

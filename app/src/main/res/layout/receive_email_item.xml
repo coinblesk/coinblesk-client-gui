@@ -4,14 +4,14 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/receive_contactless_touch_area"
+        android:id="@+id/receive_email_touch_area"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/material_grey_800"
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/receive_contactless_icon"
+            android:id="@+id/receive_email_icon"
             android:layout_width="@dimen/transaction_icon_size"
             android:layout_height="@dimen/transaction_icon_size"
             android:layout_marginBottom="@dimen/transaction_icon_horizontal_padding"
@@ -19,7 +19,7 @@
             android:layout_marginRight="@dimen/transaction_icon_horizontal_padding"
             android:layout_marginTop="@dimen/transaction_icon_horizontal_padding"
             android:contentDescription="@null"
-            android:src="@drawable/ic_send_contactless_24_nopad" />
+            android:src="@drawable/ic_email_white_24dp" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -29,25 +29,25 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/receive_contactless_title"
+                android:id="@+id/receive_email_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="24dp"
                 android:layout_marginRight="24dp"
                 android:layout_marginTop="8dp"
                 android:ellipsize="end"
-                android:text="@string/receive_contactless_title"
+                android:text="E-Mail"
                 android:textColor="@color/white"
                 android:textSize="@dimen/text_size_medium" />
 
             <TextView
-                android:id="@+id/receive_contactless_description"
+                android:id="@+id/receive_email_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:layout_marginTop="4dp"
-                android:text="@string/receive_contactless_description"
+                android:text="Request Bitcoins via E-Mail"
                 android:textColor="@color/white_30_percent"
                 android:textSize="@dimen/text_size_medium" />
 
