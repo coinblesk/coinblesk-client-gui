@@ -15,11 +15,14 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.google.zxing.client.android.Intents;
@@ -42,7 +45,7 @@ import ch.papers.payments.WalletService;
  * Created by ckiller
  */
 
-public class SendDialogFragment extends DialogFragment {
+public class SendDialogFragment extends DialogFragment implements View.OnClickListener {
     public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
 
     public static final String AMOUNT_KEY = "AMOUNT_KEY";
@@ -52,6 +55,7 @@ public class SendDialogFragment extends DialogFragment {
 
     private EditText addressEditText;
     private EditText amountEditText;
+    private SpannableStringFormatter spannableStringFormatter;
 
 
     public static DialogFragment newInstance(Coin amount) {
@@ -71,13 +75,14 @@ public class SendDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
-        final  SpannableStringFormatter spannableStringFormatter = new SpannableStringFormatter(getContext());
-        final View view = inflater.inflate(R.layout.fragment_send_alertdialog, null);
+
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_send_dialog, container);
+        spannableStringFormatter = new SpannableStringFormatter(getContext());
 
         try {
             Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
@@ -87,36 +92,43 @@ public class SendDialogFragment extends DialogFragment {
 
         }
 
-        Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY,0));
+        Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
         this.amountEditText.setText(amount.toString());
 
-        return new AlertDialog.Builder(getActivity())
-                .setTitle("Send Bitcoins")
-                .setView(view)
-                .setCancelable(true)
-                .setPositiveButton("Send", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        sendCoins();
-                        Snackbar.make(view, spannableStringFormatter.toFriendlySnackbarString(getResources()
-                                .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
-                                .show();
-                    }
-                })
-                .setNeutralButton("QR-Scan", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                }).create();
+        view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
+        view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
+        view.findViewById(R.id.fragment_send_dialog_send).setOnClickListener(this);
+
+        return view;
+
     }
+
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.setTitle(R.string.fragment_send_dialog_title);
+        return dialog;
+    }
+
+    public void onClick(View v) {
+
+        switch (v.getId()) {
+            case R.id.fragment_send_dialog_send:
+                sendCoins();
+                Snackbar.make(v, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                        .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
+                        .show();
+                break;
+            case R.id.fragment_send_dialog_cancel:
+                getDialog().cancel();
+                break;
+            case R.id.fragment_send_dialog_qr_scan:
+                IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+                break;
+        }
+
+
+        }
 
 
     @Override
@@ -189,3 +201,4 @@ public class SendDialogFragment extends DialogFragment {
     };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 }
+

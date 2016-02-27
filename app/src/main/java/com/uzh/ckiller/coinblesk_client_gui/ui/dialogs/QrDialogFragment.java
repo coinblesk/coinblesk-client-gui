@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -66,9 +67,9 @@ public class QrDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        this.getDialog().setTitle(R.string.qr_code_dialog_title);
         this.spannableStringFormatter = new SpannableStringFormatter(getContext());
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
+        getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 
         final TextView addressTextView = (TextView) view.findViewById(R.id.address_textview);
         addressTextView.setText(bitcoinURI.getAddress().toString());
