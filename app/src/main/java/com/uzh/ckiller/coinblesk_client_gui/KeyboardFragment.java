@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -12,8 +13,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -25,7 +24,7 @@ import java.math.BigDecimal;
  * Created by ckiller on 24/01/16.
  */
 
-public class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
     SwipeRefreshLayout mSwipeRefreshLayout;
     private Handler handler = new Handler();
 
@@ -35,10 +34,6 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
     private String currencyCode = "CHF";
     private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat(currencyCode, "430"));
     private boolean isBitcoinLargeAmount = true;
-
-    public static KeyboardFragment newInstance() {
-        return new KeyboardFragment();
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -196,7 +191,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    private Coin getCoin(){
+    protected Coin getCoin(){
         if(isBitcoinLargeAmount){
             return Coin.parseCoin(this.amountString);
         } else {
@@ -204,7 +199,7 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    private Fiat getFiat(){
+    protected Fiat getFiat(){
         if(!isBitcoinLargeAmount){
             return Fiat.parseFiat(currencyCode,this.amountString);
         } else {
@@ -270,10 +265,11 @@ public class KeyboardFragment extends Fragment implements View.OnClickListener, 
     @Override
     public void onEnter() {
         if(this.getCoin().isPositive()){
-//            ReceiveDialogFragment.newInstance(this.getCoin()).show(this.getFragmentManager(),"receive_dialog_fragment");
-            SendDialogFragment.newInstance(this.getCoin()).show(this.getFragmentManager(),"send_dialog_fragment");
+            this.getDialogFragmemt().show(this.getFragmentManager(),"keyboard_dialog_fragment");
         }
     }
+
+    protected abstract DialogFragment getDialogFragmemt();
 }
 
 

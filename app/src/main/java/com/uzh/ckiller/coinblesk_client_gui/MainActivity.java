@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -34,10 +35,6 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getName();
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
-    private SampleFragmentPagerAdapter fragmentPagerAdapter;
-    private CharSequence Title;
-    private QrDialogFragment qrDialogFragment;
-    private ViewPager viewPager;
 
 
 //TODO Create Landscape views for all Fragments. E.g. Landscape View for send / receive with smaller representation of the Balance fragment.
@@ -55,10 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViewPager() {
         // Get the ViewPager and set its PagerAdapter so that it can display items
-        viewPager = (ViewPager) findViewById(R.id.viewpager);
-        fragmentPagerAdapter = new SampleFragmentPagerAdapter(getSupportFragmentManager(), MainActivity.this);
-        viewPager.setAdapter(fragmentPagerAdapter);
-
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
 
         // Give the TabLayout the ViewPager
         TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
@@ -76,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void setTitle(CharSequence title) {
-        Title = title;
-        getActionBar().setTitle(Title);
+        getActionBar().setTitle(title);
     }
 
 
@@ -177,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showQrDialog() {
-        qrDialogFragment = new QrDialogFragment();
+        final DialogFragment qrDialogFragment = new QrDialogFragment();
         qrDialogFragment.show(this.getSupportFragmentManager(), "qr_dialog_fragment");
     }
 
