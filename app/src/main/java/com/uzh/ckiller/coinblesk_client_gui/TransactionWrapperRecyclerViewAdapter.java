@@ -22,16 +22,18 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public final View view;
-        public final ImageView imageView;
+        public final ImageView imageViewTxIcon;
         public final TextView textViewTitle;
         public final TextView textViewDescription;
+        public final ImageView imageViewStatus;
 
         public ViewHolder(View view) {
             super(view);
             this.view = view;
-            this.imageView = (ImageView) view.findViewById(R.id.transaction_icon);
+            this.imageViewTxIcon = (ImageView) view.findViewById(R.id.transaction_icon);
             this.textViewTitle = (TextView) view.findViewById(R.id.transaction_title);
             this.textViewDescription = (TextView) view.findViewById(R.id.transaction_description);
+            this.imageViewStatus = (ImageView) view.findViewById(R.id.transaction_title_icon_status);
         }
     }
 
@@ -52,8 +54,10 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final TransactionWrapper transaction = transactionWrappers.get(position);
         holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
-        holder.textViewDescription.setText(transaction.getTransaction().getUpdateTime()+"");
-        holder.imageView.setImageResource(transaction.getAmount().isNegative()?R.drawable.ic_send_arrow_48px:R.drawable.ic_receive_arrow_48px);
+        holder.textViewDescription.setText(transaction.getTransaction().getUpdateTime() + "");
+        holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative() ? R.drawable.ic_send_arrow_48px : R.drawable.ic_receive_arrow_48px);
+        // TODO properly define which Icon to choose from (isMature()) not)
+        holder.imageViewStatus.setImageResource(transaction.getTransaction().isMature() ? R.drawable.ic_clock_white_18dp : R.drawable.ic_checkbox_marked_circle_outline_white_18dp);
 
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
