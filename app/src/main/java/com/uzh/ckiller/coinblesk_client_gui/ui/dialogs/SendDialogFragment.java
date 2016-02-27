@@ -12,21 +12,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.widget.Toolbar;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.google.zxing.client.android.Intents;
@@ -37,9 +30,10 @@ import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.w3c.dom.Text;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -50,47 +44,52 @@ import ch.papers.payments.WalletService;
 
 public class SendDialogFragment extends DialogFragment {
     public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
+
+    public static final String AMOUNT_KEY = "AMOUNT_KEY";
+    public static final String ADDRESS_KEY = "ADDRESS_KEY";
+
     private final static String TAG = SendDialogFragment.class.getName();
-    private SpannableStringFormatter spannableStringFormatter;
 
     private EditText addressEditText;
     private EditText amountEditText;
-    private TextInputLayout addressTextInputLayout;
-    private TextInputLayout amountTextInputLayout;
-    private Coin amount;
+
 
     public static DialogFragment newInstance(Coin amount) {
         DialogFragment fragment = new SendDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putLong("amount", amount.value);
+        arguments.putLong(AMOUNT_KEY, amount.value);
         fragment.setArguments(arguments);
         return fragment;
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
-        this.spannableStringFormatter = new SpannableStringFormatter(getContext());
+    public static DialogFragment newInstance(Address address, Coin amount) {
+        DialogFragment fragment = new SendDialogFragment();
+        Bundle arguments = new Bundle();
+        arguments.putLong(AMOUNT_KEY, amount.value);
+        arguments.putString(ADDRESS_KEY, address.toString());
+        fragment.setArguments(arguments);
+        return fragment;
     }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        // QR Code
-        // IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
-
         LayoutInflater inflater = LayoutInflater.from(getActivity());
+        final  SpannableStringFormatter spannableStringFormatter = new SpannableStringFormatter(getContext());
         final View view = inflater.inflate(R.layout.fragment_send_alertdialog, null);
 
-        this.addressTextInputLayout = (TextInputLayout) view.findViewById(R.id.address_text_input_layout);
-        this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
+        try {
+            Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
+            this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
+            this.addressEditText.setText(address.toString());
+        } catch (AddressFormatException e) {
 
-        this.amountTextInputLayout = (TextInputLayout) view.findViewById(R.id.amount_text_input_layout);
+        }
+
+        Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY,0));
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-
-        amountEditText.setText(amount.toString());
+        this.amountEditText.setText(amount.toString());
 
         return new AlertDialog.Builder(getActivity())
                 .setTitle("Send Bitcoins")
@@ -126,7 +125,12 @@ public class SendDialogFragment extends DialogFragment {
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 final String contents = data.getStringExtra(Intents.Scan.RESULT);
-                this.addressEditText.setText(contents);
+                try {
+                    BitcoinURI bitcoinURI = new BitcoinURI(contents);
+                    this.addressEditText.setText(bitcoinURI.getAddress().toString());
+                } catch (BitcoinURIParseException e) {
+                    this.addressEditText.setText(contents);
+                }
             }
         }
     }
@@ -142,6 +146,7 @@ public class SendDialogFragment extends DialogFragment {
 
     private void sendCoins() {
         try {
+            Coin amount = Coin.valueOf(Long.parseLong(this.amountEditText.getText().toString()));
             walletServiceBinder.sendCoins(new Address(Constants.PARAMS, addressEditText.getText().toString()), amount);
         } catch (AddressFormatException e) {
             e.printStackTrace();

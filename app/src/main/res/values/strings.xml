@@ -204,4 +204,14 @@
     <string name="snackbar_coins_sent">Bitcoins successfully sent</string>
     <string name="snackbar_address_copied">Successfully copied to your Clipboard.</string>
 
+    <string name="payment_request_html_content">
+        <![CDATA[
+            <p>Hi</p>
+            <p>I\'m sending you a payment request with coinblesk. Either use this bitcoin link %1$s to pay directly or use the following details:</p>
+            <p><strong>Amount:</strong> %2$s</p>
+            <p><strong>Address:</strong> %3$s</p>
+        ]]>
+    </string>
+    <string name="payment_request_html_subject">New bitcoin payment request</string>
+
 </resources>

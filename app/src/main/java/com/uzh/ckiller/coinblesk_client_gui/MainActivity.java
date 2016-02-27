@@ -1,11 +1,14 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -22,6 +25,12 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.QrDialogFragment;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
+
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.WalletService;
 
@@ -48,12 +57,23 @@ public class MainActivity extends AppCompatActivity {
         initViewPager();
         setupWindowAnimations();
 
+        final Intent intent = getIntent();
+        final String scheme=intent.getScheme();
+        if(scheme != null && scheme.equals(BitcoinURI.BITCOIN_SCHEME)){
+            try {
+                BitcoinURI bitcoinURI = new BitcoinURI(intent.getDataString());
+                SendDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(this.getSupportFragmentManager(),"send-dialog");
+            } catch (BitcoinURIParseException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initViewPager() {
         // Get the ViewPager and set its PagerAdapter so that it can display items
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
+
 
         // Give the TabLayout the ViewPager
         TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
@@ -171,18 +191,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showQrDialog() {
-        final DialogFragment qrDialogFragment = new QrDialogFragment();
-        qrDialogFragment.show(this.getSupportFragmentManager(), "qr_dialog_fragment");
+        QrDialogFragment.newInstance(this.walletServiceBinder.getCurrentReceiveAddress()).show(this.getSupportFragmentManager(), "qr_dialog_fragment");
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG,"onStart");
+    private WalletService.WalletServiceBinder walletServiceBinder;
 
+    @Override
+    public void onStart() {
+        super.onStart();
         Intent intent = new Intent(this, WalletService.class);
         this.startService(intent);
+        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -190,8 +210,24 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         Log.d(TAG,"onStop");
         Intent intent = new Intent(this, WalletService.class);
+        this.unbindService(this.serviceConnection);
         this.stopService(intent);
     }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 

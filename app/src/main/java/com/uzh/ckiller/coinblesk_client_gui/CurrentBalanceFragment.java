@@ -17,8 +17,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -110,7 +110,6 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
             walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
             IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            filter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
             setBalance();
         }
