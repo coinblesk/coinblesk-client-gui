@@ -1,5 +1,7 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialogFragment;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
@@ -21,6 +24,9 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by ckiller on 24/01/16.
@@ -30,8 +36,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     SwipeRefreshLayout mSwipeRefreshLayout;
     private Handler handler = new Handler();
 
+    public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
+
     private String amountString = "0";
     private String sumAmountString = "0";
+    private SharedPreferences prefs;
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
     private String currencyCode = "CHF";
@@ -215,6 +224,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             case R.id.key_clear:
                 // TODO Add clear funct.
                 // TODO Remove input values as well
+                // TODO Clear all preferences
+
+
                 break;
 
             // Customize Buttons for Merchant Mode
@@ -245,7 +257,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
     }
-
 
 
     protected Coin getCoin() {
@@ -319,20 +330,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         this.updateAmount();
     }
 
-    public void onCustom(int customId) {
-
-        // If no value is saved
-        CustomValueDialogFragment.newInstance(Integer.toString(customId)).show(this.getFragmentManager(), "custom_value_dialog_fragment");
-
-        // If
-        // Check if there is a value saved, if yes -> append to sumAmountString
-
-//        this.getCustomValueDialogFragment(Integer.toString(customId)).show(this.getFragmentManager(), "custom_value_dialog_fragment");
-
-
-
-    }
-
     @Override
     public void onEnter() {
         if (this.getCoin().isPositive()) {
@@ -341,4 +338,40 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     protected abstract DialogFragment getDialogFragment();
+
+    public void onCustom(int customKey) {
+
+        this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+        if (this.prefs.contains(Integer.toString(customKey))) {
+            // Add amount to sum of input values
+
+        } else {
+            CustomValueDialogFragment.newInstance(Integer.toString(customKey))
+                    .show(this.getFragmentManager(), "custom_value_dialog_fragment");
+//            this.updateCustomButton(Integer.toString(customKey));
+        }
+    }
+
+    public void updateCustomButton(String customKey){
+
+        // DO THIS AFTER DIALOG HAS BEEN DISMISSED
+        String json = prefs.getString(customKey, null);
+
+        Gson gson = new Gson();
+        String[] customButtonContent = gson.fromJson(json, String[].class);
+
+        List<String> customButtonContentList;
+        customButtonContentList = Arrays.asList(customButtonContent);
+
+
+        switch (customKey){
+            case "1":
+                TextView txtView = (TextView) this.getActivity().findViewById(R.id.key_custom_one);
+                txtView.setText(customButtonContentList.get(2));
+
+        }
+
+    }
+
+
 }

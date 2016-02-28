@@ -1,7 +1,9 @@
 package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -9,7 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.google.gson.Gson;
+import com.uzh.ckiller.coinblesk_client_gui.KeyboardFragment;
 import com.uzh.ckiller.coinblesk_client_gui.R;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by ckiller on 28/02/16.
@@ -21,7 +29,6 @@ public class CustomValueDialogFragment extends DialogFragment implements View.On
     public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
     public static final String DESCRIPTION_IDENTIFIER = "]DESCRIPTION";
     public static final String PRICE_IDENTIFIER = "]PRICE";
-
 
     private EditText descriptionEditText;
     private EditText priceEditText;
@@ -65,11 +72,12 @@ public class CustomValueDialogFragment extends DialogFragment implements View.On
     private void saveInput() {
         SharedPreferences prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("[" + getArguments().get(CUSTOMIZE_BUTTON_KEY).toString()
-                + DESCRIPTION_IDENTIFIER, descriptionEditText.getText().toString());
-        editor.putString("[" + getArguments().get(CUSTOMIZE_BUTTON_KEY).toString()
-                + PRICE_IDENTIFIER, priceEditText.getText().toString());
-
+        Gson gson = new Gson();
+        List<String> customButton = Arrays.asList(descriptionEditText.getText().toString(),
+                priceEditText.getText().toString());
+        String jsonCustomButton = gson.toJson(customButton);
+        editor.putString(getArguments().get(CUSTOMIZE_BUTTON_KEY).toString(), jsonCustomButton);
         editor.commit();
+
     }
 }
