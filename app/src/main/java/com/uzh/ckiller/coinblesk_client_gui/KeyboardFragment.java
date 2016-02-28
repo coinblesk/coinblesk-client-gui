@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,15 +17,14 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialogFragment;
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.security.Key;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,15 +32,18 @@ import java.util.List;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     SwipeRefreshLayout mSwipeRefreshLayout;
     private Handler handler = new Handler();
+    private final static String TAG = KeyboardFragment.class.getName();
+
 
     public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
 
     private String amountString = "0";
     private String sumAmountString = "0";
     private SharedPreferences prefs;
+    private SpannableStringFormatter spannableStringFormatter;
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
     private String currencyCode = "CHF";
@@ -276,7 +279,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void updateAmount() {
-        final SpannableStringFormatter spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
+        spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
 
@@ -346,29 +349,58 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             // Add amount to sum of input values
 
         } else {
-            CustomValueDialogFragment.newInstance(Integer.toString(customKey))
-                    .show(this.getFragmentManager(), "custom_value_dialog_fragment");
-//            this.updateCustomButton(Integer.toString(customKey));
+            CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
+            cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
+                @Override
+                public void onSharedPrefsUpdated(String customKey) {
+                   updateCustomButton(customKey);
+                }
+            });
+            cvd.show();
         }
     }
 
-    public void updateCustomButton(String customKey){
-
-        // DO THIS AFTER DIALOG HAS BEEN DISMISSED
+    public void updateCustomButton(String customKey) {
         String json = prefs.getString(customKey, null);
-
         Gson gson = new Gson();
-        String[] customButtonContent = gson.fromJson(json, String[].class);
 
+        String[] customButtonContent = gson.fromJson(json, String[].class);
         List<String> customButtonContentList;
         customButtonContentList = Arrays.asList(customButtonContent);
 
-
-        switch (customKey){
+        switch (customKey) {
             case "1":
-                TextView txtView = (TextView) this.getActivity().findViewById(R.id.key_custom_one);
-                txtView.setText(customButtonContentList.get(2));
-
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_one))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
+            case "2":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_two))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0), customButtonContentList.get(1)));
+                break;
+            case "3":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_three))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
+            case "4":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_four))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
+            case "5":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_five))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0), customButtonContentList.get(1)));
+                break;
+            case "6":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_six))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
+            case "7":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_seven))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
+            case "8":
+                ((TextView)this.getActivity().findViewById(R.id.key_custom_eight))
+                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                break;
         }
 
     }
