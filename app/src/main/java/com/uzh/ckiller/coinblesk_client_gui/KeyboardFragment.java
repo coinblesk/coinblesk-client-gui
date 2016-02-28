@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialogFragment;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -29,6 +31,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private Handler handler = new Handler();
 
     private String amountString = "0";
+    private String sumAmountString = "0";
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
     private String currencyCode = "CHF";
@@ -97,7 +100,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initLarge(View view) {
-        // Numbers '00 0 1 2 3 4 5 6 7 8 9,' and '.'
+        // Numbers '00 0 1 2 3 4 5 6 7 8 9 . + x  clear'
         view.findViewById(R.id.key_one).setOnClickListener(this);
         view.findViewById(R.id.key_two).setOnClickListener(this);
         view.findViewById(R.id.key_three).setOnClickListener(this);
@@ -119,9 +122,21 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         view.findViewById(R.id.amount_backspace_image_view).setOnClickListener(this);
         // Switch Currency Button
         view.findViewById(R.id.amount_switch_image_view).setOnClickListener(this);
+
+        // Customize Buttons for Merchant Mode
+        view.findViewById(R.id.key_custom_one).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_two).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_three).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_four).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_five).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_six).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_seven).setOnClickListener(this);
+        view.findViewById(R.id.key_custom_eight).setOnClickListener(this);
+
     }
 
     private OnKeyboardListener onKeyboardListener;
+
 
     @Override
     public void onClick(View v) {
@@ -181,27 +196,69 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
 
             case R.id.amount_switch_image_view:
-                this.isBitcoinLargeAmount =! this.isBitcoinLargeAmount;
+                this.isBitcoinLargeAmount = !this.isBitcoinLargeAmount;
                 this.updateAmount();
                 break;
 
             case R.id.key_accept:
                 onKeyboardListener.onEnter();
                 break;
+
+            case R.id.key_plus:
+                // TODO Add 'adding' funct, appending to input values
+                break;
+
+            case R.id.key_multiply:
+                // TODO Add multiply funct.
+                break;
+
+            case R.id.key_clear:
+                // TODO Add clear funct.
+                // TODO Remove input values as well
+                break;
+
+            // Customize Buttons for Merchant Mode
+            case R.id.key_custom_one:
+                onKeyboardListener.onCustom(1);
+                break;
+            case R.id.key_custom_two:
+                onKeyboardListener.onCustom(2);
+                break;
+            case R.id.key_custom_three:
+                onKeyboardListener.onCustom(3);
+                break;
+            case R.id.key_custom_four:
+                onKeyboardListener.onCustom(4);
+                break;
+            case R.id.key_custom_five:
+                onKeyboardListener.onCustom(5);
+                break;
+            case R.id.key_custom_six:
+                onKeyboardListener.onCustom(6);
+                break;
+            case R.id.key_custom_seven:
+                onKeyboardListener.onCustom(7);
+                break;
+            case R.id.key_custom_eight:
+                onKeyboardListener.onCustom(8);
+                break;
         }
+
     }
 
-    protected Coin getCoin(){
-        if(isBitcoinLargeAmount){
+
+
+    protected Coin getCoin() {
+        if (isBitcoinLargeAmount) {
             return Coin.parseCoin(this.amountString);
         } else {
             return exchangeRate.fiatToCoin(this.getFiat());
         }
     }
 
-    protected Fiat getFiat(){
-        if(!isBitcoinLargeAmount){
-            return Fiat.parseFiat(currencyCode,this.amountString);
+    protected Fiat getFiat() {
+        if (!isBitcoinLargeAmount) {
+            return Fiat.parseFiat(currencyCode, this.amountString);
         } else {
             return exchangeRate.coinToFiat(this.getCoin());
         }
@@ -214,7 +271,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
-        if(this.isBitcoinLargeAmount){
+        if (this.isBitcoinLargeAmount) {
             largeTextView.setText(spannableStringFormatter.toLargeSpannable(this.amountString, "BTC"));
             smallTextView.setText(spannableStringFormatter.toSmallSpannable(fiat.toPlainString(), "CHF"));
         } else {
@@ -262,14 +319,26 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         this.updateAmount();
     }
 
+    public void onCustom(int customId) {
+
+        // If no value is saved
+        CustomValueDialogFragment.newInstance(Integer.toString(customId)).show(this.getFragmentManager(), "custom_value_dialog_fragment");
+
+        // If
+        // Check if there is a value saved, if yes -> append to sumAmountString
+
+//        this.getCustomValueDialogFragment(Integer.toString(customId)).show(this.getFragmentManager(), "custom_value_dialog_fragment");
+
+
+
+    }
+
     @Override
     public void onEnter() {
-        if(this.getCoin().isPositive()){
-            this.getDialogFragmemt().show(this.getFragmentManager(),"keyboard_dialog_fragment");
+        if (this.getCoin().isPositive()) {
+            this.getDialogFragment().show(this.getFragmentManager(), "keyboard_dialog_fragment");
         }
     }
 
-    protected abstract DialogFragment getDialogFragmemt();
+    protected abstract DialogFragment getDialogFragment();
 }
-
-

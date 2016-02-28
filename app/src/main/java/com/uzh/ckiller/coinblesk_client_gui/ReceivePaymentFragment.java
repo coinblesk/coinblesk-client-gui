@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialogFragment;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
 
 import org.bitcoinj.uri.BitcoinURI;
@@ -27,7 +28,7 @@ public class ReceivePaymentFragment extends KeyboardFragment {
     }
 
     @Override
-    protected DialogFragment getDialogFragmemt() {
+    protected DialogFragment getDialogFragment() {
         try {
             return ReceiveDialogFragment.newInstance(new BitcoinURI(BitcoinURI.convertToBitcoinURI(walletServiceBinder.getCurrentReceiveAddress(),this.getCoin(),"","")));
         } catch (BitcoinURIParseException e) {

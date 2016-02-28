@@ -3,6 +3,7 @@ package com.uzh.ckiller.coinblesk_client_gui;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialogFragment;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 /**
@@ -17,7 +18,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     }
 
     @Override
-    protected DialogFragment getDialogFragmemt() {
+    protected DialogFragment getDialogFragment() {
         return SendDialogFragment.newInstance(this.getCoin());
     }
 }

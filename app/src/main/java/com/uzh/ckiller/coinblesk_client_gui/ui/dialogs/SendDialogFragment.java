@@ -76,8 +76,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     }
 
 
-
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

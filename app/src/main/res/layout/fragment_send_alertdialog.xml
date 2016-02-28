@@ -25,7 +25,7 @@
                 android:editable="false"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:hint="@string/amount_edit_text_hint"
+                android:hint="@string/fragment_send_dialog_amount_edit_text_hint"
                 android:inputType="textNoSuggestions"
                 android:textSize="@dimen/text_size_xxlarge" />
         </android.support.design.widget.TextInputLayout>
@@ -41,7 +41,7 @@
                 android:id="@+id/address_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/address_edit_text_hint"
+                android:hint="@string/fragment_send_dialog_address_edit_text_hint"
                 android:inputType="textNoSuggestions"
                 android:textSize="@dimen/text_size_small" />
         </android.support.design.widget.TextInputLayout>

@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 /**
  * Created by ckiller
  */
+
 public class MainPagerAdapter extends FragmentPagerAdapter {
     final static int PAGE_COUNT = 3;
     final static private String tabTitles[] = new String[]{"BALANCE", "SEND", "RECEIVE"};
