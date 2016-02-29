@@ -121,7 +121,9 @@ public class WalletService extends Service {
                         clientHalfSignTO.amountToSpend(amount.longValue());
                         clientHalfSignTO.clientPublicKey(multisigClientKey.getPubKey());
                         clientHalfSignTO.p2shAddressTo(address.toString());
-                        final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(clientHalfSignTO).execute().body();
+
+                        Response<PrepareHalfSignTO> prepareHalfSignTOResponse = service.prepareHalfSign(clientHalfSignTO).execute();
+                        final PrepareHalfSignTO serverHalfSignTO = prepareHalfSignTOResponse.body();
 
                         // now let us sign and verify
                         final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();

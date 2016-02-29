@@ -120,11 +120,10 @@ public class SendDialogFragment extends DialogFragment {
                 final String contents = data.getStringExtra(Intents.Scan.RESULT);
                 try {
                     BitcoinURI bitcoinURI = new BitcoinURI(contents);
-                    this.addressEditText.setText(contents);
+                    this.addressEditText.setText(bitcoinURI.getAddress().toString());
                 } catch (BitcoinURIParseException e) {
                     this.addressEditText.setText(contents);
                 }
-                this.addressEditText.setText(contents);
             }
         }
     }
