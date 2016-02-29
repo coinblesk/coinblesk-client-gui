@@ -2,11 +2,8 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +22,6 @@ import java.math.BigDecimal;
  */
 
 public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
-    SwipeRefreshLayout mSwipeRefreshLayout;
-    private Handler handler = new Handler();
-
     private String amountString = "0";
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
@@ -49,24 +43,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             default:
                 initStandard(view);
                 break;
-        }
-
-        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.keyboard_swipe_refresh_layout);
-        try {
-            mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    //TODO: Refresh Exchange Rate Here
-                    handler.post(refreshing);
-                }
-            });
-
-            // sets the colors used in the refresh animation
-            mSwipeRefreshLayout.setColorSchemeResources(R.color.colorAccent, R.color.material_lime_A100,
-                    R.color.material_lime_A400, R.color.material_lime_A400);
-
-        } catch (NullPointerException e) {
-            e.printStackTrace();
         }
 
         this.onKeyboardListener = this;
@@ -222,24 +198,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             smallTextView.setText(spannableStringFormatter.toSmallSpannable(coin.toPlainString(), "BTC"));
         }
     }
-
-    // Code partly from https://yassirh.com/2014/05/how-to-use-swiperefreshlayout-the-right-way/
-    // and here: http://stackoverflow.com/a/28173911
-
-    private final Runnable refreshing = new Runnable() {
-        public void run() {
-            try {
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                }, 5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
 
     @Override
     public void onStart() {

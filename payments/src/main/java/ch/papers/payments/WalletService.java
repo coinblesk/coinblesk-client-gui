@@ -127,21 +127,26 @@ public class WalletService extends Service {
 
                         // now let us sign and verify
                         final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
-                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue(), multisigAddressScript);
-                        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, multisigAddressScript, multisigClientKey);
+
+
+                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue(), null);
+                        final Script redeemScript =ScriptBuilder.createRedeemScript(2, ImmutableList.of(multisigServerKey,multisigClientKey));
+                        Log.d(TAG,transaction.hashForSignature(0,redeemScript, Transaction.SigHash.ALL,false).toString());
+                        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
                         final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures());
+
                         for (int i = 0; i < clientTransactionSignatures.size(); i++) {
                             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
                             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
-                            Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(clientSignature, serverSignature), multisigAddressScript);
+                            Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(serverSignature,clientSignature), redeemScript);
                             transaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
-                            transaction.getInput(i).verify(unspentTransactionOutputs.get(i));
+                            transaction.getInput(i).verify();
                         }
 
                         // generate refund
                         final Transaction halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(1),getCurrentReceiveAddress());
-                        final List<TransactionSignature> refundTransactionSignatures = BitcoinUtils.partiallySign(transaction, multisigAddressScript, multisigClientKey);
+                        final List<TransactionSignature> refundTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
                         final RefundTO clientRefundTO = new RefundTO();
                         clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
                         clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(refundTransactionSignatures));
@@ -187,7 +192,6 @@ public class WalletService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         UuidObjectStorage.getInstance().init(this.getFilesDir());
-
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
             protected void onSetupCompleted() {
@@ -349,6 +353,8 @@ public class WalletService extends Service {
         this.multisigServerKey = serverKey;
         this.multisigClientKey = clientKey;
         this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
+        kit.wallet().removeWatchedScripts(kit.wallet().getWatchedScripts());
+        // now add the right one
         kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }
 
@@ -363,5 +369,11 @@ public class WalletService extends Service {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "on bind");
         return this.walletServiceBinder;
+    }
+
+    private void clearMultisig(){
+        UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+        UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+        UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
     }
 }
