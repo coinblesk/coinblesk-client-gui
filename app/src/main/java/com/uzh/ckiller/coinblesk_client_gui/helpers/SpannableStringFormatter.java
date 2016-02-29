@@ -90,8 +90,10 @@ public class SpannableStringFormatter {
         return snackbarText;
     }
 
-    public String toFriendlyCustomButtonString(String description, String amount){
-        String result = description + System.getProperty("line.separator") + amount;
+    public String toFriendlyProductString(String description, String amount){
+        int descEnd = description.length();
+        int amountEnd = amount.length();
+        String result = amount + System.getProperty("line.separator") + description;
         return result;
     }
 

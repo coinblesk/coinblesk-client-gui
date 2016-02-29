@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +23,6 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
-import java.security.Key;
 import java.util.Arrays;
 import java.util.List;
 
@@ -347,7 +345,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
         if (this.prefs.contains(Integer.toString(customKey))) {
             // Add amount to sum of input values
-
         } else {
             CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
             cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
@@ -364,42 +361,42 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         String json = prefs.getString(customKey, null);
         Gson gson = new Gson();
 
-        String[] customButtonContent = gson.fromJson(json, String[].class);
-        List<String> customButtonContentList;
-        customButtonContentList = Arrays.asList(customButtonContent);
+        String[] contentArray = gson.fromJson(json, String[].class);
+        List<String> contentList;
+        contentList = Arrays.asList(contentArray);
 
         switch (customKey) {
             case "1":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_one))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "2":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_two))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0), customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "3":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_three))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "4":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_four))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "5":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_five))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0), customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "6":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_six))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "7":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_seven))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
             case "8":
                 ((TextView)this.getActivity().findViewById(R.id.key_custom_eight))
-                        .setText(spannableStringFormatter.toFriendlyCustomButtonString(customButtonContentList.get(0),customButtonContentList.get(1)));
+                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
                 break;
         }
 
