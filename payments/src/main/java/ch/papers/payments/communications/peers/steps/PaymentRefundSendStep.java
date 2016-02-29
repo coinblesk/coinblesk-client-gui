@@ -53,7 +53,7 @@ public class PaymentRefundSendStep implements Step {
         final List<TransactionSignature> serverTransactionSignatures = new ArrayList<TransactionSignature>();
         serverTransactionSignatures.add(transactionSignature);
 
-        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, refundAddress, bitcoinURI.getAddress(), bitcoinURI.getAmount().longValue(), multisigAddressScript);
+        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, refundAddress, bitcoinURI.getAddress(), bitcoinURI.getAmount().longValue());
         final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, multisigAddressScript, multisigClientKey);
 
         for (int i = 0; i < clientTransactionSignatures.size(); i++) {

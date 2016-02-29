@@ -22,7 +22,6 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,6 +62,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
         }
 
+        spannableStringFormatter = new SpannableStringFormatter(this.getContext());
         this.onKeyboardListener = this;
         return view;
     }

@@ -6,6 +6,7 @@ package ch.papers.payments.communications.http;
  * a.decarli@papers.ch
  */
 
+import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.json.RefundTO;
@@ -24,4 +25,6 @@ public interface CoinbleskWebService {
     @POST("payment/refund")
     Call<RefundTO> refund(@Body RefundTO refundTO);
 
+    @POST("payment/complete-sign")
+    Call<CompleteSignTO> sign(@Body CompleteSignTO signTO);
 }

@@ -10,7 +10,6 @@ import android.util.Log;
 
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.PrepareHalfSignTO;
-import com.coinblesk.json.RefundTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +35,7 @@ import org.bitcoinj.utils.Fiat;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -129,8 +129,15 @@ public class WalletService extends Service {
                         final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
 
 
-                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue(), null);
-                        final Script redeemScript =ScriptBuilder.createRedeemScript(2, ImmutableList.of(multisigServerKey,multisigClientKey));
+                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
+
+                        //This is needed because otherwise we mix up signature order
+                        List<ECKey> keys = new ArrayList<ECKey>();
+                        keys.add(multisigClientKey);
+                        keys.add(multisigServerKey);
+                        Collections.sort(keys,ECKey.PUBKEY_COMPARATOR);
+
+                        final Script redeemScript =ScriptBuilder.createRedeemScript(2, keys);
                         Log.d(TAG,transaction.hashForSignature(0,redeemScript, Transaction.SigHash.ALL,false).toString());
                         final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
                         final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures());
@@ -139,24 +146,45 @@ public class WalletService extends Service {
                             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
                             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
-                            Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(serverSignature,clientSignature), redeemScript);
+                            // yes, because order matters...
+                            List<TransactionSignature> signatures = keys.indexOf(multisigClientKey)==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+                            Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
                             transaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
                             transaction.getInput(i).verify();
                         }
 
-                        // generate refund
-                        final Transaction halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(1),getCurrentReceiveAddress());
-                        final List<TransactionSignature> refundTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
-                        final RefundTO clientRefundTO = new RefundTO();
-                        clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
-                        clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(refundTransactionSignatures));
-                        clientRefundTO.refundTransaction(halfSignedRefundTransaction.bitcoinSerialize());
+                        int changeOutput = -1;
+                        for (TransactionOutput transactionOutput :transaction.getOutputs()) {
+                            if(transactionOutput.getAddressFromP2SH(Constants.PARAMS).equals(getCurrentReceiveAddress())){
+                                changeOutput = transaction.getOutputs().indexOf(transactionOutput);
+                                break;
+                            }
+                        }
 
-                        // let server sign
-                        final RefundTO serverRefundTo = service.refund(clientRefundTO).execute().body();
-                        final Transaction refundTransaction = new Transaction(Constants.PARAMS,serverRefundTo.refundTransaction());
-                        refundTransaction.verify();
-                        refundTransaction.getInput(0).verify();
+                        /*if(changeOutput >= 0){
+                            // generate refund
+                            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),getCurrentReceiveAddress());
+                            final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
+                            final RefundTO clientRefundTO = new RefundTO();
+                            clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
+                            clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(clientRefundTransactionSignatures));
+                            clientRefundTO.refundTransaction(refundTransaction.unsafeBitcoinSerialize());
+
+
+                            // let server sign
+                            final RefundTO serverRefundTo = service.refund(clientRefundTO).execute().body();
+                            final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTo.serverSignatures());
+                            for (int i = 0; i < clientRefundTransactionSignatures.size(); i++) {
+                                final TransactionSignature serverSignature = serverRefundTransactionSignatures.get(i);
+                                final TransactionSignature clientSignature = clientRefundTransactionSignatures.get(i);
+
+                                // yes, because order matters...
+                                List<TransactionSignature> signatures = keys.indexOf(multisigClientKey)==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+                                Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
+                                refundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
+                                refundTransaction.getInput(i).verify();
+                            }
+                        }*/
 
                         // all good our refund tx is safe, we can broadcast
                         kit.peerGroup().broadcastTransaction(transaction);

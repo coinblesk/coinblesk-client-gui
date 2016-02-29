@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
@@ -20,7 +19,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 
 import com.google.zxing.client.android.Intents;
@@ -79,7 +77,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
         spannableStringFormatter = new SpannableStringFormatter(getContext());
-
+        this.addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
         try {
             Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
             this.addressEditText.setText(address.toString());
