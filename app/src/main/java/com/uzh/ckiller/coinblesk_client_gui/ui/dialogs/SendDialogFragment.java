@@ -3,6 +3,7 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 //import android.support.v7.app.AlertDialog;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;

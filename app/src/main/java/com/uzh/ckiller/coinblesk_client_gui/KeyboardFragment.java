@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +30,10 @@ import java.util.List;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     SwipeRefreshLayout mSwipeRefreshLayout;
     private Handler handler = new Handler();
+    public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
 
     private String amountString = "0";
     private SharedPreferences prefs;
@@ -41,6 +44,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private String currencyCode = "CHF";
     private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat(currencyCode, "430"));
     private boolean isBitcoinLargeAmount = true;
+
+    protected abstract DialogFragment getDialogFragment();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -333,7 +338,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         sumTextView.setText((sumString + "=" + this.getResult(sumString)));
     }
 
-    protected abstract DialogFragment getDialogFragment();
 
     public void onCustom(int customKey) {
 
@@ -418,9 +422,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         String delims = "[+]";
         String result = "";
         String[] tokens = amounts.split(delims);
-        if (tokens.length > 1){
+        if (tokens.length > 1) {
             BigDecimal sum = new BigDecimal(0);
-            for (int i = 0; i < tokens.length; i++){
+            for (int i = 0; i < tokens.length; i++) {
                 sum = sum.add(new BigDecimal(tokens[i]));
             }
             result = sum.toString();

@@ -73,7 +73,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     }
 
     @Override
-    protected DialogFragment getDialogFragmemt() {
+    protected DialogFragment getDialogFragment() {
         return SendDialogFragment.newInstance(this.getCoin());
     }
 
