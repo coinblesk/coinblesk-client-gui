@@ -1,39 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/qr_dialog_fragment"
-    android:layout_gravity="center"
-    android:orientation="vertical">
+    style="@style/qr_dialog_fragment">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/material_grey_800"
-        android:minWidth="400dp"
-        android:orientation="vertical"
-        android:paddingTop="@dimen/padding_normal">
+    <ImageView
+        android:id="@+id/qr_code"
+        style="@style/qr_code" />
 
-        <ImageView
-            android:id="@+id/qr_code"
-            style="@style/qr_code" />
+    <TextView
+        android:id="@+id/address_textview"
+        style="@style/address_textview" />
 
-        <TextView
-            android:id="@+id/address_textview"
-            style="@style/address_textview" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="right"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/qr_dialog_copytoclipboard"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/qr_code_copy_to_clipboard" />
-        </LinearLayout>
-
-    </LinearLayout>
+    <Button
+        android:id="@+id/qr_dialog_copytoclipboard"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:padding="@dimen/spacing_normal"
+        android:text="@string/qr_code_copy_to_clipboard"
+        android:textColor="@color/colorAccent" />
 
 </LinearLayout>
+

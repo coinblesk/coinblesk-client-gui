@@ -220,8 +220,10 @@
     <style name="qr_dialog_fragment">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
+        <item name="android:minWidth">400dp</item>
         <item name="android:background">@color/material_grey_800</item>
         <item name="android:orientation">vertical</item>
+        <item name="android:layout_gravity">center</item>
     </style>
 
     <style name="address_textview">
@@ -229,14 +231,13 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center</item>
+        <item name="android:layout_marginBottom">24dp</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
 
     <style name="qr_code">
         <item name="android:layout_width">@dimen/qr_code_size</item>
         <item name="android:layout_height">@dimen/qr_code_size</item>
-        <item name="android:maxWidth">@dimen/qr_code_size</item>
-        <item name="android:maxHeight">@dimen/qr_code_size</item>
         <item name="android:layout_margin">@dimen/card_margin</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center</item>

@@ -42,6 +42,8 @@
 
                 <include layout="@layout/txdetail_fee" />
 
+                <include layout="@layout/separator_line" />
+
                 <include layout="@layout/txdetail_transaction" />
 
             </LinearLayout>

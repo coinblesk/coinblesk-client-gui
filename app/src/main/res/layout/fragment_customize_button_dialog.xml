@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/qr_dialog_fragment"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/card_margin"
+        android:orientation="vertical">
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/customize_button_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_micro">
+
+            <EditText
+                android:id="@+id/customize_button_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/fragment_customize_button_dialog_description_hint"
+                android:inputType="textNoSuggestions"
+                android:textSize="@dimen/text_size_xxlarge" />
+        </android.support.design.widget.TextInputLayout>
+
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/address_text_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_micro">
+
+            <EditText
+                android:id="@+id/customize_button_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/fragment_customize_button_dialog_price_hint"
+                android:inputType="numberDecimal"
+                android:textSize="@dimen/text_size_xxlarge" />
+        </android.support.design.widget.TextInputLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/customize_button_cancel"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/customize_button_save"
+            android:padding="@dimen/spacing_normal"
+            android:text="@string/fragment_customize_button_cancel"
+            android:textColor="@color/colorAccent" />
+
+        <Button
+            android:id="@+id/customize_button_save"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:gravity="center"
+            android:padding="@dimen/spacing_normal"
+            android:text="@string/fragment_customize_button_save"
+            android:textColor="@color/colorAccent" />
+    </RelativeLayout>
+
+
+</LinearLayout>
+
+

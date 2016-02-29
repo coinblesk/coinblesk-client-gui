@@ -10,6 +10,10 @@
     <string name="about_coinblesk">About Coinblesk</string>
     <string name="share_coinblesk">Share Coinblesk</string>
 
+    <!--Standard Dialog Strings-->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+
     <!--Not Categorized yet-->
     <string name="action_settings">Settings</string>
     <string name="action_qr_code">QR-Code</string>
@@ -47,80 +51,6 @@
     <string name="key_dot">.</string>
     <string name="key_accept">accept</string>
     <!-- End Numeric Keypad Strings-->
-    <!-- Fontello icons -->
-    <string name="fontello_logo">&#xe802;</string>
-    <string name="fontello_search">&#xe816;</string>
-    <string name="fontello_x_mark">&#xe81f;</string>
-    <string name="fontello_x_mark_masked">&#xe806;</string>
-    <string name="fontello_microfon">&#xe80f;</string>
-    <string name="fontello_user">&#xe81b;</string>
-    <string name="fontello_password">&#xe823;</string>
-    <string name="fontello_upload">&#xe81a;</string>
-    <string name="fontello_play">&#xe813;</string>
-    <string name="fontello_heart_empty">&#xe80b;</string>
-    <string name="fontello_heart_full">&#xe80a;</string>
-    <string name="fontello_drag_and_drop">&#xe821;</string>
-
-    <!-- Material Design Icons -->
-    <string name="material_icon_account">&#xe800;</string>
-    <string name="material_icon_account_multiple">&#xe8dc;</string>
-    <string name="material_icon_bookmark">&#xe921;</string>
-    <string name="material_icon_bike">&#xe915;</string>
-    <string name="material_icon_box_full">&#xe86b;</string>
-    <string name="material_icon_clock">&#xe881;</string>
-    <string name="material_icon_check">&#xe867;</string>
-    <string name="material_icon_checked_full">&#xe86f;</string>
-    <string name="material_icon_check_empty">&#xe86a;</string>
-    <string name="material_icon_check_full">&#xe86e;</string>
-    <string name="material_icon_city">&#xe878;</string>
-    <string name="material_icon_cart">&#xe857;</string>
-    <string name="material_icon_chevron_down">&#xe874;</string>
-    <string name="material_icon_chevron_up">&#xe877;</string>
-    <string name="material_icon_date">&#xe848;</string>
-    <string name="material_icon_drink">&#xea08;</string>
-    <string name="material_icon_dollar">&#xe892;</string>
-    <string name="material_icon_email">&#xe99c;</string>
-    <string name="material_icon_eat">&#xeac6;</string>
-    <string name="material_icon_friends">&#xe8d5;</string>
-    <string name="material_icon_flag">&#xe96a;</string>
-    <string name="material_icon_favorite">&#xe9b6;</string>
-    <string name="material_icon_go">&#xea04;</string>
-    <string name="material_icon_home_variant">&#xe9bd;</string>
-    <string name="material_icon_home">&#xe9be;</string>
-    <string name="material_icon_hotels">&#xeae3;</string>
-    <string name="material_icon_heart_outline">&#xe9b3;</string>
-    <string name="material_icon_headphones">&#xe9b1;</string>
-    <string name="material_icon_human">&#xe9c5;</string>
-    <string name="material_icon_headline">&#xeb40;</string>
-    <string name="material_icon_image_box">&#xe952;</string>
-    <string name="material_icon_like">&#xeb03;</string>
-    <string name="material_icon_line_spacing">&#xe988;</string>
-    <string name="material_icon_note">&#xea23;</string>
-    <string name="material_icon_message">&#xea12;</string>
-    <string name="material_icon_play">&#xe831;</string>
-    <string name="material_icon_play_single">&#xea7d;</string>
-    <string name="material_icon_play_square">&#xea7a;</string>
-    <string name="material_icon_play_circle">&#xea7b;</string>
-    <string name="material_icon_play_outline">&#xea7b;</string>
-    <string name="material_icon_pig">&#xea72;</string>
-    <string name="material_icon_password">&#xe9fa;</string>
-    <string name="material_icon_plus_box">&#xea7f;</string>
-    <string name="material_icon_party">&#xe937;</string>
-    <string name="material_icon_star_outline">&#xeade;</string>
-    <string name="material_icon_star">&#xeadf;</string>
-    <string name="material_icon_share">&#xeac0;</string>
-    <string name="material_icon_skip_next">&#xeaca;</string>
-    <string name="material_icon_skip_previous">&#xeacb;</string>
-    <string name="material_icon_soundcloud">&#xead3;</string>
-    <string name="material_icon_statistics">&#xea87;</string>
-    <string name="material_icon_shop">&#xe858;</string>
-    <string name="material_icon_sleep">&#xe9c2;</string>
-    <string name="material_icon_settings">&#xeabe;</string>
-    <string name="material_icon_state">&#xeb62;</string>
-    <string name="material_icon_to_left">&#xe876;</string>
-    <string name="material_icon_video">&#xeb39;</string>
-    <string name="material_icon_undo">&#xeb2c;</string>
-    <string name="material_icon_unfold_more">&#xeb2f;</string>
 
     <string name="qr_code_dialog_title">Your QR Code</string>
     <string name="qr_code_copy_to_clipboard">Copy to Clipboard</string>
@@ -180,8 +110,7 @@
     sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
     laborum.
     </string>
-    <string name="address_edit_text_hint">Recipient\s address</string>
-    <string name="amount_edit_text_hint">Amount</string>
+
 
     <!--Transaction Detail-->
     <string name="txdetail_coin_amount_title">Amount</string>
@@ -191,6 +120,20 @@
     <string name="txdetail_fee_title">Fee</string>
     <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
+
+    <!--Send Dialog Strings-->
+    <string name="fragment_send_dialog_address_edit_text_hint">Recipient\s address</string>
+    <string name="fragment_send_dialog_amount_edit_text_hint">Amount</string>
+    <string name="fragment_send_dialog_title">Send Bitcoins</string>
+    <string name="fragment_send_dialog_send">Send</string>
+    <string name="fragment_send_dialog_qr_scan">QR-Scan</string>
+    <string name="fragment_send_dialog_cancel">Cancel</string>
+
+    <!--Customize Button Dialog Strings-->
+    <string name="fragment_customize_button_dialog_description_hint">Product</string>
+    <string name="fragment_customize_button_dialog_price_hint">Price</string>
+    <string name="fragment_customize_button_save">@string/save</string>
+    <string name="fragment_customize_button_cancel">@string/cancel</string>
 
     <!--Receive Dialog Strings-->
     <string name="receive_email_title">E-Mail</string>

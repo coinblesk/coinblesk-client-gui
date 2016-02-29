@@ -28,6 +28,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     }
 
     @Override
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
         view.setOnTouchListener(new View.OnTouchListener() {
@@ -76,5 +77,8 @@ public class SendPaymentFragment extends KeyboardFragment {
         return SendDialogFragment.newInstance(this.getCoin());
     }
 
-
+    @Override
+    public void onSharedPrefsUpdated(String customKey) {
+        super.initCustomButton(customKey);
+    }
 }

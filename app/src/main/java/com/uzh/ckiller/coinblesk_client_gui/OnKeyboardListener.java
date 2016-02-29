@@ -9,4 +9,6 @@ public interface OnKeyboardListener {
     public void onDigit(int digit);
     public void onDot();
     public void onEnter();
+    public void onCustom(int digit);
+    public void onPlus(String value);
 }

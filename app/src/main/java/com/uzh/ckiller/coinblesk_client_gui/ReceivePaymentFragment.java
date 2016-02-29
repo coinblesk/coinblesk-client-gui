@@ -35,7 +35,12 @@ public class ReceivePaymentFragment extends KeyboardFragment {
 
 
     @Override
-    protected DialogFragment getDialogFragmemt() {
+    public void onSharedPrefsUpdated(String customKey) {
+        super.initCustomButton(customKey);
+    }
+
+    @Override
+    protected DialogFragment getDialogFragment() {
         try {
             return ReceiveDialogFragment.newInstance(new BitcoinURI(BitcoinURI.convertToBitcoinURI(walletServiceBinder.getCurrentReceiveAddress(),this.getCoin(),"","")));
         } catch (BitcoinURIParseException e) {

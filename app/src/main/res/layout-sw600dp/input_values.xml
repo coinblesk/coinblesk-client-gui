@@ -5,8 +5,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/input_values_text_view"
-        style="@style/input_values_text_view"
-        android:text="@string/input_values_sample"/>
+        android:id="@+id/sum_values_text_view"
+        style="@style/input_values_text_view" />
 
 </LinearLayout>

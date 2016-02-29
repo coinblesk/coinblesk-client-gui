@@ -23,6 +23,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -38,6 +40,7 @@ import android.transition.Slide;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
@@ -67,7 +70,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
         final Button copyTxButton = (Button) this.findViewById(R.id.txdetail_copytx_button);
 
         copyTxButton.setOnClickListener(new View.OnClickListener() {
-            @Override
             public void onClick(View v) {
                 Snackbar.make(v, spannableStringFormatter.toFriendlySnackbarString(getResources()
                         .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
