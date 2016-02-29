@@ -23,6 +23,6 @@ public class SendPaymentFragment extends KeyboardFragment {
 
     @Override
     public void onSharedPrefsUpdated(String customKey) {
-        super.updateCustomButton(customKey);
+        super.initCustomButton(customKey);
     }
 }

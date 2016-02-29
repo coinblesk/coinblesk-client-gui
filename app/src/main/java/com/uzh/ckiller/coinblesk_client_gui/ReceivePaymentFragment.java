@@ -8,7 +8,6 @@ import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 
-import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
 
 import org.bitcoinj.uri.BitcoinURI;
@@ -29,7 +28,7 @@ public class ReceivePaymentFragment extends KeyboardFragment {
 
     @Override
     public void onSharedPrefsUpdated(String customKey) {
-        super.updateCustomButton(customKey);
+        super.initCustomButton(customKey);
     }
 
     @Override

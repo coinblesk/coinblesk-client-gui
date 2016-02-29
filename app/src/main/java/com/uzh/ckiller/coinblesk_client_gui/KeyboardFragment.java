@@ -23,6 +23,7 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,9 +40,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
 
     private String amountString = "0";
-    private String sumAmountString = "0";
     private SharedPreferences prefs;
     private SpannableStringFormatter spannableStringFormatter;
+    private String sumString = "";
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
     private String currencyCode = "CHF";
@@ -86,6 +87,23 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         return view;
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
+        if (screenLayout == Configuration.SCREENLAYOUT_SIZE_LARGE || screenLayout == Configuration.SCREENLAYOUT_SIZE_XLARGE) {
+            this.initCustomButtons("1");
+            this.initCustomButtons("2");
+            this.initCustomButtons("3");
+            this.initCustomButtons("4");
+            this.initCustomButtons("5");
+            this.initCustomButtons("6");
+            this.initCustomButtons("7");
+            this.initCustomButtons("8");
+        }
+
+    }
+
     private void initStandard(View view) {
 
         // Numbers '0 1 2 3 4 5 6 7 8 9,' and '.'
@@ -110,6 +128,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initLarge(View view) {
+
+        spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
+        this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+
         // Numbers '00 0 1 2 3 4 5 6 7 8 9 . + x  clear'
         view.findViewById(R.id.key_one).setOnClickListener(this);
         view.findViewById(R.id.key_two).setOnClickListener(this);
@@ -142,6 +164,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         view.findViewById(R.id.key_custom_six).setOnClickListener(this);
         view.findViewById(R.id.key_custom_seven).setOnClickListener(this);
         view.findViewById(R.id.key_custom_eight).setOnClickListener(this);
+
 
     }
 
@@ -215,7 +238,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
 
             case R.id.key_plus:
-                // TODO Add 'adding' funct, appending to input values
+                onPlus(amountString);
                 break;
 
             case R.id.key_multiply:
@@ -223,14 +246,12 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
 
             case R.id.key_clear:
-                // TODO Add clear funct.
-                // TODO Remove input values as well
-                // TODO Clear all preferences
-
-
+                this.sumString = "";
+                this.amountString = "0";
+                updateAmount();
+                updateSum();
                 break;
 
-            // Customize Buttons for Merchant Mode
             case R.id.key_custom_one:
                 onKeyboardListener.onCustom(1);
                 break;
@@ -277,7 +298,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void updateAmount() {
-        spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
 
@@ -338,69 +358,118 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
+    @Override
+    public void onPlus(String value) {
+        if (this.sumString.length() == 0) {
+            this.sumString += value;
+        } else {
+            this.sumString += ("+" + value);
+        }
+        this.amountString = "0";
+        updateAmount();
+        this.updateSum();
+    }
+
+
+    private void updateSum() {
+        final TextView sumTextView = (TextView) this.getView().findViewById(R.id.sum_values_text_view);
+        sumTextView.setText((sumString + "=" + this.getResult(sumString)));
+    }
+
     protected abstract DialogFragment getDialogFragment();
 
     public void onCustom(int customKey) {
 
-        this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
         if (this.prefs.contains(Integer.toString(customKey))) {
-            // Add amount to sum of input values
+            try {
+                this.onPlus((getPrefForCustomKey(Integer.toString(customKey))).get(1));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
             cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
                 @Override
                 public void onSharedPrefsUpdated(String customKey) {
-                   updateCustomButton(customKey);
+                    initCustomButton(customKey);
                 }
             });
             cvd.show();
         }
     }
 
-    public void updateCustomButton(String customKey) {
-        String json = prefs.getString(customKey, null);
-        Gson gson = new Gson();
 
-        String[] contentArray = gson.fromJson(json, String[].class);
-        List<String> contentList;
-        contentList = Arrays.asList(contentArray);
+    public void initCustomButton(String customKey) {
 
-        switch (customKey) {
-            case "1":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_one))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "2":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_two))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "3":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_three))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "4":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_four))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "5":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_five))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "6":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_six))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "7":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_seven))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
-            case "8":
-                ((TextView)this.getActivity().findViewById(R.id.key_custom_eight))
-                        .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
-                break;
+        List<String> contentList = getPrefForCustomKey(customKey);
+
+        if (contentList != null) {
+            switch (customKey) {
+                case "1":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_one))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "2":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_two))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "3":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_three))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "4":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_four))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "5":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_five))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "6":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_six))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "7":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_seven))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+                case "8":
+                    ((TextView) this.getActivity().findViewById(R.id.key_custom_eight))
+                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                    break;
+            }
         }
 
     }
 
+    private List<String> getPrefForCustomKey(String customKey) {
+        String json = prefs.getString(customKey, null);
+        Gson gson = new Gson();
+        String[] contentArray = gson.fromJson(json, String[].class);
+        List<String> contentList = Arrays.asList(contentArray);
+        return contentList;
+    }
+
+    private void initCustomButtons(String customKey) {
+        String json = prefs.getString(customKey, null);
+        if (json != null) {
+            this.initCustomButton(customKey);
+        }
+    }
+
+    private String getResult(String amounts) {
+        String delims = "[+]";
+        String result = "";
+        String[] tokens = amounts.split(delims);
+        if (tokens.length > 1){
+            BigDecimal sum = new BigDecimal(0);
+            for (int i = 0; i < tokens.length; i++){
+                sum = sum.add(new BigDecimal(tokens[i]));
+            }
+            result = sum.toString();
+        }
+
+        return result;
+    }
 
 }
