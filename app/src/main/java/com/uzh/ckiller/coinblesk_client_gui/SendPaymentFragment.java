@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MotionEventCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,32 +31,29 @@ public class SendPaymentFragment extends KeyboardFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
         view.setOnTouchListener(new View.OnTouchListener() {
-            float startPoint = 0;
-            boolean isShowingDialog = false;
+            private float startPoint = 0;
+            private boolean isShowingDialog = false;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                int action = MotionEventCompat.getActionMasked(event);
-
-                switch(action) {
-                    case (MotionEvent.ACTION_DOWN) :
-                        Log.d(TAG,"Action was DOWN"+event.getY());
+                switch(MotionEventCompat.getActionMasked(event)) {
+                    case (MotionEvent.ACTION_DOWN):
                         startPoint = event.getY();
-                        return true;
-                    case (MotionEvent.ACTION_MOVE) :
-                        Log.d(TAG,"Action was MOVE"+event.getY());
+                        break;
+                    case (MotionEvent.ACTION_MOVE):
                         if(!isShowingDialog && event.getY()-startPoint > THRESHOLD){
                             showDialog();
                             isShowingDialog = true;
                         }
-                        return true;
-                    default :
+                        break;
+                    default:
                         if(isShowingDialog){
                             dismissDialog();
                             isShowingDialog = false;
                         }
-                        return true;
+                        break;
                 }
+                return false;
             }
         });
 
