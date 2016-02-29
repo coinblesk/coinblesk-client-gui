@@ -4,6 +4,8 @@ import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.TestNet3Params;
 
+import java.util.UUID;
+
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 21/01/16.
  * Papers.ch
@@ -31,6 +33,16 @@ public class Constants {
     public static final String WALLET_COINS_SENT = "WALLET_COINS_SENT";
     public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
 
+    //Crypto constants
+    public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";
+
     // coinblesk server communication
-    public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.0.101:8080";
+    public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.36:8080/";
+    //public static final String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+
+
+    public static final UUID SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");
+    public static final int SERVICE_PORT = 60030;
+    public final static int DISCOVERABLE_DURATION = 600; //this is unlimited
+    public static final int BUFFER_SIZE=1024;
 }

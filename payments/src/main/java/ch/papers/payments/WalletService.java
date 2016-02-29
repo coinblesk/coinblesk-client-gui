@@ -6,10 +6,13 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Base64;
 import android.util.Log;
 
 import com.coinblesk.json.KeyTO;
+import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.json.RefundTO;
+import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
@@ -21,9 +24,12 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Wallet;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
@@ -40,6 +46,7 @@ import ch.papers.payments.communications.http.CoinbleskWebService;
 import ch.papers.payments.models.ECKeyWrapper;
 import ch.papers.payments.models.TransactionWrapper;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -52,11 +59,17 @@ public class WalletService extends Service {
 
     private final static String TAG = WalletService.class.getName();
 
+    private final Retrofit retrofit = new Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
+            .build();
+
     private ExchangeRate exchangeRate;
     private WalletAppKit kit;
 
     private Script multisigAddressScript;
-
+    private ECKey multisigClientKey;
+    private ECKey multisigServerKey;
 
     public class WalletServiceBinder extends Binder {
         public Address getCurrentReceiveAddress() {
@@ -87,13 +100,77 @@ public class WalletService extends Service {
             return transactions;
         }
 
+        public List<TransactionOutput> getUnspentInstantOutputs() {
+            List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
+            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(true, false)) {
+                if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
+                    unspentInstantOutputs.add(unspentTransactionOutput);
+                }
+            }
+            return unspentInstantOutputs;
+        }
+
+        public void instantSendCoins(final Address address, final Coin amount) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
+                        // let server sign first
+                        final PrepareHalfSignTO clientHalfSignTO = new PrepareHalfSignTO();
+                        clientHalfSignTO.amountToSpend(amount.longValue());
+                        clientHalfSignTO.clientPublicKey(multisigClientKey.getPubKey());
+                        clientHalfSignTO.p2shAddressTo(address.toString());
+                        final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(clientHalfSignTO).execute().body();
+
+                        // now let us sign and verify
+                        final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
+                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue(), multisigAddressScript);
+                        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, multisigAddressScript, multisigClientKey);
+                        final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures());
+                        for (int i = 0; i < clientTransactionSignatures.size(); i++) {
+                            final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
+                            final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
+
+                            Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(clientSignature, serverSignature), multisigAddressScript);
+                            transaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
+                            transaction.getInput(i).verify(unspentTransactionOutputs.get(i));
+                        }
+
+                        // generate refund
+                        final Transaction halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(1),getCurrentReceiveAddress());
+                        final List<TransactionSignature> refundTransactionSignatures = BitcoinUtils.partiallySign(transaction, multisigAddressScript, multisigClientKey);
+                        final RefundTO clientRefundTO = new RefundTO();
+                        clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
+                        clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(refundTransactionSignatures));
+                        clientRefundTO.refundTransaction(halfSignedRefundTransaction.bitcoinSerialize());
+
+                        // let server sign
+                        final RefundTO serverRefundTo = service.refund(clientRefundTO).execute().body();
+                        final Transaction refundTransaction = new Transaction(Constants.PARAMS,serverRefundTo.refundTransaction());
+                        refundTransaction.verify();
+                        refundTransaction.getInput(0).verify();
+
+                        // all good our refund tx is safe, we can broadcast
+                        kit.peerGroup().broadcastTransaction(transaction);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
         public void sendCoins(Address address, Coin amount) {
-            try {
-                final Transaction transaction = WalletService.this.kit.wallet().createSend(address, amount);
-                WalletService.this.kit.peerGroup().broadcastTransaction(transaction);
-            } catch (InsufficientMoneyException e) {
-                final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
-                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
+            if (multisigAddressScript != null && getUnspentInstantOutputs().size()>0) {
+                instantSendCoins(address, amount);
+            } else {
+                try {
+                    final Transaction transaction = WalletService.this.kit.wallet().createSend(address, amount);
+                    WalletService.this.kit.peerGroup().broadcastTransaction(transaction);
+                } catch (InsufficientMoneyException e) {
+                    final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
+                    LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
+                }
             }
         }
 
@@ -176,8 +253,8 @@ public class WalletService extends Service {
                         UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
                             @Override
                             public void onSuccess(ECKeyWrapper clientKey) {
-                                setupMultiSigAddress(ImmutableList.of(clientKey.getKey(),
-                                        serverKey.getKey()));
+                                setupMultiSigAddress(clientKey.getKey(),
+                                        serverKey.getKey());
                             }
 
                             @Override
@@ -191,24 +268,23 @@ public class WalletService extends Service {
                     @Override
                     public void onError(String message) {
                         try {
-                            Retrofit retrofit = new Retrofit.Builder()
-                                    .addConverterFactory(GsonConverterFactory.create())
-                                    .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-                                    .build();
-                            CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
 
+                            CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                             final ECKey clientMultiSigKey = new ECKey();
                             final KeyTO clientKey = new KeyTO();
-                            clientKey.publicKey(Base64.encodeToString(clientMultiSigKey.getPubKey(), Base64.NO_WRAP));
+                            clientKey.publicKey(clientMultiSigKey.getPubKey());
+                            Response<KeyTO> response = service.keyExchange(clientKey).execute();
+                            if(response.isSuccess()) {
+                                final KeyTO serverKey = response.body();
+                                final ECKey serverMultiSigKey = ECKey.fromPublicOnly(serverKey.publicKey());
+                                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+                                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
+                                UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
 
-                            final KeyTO serverKey = service.keyExchange(clientKey).execute().body();
-                            final ECKey serverMultiSigKey = ECKey.fromPublicOnly(Base64.decode(serverKey.publicKey(), Base64.NO_WRAP));
-
-                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-                            UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
-
-                            setupMultiSigAddress(ImmutableList.of(clientMultiSigKey, serverMultiSigKey));
+                                setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
+                            } else {
+                                Log.d(TAG,response.code()+"");
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -267,8 +343,10 @@ public class WalletService extends Service {
         return Service.START_NOT_STICKY;
     }
 
-    private void setupMultiSigAddress(List<ECKey> keys) {
-        this.multisigAddressScript = PaymentProtocol.getInstance().createMultisigScript(keys);
+    private void setupMultiSigAddress(ECKey clientKey, ECKey serverKey) {
+        this.multisigServerKey = serverKey;
+        this.multisigClientKey = clientKey;
+        this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
         kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }
 

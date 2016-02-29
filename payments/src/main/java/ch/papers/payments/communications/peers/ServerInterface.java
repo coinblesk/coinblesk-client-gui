@@ -1,4 +1,4 @@
-package ch.papers.payments.communications.http;
+package ch.papers.payments.communications.peers;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

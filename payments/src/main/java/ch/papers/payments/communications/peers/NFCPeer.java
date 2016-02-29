@@ -1,11 +1,11 @@
-package ch.papers.communications.wifi;
+package ch.papers.payments.communications.peers;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.provider.Settings;
 
-import ch.papers.communications.AbstractPeer;
+import org.bitcoinj.uri.BitcoinURI;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 26/02/16.
@@ -43,5 +43,10 @@ public class NFCPeer extends AbstractPeer{
     @Override
     public boolean isSupported() {
         return this.nfcAdapter != null;
+    }
+
+    @Override
+    public void broadcastPaymentRequest(BitcoinURI paymentUri) {
+
     }
 }

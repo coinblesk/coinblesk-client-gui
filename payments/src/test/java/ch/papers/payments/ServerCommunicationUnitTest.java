@@ -2,10 +2,10 @@ package ch.papers.payments;
 // needed as long as server is not working properly
 
 import com.coinblesk.json.KeyTO;
+import com.google.gson.Gson;
 
 import junit.framework.Assert;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,11 +36,12 @@ public class ServerCommunicationUnitTest {
         CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
 
         KeyTO clientKey = new KeyTO();
-        clientKey.publicKey(Base64.encodeBase64String(testUser.getEcKey().getPubKey()));
+        clientKey.publicKey(testUser.getEcKey().getPubKey());
+
+        System.out.println(new Gson().toJson(clientKey));
 
         Response<KeyTO> serverKey = service.keyExchange(clientKey).execute();
         Assert.assertTrue(serverKey.body().isSuccess());
-
     }
 
 }

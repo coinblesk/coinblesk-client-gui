@@ -3,23 +3,21 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 //import android.support.v7.app.AlertDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.google.zxing.client.android.Intents;
@@ -71,17 +69,15 @@ public class SendDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    @NonNull
+    @Nullable
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final  SpannableStringFormatter spannableStringFormatter = new SpannableStringFormatter(getContext());
-        final View view = inflater.inflate(R.layout.fragment_send_alertdialog, null);
+        final View view = inflater.inflate(R.layout.fragment_send_alertdialog, container);
+        this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
 
         try {
             Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
-            this.addressEditText = ((EditText) view.findViewById(R.id.address_edit_text));
             this.addressEditText.setText(address.toString());
         } catch (AddressFormatException e) {
 
@@ -91,33 +87,30 @@ public class SendDialogFragment extends DialogFragment {
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
         this.amountEditText.setText(amount.toString());
 
-        return new AlertDialog.Builder(getActivity())
-                .setTitle("Send Bitcoins")
-                .setView(view)
-                .setCancelable(true)
-                .setPositiveButton("Send", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        sendCoins();
-                        Snackbar.make(view, spannableStringFormatter.toFriendlySnackbarString(getResources()
-                                .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
-                                .show();
-                    }
-                })
-                .setNeutralButton("QR-Scan", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                }).create();
-    }
+        view.findViewById(R.id.cancel_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        view.findViewById(R.id.send_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendCoins();
+                Snackbar.make(view, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                        .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        });
 
+        view.findViewById(R.id.qr_scan_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+            }
+        });
+        return view;
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -127,10 +120,11 @@ public class SendDialogFragment extends DialogFragment {
                 final String contents = data.getStringExtra(Intents.Scan.RESULT);
                 try {
                     BitcoinURI bitcoinURI = new BitcoinURI(contents);
-                    this.addressEditText.setText(bitcoinURI.getAddress().toString());
+                    this.addressEditText.setText(contents);
                 } catch (BitcoinURIParseException e) {
                     this.addressEditText.setText(contents);
                 }
+                this.addressEditText.setText(contents);
             }
         }
     }

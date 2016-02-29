@@ -7,12 +7,21 @@ package ch.papers.payments.communications.http;
  */
 
 import com.coinblesk.json.KeyTO;
+import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.json.RefundTO;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface CoinbleskWebService {
-    @POST("/payment/key-exchange")
+    @POST("payment/key-exchange")
     Call<KeyTO> keyExchange(@Body KeyTO keyTO);
+
+    @POST("payment/prepare")
+    Call<PrepareHalfSignTO> prepareHalfSign(@Body PrepareHalfSignTO prepareSignTO);
+
+    @POST("payment/refund")
+    Call<RefundTO> refund(@Body RefundTO refundTO);
+
 }

@@ -1,4 +1,4 @@
-package ch.papers.communications;
+package ch.papers.payments.communications.peers;
 
 import android.content.Context;
 

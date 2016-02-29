@@ -14,13 +14,13 @@ android {
         }
         prod {
             // The actual minSdkVersion for the application.
-            minSdkVersion 14
+            minSdkVersion 19
         }
     }
 
     defaultConfig {
         applicationId "com.uzh.ckiller.coinblesk_client_clean_start"
-        minSdkVersion 14
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"

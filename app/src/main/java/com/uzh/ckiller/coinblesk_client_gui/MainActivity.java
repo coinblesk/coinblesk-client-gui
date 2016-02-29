@@ -1,14 +1,17 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -33,7 +36,8 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.WalletService;
-
+import ch.papers.payments.communications.peers.ClientPeerService;
+import ch.papers.payments.communications.peers.ServerPeerService;
 
 
 /**
@@ -42,6 +46,8 @@ import ch.papers.payments.WalletService;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getName();
+    private final static int FINE_LOCATION_PERMISSION_REQUEST = 1;
+
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
@@ -67,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                FINE_LOCATION_PERMISSION_REQUEST);
     }
 
     private void initViewPager() {
@@ -113,7 +123,8 @@ public class MainActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
 
                     case R.id.backup:
-                        Toast.makeText(getApplicationContext(), "Backup Selected", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getApplicationContext(), ClientPeerService.class);
+                        startService(intent);
                         return true;
                     case R.id.settings:
                         Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_SHORT).show();
@@ -121,7 +132,8 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(newAct);
                         return (true);
                     case R.id.about_coinblesk:
-                        Toast.makeText(getApplicationContext(), "About Coinblesk Selected", Toast.LENGTH_SHORT).show();
+                        Intent serviceIntent = new Intent(getApplicationContext(), ServerPeerService.class);
+                        startService(serviceIntent);
                         return true;
                     default:
                         Toast.makeText(getApplicationContext(), "Somethings Wrong", Toast.LENGTH_SHORT).show();
@@ -235,6 +247,25 @@ public class MainActivity extends AppCompatActivity {
         Slide slide = new Slide();
         slide.setDuration(1000);
         getWindow().setExitTransition(slide);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case FINE_LOCATION_PERMISSION_REQUEST: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // BLE and BL will be supported
+                } else {
+                    // BLE and BL will not be supported
+                }
+                return;
+            }
+
+        }
     }
 }
 

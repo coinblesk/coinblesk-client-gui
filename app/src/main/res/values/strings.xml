@@ -213,5 +213,7 @@
         ]]>
     </string>
     <string name="payment_request_html_subject">New bitcoin payment request</string>
+    <string name="send">Send</string>
+    <string name="cancel">Cancel</string>
 
 </resources>

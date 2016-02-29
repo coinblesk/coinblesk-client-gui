@@ -30,7 +30,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.communications.http.MockServerInterface;
-import ch.papers.payments.communications.http.ServerInterface;
+import ch.papers.payments.communications.peers.ServerInterface;
 import ch.papers.payments.models.ECKeyWrapper;
 import ch.papers.payments.models.User;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
@@ -225,7 +225,7 @@ public class PaymentProtocolUnitTest {
 
 
         // before we broadcast creating refund transaction
-        Transaction refundTransaction = paymentProtocol.generateRefundTransaction(req.tx.getOutput(0), kit.wallet().currentReceiveKey());
+        Transaction refundTransaction = paymentProtocol.generateRefundTransaction(req.tx.getOutput(0), kit.wallet().currentReceiveKey().toAddress(Constants.PARAMS));
         TransactionSignature refundTransactionServerSignature = service.createRefund(refundTransaction, paymentProtocol.signMultisigTransaction(req.tx.getOutput(0), refundTransaction, clientUser.getEcKey())).execute().body();
 
         Script refundTransactionInputScript = ScriptBuilder.createMultiSigInputScript(paymentProtocol.signMultisigTransaction(req.tx.getOutput(0), refundTransaction, clientUser.getEcKey()),refundTransactionServerSignature);
@@ -254,7 +254,7 @@ public class PaymentProtocolUnitTest {
 
 
         final Transaction newRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(externalTransaction.getOutput(0),
-                clientUser.getEcKey());
+                clientUser.getEcKey().toAddress(Constants.PARAMS));
         byte[] signedoutputSize = newRefundTransaction.bitcoinSerialize();
 
         TransactionSignature refundTransaction2ServerSignature = service.createRefund(newRefundTransaction, paymentProtocol.signMultisigTransaction(externalTransaction.getOutput(0), newRefundTransaction, clientUser.getEcKey())).execute().body();

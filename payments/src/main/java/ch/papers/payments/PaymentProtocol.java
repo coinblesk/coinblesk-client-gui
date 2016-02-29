@@ -48,16 +48,12 @@ public class PaymentProtocol {
         return toMultisigTransaction;
     }
 
-    public Script createMultisigScript(List<ECKey> keys){
-        return ScriptBuilder.createP2SHOutputScript(2, keys);
-    }
-
     public Transaction generateFromMultisigTransaction(TransactionOutput multisigOutput, ECKey publicServerKey, ECKey publicClientKey, Coin amount, Address address) {
         Coin remainingAmount = multisigOutput.getValue();
         remainingAmount = remainingAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
         remainingAmount = remainingAmount.subtract(amount);
         final List<ECKey> keys = ImmutableList.of(publicClientKey, publicServerKey);
-        final Script script = this.createMultisigScript(keys);
+        final Script script = ScriptBuilder.createP2SHOutputScript(2, keys);
 
         final Transaction externalTransaction = new Transaction(Constants.PARAMS);
         externalTransaction.addInput(multisigOutput);
@@ -77,7 +73,7 @@ public class PaymentProtocol {
         return new TransactionSignature(serverKey.sign(sighash), Transaction.SigHash.ALL, false);
     }
 
-    public Transaction generateRefundTransaction(TransactionOutput output, ECKey publicClientKey) {
+    public Transaction generateRefundTransaction(TransactionOutput output, Address toAddress) {
         final Transaction refundTransaction = new Transaction(Constants.PARAMS);
         final long unixTime = System.currentTimeMillis()/ 1000L;
         final long lockTime = unixTime + (Constants.LOCK_TIME_MONTHS * Constants.UNIX_TIME_MONTH);
@@ -85,7 +81,7 @@ public class PaymentProtocol {
 
         Coin remainingAmount = output.getValue();
         remainingAmount = remainingAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
-        refundTransaction.addOutput(remainingAmount, publicClientKey);
+        refundTransaction.addOutput(remainingAmount, toAddress);
         refundTransaction.setLockTime(lockTime);
 
         return refundTransaction;

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">payments</string>
+    <string name="aiddescription">aiddescription</string>
+    <string name="servicedesc">servicedesc</string>
 </resources>

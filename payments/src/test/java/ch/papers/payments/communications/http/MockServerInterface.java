@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import ch.papers.payments.PaymentProtocol;
+import ch.papers.payments.communications.peers.ServerInterface;
 import ch.papers.payments.models.User;
 import retrofit2.Call;
 import retrofit2.http.Body;
