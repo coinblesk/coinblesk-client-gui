@@ -16,7 +16,7 @@ public class Utils {
         final byte[] concatBuffer = new byte[totalLength];
         int copyCounter = 0;
         for (byte[] byteArray:byteArrays) {
-            System.arraycopy(concatBuffer, 0, byteArray, copyCounter, byteArray.length);
+            System.arraycopy(byteArray, 0, concatBuffer, copyCounter, byteArray.length);
             copyCounter += byteArray.length;
         }
 
