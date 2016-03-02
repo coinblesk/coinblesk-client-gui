@@ -132,8 +132,10 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(newAct);
                         return (true);
                     case R.id.about_coinblesk:
-                        Intent serviceIntent = new Intent(getApplicationContext(), ServerPeerService.class);
-                        startService(serviceIntent);
+                        Intent aboutAct = new Intent(getApplicationContext(), AboutActivity.class);
+                        startActivity(aboutAct);
+//                        Intent serviceIntent = new Intent(getApplicationContext(), ServerPeerService.class);
+//                        startService(serviceIntent);
                         return true;
                     default:
                         Toast.makeText(getApplicationContext(), "Somethings Wrong", Toast.LENGTH_SHORT).show();

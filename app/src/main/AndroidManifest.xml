@@ -45,7 +45,15 @@
         </activity>
 
         <activity
-            android:name="com.uzh.ckiller.coinblesk_client_gui.SettingsActivity"
+            android:name=".SettingsActivity"
+            android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.uzh.ckiller.coinblesk_client_gui.MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".AboutActivity"
             android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
