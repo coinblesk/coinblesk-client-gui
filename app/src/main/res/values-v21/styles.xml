@@ -9,4 +9,11 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <!--This fixes the incorrect android:colorAccent coloring in EditText inside of SendDialogFragment-->
+    <style name="EditTextTheme">
+        <item name="android:colorControlNormal">#c5c5c5</item>
+        <item name="android:colorControlActivated">@color/colorAccent</item>
+        <item name="android:colorControlHighlight">@color/colorAccent</item>
+    </style>
+
 </resources>

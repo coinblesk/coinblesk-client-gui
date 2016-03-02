@@ -264,5 +264,27 @@
         <item name="android:textColor">@color/main_color_grey_300</item>
     </style>
 
+    <style name="AboutLink" parent="">
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:paddingLeft">@dimen/padding_dialog</item>
+        <item name="android:paddingRight">@dimen/padding_dialog</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+
+    <style name="TextAppearance.Body2" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">14sp</item> <!-- bug in AppCompat, can remove this when it's fixed -->
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Body1" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">14sp</item> <!-- bug in AppCompat, can remove this when it's fixed -->
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+
 
 </resources>

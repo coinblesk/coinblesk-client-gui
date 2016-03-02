@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/qr_dialog_fragment">
 
     <LinearLayout
@@ -41,7 +42,8 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/fragment_send_dialog_address_edit_text_hint"
                 android:inputType="textNoSuggestions"
-                android:textSize="@dimen/text_size_small" />
+                android:textSize="@dimen/text_size_small"
+                android:theme="@style/EditTextTheme" />
         </android.support.design.widget.TextInputLayout>
     </LinearLayout>
 

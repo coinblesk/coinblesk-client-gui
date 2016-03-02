@@ -45,4 +45,12 @@
     <color name="cpb_green_dark">#ff6d9b00</color>
     <color name="cpb_white">@android:color/white</color>
 
+    <color name="social_github">@color/main_color_700</color>
+    <color name="social_website">@color/main_color_600</color>
+    <color name="social_coinblesk">@color/main_color_800</color>
+    <color name="light_grey">#fff0f0f0</color>
+
+
+
+
 </resources>

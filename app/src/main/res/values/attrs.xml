@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <declare-styleable name="AspectRatioView">
+        <attr name="aspectRatio" format="float" />
+    </declare-styleable>
+
     <declare-styleable name="ScaledLinearLayout">
         <attr name="linear_layout_ratio" format="float" />
     </declare-styleable>
+
+
+    <!--<declare-styleable name="BaseTheme">
+        <attr name="actionBarIconColor" format="color" />
+        <attr name="actionBarInsetStart" format="dimension" />
+        <attr name="spinnerBarInsetStart" format="dimension" />
+        <attr name="popupItemBackground" format="reference" />
+        <attr name="photoItemForeground" format="reference" />
+        <attr name="photoItemForegroundBorderless" format="reference" />
+        <attr name="imageItemBackground" format="reference"/>
+    </declare-styleable>-->
+
    <!-- <declare-styleable name="MaterialRippleLayout">
         <attr name="rippleColor" format="color" />
         <attr name="rippleDimension" format="dimension" />

@@ -6,6 +6,11 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="detail_backdrop_height">256dp</dimen>
 
+    <!--About Aspect Ratio View -->
+    <item name="aspect_16_9" format="float" type="dimen">1.7778</item>
+    <item name="aspect_4_3" format="float" type="dimen">1.3333</item>
+    <item name="aspect_phi" format="float" type="dimen">1.618</item>
+
     <!--Card Sizes-->
     <dimen name="card_margin">16dp</dimen>
     <dimen name="card_view_margin">10dp</dimen>
@@ -30,6 +35,7 @@
     <dimen name="spacing_normal">8dp</dimen>
     <dimen name="spacing_micro">4dp</dimen>
     <dimen name="padding_normal">16dp</dimen>
+    <dimen name="padding_dialog">24dp</dimen>
 
     <!-- App Primary Text Sizes -->
     <dimen name="text_size_xsmall">11dp</dimen>
@@ -54,5 +60,20 @@
     <!--QR-Dialog Fragment Sizes-->
     <dimen name="qr_code_size">280dp</dimen>
     <dimen name="qr_dialog_size">312dp</dimen>
+
+
+    <!-- Social -->
+    <dimen name="social_default_spacing">24dp</dimen>
+    <dimen name="social_drawable_padding">8dp</dimen>
+    <dimen name="social_icon_size">24dp</dimen>
+    <dimen name="social_font_size">14sp</dimen>
+
+    <dimen name="social_icon_box_size">48dp</dimen>
+    <dimen name="social_icon_box_padding">12dp</dimen>
+
+    <!-- Social panels in landscape mode -->
+    <dimen name="social_landscape_io_logo_panel_height">224dp</dimen>
+    <dimen name="social_landscape_io15_panel_height">224dp</dimen>
+    <dimen name="social_landscape_request_extended_height">112dp</dimen>
 
 </resources>

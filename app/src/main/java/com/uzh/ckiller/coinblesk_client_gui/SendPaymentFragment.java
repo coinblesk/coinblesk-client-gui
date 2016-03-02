@@ -37,18 +37,18 @@ public class SendPaymentFragment extends KeyboardFragment {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch(MotionEventCompat.getActionMasked(event)) {
+                switch (MotionEventCompat.getActionMasked(event)) {
                     case (MotionEvent.ACTION_DOWN):
                         startPoint = event.getY();
                         break;
                     case (MotionEvent.ACTION_MOVE):
-                        if(!isShowingDialog && event.getY()-startPoint > THRESHOLD){
+                        if (!isShowingDialog && event.getY() - startPoint > THRESHOLD) {
                             showDialog();
                             isShowingDialog = true;
                         }
                         break;
                     default:
-                        if(isShowingDialog){
+                        if (isShowingDialog) {
                             dismissDialog();
                             isShowingDialog = false;
                         }

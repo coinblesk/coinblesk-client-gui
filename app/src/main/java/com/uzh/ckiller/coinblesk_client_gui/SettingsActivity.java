@@ -18,6 +18,8 @@ public class SettingsActivity extends AppCompatActivity {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
 
         if (getFragmentManager().findFragmentById(R.id.fragment_settings) == null) {
             getFragmentManager().beginTransaction()

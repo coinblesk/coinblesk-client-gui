@@ -3,6 +3,7 @@ package com.uzh.ckiller.coinblesk_client_gui.helpers;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.widget.ImageView;
 
 import com.uzh.ckiller.coinblesk_client_gui.R;
@@ -60,7 +61,6 @@ public class ConnectionIconFormatter implements IPreferenceStrings {
 
     private void makeVisible(ImageView imageView) {
         imageView.setAlpha(ICON_VISIBLE);
-        imageView.setColorFilter(mContext.getResources()
-                .getColor(R.color.colorAccent));
+        imageView.setColorFilter(ContextCompat.getColor(mContext,R.color.colorAccent));
     }
 }

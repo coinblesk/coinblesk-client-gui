@@ -10,6 +10,14 @@
     <string name="about_coinblesk">About Coinblesk</string>
     <string name="share_coinblesk">Share Coinblesk</string>
 
+    <!--About Coinblesk Strings-->
+    <string name="about_coinblesk_content">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
+
+    <string name="social_website">Coinblesk.com</string>
+    <string name="social_website_content_description">Coinblesk.com</string>
+    <string name="social_github">Github</string>
+    <string name="social_github_content_description">Github</string>
+
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>
     <string name="save">Save</string>
