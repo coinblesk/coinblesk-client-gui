@@ -2,6 +2,7 @@ package com.uzh.ckiller.coinblesk_client_gui.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.Image;
 import android.preference.PreferenceManager;
@@ -10,6 +11,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.util.TypedValue;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
@@ -26,21 +28,51 @@ import ch.papers.payments.models.TransactionWrapper;
 /**
  * Created by ckiller on 03/03/16.
  */
+
 public class UIUtils implements IPreferenceStrings {
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
         StringBuffer stringBuffer = new StringBuffer(amount + " " + currency);
-        SpannableString smallSpannable = new SpannableString(stringBuffer);
-        return smallSpannable;
+        SpannableString spannableString = new SpannableString(stringBuffer);
+        return spannableString;
     }
 
     public static SpannableString toLargeSpannable(Context context, String amount, String currency) {
         final int amountLength = amount.length();
-        SpannableString largeSpannable = new SpannableString(new StringBuffer(amount + " " + currency));
-        largeSpannable.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0); // set size
-        largeSpannable.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);// set color
-        largeSpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, (amountLength + 4), 0);
-        return largeSpannable;
+        SpannableString spannableString = new SpannableString(new StringBuffer(amount + " " + currency));
+        spannableString.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0); // set size
+        spannableString.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);// set color
+        spannableString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, (amountLength + 4), 0);
+
+
+        return spannableString;
+    }
+
+    public static int getLargeTextSize(Context context, int amountLength) {
+
+         /*final int screenLayout = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
+        switch (screenLayout) {
+            case Configuration.SCREENLAYOUT_SIZE_LARGE:
+            case Configuration.SCREENLAYOUT_SIZE_XLARGE:
+                // TABLETS
+                break;
+            default:
+                // PHONES
+                break;
+        }*/
+
+
+        int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
+        if (amountLength > 6) {
+            textSize = context.getResources().getInteger(R.integer.text_size_xlarge);
+        }
+        if (amountLength > 7) {
+            textSize = context.getResources().getInteger(R.integer.text_size_large);
+        }
+        if (amountLength > 8) {
+            textSize = context.getResources().getInteger(R.integer.text_size_medium);
+        }
+        return textSize;
     }
 
     public static SpannableString toFriendlyAmountString(Context context, TransactionWrapper transaction) {
@@ -116,11 +148,6 @@ public class UIUtils implements IPreferenceStrings {
 
     }
 
-    // TODO Dynamically resize textview textsize using this method:
-    //    text.setTextSize(TypedValue.COMPLEX_UNIT_SP,14);
-    //    http://stackoverflow.com/questions/6998938/textview-setting-the-text-size-programmatically-doesnt-seem-to-work
-    //    This is the correct answer. More specifically:
-    //    float myTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 18F, context.getResources().getDisplayMetrics());
 
     public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

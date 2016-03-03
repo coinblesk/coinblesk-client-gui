@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +69,8 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(),walletServiceBinder.getBalance().toPlainString(), "BTC"));
+        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(), walletServiceBinder.getBalance().toPlainString(), "BTC"));
+        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), (walletServiceBinder.getBalance().toPlainString().length())));
         smallBalance.setText(UIUtils.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
     }
 

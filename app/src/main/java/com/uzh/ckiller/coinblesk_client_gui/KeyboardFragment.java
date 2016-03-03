@@ -1,20 +1,15 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
@@ -23,14 +18,13 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener{
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     private String amountString = "0";
     private String sumString = "";
 
@@ -274,6 +268,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
+        largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
+
         if (this.isBitcoinLargeAmount) {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "BTC"));
             smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), "CHF"));
@@ -341,9 +337,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 }
             });
             cvd.show();
-        }else{
+        } else {
             try {
-                this.onPlus(UIUtils.getCustomButton(this.getContext(),(Integer.toString(customKey))).get(1));
+                this.onPlus(UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -395,7 +391,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initCustomButtons(String customKey) {
-        if(UIUtils.isCustomButtonEmpty(this.getContext(),customKey)==false){
+        if (UIUtils.isCustomButtonEmpty(this.getContext(), customKey) == false) {
             this.initCustomButton(customKey);
         }
     }

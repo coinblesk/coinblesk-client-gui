@@ -37,7 +37,7 @@
     <dimen name="padding_normal">16dp</dimen>
     <dimen name="padding_dialog">24dp</dimen>
 
-    <!-- App Primary Text Sizes -->
+    <!--&lt;!&ndash; App Primary Text Sizes &ndash;&gt;
     <dimen name="text_size_xsmall">11dp</dimen>
     <dimen name="text_size_small">12dp</dimen>
     <dimen name="text_size_body">13dp</dimen>
@@ -46,7 +46,19 @@
     <dimen name="text_size_xlarge">20dp</dimen>
     <dimen name="text_size_xxlarge">24dp</dimen>
     <dimen name="text_size_xxxlarge">28dp</dimen>
-    <dimen name="text_size_diff_large_small">6dp</dimen>
+    <dimen name="text_size_diff_large_small">6dp</dimen>-->
+
+    <!-- App Primary Text Sizes -->
+    <dimen name="text_size_xsmall">11sp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_body">13sp</dimen>
+    <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_large">18sp</dimen>
+    <dimen name="text_size_xlarge">20sp</dimen>
+    <dimen name="text_size_xxlarge">24sp</dimen>
+    <dimen name="text_size_xxxlarge">28sp</dimen>
+    <dimen name="text_size_diff_large_small">6sp</dimen>
+
 
     <!--Amount and Keyboard Sizes-->
     <dimen name="text_size_numeric_keypad">36dp</dimen>
