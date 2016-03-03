@@ -61,17 +61,26 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }*/
 
-
         int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
-        if (amountLength > 6) {
-            textSize = context.getResources().getInteger(R.integer.text_size_xlarge);
+        final int orientation = context.getResources().getConfiguration().orientation;
+        switch (orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                textSize = context.getResources().getInteger(R.integer.text_size_large_landscape);
+                if (amountLength > 6)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium_landscape);
+                if (amountLength > 7)
+                    textSize = context.getResources().getInteger(R.integer.text_size_small_landscape);
+                break;
+            case Configuration.ORIENTATION_PORTRAIT:
+                if (amountLength > 6)
+                    textSize = context.getResources().getInteger(R.integer.text_size_xlarge);
+                if (amountLength > 7)
+                    textSize = context.getResources().getInteger(R.integer.text_size_large);
+                if (amountLength > 8)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium);
+                break;
         }
-        if (amountLength > 7) {
-            textSize = context.getResources().getInteger(R.integer.text_size_large);
-        }
-        if (amountLength > 8) {
-            textSize = context.getResources().getInteger(R.integer.text_size_medium);
-        }
+
         return textSize;
     }
 
