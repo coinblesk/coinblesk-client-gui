@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:aspectRatio="3.236">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/social_github">
+
+                <TextView
+                    android:id="@+id/social_github"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?android:selectableItemBackground"
+                    android:clickable="true"
+                    android:contentDescription="@string/social_github_content_description"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/social_github"
+                    android:textAppearance="@style/TextAppearance.Body2" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/social_website">
+
+                <TextView
+                    android:id="@+id/social_website"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?android:selectableItemBackground"
+                    android:clickable="true"
+                    android:contentDescription="@string/social_website_content_description"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/social_website"
+                    android:textAppearance="@style/TextAppearance.Body2" />
+            </FrameLayout>
+        </LinearLayout>
+    </com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView>
+
+
+</LinearLayout>

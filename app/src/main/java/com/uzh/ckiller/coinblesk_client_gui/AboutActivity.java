@@ -1,7 +1,6 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.os.Bundle;
-import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -13,7 +12,7 @@ public class AboutActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.about_aspect_ratio_view);
+        setContentView(R.layout.activity_about);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

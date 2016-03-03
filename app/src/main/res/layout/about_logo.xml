@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
+        android:id="@+id/social_coinblesk"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:aspectRatio="@dimen/aspect_phi">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/social_coinblesk">
+
+            <ImageView
+                android:id="@+id/social_coinblesk_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:adjustViewBounds="true"
+                android:clickable="false"
+                android:elevation="4dp"
+                android:focusable="false"
+                android:scaleType="centerInside"
+                android:src="@drawable/about_cb" />
+
+            <include layout="@layout/social_icons_horizontal" />
+        </RelativeLayout>
+    </com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView>
+
+</LinearLayout>

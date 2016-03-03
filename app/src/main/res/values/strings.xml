@@ -11,12 +11,24 @@
     <string name="share_coinblesk">Share Coinblesk</string>
 
     <!--About Coinblesk Strings-->
-    <string name="about_coinblesk_content">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
+    <string name="social_about_text">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
+    <string name="social_about_text_short">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.</string>
 
+    <string name="social_about_text_not_clickable">Can\'t click here.</string>
     <string name="social_website">Coinblesk.com</string>
     <string name="social_website_content_description">Coinblesk.com</string>
-    <string name="social_github">Github</string>
+    <string name="social_github">Github.com/coinblesk</string>
     <string name="social_github_content_description">Github</string>
+    <string name="social_tos">\nTerms of Use</string>
+    <string name="social_tos_content_description">Terms of Use</string>
+    <string name="social_tos_content">
+        This application was developed as part of a various student projects at the Department of Informatics
+        at the University of Zurich in Switzerland.\nWe do not take any responsibility for a possible loss of your Bitcoins
+         in case of a system/hardware failure or by unpredictable malicious third-party influence. Please be aware that this application is
+         still in its Beta Stadium and bugs may occur.
+         \nUniversity of Zurich, 2016
+    </string>
+
 
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>

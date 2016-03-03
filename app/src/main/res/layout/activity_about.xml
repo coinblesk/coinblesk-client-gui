@@ -1,51 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include
+    <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/toolbar"
-        layout="@layout/tool_bar" />
-
-    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimary">
+        android:layout_height="@dimen/abc_action_bar_default_height_material"
+        android:elevation="4dp"
+        app:theme="@style/AppThemeMaterial" />
 
-        <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false">
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/card_margin"
-            card_view:cardBackgroundColor="@color/material_grey_800">
+            android:orientation="vertical"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                style="@style/Widget.CardContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <include layout="@layout/about_logo"></include>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:layout_marginRight="24dp"
-                    android:layout_marginTop="8dp"
-                    android:ellipsize="end"
-                    android:text="@string/about_coinblesk"
-                    android:textColor="@color/colorAccent"
-                    android:textSize="@dimen/text_size_small" />
+            <include layout="@layout/about_links"></include>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="@dimen/text_size_body"
-                    android:text="@string/about_coinblesk_content"
-                    android:paddingBottom="@dimen/card_margin"
-                    />
+            <include layout="@layout/about_text"></include>
 
-            </LinearLayout>
+            <include layout="@layout/about_tos"></include>
 
-        </android.support.v7.widget.CardView>
-    </LinearLayout>
+        </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>
+
