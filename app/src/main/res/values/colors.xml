@@ -47,9 +47,9 @@
 
     <color name="social_github">@color/main_color_700</color>
     <color name="social_website">@color/main_color_600</color>
-    <color name="social_coinblesk">@color/main_color_800</color>
-    <color name="social_about">@color/main_color_800</color>
-    <color name="social_tos">@color/main_color_700</color>
+    <color name="social_about_logo">@color/main_color_800</color>
+    <color name="social_about_text">@color/main_color_800</color>
+    <color name="social_about_tos">@color/main_color_700</color>
     <color name="social_logo">@color/main_color_600</color>
     <color name="light_grey">#fff0f0f0</color>
 

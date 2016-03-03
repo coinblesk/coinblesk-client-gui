@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
-        android:id="@+id/social_coinblesk"
+        android:id="@+id/social_about_logo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:aspectRatio="@dimen/aspect_phi">
@@ -14,10 +14,10 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/social_coinblesk">
+            android:background="@color/social_about_logo">
 
             <ImageView
-                android:id="@+id/social_coinblesk_image"
+                android:id="@+id/social_about_logo_imageview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"

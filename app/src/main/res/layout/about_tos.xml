@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
-        android:id="@+id/social_tos"
+        android:id="@+id/social_about_tos"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:aspectRatio="3.236">
@@ -14,7 +14,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/social_tos"
+            android:background="@color/social_about_tos"
             android:baselineAligned="true"
             android:orientation="horizontal">
 
@@ -25,9 +25,9 @@
                 android:background="?android:selectableItemBackground"
                 android:clickable="true"
                 android:gravity="center"
-                android:contentDescription="@string/social_tos_content_description"
+                android:contentDescription="@string/social_about_tos_content_description"
                 android:focusable="true"
-                android:text="@string/social_tos"
+                android:text="@string/social_about_tos"
                 android:textAppearance="@style/TextAppearance.Body2" />
 
         </LinearLayout>
