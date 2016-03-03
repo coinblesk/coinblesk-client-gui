@@ -14,9 +14,9 @@
     <string name="social_about_text">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
     <string name="social_about_text_short">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.</string>
     <string name="social_about_text_not_clickable">Can\'t click here.</string>
-    <string name="social_website">Coinblesk.com</string>
-    <string name="social_website_content_description">Coinblesk.com</string>
-    <string name="social_github">Github.com/coinblesk</string>
+    <string name="social_website">Website\n<i>Coinblesk.com</i></string>
+    <string name="social_website_content_description">Website\n<i>Coinblesk.com</i></string>
+    <string name="social_github">Open-Source\n<i>Github.com/coinblesk</i></string>
     <string name="social_github_content_description">Github</string>
     <string name="social_about_tos">\nTerms of Use</string>
     <string name="social_about_tos_content_description">Terms of Use</string>

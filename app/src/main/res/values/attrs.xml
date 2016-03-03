@@ -9,7 +9,6 @@
         <attr name="linear_layout_ratio" format="float" />
     </declare-styleable>
 
-
     <!--<declare-styleable name="BaseTheme">
         <attr name="actionBarIconColor" format="color" />
         <attr name="actionBarInsetStart" format="dimension" />
