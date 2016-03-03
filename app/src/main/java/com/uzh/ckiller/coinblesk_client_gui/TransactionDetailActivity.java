@@ -22,9 +22,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -32,18 +29,14 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
 import android.transition.Fade;
 import android.transition.Slide;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -57,21 +50,18 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
 
     public static final String EXTRA_NAME = "transaction-hash";
-    private SpannableStringFormatter spannableStringFormatter;
-
     private String transactionHash;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_txdetail);
-        spannableStringFormatter = new SpannableStringFormatter(this.getApplicationContext());
 
         final Button copyTxButton = (Button) this.findViewById(R.id.txdetail_copytx_button);
 
         copyTxButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Snackbar.make(v, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
                         .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
                 .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
                         .setAction("Action", null).show();
@@ -103,8 +93,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         try {
 
-            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(spannableStringFormatter.toFriendlyAmountString(transaction));
-
+            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
             ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
 
             //TODO Get Exchange Rate from transaction
@@ -112,7 +101,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
             // TODO Format the Date properly (make it shorter, without MEZ indication)
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
-
             ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
             ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
 

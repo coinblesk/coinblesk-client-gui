@@ -24,7 +24,7 @@ import android.widget.EditText;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.uzh.ckiller.coinblesk_client_gui.R;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -51,7 +51,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
 
     private EditText addressEditText;
     private EditText amountEditText;
-    private SpannableStringFormatter spannableStringFormatter;
 
 
     public static DialogFragment newInstance(Coin amount) {
@@ -76,7 +75,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
-        spannableStringFormatter = new SpannableStringFormatter(getContext());
         this.addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
         try {
             Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
@@ -108,7 +106,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
         switch (v.getId()) {
             case R.id.fragment_send_dialog_send:
                 sendCoins();
-                Snackbar.make(v, spannableStringFormatter.toFriendlySnackbarString(getResources()
+                Snackbar.make(v, UIUtils.toFriendlySnackbarString(this.getContext(), getResources()
                         .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
                         .show();
                 break;

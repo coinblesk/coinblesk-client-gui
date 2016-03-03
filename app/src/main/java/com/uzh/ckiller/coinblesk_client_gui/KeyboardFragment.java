@@ -14,7 +14,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
 import org.bitcoinj.core.Coin;
@@ -36,7 +36,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private String amountString = "0";
     private SharedPreferences prefs;
-    private SpannableStringFormatter spannableStringFormatter;
     private String sumString = "";
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
@@ -62,7 +61,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
         }
 
-        spannableStringFormatter = new SpannableStringFormatter(this.getContext());
         this.onKeyboardListener = this;
         return view;
     }
@@ -109,7 +107,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private void initLarge(View view) {
 
-        spannableStringFormatter = new SpannableStringFormatter(this.getActivity());
         this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
 
         // Numbers '00 0 1 2 3 4 5 6 7 8 9 . + x  clear'
@@ -284,11 +281,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
         if (this.isBitcoinLargeAmount) {
-            largeTextView.setText(spannableStringFormatter.toLargeSpannable(this.amountString, "BTC"));
-            smallTextView.setText(spannableStringFormatter.toSmallSpannable(fiat.toPlainString(), "CHF"));
+            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "BTC"));
+            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), "CHF"));
         } else {
-            largeTextView.setText(spannableStringFormatter.toLargeSpannable(this.amountString, "CHF"));
-            smallTextView.setText(spannableStringFormatter.toSmallSpannable(coin.toPlainString(), "BTC"));
+            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "CHF"));
+            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), "BTC"));
         }
     }
 
@@ -335,7 +332,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private void updateSum() {
         final TextView sumTextView = (TextView) this.getView().findViewById(R.id.sum_values_text_view);
-        sumTextView.setText((sumString + "=" + this.getResult(sumString)));
+        sumTextView.setText((sumString + "=" + UIUtils.appendResult(sumString)));
     }
 
 
@@ -368,35 +365,35 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             switch (customKey) {
                 case "1":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_one))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "2":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_two))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "3":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_three))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "4":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_four))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "5":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_five))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "6":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_six))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "7":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_seven))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
                 case "8":
                     ((TextView) this.getActivity().findViewById(R.id.key_custom_eight))
-                            .setText(spannableStringFormatter.toFriendlyProductString(contentList.get(0), contentList.get(1)));
+                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
                     break;
             }
         }
@@ -416,21 +413,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (json != null) {
             this.initCustomButton(customKey);
         }
-    }
-
-    private String getResult(String amounts) {
-        String delims = "[+]";
-        String result = "";
-        String[] tokens = amounts.split(delims);
-        if (tokens.length > 1) {
-            BigDecimal sum = new BigDecimal(0);
-            for (int i = 0; i < tokens.length; i++) {
-                sum = sum.add(new BigDecimal(tokens[i]));
-            }
-            result = sum.toString();
-        }
-
-        return result;
     }
 
 }

@@ -21,7 +21,7 @@ import android.widget.TextView;
 import com.google.zxing.WriterException;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.QREncoder;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -36,8 +36,6 @@ public class QrDialogFragment extends DialogFragment {
 
     private final static String TAG = QrDialogFragment.class.getName();
     public final static String QR_PAYLOAD_KEY = "QR_PAYLOAD_KEY";
-
-    private SpannableStringFormatter spannableStringFormatter;
 
     public static DialogFragment newInstance(Address address, Coin amount){
         String payload = BitcoinURI.convertToBitcoinURI(address,amount,"","");
@@ -67,7 +65,6 @@ public class QrDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        this.spannableStringFormatter = new SpannableStringFormatter(getContext());
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 
@@ -81,7 +78,7 @@ public class QrDialogFragment extends DialogFragment {
                 ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(getContext().CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Your address", BitcoinURI.convertToBitcoinURI(bitcoinURI.getAddress(),bitcoinURI.getAmount(),bitcoinURI.getLabel(),bitcoinURI.getMessage()));
                 clipboard.setPrimaryClip(clip);
-                Snackbar.make(getView(), spannableStringFormatter.toFriendlySnackbarString((getResources()
+                Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), (getResources()
                         .getString(R.string.snackbar_address_copied))), Snackbar.LENGTH_SHORT)
                         .show();
             }

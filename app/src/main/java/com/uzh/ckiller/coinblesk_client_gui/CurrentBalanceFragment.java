@@ -16,9 +16,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.ConnectionIconFormatter;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
-import com.uzh.ckiller.coinblesk_client_gui.helpers.SpannableStringFormatter;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -31,9 +30,6 @@ import ch.papers.payments.WalletService;
  */
 
 public class CurrentBalanceFragment extends Fragment implements IPreferenceStrings {
-
-    private SpannableStringFormatter spannableStringFormatter;
-    private ConnectionIconFormatter connectionIconFormatter;
 
     public static CurrentBalanceFragment newInstance(int page) {
         CurrentBalanceFragment fragment = new CurrentBalanceFragment();
@@ -50,17 +46,15 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        connectionIconFormatter.setIconColor(nfcIcon, NFC_ACTIVATED);
-        connectionIconFormatter.setIconColor(bluetoothIcon, BT_ACTIVATED);
-        connectionIconFormatter.setIconColor(wifiIcon, WIFIDIRECT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, NFC_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, BT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, WIFIDIRECT_ACTIVATED);
 
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        spannableStringFormatter = new SpannableStringFormatter(getContext());
-        connectionIconFormatter = new ConnectionIconFormatter(getContext());
     }
 
     @Override
@@ -74,8 +68,8 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(spannableStringFormatter.toLargeSpannable(walletServiceBinder.getBalance().toPlainString(), "BTC"));
-        smallBalance.setText(spannableStringFormatter.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(),walletServiceBinder.getBalance().toPlainString(), "BTC"));
+        smallBalance.setText(UIUtils.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
