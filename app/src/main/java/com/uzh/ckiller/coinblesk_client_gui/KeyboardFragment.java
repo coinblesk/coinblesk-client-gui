@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
@@ -29,13 +30,8 @@ import java.util.List;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
-    SwipeRefreshLayout mSwipeRefreshLayout;
-    private Handler handler = new Handler();
-    public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
-
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener{
     private String amountString = "0";
-    private SharedPreferences prefs;
     private String sumString = "";
 
     // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
@@ -106,8 +102,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initLarge(View view) {
-
-        this.prefs = getActivity().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
 
         // Numbers '00 0 1 2 3 4 5 6 7 8 9 . + x  clear'
         view.findViewById(R.id.key_one).setOnClickListener(this);
@@ -338,13 +332,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     public void onCustom(int customKey) {
 
-        if (this.prefs.contains(Integer.toString(customKey))) {
-            try {
-                this.onPlus((getPrefForCustomKey(Integer.toString(customKey))).get(1));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
+        if (UIUtils.isCustomButtonEmpty(this.getContext(), Integer.toString(customKey))) {
             CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
             cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
                 @Override
@@ -353,13 +341,19 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 }
             });
             cvd.show();
+        }else{
+            try {
+                this.onPlus(UIUtils.getCustomButton(this.getContext(),(Integer.toString(customKey))).get(1));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
 
     public void initCustomButton(String customKey) {
 
-        List<String> contentList = getPrefForCustomKey(customKey);
+        List<String> contentList = UIUtils.getCustomButton(this.getContext(), customKey);
 
         if (contentList != null) {
             switch (customKey) {
@@ -400,17 +394,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     }
 
-    private List<String> getPrefForCustomKey(String customKey) {
-        String json = prefs.getString(customKey, null);
-        Gson gson = new Gson();
-        String[] contentArray = gson.fromJson(json, String[].class);
-        List<String> contentList = Arrays.asList(contentArray);
-        return contentList;
-    }
-
     private void initCustomButtons(String customKey) {
-        String json = prefs.getString(customKey, null);
-        if (json != null) {
+        if(UIUtils.isCustomButtonEmpty(this.getContext(),customKey)==false){
             this.initCustomButton(customKey);
         }
     }

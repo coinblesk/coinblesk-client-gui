@@ -12,10 +12,13 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.widget.ImageView;
 
+import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import ch.papers.payments.models.TransactionWrapper;
@@ -23,7 +26,7 @@ import ch.papers.payments.models.TransactionWrapper;
 /**
  * Created by ckiller on 03/03/16.
  */
-public class UIUtils implements IPreferenceStrings{
+public class UIUtils implements IPreferenceStrings {
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
         StringBuffer stringBuffer = new StringBuffer(amount + " " + currency);
@@ -83,11 +86,45 @@ public class UIUtils implements IPreferenceStrings{
         return result;
     }
 
-    public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
+    public static boolean isCustomButtonEmpty(Context context, String customKey) {
+        SharedPreferences prefs = context.getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+        String json = prefs.getString(customKey, null);
+        if (json == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-        // Get shared Preferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> connectionSettings = preferences.getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
+    public static List<String> getCustomButton(Context context, String customKey) {
+        SharedPreferences prefs = context.getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+
+        if (UIUtils.isCustomButtonEmpty(context, customKey) == false) {
+            String json = prefs.getString(customKey, null);
+            Gson gson = new Gson();
+            String[] contentArray = gson.fromJson(json, String[].class);
+            List<String> contentList;
+            try {
+                contentList = Arrays.asList(contentArray);
+                return contentList;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null;
+
+    }
+
+    // TODO Dynamically resize textview textsize using this method:
+    //    text.setTextSize(TypedValue.COMPLEX_UNIT_SP,14);
+    //    http://stackoverflow.com/questions/6998938/textview-setting-the-text-size-programmatically-doesnt-seem-to-work
+    //    This is the correct answer. More specifically:
+    //    float myTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 18F, context.getResources().getDisplayMetrics());
+
+    public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        Set<String> connectionSettings = prefs.getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
 
         // Set the Icon Color and Visibility
         if (connectionSettings != null) {
