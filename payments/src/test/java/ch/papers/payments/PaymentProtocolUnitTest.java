@@ -30,7 +30,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.communications.http.MockServerInterface;
-import ch.papers.payments.communications.peers.ServerInterface;
+import ch.papers.payments.communications.http.ServerInterface;
 import ch.papers.payments.models.ECKeyWrapper;
 import ch.papers.payments.models.User;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;

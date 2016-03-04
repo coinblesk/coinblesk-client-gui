@@ -50,4 +50,5 @@ public class Constants {
 
     public static final UUID WRITE_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc3");
     public static final UUID READ_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc4");
+    public static final int SYMMETRIC_KEY_SIZE = 256/8;
 }

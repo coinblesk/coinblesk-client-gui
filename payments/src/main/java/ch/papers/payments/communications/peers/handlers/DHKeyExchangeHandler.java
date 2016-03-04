@@ -15,6 +15,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.spec.SecretKeySpec;
@@ -102,7 +103,7 @@ public class DHKeyExchangeHandler implements Runnable {
                     KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH", "SC");
                     keyAgreement.init(keyPair.getPrivate());
                     keyAgreement.doPhase(publicKey, true);
-                    final byte[] sharedKey = keyAgreement.generateSecret();
+                    final byte[] sharedKey = Arrays.copyOfRange(keyAgreement.generateSecret(),0,Constants.SYMMETRIC_KEY_SIZE);
 
                     resultListener.onSuccess(new SecretKeySpec(sharedKey, Constants.SYMMETRIC_CIPHER_ALGORITH));
                 } catch (Exception e) {
