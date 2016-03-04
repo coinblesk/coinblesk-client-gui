@@ -37,7 +37,7 @@ public class NFCService extends HostApduService {
         stepList.clear();
 
         // Check if intent has extras
-        if(intent.getExtras() != null){
+        if (intent.getExtras() != null) {
             try {
                 String bitcoinUri = intent.getExtras().getString(Constants.BITCOIN_URI_KEY);
                 final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
@@ -60,12 +60,10 @@ public class NFCService extends HostApduService {
     }
 
     byte[] derRequestPayload = new byte[0];
-    byte[] derResponsePayload = new byte[0];
-    boolean isSending = false;
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        Log.d(TAG,"this is command apdu lenght: "+commandApdu.length);
+        Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
         int derPayloadStartIndex = 0;
         if (this.selectAidApdu(commandApdu)) {
             Log.d(TAG, "hanshake");
@@ -74,43 +72,30 @@ public class NFCService extends HostApduService {
             derRequestPayload = new byte[0];
         }
 
-        byte[] payload = Arrays.copyOfRange(commandApdu,derPayloadStartIndex,commandApdu.length);
-        derRequestPayload = Utils.concatBytes(derRequestPayload,payload);
+        byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
+        derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
 
         int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
 
-        if(derRequestPayload.length<responseLength){
+        if (derRequestPayload.length < responseLength) {
             return DERObject.NULLOBJECT.serializeToDER();
         } else {
-            if(!isProcessing && !isSending) {
+            if(!isProcessing) {
                 final Thread processingThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         isProcessing = true;
-                        derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(derRequestPayload)).serializeToDER();
+                        final byte[] requestPayload = derRequestPayload;
                         derRequestPayload = new byte[0];
-                        isSending = true;
+                        byte[] derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
+                        Log.d(TAG, "sending response now");
                         isProcessing = false;
-
+                        sendResponseApdu(derResponsePayload);
                     }
                 });
                 processingThread.start();
-                try {
-                    processingThread.join(100);
-                } catch (InterruptedException e) {
-                    Log.d(TAG, "missed this timeout, maybe next time");
-                }
             }
-
-            if(this.isProcessing){
-                Log.d(TAG,"Ah, ah, ah, ahh, staying alive, staying alive...");
-                return DERObject.NULLOBJECT.serializeToDER();
-            } else {
-                Log.d(TAG,"replying with response exp:"+DERParser.extractPayloadEndIndex(derResponsePayload));
-                Log.d(TAG,"replying with response:"+derResponsePayload.length);
-                isSending = false;
-                return derResponsePayload;
-            }
+            return null;
         }
     }
 

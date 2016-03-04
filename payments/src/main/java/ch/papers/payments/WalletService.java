@@ -72,9 +72,6 @@ public class WalletService extends Service {
     private ECKey multisigServerKey;
 
     public class WalletServiceBinder extends Binder {
-        private ECKey multisigClientKey;
-        private Script multisigAddressScript;
-
         public Address getCurrentReceiveAddress() {
             if (multisigAddressScript != null) {
                 return multisigAddressScript.getToAddress(Constants.PARAMS);
@@ -115,8 +112,6 @@ public class WalletService extends Service {
 
         public void instantSendCoins(final Address address, final Coin amount) {
             new Thread(new Runnable() {
-                private ECKey multisigServerKey;
-
                 @Override
                 public void run() {
                     try {
@@ -135,7 +130,8 @@ public class WalletService extends Service {
 
 
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
-
+                        Log.d(TAG,"rcv: "+address);
+                        Log.d(TAG,"tx: "+transaction);
                         //This is needed because otherwise we mix up signature order
                         List<ECKey> keys = new ArrayList<ECKey>();
                         keys.add(multisigClientKey);
@@ -160,7 +156,7 @@ public class WalletService extends Service {
 
                         int changeOutput = -1;
                         for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                            if (transactionOutput.getAddressFromP2SH(Constants.PARAMS).equals(getCurrentReceiveAddress())) {
+                            if (transactionOutput.getAddressFromP2SH(Constants.PARAMS) != null && transactionOutput.getAddressFromP2SH(Constants.PARAMS).equals(getCurrentReceiveAddress())) {
                                 changeOutput = transaction.getOutputs().indexOf(transactionOutput);
                                 break;
                             }
@@ -402,7 +398,13 @@ public class WalletService extends Service {
         this.multisigServerKey = serverKey;
         this.multisigClientKey = clientKey;
         this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
-        kit.wallet().removeWatchedScripts(kit.wallet().getWatchedScripts());
+
+        for (Script watchedScript:kit.wallet().getWatchedScripts()) {
+            if(!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
+                kit.wallet().removeWatchedScripts(ImmutableList.<Script>of(watchedScript));
+            }
+        }
+
         // now add the right one
         kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }

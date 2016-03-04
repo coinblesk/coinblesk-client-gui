@@ -43,11 +43,11 @@ public class PaymentRequestReceiveStep implements Step{
         final DERSequence derSequence = (DERSequence) input;
         final Coin amount = Coin.valueOf(((DERInteger) derSequence.getChildren().get(0)).getBigInteger().longValue());
         Log.d(TAG,"received amount:"+amount);
-        final Address address = Address.fromP2SHHash(Constants.PARAMS,derSequence.getChildren().get(1).getPayload());
+        final Address address = new Address(Constants.PARAMS,derSequence.getChildren().get(1).getPayload());
         Log.d(TAG,"received address:"+address);
 
         try {
-            this.bitcoinURI = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address,amount,null, null));
+            this.bitcoinURI = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address,amount,"", ""));
             Log.d(TAG,"bitcoin uri complete:"+bitcoinURI);
         } catch (BitcoinURIParseException e) {
             e.printStackTrace();

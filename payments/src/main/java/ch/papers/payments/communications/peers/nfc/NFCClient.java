@@ -96,6 +96,8 @@ public class NFCClient extends AbstractPeer {
                         try {
                             IsoDep isoDep = IsoDep.get(tag);
                             isoDep.connect();
+                            isoDep.setTimeout(5000);
+
 
                             DERObject paymentRequestInput = transceiveDER(isoDep,DERObject.NULLOBJECT,true);
                             DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
@@ -113,7 +115,7 @@ public class NFCClient extends AbstractPeer {
                     }
 
                     public DERObject transceiveDER(IsoDep isoDep, DERObject input, boolean needsSelectAidApdu) throws IOException {
-
+                        Log.d(TAG,"start transceive");
                         byte[] derPayload = input.serializeToDER();
                         byte[] derResponse = new byte[0];
                         int fragmentByte = 0;
@@ -134,19 +136,12 @@ public class NFCClient extends AbstractPeer {
                         int responseLength = DERParser.extractPayloadEndIndex(derResponse);
                         Log.d(TAG, "expected response lenght:"+responseLength);
                         Log.d(TAG, "actual response lenght:"+derResponse.length);
-                        while(responseLength == 2){
-                            Log.d(TAG,"keepalive passthrough");
-                            derResponse = isoDep.transceive(DERObject.NULLOBJECT.serializeToDER());
-                            responseLength = DERParser.extractPayloadEndIndex(derResponse);
-                            Log.d(TAG, "expected response lenght:"+responseLength);
-                            Log.d(TAG, "actual response lenght:"+derResponse.length);
-                        }
 
                         while(derResponse.length<responseLength){
                             derResponse = Utils.concatBytes(derResponse,isoDep.transceive(DERObject.NULLOBJECT.serializeToDER()));
                             Log.d(TAG, "had to ask for next bytes:"+derResponse.length);
                         }
-
+                        Log.d(TAG,"end transceive");
                         return DERParser.parseDER(derResponse);
                     }
 

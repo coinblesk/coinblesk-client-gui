@@ -38,7 +38,7 @@ public class PaymentRefundSendStep implements Step {
     final BitcoinURI bitcoinURI;
     final ECKey multisigClientKey;
     final ECKey multisigServerKey;
-    final Script multisigAddressScript;
+    final Address changeAddress;
 
     public PaymentRefundSendStep(WalletService.WalletServiceBinder walletServiceBinder, BitcoinURI bitcoinURI) {
         this.unspentTransactionOutputs = walletServiceBinder.getUnspentInstantOutputs();
@@ -46,7 +46,7 @@ public class PaymentRefundSendStep implements Step {
         this.bitcoinURI = bitcoinURI;
         this.multisigClientKey = walletServiceBinder.getMultisigClientKey();
         this.multisigServerKey = walletServiceBinder.getMultisigServerKey();
-        this.multisigAddressScript = walletServiceBinder.getMultisigAddressScript();
+        this.changeAddress = walletServiceBinder.getCurrentReceiveAddress();
     }
 
     @Override
@@ -63,18 +63,18 @@ public class PaymentRefundSendStep implements Step {
             Log.d(TAG,"adding server signature");
         }
 
-        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, multisigAddressScript.getToAddress(Constants.PARAMS), bitcoinURI.getAddress(), bitcoinURI.getAmount().longValue());
-
+        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, this.unspentTransactionOutputs, this.changeAddress, this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        Log.d(TAG,"tx: "+transaction);
         final List<ECKey> keys = new ArrayList<>();
         keys.add(this.multisigClientKey);
         keys.add(this.multisigServerKey);
-
         Collections.sort(keys,ECKey.PUBKEY_COMPARATOR);
 
         Script redeemScript = ScriptBuilder.createRedeemScript(2,keys);
         final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
 
         for (int i = 0; i < clientTransactionSignatures.size(); i++) {
+            Log.d(TAG,"starting verify");
             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
