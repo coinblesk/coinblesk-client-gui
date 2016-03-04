@@ -7,6 +7,8 @@ import android.provider.Settings;
 
 import org.bitcoinj.uri.BitcoinURI;
 
+import ch.papers.payments.WalletService;
+
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 26/02/16.
  * Papers.ch
@@ -18,8 +20,8 @@ public class NFCPeer extends AbstractPeer{
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    public NFCPeer(Activity activity) {
-        super(activity);
+    public NFCPeer(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
     }

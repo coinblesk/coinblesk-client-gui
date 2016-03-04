@@ -23,6 +23,8 @@ public class Constants {
     public static final String MULTISIG_CLIENT_KEY_NAME = "client_public_key";
     public static final String MULTISIG_SERVER_KEY_NAME = "server_public_key";
 
+    public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
+
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
     public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
@@ -45,4 +47,5 @@ public class Constants {
     public static final int SERVICE_PORT = 60030;
     public final static int DISCOVERABLE_DURATION = 600; //this is unlimited
     public static final int BUFFER_SIZE=1024;
+
 }

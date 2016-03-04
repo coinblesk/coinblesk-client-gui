@@ -31,6 +31,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractPeer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
 
@@ -55,8 +56,8 @@ public class WiFiServer extends AbstractPeer {
     private Map<SecretKeySpec, Socket> secureConnections = new ConcurrentHashMap<SecretKeySpec, Socket>();
 
 
-    public WiFiServer(Context context) {
-        super(context);
+    public WiFiServer(Context context,WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
 
     @Override

@@ -11,9 +11,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
-import ch.papers.payments.communications.peers.wifi.WiFiServer;
-
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
  * Papers.ch
@@ -42,8 +39,8 @@ public class ServerPeerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.peers.add(new WiFiServer(this));
-        this.peers.add(new BluetoothRFCommServer(this));
+        //this.peers.add(new WiFiServer(this));
+        //this.peers.add(new BluetoothRFCommServer(this));
         //this.peers.add(new BluetoothLEPeer(this));
 
         for (Peer peer:this.peers) {

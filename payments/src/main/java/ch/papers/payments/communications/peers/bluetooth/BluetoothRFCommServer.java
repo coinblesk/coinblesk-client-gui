@@ -26,6 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractPeer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
 
@@ -43,8 +44,8 @@ public class BluetoothRFCommServer extends AbstractPeer {
 
     private Map<SecretKeySpec, BluetoothSocket> secureConnections = new ConcurrentHashMap<SecretKeySpec, BluetoothSocket>();
 
-    public BluetoothRFCommServer(Context context) {
-        super(context);
+    public BluetoothRFCommServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
 
     @Override

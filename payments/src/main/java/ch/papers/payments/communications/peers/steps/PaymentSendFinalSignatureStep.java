@@ -1,8 +1,6 @@
 package ch.papers.payments.communications.peers.steps;
 
-import org.bitcoinj.core.Transaction;
-
-import ch.papers.payments.Constants;
+import ch.papers.payments.communications.messages.DERObject;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -13,17 +11,12 @@ public class PaymentSendFinalSignatureStep implements Step{
 
 
     @Override
-    public int expectedInputLength() {
-        return 0;
-    }
-
-    @Override
-    public byte[] process(byte[] input) {
-        final Transaction refundTransaction = new Transaction(Constants.PARAMS,input);
+    public DERObject process(DERObject input) {
+        /*final Transaction refundTransaction = new Transaction(Constants.PARAMS,input);
         refundTransaction.verify();
-        refundTransaction.getInput(0).verify();
+        refundTransaction.getInput(0).verify();*/
 
 
-        return new byte[0];
+        return null;
     }
 }

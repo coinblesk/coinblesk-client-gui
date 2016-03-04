@@ -1,19 +1,28 @@
 package ch.papers.payments.communications.peers.steps;
 
+import android.util.Log;
+
 import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.util.SerializeUtils;
+import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.communications.http.CoinbleskWebService;
+import ch.papers.payments.communications.messages.DERInteger;
+import ch.papers.payments.communications.messages.DERObject;
+import ch.papers.payments.communications.messages.DERParser;
+import ch.papers.payments.communications.messages.DERSequence;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -23,8 +32,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * a.decarli@papers.ch
  */
 public class PaymentAuthorizationReceiveStep implements Step {
+    private final static String TAG = PaymentAuthorizationReceiveStep.class.getSimpleName();
+
     final private BitcoinURI bitcoinURI;
-    final private byte[] payload;
 
     private final Retrofit retrofit = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
@@ -33,39 +43,45 @@ public class PaymentAuthorizationReceiveStep implements Step {
 
     public PaymentAuthorizationReceiveStep(BitcoinURI bitcoinURI) {
         this.bitcoinURI = bitcoinURI;
-        byte[] amountBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(bitcoinURI.getAmount().getValue()).array();
-        payload = Utils.concatBytes(amountBytes, bitcoinURI.getAddress().getHash160());
     }
 
     @Override
-    public int expectedInputLength() {
-        return 160;
-    }
-
-    @Override
-    public byte[] process(byte[] input) {
+    public DERObject process(DERObject input) {
         try {
-            int signatureSize = input[0];
-            byte[] signatureBytes = Arrays.copyOfRange(input, 1, signatureSize);
-            byte[] publicKeyBytes = Arrays.copyOfRange(input, signatureSize, 32);
-            ECKey clientPublicKey = ECKey.fromPublicOnly(publicKeyBytes);
-            if (clientPublicKey.verify(payload, signatureBytes)) {
+            final DERSequence inputSequence = (DERSequence) input;
+            final ECKey clientPublicKey = ECKey.fromPublicOnly(inputSequence.getChildren().get(0).getPayload());
+            final ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(((DERInteger) inputSequence.getChildren().get(2)).getBigInteger(), ((DERInteger) inputSequence.getChildren().get(3)).getBigInteger());
+            final BigInteger timestamp = ((DERInteger)inputSequence.getChildren().get(1)).getBigInteger();
+
+            Log.d(TAG,"key used for signing"+clientPublicKey.getPublicKeyAsHex());
+            Log.d(TAG,"address used for signing"+bitcoinURI.getAddress());
+            Log.d(TAG,"timestamp used for signing"+timestamp.longValue());
+            Sha256Hash inputHash = Sha256Hash.of(Utils.concatBytes(BigInteger.valueOf(bitcoinURI.getAmount().getValue()).toByteArray(),bitcoinURI.getAddress().getHash160(),timestamp.toByteArray()));
+            Log.d(TAG,"hash used for signing"+inputHash);
+            if (clientPublicKey.verify(inputHash, ecdsaSignature)) {
+                Log.d(TAG,"verify was successful!");
                 final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                 // let server sign first
                 final PrepareHalfSignTO clientHalfSignTO = new PrepareHalfSignTO();
                 clientHalfSignTO.amountToSpend(bitcoinURI.getAmount().longValue());
-                clientHalfSignTO.clientPublicKey(publicKeyBytes);
+                clientHalfSignTO.clientPublicKey(clientPublicKey.getPubKey());
                 clientHalfSignTO.p2shAddressTo(bitcoinURI.getAddress().toString());
                 final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(clientHalfSignTO).execute().body();
-                for (TransactionSignature signature:SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures())) {
-                    // TODO: handle multiple
-                    byte[] paddingTail = new byte[80-signature.encodeToDER().length];
-                    return Utils.concatBytes(signature.encodeToDER(),paddingTail);
+
+
+                List<DERObject> derObjectList = new ArrayList<DERObject>();
+                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures())) {
+                    List<DERObject> signatureList = ImmutableList.<DERObject>of(new DERInteger(signature.r),new DERInteger(signature.s));
+                    derObjectList.add(new DERSequence(signatureList));
                 }
+                byte[] dersequence = new DERSequence(derObjectList).serializeToDER();
+                Log.d(TAG,"sending response"+dersequence.length);
+                Log.d(TAG,"sending response exp"+ DERParser.extractPayloadEndIndex(dersequence));
+                return new DERSequence(derObjectList);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new byte[0];
+        return new DERInteger(BigInteger.valueOf(-1));
     }
 }

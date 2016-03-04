@@ -20,6 +20,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
+import ch.papers.payments.Constants;
+import ch.papers.payments.communications.peers.nfc.NFCService;
+
 /**
  * Created by ckiller
  */
@@ -67,6 +70,16 @@ public class ReceiveDialogFragment extends DialogFragment {
                 @Override
                 public void onClick(View v) {
                     QrDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(getFragmentManager(),"qr-fragment");
+                }
+            });
+
+            view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    Intent intent = new Intent(getActivity(), NFCService.class);
+                    intent.putExtra(Constants.BITCOIN_URI_KEY,bitcoinUriString);
+                    getActivity().startService(intent);
                 }
             });
 

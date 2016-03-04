@@ -10,51 +10,66 @@ import android.util.Log;
 
 import org.bitcoinj.uri.BitcoinURI;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import javax.crypto.spec.SecretKeySpec;
-
+import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.Utils;
+import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.messages.DERObject;
+import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractPeer;
-import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
+import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import ch.papers.payments.models.ECKeyWrapper;
+import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class NFCClient extends AbstractPeer{
+public class NFCClient extends AbstractPeer {
     private final static String TAG = NFCClient.class.getSimpleName();
 
-    private static final byte[] CLA_INS_P1_P2 = { (byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00 };
-    private static final byte[] AID_ANDROID = { (byte)0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+    private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
+    private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
 
     private static final byte[] selectCommand = {
-            (byte)0x00, // CLA
-            (byte)0xA4, // INS
-            (byte)0x04, // P1
-            (byte)0x00, // P2
-            (byte)0x0A, // LC
-            (byte)0x01,(byte)0x02,(byte)0x03,(byte)0x04,(byte)0x05,(byte)0x06,(byte)0x07,(byte)0x08,(byte)0x09,(byte)0xFF, // AID
-            (byte)0x7F  // LE
+            (byte) 0x00, // CLA
+            (byte) 0xA4, // INS
+            (byte) 0x04, // P1
+            (byte) 0x00, // P2
+            (byte) 0x0A, // LC
+            (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0xFF, // AID
+            (byte) 0x7F  // LE
     };
 
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    final byte[] buffer = new byte[Constants.BUFFER_SIZE];
-    final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
-    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(Constants.BUFFER_SIZE);
+    private PaymentRequestReceiveStep paymentRequestReceiveStep;
 
-    public NFCClient(Activity activity) {
-        super(activity);
+    public NFCClient(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
+
+        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
+            @Override
+            public void onSuccess(ECKeyWrapper clientKey) {
+                paymentRequestReceiveStep = new PaymentRequestReceiveStep(clientKey.getKey());
+            }
+
+            @Override
+            public void onError(String s) {
+
+            }
+        }, ECKeyWrapper.class);
+
     }
 
     @Override
@@ -69,8 +84,7 @@ public class NFCClient extends AbstractPeer{
 
     @Override
     public void start() {
-        if (!nfcAdapter.isEnabled())
-        {
+        if (!nfcAdapter.isEnabled()) {
             this.activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
             return;
         }
@@ -83,37 +97,61 @@ public class NFCClient extends AbstractPeer{
                             IsoDep isoDep = IsoDep.get(tag);
                             isoDep.connect();
 
-                            byte[] response = isoDep.transceive(createSelectAidApdu(AID_ANDROID));
+                            DERObject paymentRequestInput = transceiveDER(isoDep,DERObject.NULLOBJECT,true);
+                            DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
 
-                            new DHKeyExchangeHandler(byteArrayInputStream, byteArrayOutputStream, new OnResultListener<SecretKeySpec>() {
-                                @Override
-                                public void onSuccess(SecretKeySpec secretKeySpec) {
-                                    Log.d(TAG,"exchange successful");
-                                }
+                            DERObject refundSendInput = transceiveDER(isoDep,authorizationResponseOutput);
+                            PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(),paymentRequestReceiveStep.getBitcoinURI());
 
-                                @Override
-                                public void onError(String s) {
-                                    Log.d(TAG, "error during key exchange:" + s);
-                                }
-                            });
+                            DERObject sendFinalSignatureOutput = paymentRefundSendStep.process(refundSendInput);
 
-                            int readByteCounter = 0;
-                            byte[] payload = new byte[Constants.BUFFER_SIZE];
-                            while((readByteCounter=byteArrayInputStream.read(payload))>0){
-                                int byteCounter = 0;
-                                while(byteCounter < readByteCounter){
-                                    byte[] fragment = Arrays.copyOfRange(payload,byteCounter,byteCounter+isoDep.getMaxTransceiveLength());
-
-
-                                    byteArrayOutputStream.write(isoDep.transceive(fragment));
-                                    byteCounter += fragment.length;
-                                }
-                            }
 
                             isoDep.close();
                         } catch (IOException e) {
                             Log.d(TAG, e.getMessage());
                         }
+                    }
+
+                    public DERObject transceiveDER(IsoDep isoDep, DERObject input, boolean needsSelectAidApdu) throws IOException {
+
+                        byte[] derPayload = input.serializeToDER();
+                        byte[] derResponse = new byte[0];
+                        int fragmentByte = 0;
+
+                        Log.d(TAG, "have to send bytes:"+derPayload.length);
+                        while (fragmentByte < derPayload.length) {
+                            byte[] fragment = new byte[0];
+                            if(needsSelectAidApdu){
+                                fragment = createSelectAidApdu(AID_ANDROID);
+                            }
+
+                            fragment = Utils.concatBytes(fragment,Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length,fragmentByte + isoDep.getMaxTransceiveLength())));
+                            derResponse = Utils.concatBytes(derResponse,isoDep.transceive(fragment));
+                            fragmentByte += fragment.length;
+                            Log.d(TAG, "fragment size:"+fragment.length);
+                        }
+
+                        int responseLength = DERParser.extractPayloadEndIndex(derResponse);
+                        Log.d(TAG, "expected response lenght:"+responseLength);
+                        Log.d(TAG, "actual response lenght:"+derResponse.length);
+                        while(responseLength == 2){
+                            Log.d(TAG,"keepalive passthrough");
+                            derResponse = isoDep.transceive(DERObject.NULLOBJECT.serializeToDER());
+                            responseLength = DERParser.extractPayloadEndIndex(derResponse);
+                            Log.d(TAG, "expected response lenght:"+responseLength);
+                            Log.d(TAG, "actual response lenght:"+derResponse.length);
+                        }
+
+                        while(derResponse.length<responseLength){
+                            derResponse = Utils.concatBytes(derResponse,isoDep.transceive(DERObject.NULLOBJECT.serializeToDER()));
+                            Log.d(TAG, "had to ask for next bytes:"+derResponse.length);
+                        }
+
+                        return DERParser.parseDER(derResponse);
+                    }
+
+                    private DERObject transceiveDER(IsoDep isoDep, DERObject input) throws IOException {
+                        return this.transceiveDER(isoDep,input,false);
                     }
                 }, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
                 null);
@@ -127,7 +165,7 @@ public class NFCClient extends AbstractPeer{
     private byte[] createSelectAidApdu(byte[] aid) {
         byte[] result = new byte[6 + aid.length];
         System.arraycopy(CLA_INS_P1_P2, 0, result, 0, CLA_INS_P1_P2.length);
-        result[4] = (byte)aid.length;
+        result[4] = (byte) aid.length;
         System.arraycopy(aid, 0, result, 5, aid.length);
         result[result.length - 1] = 0;
         return result;

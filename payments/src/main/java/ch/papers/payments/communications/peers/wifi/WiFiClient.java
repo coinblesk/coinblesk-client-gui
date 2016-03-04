@@ -24,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractPeer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
@@ -54,8 +55,8 @@ public class WiFiClient extends AbstractPeer implements WifiP2pManager.Connectio
         }
     };
 
-    public WiFiClient(Context context) {
-        super(context);
+    public WiFiClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
 
     @Override
