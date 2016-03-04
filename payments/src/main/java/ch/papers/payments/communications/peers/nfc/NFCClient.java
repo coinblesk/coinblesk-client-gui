@@ -104,7 +104,6 @@ public class NFCClient extends AbstractPeer {
 
                             DERObject refundSendInput = transceiveDER(isoDep,authorizationResponseOutput);
                             PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(),paymentRequestReceiveStep.getBitcoinURI());
-
                             DERObject sendFinalSignatureOutput = paymentRefundSendStep.process(refundSendInput);
 
 

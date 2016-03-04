@@ -21,6 +21,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import ch.papers.payments.Constants;
+import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
 import ch.papers.payments.communications.peers.nfc.NFCService;
 
 /**
@@ -80,6 +81,9 @@ public class ReceiveDialogFragment extends DialogFragment {
                     Intent intent = new Intent(getActivity(), NFCService.class);
                     intent.putExtra(Constants.BITCOIN_URI_KEY,bitcoinUriString);
                     getActivity().startService(intent);
+                    BluetoothLEServer bluetoothLEServer = new BluetoothLEServer(getActivity(),null);
+                    bluetoothLEServer.broadcastPaymentRequest(bitcoinURI);
+                    bluetoothLEServer.start();
                 }
             });
 

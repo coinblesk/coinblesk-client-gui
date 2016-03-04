@@ -43,8 +43,6 @@ public class NFCService extends HostApduService {
                 final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
                 stepList.add(new PaymentRequestSendStep(bitcoinURI));
                 stepList.add(new PaymentAuthorizationReceiveStep(bitcoinURI));
-
-
             } catch (BitcoinURIParseException e) {
                 e.printStackTrace();
             }

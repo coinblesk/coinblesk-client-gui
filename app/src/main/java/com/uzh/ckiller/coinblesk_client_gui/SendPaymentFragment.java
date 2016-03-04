@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
 import ch.papers.payments.communications.peers.nfc.NFCClient;
 
 /**
@@ -54,6 +55,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                         if (!isShowingDialog && event.getY() - startPoint > THRESHOLD) {
                             showDialog();
                             new NFCClient(getActivity(),walletServiceBinder).start();
+                            new BluetoothLEClient(getActivity(),walletServiceBinder).start();
                             isShowingDialog = true;
                         }
                         break;
