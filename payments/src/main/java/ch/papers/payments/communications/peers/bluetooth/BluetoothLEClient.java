@@ -11,8 +11,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import org.bitcoinj.uri.BitcoinURI;
-
 import java.util.Arrays;
 
 import ch.papers.objectstorage.UuidObjectStorage;
@@ -22,7 +20,7 @@ import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
-import ch.papers.payments.communications.peers.AbstractPeer;
+import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import ch.papers.payments.models.ECKeyWrapper;
@@ -33,7 +31,7 @@ import ch.papers.payments.models.filters.ECKeyWrapperFilter;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class BluetoothLEClient extends AbstractPeer {
+public class BluetoothLEClient extends AbstractClient {
     private final static String TAG = BluetoothLEClient.class.getSimpleName();
 
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -56,6 +54,15 @@ public class BluetoothLEClient extends AbstractPeer {
 
             }
         }, ECKeyWrapper.class);
+    }
+
+    @Override
+    public void onIsReadyForInstantPaymentChange() {
+        if(this.isReadyForInstantPayment()){
+            bluetoothAdapter.startLeScan(this.leScanCallback);
+        } else {
+            bluetoothAdapter.stopLeScan(this.leScanCallback);
+        }
     }
 
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -165,20 +172,5 @@ public class BluetoothLEClient extends AbstractPeer {
     @Override
     public boolean isSupported() {
         return this.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-    }
-
-    @Override
-    public void start() {
-        bluetoothAdapter.startLeScan(this.leScanCallback);
-    }
-
-    @Override
-    public void stop() {
-        bluetoothAdapter.stopLeScan(this.leScanCallback);
-    }
-
-    @Override
-    public void broadcastPaymentRequest(BitcoinURI paymentUri) {
-
     }
 }

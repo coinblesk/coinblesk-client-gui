@@ -14,27 +14,34 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.util.Log;
 
-import org.bitcoinj.uri.BitcoinURI;
-
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.AbstractPeer;
+import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHandler;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class WiFiClient extends AbstractPeer implements WifiP2pManager.ConnectionInfoListener {
+public class WiFiClient extends AbstractClient implements WifiP2pManager.ConnectionInfoListener {
     private final static String TAG = BluetoothRFCommClient.class.getSimpleName();
 
     private WifiP2pManager manager;
@@ -120,6 +127,8 @@ public class WiFiClient extends AbstractPeer implements WifiP2pManager.Connectio
 
             }
         });
+
+        this.setRunning(false);
     }
 
     private void connect(WifiP2pDevice device) {
@@ -136,11 +145,6 @@ public class WiFiClient extends AbstractPeer implements WifiP2pManager.Connectio
     }
 
     @Override
-    public void broadcastPaymentRequest(BitcoinURI paymentUri) {
-
-    }
-
-    @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
         if (!info.isGroupOwner && info.groupFormed && !isConnected) {
             isConnected = true;
@@ -153,6 +157,28 @@ public class WiFiClient extends AbstractPeer implements WifiP2pManager.Connectio
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
                                 Log.d(TAG,"exchange successful");
+                                try {
+
+                                    final Cipher writeCipher = Cipher.getInstance("AES");
+                                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+
+                                    final Cipher readCipher = Cipher.getInstance("AES");
+                                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+
+                                    final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+                                    final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+
+                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream,encrytpedOutputStream,getWalletServiceBinder())).start();
+                                    setRunning(true);
+                                } catch (NoSuchAlgorithmException e) {
+                                    e.printStackTrace();
+                                } catch (NoSuchPaddingException e) {
+                                    e.printStackTrace();
+                                } catch (InvalidKeyException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
@@ -166,5 +192,10 @@ public class WiFiClient extends AbstractPeer implements WifiP2pManager.Connectio
                 }
             }).start();
         }
+    }
+
+    @Override
+    public void onIsReadyForInstantPaymentChange() {
+
     }
 }

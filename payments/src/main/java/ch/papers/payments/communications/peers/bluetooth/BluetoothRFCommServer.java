@@ -12,7 +12,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -26,9 +25,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.AbstractPeer;
+import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.InstantPaymentServerHandler;
 
 
 /**
@@ -36,7 +35,7 @@ import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class BluetoothRFCommServer extends AbstractPeer {
+public class BluetoothRFCommServer extends AbstractServer {
     private final static String TAG = BluetoothRFCommServer.class.getSimpleName();
 
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -44,8 +43,8 @@ public class BluetoothRFCommServer extends AbstractPeer {
 
     private Map<SecretKeySpec, BluetoothSocket> secureConnections = new ConcurrentHashMap<SecretKeySpec, BluetoothSocket>();
 
-    public BluetoothRFCommServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
-        super(context, walletServiceBinder);
+    public BluetoothRFCommServer(Context context) {
+        super(context);
     }
 
     @Override
@@ -66,10 +65,7 @@ public class BluetoothRFCommServer extends AbstractPeer {
                 final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                 final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
-                byte[] amountBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(paymentUri.getAmount().getValue()).array();
-                encrytpedOutputStream.write(paymentUri.getAddress().getHash160());
-                encrytpedOutputStream.write(amountBytes);
-                encrytpedOutputStream.flush();
+                new Thread(new InstantPaymentServerHandler(encryptedInputStream,encrytpedOutputStream,paymentUri)).start();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             } catch (NoSuchPaddingException e) {
@@ -125,6 +121,7 @@ public class BluetoothRFCommServer extends AbstractPeer {
             }
         }
         this.secureConnections.clear();
+        this.setRunning(false);
     }
 
     private void makeDiscoverable() {

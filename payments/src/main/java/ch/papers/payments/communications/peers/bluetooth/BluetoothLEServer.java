@@ -25,10 +25,9 @@ import java.util.List;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
-import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
-import ch.papers.payments.communications.peers.AbstractPeer;
+import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 import ch.papers.payments.communications.peers.steps.Step;
@@ -38,7 +37,7 @@ import ch.papers.payments.communications.peers.steps.Step;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class BluetoothLEServer extends AbstractPeer {
+public class BluetoothLEServer extends AbstractServer {
     private final static String TAG = BluetoothLEServer.class.getSimpleName();
 
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -46,8 +45,8 @@ public class BluetoothLEServer extends AbstractPeer {
 
     private final List<Step> stepList = new ArrayList<Step>();
 
-    public BluetoothLEServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
-        super(context, walletServiceBinder);
+    public BluetoothLEServer(Context context) {
+        super(context);
     }
 
     @Override
@@ -76,9 +75,6 @@ public class BluetoothLEServer extends AbstractPeer {
                 private byte[] derRequestPayload = new byte[0];
                 private byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
                 private int stepCounter = 0;
-                private boolean isProcessing = false;
-
-
 
                 @Override
                 public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
@@ -118,15 +114,12 @@ public class BluetoothLEServer extends AbstractPeer {
                     this.derRequestPayload = Utils.concatBytes(derRequestPayload, value);
                     int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
                     if(derRequestPayload.length>=responseLength){
-                        this.isProcessing = true;
                         final byte[] requestPayload = derRequestPayload;
                         this.derRequestPayload = new byte[0];
                         this.derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
                         Log.d(TAG, "sending response now");
-                        isProcessing = false;
                     }
                 }
-
             });
 
 
@@ -141,7 +134,7 @@ public class BluetoothLEServer extends AbstractPeer {
             bluetoothGattServer.addService(bluetoothGattService);
             bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                             .setConnectable(true).setTimeout(0)
-                            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).build(),
+                            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW).build(),
                     new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
                     });
         }

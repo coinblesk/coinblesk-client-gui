@@ -4,9 +4,13 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.text.Html;
@@ -20,9 +24,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
-import ch.papers.payments.communications.peers.nfc.NFCService;
+import ch.papers.payments.communications.peers.ServerPeerService;
 
 /**
  * Created by ckiller
@@ -70,23 +72,16 @@ public class ReceiveDialogFragment extends DialogFragment {
             view.findViewById(R.id.receive_qrcode_touch_area).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    QrDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(getFragmentManager(),"qr-fragment");
+                    QrDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(getFragmentManager(), "qr-fragment");
                 }
             });
 
             view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    Intent intent = new Intent(getActivity(), NFCService.class);
-                    intent.putExtra(Constants.BITCOIN_URI_KEY,bitcoinUriString);
-                    getActivity().startService(intent);
-                    BluetoothLEServer bluetoothLEServer = new BluetoothLEServer(getActivity(),null);
-                    bluetoothLEServer.broadcastPaymentRequest(bitcoinURI);
-                    bluetoothLEServer.start();
+                    serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
                 }
             });
-
 
             return new AlertDialog.Builder(getActivity())
                     .setTitle("Receive Bitcoins")
@@ -111,6 +106,39 @@ public class ReceiveDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
     }
+
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private ServerPeerService.ServerServiceBinder serverServiceBinder;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
+        this.getActivity().bindService(serverServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        this.getActivity().unbindService(serviceConnection);
+    }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            serverServiceBinder = (ServerPeerService.ServerServiceBinder) binder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            serverServiceBinder = null;
+        }
+    };
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 }
 
