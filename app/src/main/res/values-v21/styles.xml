@@ -7,6 +7,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:alertDialogTheme">@style/Theme.AlertDialog</item>
     </style>
 
     <!--This fixes the incorrect android:colorAccent coloring in EditText inside of SendDialogFragment-->
@@ -14,6 +15,12 @@
         <item name="android:colorControlNormal">#c5c5c5</item>
         <item name="android:colorControlActivated">@color/colorAccent</item>
         <item name="android:colorControlHighlight">@color/colorAccent</item>
+    </style>
+
+    <style name="Theme.AlertDialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
     </style>
 
 </resources>
