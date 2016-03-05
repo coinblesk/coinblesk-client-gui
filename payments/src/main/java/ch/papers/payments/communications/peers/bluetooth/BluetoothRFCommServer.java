@@ -10,8 +10,10 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,6 +21,7 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
@@ -55,15 +58,20 @@ public class BluetoothRFCommServer extends AbstractServer {
         if(this.hasPaymentRequestUri()) {
             for (Map.Entry<SecretKeySpec, BluetoothSocket> entry : secureConnections.entrySet()) {
                 try {
-                    final Cipher writeCipher = Cipher.getInstance("AES");
-                    writeCipher.init(Cipher.ENCRYPT_MODE, entry.getKey());
+                    final byte[] iv = new byte[16];
+                    Arrays.fill(iv, (byte) 0x00);
+                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
-                    final Cipher readCipher = Cipher.getInstance("AES");
-                    readCipher.init(Cipher.DECRYPT_MODE, entry.getKey());
+                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    writeCipher.init(Cipher.ENCRYPT_MODE, entry.getKey(),ivParameterSpec);
+
+                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    readCipher.init(Cipher.DECRYPT_MODE, entry.getKey(),ivParameterSpec);
 
                     final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                     final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
+                    Log.d(TAG,"setting up secure connection");
                     new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri())).start();
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
@@ -72,6 +80,8 @@ public class BluetoothRFCommServer extends AbstractServer {
                 } catch (InvalidKeyException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InvalidAlgorithmParameterException e) {
                     e.printStackTrace();
                 }
             }

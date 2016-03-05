@@ -11,7 +11,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.papers.payments.communications.peers.wifi.WiFiServer;
+import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
@@ -53,8 +53,8 @@ public class ServerPeerService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
-                //ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                //ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
                 //ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
                 //ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
 

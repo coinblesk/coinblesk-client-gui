@@ -12,13 +12,16 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
@@ -46,31 +49,35 @@ public class BluetoothRFCommClient extends AbstractClient {
             String action = intent.getAction();
             // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Log.d(TAG, "device found:" + device.getAddress());
-                try {
-                    socket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
-                    socket.connect();
+                final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "device found:" + device.getAddress());
+                        try {
+                            socket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
+                            socket.connect();
+                            new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                                @Override
+                                public void onSuccess(SecretKeySpec secretKeySpec) {
+                                    Log.d(TAG, "exchange successful");
+                                    commonSecretKeySpec = secretKeySpec;
 
-                    new Thread(new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
-                        @Override
-                        public void onSuccess(SecretKeySpec secretKeySpec) {
-                            Log.d(TAG, "exchange successful");
-                            commonSecretKeySpec = secretKeySpec;
+                                    if (isReadyForInstantPayment()) {
+                                        onIsReadyForInstantPaymentChange();
+                                    }
+                                }
 
-                            if (isReadyForInstantPayment()){
-                                onIsReadyForInstantPaymentChange();
-                            }
+                                @Override
+                                public void onError(String s) {
+                                    Log.d(TAG, "error during key exchange:" + s);
+                                }
+                            }).run();
+                        } catch (Exception e) {
                         }
+                    }
+                }).start();
 
-                        @Override
-                        public void onError(String s) {
-                            Log.d(TAG, "error during key exchange:" + s);
-                        }
-                    })).start();
-                } catch (Exception e) {
-                }
             }
         }
     };
@@ -84,15 +91,19 @@ public class BluetoothRFCommClient extends AbstractClient {
     public void onIsReadyForInstantPaymentChange() {
         if (this.isReadyForInstantPayment() && commonSecretKeySpec != null) {
             try {
-                final Cipher writeCipher = Cipher.getInstance("AES");
-                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec);
+                final byte[] iv = new byte[16];
+                Arrays.fill(iv, (byte) 0x00);
+                IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
-                final Cipher readCipher = Cipher.getInstance("AES");
-                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec);
+                final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec,ivParameterSpec);
+
+                final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec,ivParameterSpec);
 
                 final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
                 final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
-
+                Log.d(TAG,"setting up secure connection");
                 new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
                 setRunning(true);
             } catch (NoSuchAlgorithmException e) {
@@ -102,6 +113,8 @@ public class BluetoothRFCommClient extends AbstractClient {
             } catch (InvalidKeyException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvalidAlgorithmParameterException e) {
                 e.printStackTrace();
             }
         } else {
@@ -115,7 +128,7 @@ public class BluetoothRFCommClient extends AbstractClient {
             this.bluetoothAdapter.enable();
         }
 
-        Log.d(TAG,"starting discovery");
+        Log.d(TAG, "starting discovery");
 
         final IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         this.getContext().registerReceiver(this.broadcastReceiver, filter);
@@ -134,6 +147,6 @@ public class BluetoothRFCommClient extends AbstractClient {
 
     @Override
     public boolean isSupported() {
-        return this.bluetoothAdapter!=null;
+        return this.bluetoothAdapter != null;
     }
 }

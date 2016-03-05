@@ -1,5 +1,7 @@
 package ch.papers.payments.communications.peers.handlers;
 
+import android.util.Log;
+
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.InputStream;
@@ -7,6 +9,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 import ch.papers.payments.communications.peers.steps.Step;
@@ -30,9 +33,12 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
 
     @Override
     public void run() {
-        int stepCounter = 0;
 
-        writeDERObject(stepList.get(stepCounter++).process(readDERObject()));
+        int stepCounter = 0;
+        Log.d(TAG,"start reading");
+        DERObject derResponseObject = readDERObject();
+        Log.d(TAG,"read response object");
+        writeDERObject(stepList.get(stepCounter++).process(derResponseObject));
         writeDERObject(stepList.get(stepCounter++).process(readDERObject()));
         //writeDERObject();
     }

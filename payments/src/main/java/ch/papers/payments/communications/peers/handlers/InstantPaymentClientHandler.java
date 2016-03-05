@@ -1,7 +1,10 @@
 package ch.papers.payments.communications.peers.handlers;
 
+import android.util.Log;
+
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.OnResultListener;
@@ -29,10 +32,13 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
         super(inputStream, outputStream);
         this.paymentRequestAuthorizer = paymentRequestAuthorizer;
         this.walletServiceBinder = walletServiceBinder;
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
             @Override
             public void onSuccess(ECKeyWrapper clientKey) {
                 paymentRequestReceiveStep = new PaymentRequestReceiveStep(clientKey.getKey());
+                countDownLatch.countDown();
             }
 
             @Override
@@ -40,12 +46,19 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
 
             }
         }, ECKeyWrapper.class);
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void run() {
+        Log.d(TAG,"kick off");
         writeDERObject(DERObject.NULLOBJECT); // we kick off the process
         DERObject paymentRequestResponse = paymentRequestReceiveStep.process(readDERObject());
+        Log.d(TAG,"got request, authorizing user");
         if(paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
             writeDERObject(paymentRequestResponse);
             final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI());
