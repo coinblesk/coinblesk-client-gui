@@ -22,6 +22,7 @@ public interface IPreferenceStrings {
     String COIN = "BTC";
     String MILLICOIN = "mBTC";
     String MICROCOIN = "μBTC";
+    int MAXIMUM_AMOUNT_LENGTH = 7;
 
     // Preference Status Strings
     String NFC_ACTIVATED = "nfc-checked";

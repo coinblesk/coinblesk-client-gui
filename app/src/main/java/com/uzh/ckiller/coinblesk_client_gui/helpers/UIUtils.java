@@ -103,18 +103,20 @@ public class UIUtils implements IPreferenceStrings {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
 
-        final int length = amount.length();
         Coin coin = Coin.parseCoin("0");
+        BigDecimal bd = new BigDecimal(amount);
 
         switch (coinDenomination) {
             case COIN:
                 coin = Coin.parseCoin(amount);
                 break;
             case MILLICOIN:
-                coin = ((reverse) ? coin.multiply(1000) : coin.divide(1000));
+                bd = ((reverse) ? bd.multiply(new BigDecimal(1000)) : bd.divide(new BigDecimal(1000)));
+                coin = Coin.parseCoin(bd.toString());
                 break;
             case MICROCOIN:
-                coin = ((reverse) ? coin.multiply(1000000) : coin.divide(1000000));
+                bd = ((reverse) ? bd.multiply(new BigDecimal(1000000)) : bd.divide(new BigDecimal(1000000)));
+                coin = Coin.parseCoin(bd.toString());
                 break;
         }
 
