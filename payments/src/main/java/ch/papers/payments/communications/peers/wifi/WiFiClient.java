@@ -44,9 +44,10 @@ import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHand
 public class WiFiClient extends AbstractClient implements WifiP2pManager.ConnectionInfoListener {
     private final static String TAG = BluetoothRFCommClient.class.getSimpleName();
 
-    private WifiP2pManager manager;
-    private WifiP2pManager.Channel channel;
-    private Socket socket;
+    private WifiP2pManager manager = null;
+    private WifiP2pManager.Channel channel = null;
+    private Socket socket = null;
+    private SecretKeySpec commonSecretKeySpec = null;
 
     private boolean isConnected = false;
 
@@ -157,28 +158,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
                                 Log.d(TAG, "exchange successful");
-                                try {
+                                commonSecretKeySpec = secretKeySpec;
 
-                                    final Cipher writeCipher = Cipher.getInstance("AES");
-                                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-
-                                    final Cipher readCipher = Cipher.getInstance("AES");
-                                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-
-                                    final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
-                                    final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
-
-                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
-                                    setRunning(true);
-                                } catch (NoSuchAlgorithmException e) {
-                                    e.printStackTrace();
-                                } catch (NoSuchPaddingException e) {
-                                    e.printStackTrace();
-                                } catch (InvalidKeyException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
                             }
 
                             @Override
@@ -196,6 +177,30 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
+        if (this.isReadyForInstantPayment() && commonSecretKeySpec != null) {
+            try {
+                final Cipher writeCipher = Cipher.getInstance("AES");
+                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec);
 
+                final Cipher readCipher = Cipher.getInstance("AES");
+                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec);
+
+                final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+                final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+
+                setRunning(true);
+                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchPaddingException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // TODO block
+        }
     }
 }

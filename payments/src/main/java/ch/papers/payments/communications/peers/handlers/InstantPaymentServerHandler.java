@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 import ch.papers.payments.communications.peers.steps.Step;
@@ -33,7 +32,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
     public void run() {
         int stepCounter = 0;
 
-        writeDERObject(stepList.get(stepCounter++).process(DERObject.NULLOBJECT));
+        writeDERObject(stepList.get(stepCounter++).process(readDERObject()));
         writeDERObject(stepList.get(stepCounter++).process(readDERObject()));
         //writeDERObject();
     }

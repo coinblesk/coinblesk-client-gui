@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MotionEventCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -65,12 +66,15 @@ public class SendPaymentFragment extends KeyboardFragment {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                float heightValue = event.getY();
                 switch (MotionEventCompat.getActionMasked(event)) {
                     case (MotionEvent.ACTION_DOWN):
-                        startPoint = event.getY();
-                        break;
+                        Log.d(TAG, "touch down");
+                        startPoint = heightValue;
+                        return true;
                     case (MotionEvent.ACTION_MOVE):
-                        if (!isShowingDialog && event.getY() - startPoint > THRESHOLD) {
+                        Log.d(TAG, "touch move");
+                        if (!isShowingDialog && heightValue - startPoint > THRESHOLD) {
                             showDialog();
                             for (AbstractClient client : clients) {
                                 if (client.isRunning()) {
@@ -180,7 +184,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     @Override
     public void onStop() {
         for (AbstractClient peer : this.clients) {
-            if(peer.isRunning()) {
+            if (peer.isRunning()) {
                 peer.stop();
             }
         }

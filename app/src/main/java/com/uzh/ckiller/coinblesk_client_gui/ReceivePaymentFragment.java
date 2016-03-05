@@ -13,12 +13,7 @@ import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.Peer;
-import ch.papers.payments.communications.peers.ServerPeerService;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
@@ -31,8 +26,6 @@ public class ReceivePaymentFragment extends KeyboardFragment {
     public static Fragment newInstance() {
         return new ReceivePaymentFragment();
     }
-
-    private final List<Peer> peers = new ArrayList<Peer>();
 
 
     @Override
@@ -62,13 +55,8 @@ public class ReceivePaymentFragment extends KeyboardFragment {
 
     @Override
     public void onStop() {
-        super.onStop();
-
-        for (Peer peer:this.peers) {
-            peer.stop();
-        }
-
         this.getActivity().unbindService(serviceConnection);
+        super.onStop();
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

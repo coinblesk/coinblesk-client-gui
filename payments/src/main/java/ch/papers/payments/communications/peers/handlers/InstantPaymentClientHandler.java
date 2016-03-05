@@ -44,6 +44,7 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
 
     @Override
     public void run() {
+        writeDERObject(DERObject.NULLOBJECT); // we kick off the process
         DERObject paymentRequestResponse = paymentRequestReceiveStep.process(readDERObject());
         if(paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
             writeDERObject(paymentRequestResponse);

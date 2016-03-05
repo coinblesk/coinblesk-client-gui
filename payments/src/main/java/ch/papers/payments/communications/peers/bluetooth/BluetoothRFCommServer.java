@@ -49,7 +49,7 @@ public class BluetoothRFCommServer extends AbstractServer {
 
     @Override
     public boolean isSupported() {
-        return true;
+        return bluetoothAdapter != null;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class BluetoothRFCommServer extends AbstractServer {
                 final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                 final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
-                new Thread(new InstantPaymentServerHandler(encryptedInputStream,encrytpedOutputStream,paymentUri)).start();
+                new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, paymentUri)).start();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             } catch (NoSuchPaddingException e) {
@@ -134,7 +134,7 @@ public class BluetoothRFCommServer extends AbstractServer {
             this.bluetoothAdapter.enable();
         }
 
-        if(bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE){
+        if (bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             Intent discoverableIntent = new
                     Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.DISCOVERABLE_DURATION);

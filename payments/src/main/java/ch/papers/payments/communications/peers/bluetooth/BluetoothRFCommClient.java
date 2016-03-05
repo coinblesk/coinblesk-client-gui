@@ -50,34 +50,14 @@ public class BluetoothRFCommClient extends AbstractClient {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 Log.d(TAG, "device found:" + device.getAddress());
                 try {
-                    final BluetoothSocket clientSocket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
-                    clientSocket.connect();
+                    socket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
+                    socket.connect();
 
-                    new Thread(new DHKeyExchangeHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                    new Thread(new DHKeyExchangeHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                         @Override
                         public void onSuccess(SecretKeySpec secretKeySpec) {
                             Log.d(TAG, "exchange successful");
-                            try {
-                                final Cipher writeCipher = Cipher.getInstance("AES");
-                                writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-
-                                final Cipher readCipher = Cipher.getInstance("AES");
-                                readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-
-                                final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
-                                final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
-
-                                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
-                                setRunning(true);
-                            } catch (NoSuchAlgorithmException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchPaddingException e) {
-                                e.printStackTrace();
-                            } catch (InvalidKeyException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            commonSecretKeySpec = secretKeySpec;
                         }
 
                         @Override
@@ -90,6 +70,7 @@ public class BluetoothRFCommClient extends AbstractClient {
             }
         }
     };
+    private SecretKeySpec commonSecretKeySpec;
 
     public BluetoothRFCommClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
@@ -97,7 +78,31 @@ public class BluetoothRFCommClient extends AbstractClient {
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
+        if (this.isReadyForInstantPayment() && commonSecretKeySpec != null) {
+            try {
+                final Cipher writeCipher = Cipher.getInstance("AES");
+                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec);
 
+                final Cipher readCipher = Cipher.getInstance("AES");
+                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec);
+
+                final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+                final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+
+                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
+                setRunning(true);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchPaddingException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            //TODO block
+        }
     }
 
     @Override
@@ -123,6 +128,6 @@ public class BluetoothRFCommClient extends AbstractClient {
 
     @Override
     public boolean isSupported() {
-        return true;
+        return this.bluetoothAdapter!=null;
     }
 }
