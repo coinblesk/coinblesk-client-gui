@@ -9,8 +9,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.text.Html;
@@ -26,6 +28,9 @@ import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationView;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ch.papers.payments.Utils;
 import ch.papers.payments.communications.peers.ServerPeerService;
 
@@ -35,7 +40,7 @@ import ch.papers.payments.communications.peers.ServerPeerService;
 
 public class ReceiveDialogFragment extends DialogFragment {
     private final static String TAG = ReceiveDialogFragment.class.getName();
-
+    private final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
 
 
@@ -75,33 +80,40 @@ public class ReceiveDialogFragment extends DialogFragment {
                 }
             });
 
-            view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+            if(!connectionSettings.isEmpty()) {
+                view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
 
-                    final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                    final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
-                    amountTextView.setText(bitcoinURI.getAmount().toString());
-                    final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
-                    addressTextView.setText(bitcoinURI.getAddress().toString());
+                        final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
+                        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                        amountTextView.setText(bitcoinURI.getAmount().toString());
+                        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                        addressTextView.setText(bitcoinURI.getAddress().toString());
 
-                    final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
-                    authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(bitcoinURI).getBytes()));
-                    new AlertDialog.Builder(getActivity())
-                            .setTitle("Authview")
-                            .setView(authViewDialog)
-                            .setCancelable(true)
-                            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Log.d(TAG,"called cancel");
-                                    serverServiceBinder.cancelPaymentRequest();
-                                }
-                            }).show();
+                        final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+                        authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(bitcoinURI).getBytes()));
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Authview")
+                                .setView(authViewDialog)
+                                .setCancelable(true)
+                                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Log.d(TAG, "called cancel");
+                                        serverServiceBinder.cancelPaymentRequest();
+                                    }
+                                }).show();
 
-                    serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
-                }
-            });
+                        serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
+                    }
+                });
+            } else {
+                view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.GONE);
+            }
 
             return new AlertDialog.Builder(getActivity())
                     .setTitle("Receive Bitcoins")

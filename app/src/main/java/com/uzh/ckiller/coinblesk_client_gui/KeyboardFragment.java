@@ -10,6 +10,7 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
@@ -53,6 +54,14 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 initStandard(view);
                 break;
         }
+
+        final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
+        final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
+        final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
+
+        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, NFC_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, BT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, WIFIDIRECT_ACTIVATED);
 
         this.onKeyboardListener = this;
         return view;
