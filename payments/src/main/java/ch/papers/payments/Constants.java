@@ -34,6 +34,7 @@ public class Constants {
     public static final String WALLET_INSUFFICIENT_BALANCE = "WALLET_INSUFFICIENT_BALANCE";
     public static final String WALLET_COINS_SENT = "WALLET_COINS_SENT";
     public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
+    public static final String EXCHANGE_RATE_CHANGED_ACTION = "EXCHANGE_RATE_CHANGED_ACTION";
 
     //Crypto constants
     public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";

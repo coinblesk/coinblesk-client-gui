@@ -80,6 +80,9 @@ public class WalletService extends Service {
 
     public class WalletServiceBinder extends Binder {
 
+        public ExchangeRate getExchangeRate(){
+            return exchangeRate;
+        }
 
         public Address getCurrentReceiveAddress() {
             if (multisigAddressScript != null) {
@@ -260,6 +263,8 @@ public class WalletService extends Service {
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                        Intent exchangeRateChangeIntent = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(exchangeRateChangeIntent);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

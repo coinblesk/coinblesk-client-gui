@@ -1,11 +1,19 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,11 +26,13 @@ import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 
 /**
  * Created by ckiller on 24/01/16.
@@ -32,9 +42,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private String amountString = "0";
     private String sumString = "";
 
-    // TODO: get current exchange rate from net, largeamount settings from prefs, prefered fiat from prefs.
-    private String currencyCode = "CHF";
-    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat(currencyCode, "430"));
     private boolean isBitcoinLargeAmount = true;
 
     protected abstract DialogFragment getDialogFragment();
@@ -262,15 +269,15 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (isBitcoinLargeAmount) {
             return UIUtils.formatCoin(this.getContext(), this.amountString, false);
         } else {
-            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
+            return UIUtils.formatCoin(this.getContext(), walletServiceBinder.getExchangeRate().fiatToCoin(this.getFiat()).toPlainString(), true);
         }
     }
 
     protected Fiat getFiat() {
         if (!isBitcoinLargeAmount) {
-            return Fiat.parseFiat(currencyCode, this.amountString);
+            return Fiat.parseFiat(walletServiceBinder.getExchangeRate().fiat.currencyCode, this.amountString);
         } else {
-            return exchangeRate.coinToFiat(this.getCoin());
+            return walletServiceBinder.getExchangeRate().coinToFiat(this.getCoin());
         }
     }
 
@@ -295,6 +302,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     @Override
     public void onStart() {
         super.onStart();
+        Intent intent = new Intent(this.getActivity(), WalletService.class);
+        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         this.updateAmount();
     }
 
@@ -445,5 +454,40 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             this.initCustomButton(customKey);
         }
     }
+
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateAmount();
+        }
+    };
+
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        this.getActivity().unbindService(serviceConnection);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+    }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            IntentFilter filter = new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            updateAmount();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 }
