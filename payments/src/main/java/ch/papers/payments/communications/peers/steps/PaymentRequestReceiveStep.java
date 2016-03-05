@@ -24,17 +24,17 @@ import ch.papers.payments.communications.messages.DERSequence;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class PaymentRequestReceiveStep implements Step{
+public class PaymentRequestReceiveStep implements Step {
     private final static String TAG = PaymentRequestReceiveStep.class.getSimpleName();
 
     private final ECKey ecKey;
     private BitcoinURI bitcoinURI;
 
-    public PaymentRequestReceiveStep(ECKey ecKey){
+    public PaymentRequestReceiveStep(ECKey ecKey) {
         this.ecKey = ecKey;
     }
 
-    public BitcoinURI getBitcoinURI(){
+    public BitcoinURI getBitcoinURI() {
         return bitcoinURI;
     }
 
@@ -42,24 +42,31 @@ public class PaymentRequestReceiveStep implements Step{
     public DERObject process(DERObject input) {
         final DERSequence derSequence = (DERSequence) input;
         final Coin amount = Coin.valueOf(((DERInteger) derSequence.getChildren().get(0)).getBigInteger().longValue());
-        Log.d(TAG,"received amount:"+amount);
-        final Address address = new Address(Constants.PARAMS,derSequence.getChildren().get(1).getPayload());
-        Log.d(TAG,"received address:"+address);
+        Log.d(TAG, "received amount:" + amount);
+
+        Address address;
+        if (((DERInteger) derSequence.getChildren().get(1)).getBigInteger().longValue() == 1) {
+            address = Address.fromP2SHHash(Constants.PARAMS, derSequence.getChildren().get(1).getPayload());
+        } else {
+            address = new Address(Constants.PARAMS, derSequence.getChildren().get(1).getPayload());
+        }
+        Log.d(TAG, "received address:" + address);
+
 
         try {
-            this.bitcoinURI = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address,amount,"", ""));
-            Log.d(TAG,"bitcoin uri complete:"+bitcoinURI);
+            this.bitcoinURI = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address, amount, "", ""));
+            Log.d(TAG, "bitcoin uri complete:" + bitcoinURI);
         } catch (BitcoinURIParseException e) {
             e.printStackTrace();
         }
 
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-        Log.d(TAG,"sign timestamp:"+timestamp.longValue());
+        Log.d(TAG, "sign timestamp:" + timestamp.longValue());
 
 
-        Log.d(TAG,"used used for signing"+ecKey.getPublicKeyAsHex());
-        Sha256Hash inputHash = Sha256Hash.of(Utils.concatBytes(BigInteger.valueOf(amount.getValue()).toByteArray(),address.getHash160(),timestamp.toByteArray()));
-        Log.d(TAG,"hash used for signing"+inputHash);
+        Log.d(TAG, "used used for signing" + ecKey.getPublicKeyAsHex());
+        Sha256Hash inputHash = Sha256Hash.of(Utils.concatBytes(BigInteger.valueOf(amount.getValue()).toByteArray(), address.getHash160(), timestamp.toByteArray()));
+        Log.d(TAG, "hash used for signing" + inputHash);
         final ECKey.ECDSASignature ecdsaSignature = this.ecKey.sign(inputHash);
 
         final List<DERObject> derObjectList = new ArrayList<DERObject>();
@@ -69,7 +76,7 @@ public class PaymentRequestReceiveStep implements Step{
         derObjectList.add(new DERInteger(ecdsaSignature.s));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
-        Log.d(TAG,"responding with eckey and signature total size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG, "responding with eckey and signature total size:" + payloadDerSequence.serializeToDER().length);
         return payloadDerSequence;
     }
 }

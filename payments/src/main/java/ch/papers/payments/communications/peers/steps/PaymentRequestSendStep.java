@@ -25,6 +25,7 @@ public class PaymentRequestSendStep implements Step {
         Log.d(TAG,"sending" + bitcoinURI);
         List<DERObject> derObjectList = new ArrayList<DERObject>();
         derObjectList.add(new DERInteger(BigInteger.valueOf(bitcoinURI.getAmount().getValue())));
+        derObjectList.add(new DERInteger(BigInteger.valueOf(bitcoinURI.getAddress().isP2SHAddress()?1:0)));
         derObjectList.add(new DERObject(bitcoinURI.getAddress().getHash160()));
         payload = new DERSequence(derObjectList);
         Log.d(TAG,"payload size" + payload.serializeToDER().length);

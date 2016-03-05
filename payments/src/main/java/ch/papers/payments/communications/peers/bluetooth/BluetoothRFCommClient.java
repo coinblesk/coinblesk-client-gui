@@ -48,21 +48,21 @@ public class BluetoothRFCommClient extends AbstractClient {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            if (BluetoothDevice.ACTION_FOUND.equals(action) && socket != null) {
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         Log.d(TAG, "device found:" + device.getAddress());
                         try {
-                            socket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
-                            socket.connect();
-                            new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                            final BluetoothSocket deviceSocket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
+                            deviceSocket.connect();
+                            new DHKeyExchangeClientHandler(deviceSocket.getInputStream(), deviceSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                                 @Override
                                 public void onSuccess(SecretKeySpec secretKeySpec) {
                                     Log.d(TAG, "exchange successful");
                                     commonSecretKeySpec = secretKeySpec;
-
+                                    socket = deviceSocket;
                                     if (isReadyForInstantPayment()) {
                                         onIsReadyForInstantPaymentChange();
                                     }
