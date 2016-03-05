@@ -275,14 +275,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void updateAmount() {
-        final Coin coin = this.getCoin();
-        final Fiat fiat = this.getFiat();
-
-
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
 
         largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
+
+        final Coin coin = this.getCoin();
+        final Fiat fiat = this.getFiat();
 
         if (this.isBitcoinLargeAmount) {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, UIUtils.getCoinDenomination(this.getContext())));
@@ -303,13 +302,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onDigit(int digit) {
 
         final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
-        final int decimalPlacesFromString = UIUtils.getNumberOfDecimalPlacedFromString(this.amountString);
+        final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
+        final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
+        final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
 
-        if (decimalPlacesFromString < UIUtils.getDecimalThreshold(coinDenom)) {
-            this.amountString += digit;
-            this.amountString = new BigDecimal(amountString).toString();
-            this.updateAmount();
+        final boolean isDecimal = UIUtils.isDecimal(amountString);
+
+        if(isDecimal){
+            if (fractionalLength < decimalThreshold) {
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
         }
+
+        if(!isDecimal){
+            if (integerLength < MAXIMUM_AMOUNT_LENGTH) {
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
+        }
+
     }
 
 

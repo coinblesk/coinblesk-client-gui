@@ -103,18 +103,20 @@ public class UIUtils implements IPreferenceStrings {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
 
-        final int length = amount.length();
         Coin coin = Coin.parseCoin("0");
+        BigDecimal bd = new BigDecimal(amount);
 
         switch (coinDenomination) {
             case COIN:
                 coin = Coin.parseCoin(amount);
                 break;
             case MILLICOIN:
-                coin = ((reverse) ? coin.multiply(1000) : coin.divide(1000));
+                bd = ((reverse) ? bd.multiply(new BigDecimal(1000)) : bd.divide(new BigDecimal(1000)));
+                coin = Coin.parseCoin(bd.toString());
                 break;
             case MICROCOIN:
-                coin = ((reverse) ? coin.multiply(1000000) : coin.divide(1000000));
+                bd = ((reverse) ? bd.multiply(new BigDecimal(1000000)) : bd.divide(new BigDecimal(1000000)));
+                coin = Coin.parseCoin(bd.toString());
                 break;
         }
 
@@ -290,15 +292,29 @@ public class UIUtils implements IPreferenceStrings {
         imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
     }
 
-    public static int getNumberOfDecimalPlacedFromString(String amount) {
-        // Escape '.', otherwise won't work
+    public static int getFractionalLengthFromString(String amount) {
+        // Escape '.' otherwise won't work
         String delims = "\\.";
         int length = -1;
         String[] tokens = amount.split(delims);
-        if (tokens.length == 2) {
+        if (tokens.length == 2)
             length = tokens[1].length();
-        }
         return length;
+    }
+
+    public static int getIntegerLengthFromString(String amount){
+        // Escape '.' otherwise won't work
+        String delims = "\\.";
+        int length = -1;
+        String[] tokens = amount.split(delims);
+        if (tokens.length == 1)
+            length = tokens[0].length();
+        return length;
+    }
+
+    public static boolean isDecimal(String amount){
+        return ((amount.contains(".")) ? true : false);
+
     }
 
     public static int getDecimalThreshold(String coinDenomination) {
@@ -315,8 +331,9 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
         return threshold;
-
     }
+
+
 
 
 }
