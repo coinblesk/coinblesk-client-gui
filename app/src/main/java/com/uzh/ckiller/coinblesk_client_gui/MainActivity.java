@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -33,8 +34,6 @@ import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.WalletService;
 
@@ -239,7 +238,9 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String currency = prefs.getString("pref_currency_list","USD");
+            walletServiceBinder.setCurrency(currency);
         }
 
         @Override

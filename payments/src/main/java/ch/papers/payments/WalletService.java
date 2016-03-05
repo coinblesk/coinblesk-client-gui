@@ -13,6 +13,12 @@ import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
+import com.xeiam.xchange.Exchange;
+import com.xeiam.xchange.ExchangeFactory;
+import com.xeiam.xchange.bitstamp.BitstampExchange;
+import com.xeiam.xchange.currency.CurrencyPair;
+import com.xeiam.xchange.dto.marketdata.Ticker;
+import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -64,7 +70,8 @@ public class WalletService extends Service {
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();
 
-    private ExchangeRate exchangeRate;
+    private String fiatCurrency="USD";
+    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF","430"));
     private WalletAppKit kit;
 
     private Script multisigAddressScript;
@@ -72,6 +79,8 @@ public class WalletService extends Service {
     private ECKey multisigServerKey;
 
     public class WalletServiceBinder extends Binder {
+
+
         public Address getCurrentReceiveAddress() {
             if (multisigAddressScript != null) {
                 return multisigAddressScript.getToAddress(Constants.PARAMS);
@@ -80,8 +89,9 @@ public class WalletService extends Service {
             }
         }
 
-        public void setExchangeRate(ExchangeRate exchangeRate) {
-            WalletService.this.exchangeRate = exchangeRate;
+        public void setCurrency(String currency) {
+            fiatCurrency = currency;
+            this.fetchExchangeRate();
         }
 
         public Coin getBalance() {
@@ -228,6 +238,33 @@ public class WalletService extends Service {
 
         public ECKey getMultisigServerKey() {
             return multisigServerKey;
+        }
+
+        public void fetchExchangeRate(){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Exchange bitstamp = ExchangeFactory.INSTANCE.createExchange(BitstampExchange.class.getName());
+                        PollingMarketDataService marketDataService = bitstamp.getPollingMarketDataService();
+                        Ticker ticker;
+                        if(fiatCurrency.equals("USD")) {
+                            ticker = marketDataService.getTicker(CurrencyPair.BTC_USD);
+                        } else if (fiatCurrency.equals("CHF")){
+                            ticker = marketDataService.getTicker(CurrencyPair.BTC_CHF);
+                        } else {
+                            ticker = marketDataService.getTicker(CurrencyPair.BTC_EUR);
+                        }
+
+                        WalletService.this.exchangeRate =  new ExchangeRate(Fiat.valueOf(ticker.getCurrencyPair().counterSymbol,ticker.getAsk().longValue()*10000));
+                        Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
+                        walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
+                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 

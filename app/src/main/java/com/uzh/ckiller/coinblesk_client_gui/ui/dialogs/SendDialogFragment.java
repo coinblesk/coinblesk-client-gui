@@ -31,8 +31,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -178,7 +176,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
 
             // TODO handle errors
             IntentFilter filter = new IntentFilter(Constants.WALLET_COINS_SENT);

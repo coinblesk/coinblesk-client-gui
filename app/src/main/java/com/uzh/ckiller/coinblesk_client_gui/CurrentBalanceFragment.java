@@ -1,19 +1,13 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.DialogPreference;
-import android.preference.ListPreference;
-import android.preference.PreferenceManager;
-import android.preference.PreferenceScreen;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
@@ -25,9 +19,6 @@ import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
-
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -116,7 +107,6 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
             IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);

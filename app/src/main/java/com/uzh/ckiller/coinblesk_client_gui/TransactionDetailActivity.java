@@ -38,9 +38,6 @@ import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
-
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.models.TransactionWrapper;
@@ -140,7 +137,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.setExchangeRate(new ExchangeRate(Fiat.parseFiat("CHF", "430")));
             IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
             setTransactionDetails();
