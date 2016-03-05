@@ -26,6 +26,7 @@ import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
@@ -42,6 +43,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private String amountString = "0";
     private String sumString = "";
 
+    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
     private boolean isBitcoinLargeAmount = true;
 
     protected abstract DialogFragment getDialogFragment();
@@ -269,15 +271,15 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (isBitcoinLargeAmount) {
             return UIUtils.formatCoin(this.getContext(), this.amountString, false);
         } else {
-            return UIUtils.formatCoin(this.getContext(), walletServiceBinder.getExchangeRate().fiatToCoin(this.getFiat()).toPlainString(), true);
+            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
         }
     }
 
     protected Fiat getFiat() {
         if (!isBitcoinLargeAmount) {
-            return Fiat.parseFiat(walletServiceBinder.getExchangeRate().fiat.currencyCode, this.amountString);
+            return Fiat.parseFiat(exchangeRate.fiat.currencyCode, this.amountString);
         } else {
-            return walletServiceBinder.getExchangeRate().coinToFiat(this.getCoin());
+            return exchangeRate.coinToFiat(this.getCoin());
         }
     }
 
@@ -292,9 +294,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         if (this.isBitcoinLargeAmount) {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, UIUtils.getCoinDenomination(this.getContext())));
-            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), "CHF"));
+            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), this.exchangeRate.fiat.getCurrencyCode()));
         } else {
-            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "CHF"));
+            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
             smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), UIUtils.getCoinDenomination(this.getContext())));
         }
     }
@@ -459,6 +461,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            exchangeRate = walletServiceBinder.getExchangeRate();
             updateAmount();
         }
     };
@@ -478,6 +481,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            walletServiceBinder.fetchExchangeRate();
+            exchangeRate = walletServiceBinder.getExchangeRate();
             IntentFilter filter = new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
             updateAmount();
