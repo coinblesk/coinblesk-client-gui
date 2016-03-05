@@ -81,8 +81,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         this.manager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
-                if(group != null){
-                    manager.removeGroup(channel,new LogActionListener("removeGroup"));
+                if (group != null) {
+                    manager.removeGroup(channel, new LogActionListener("removeGroup"));
                 }
             }
         });
@@ -132,7 +132,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     }
 
     private void connect(WifiP2pDevice device) {
-        Log.d(TAG,"starting connection");
+        Log.d(TAG, "starting connection");
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
@@ -156,7 +156,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                         new DHKeyExchangeHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
-                                Log.d(TAG,"exchange successful");
+                                Log.d(TAG, "exchange successful");
                                 try {
 
                                     final Cipher writeCipher = Cipher.getInstance("AES");
@@ -168,7 +168,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
 
-                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream,encrytpedOutputStream,getWalletServiceBinder(),getPaymentRequestAuthorizer())).start();
+                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
                                     setRunning(true);
                                 } catch (NoSuchAlgorithmException e) {
                                     e.printStackTrace();

@@ -7,6 +7,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
@@ -43,8 +44,9 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
 
     @Override
     public void run() {
-        writeDERObject(paymentRequestReceiveStep.process(readDERObject()));
+        DERObject paymentRequestResponse = paymentRequestReceiveStep.process(readDERObject());
         if(paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+            writeDERObject(paymentRequestResponse);
             final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI());
             writeDERObject(paymentRefundSendStep.process(readDERObject()));
         }

@@ -130,13 +130,18 @@ public class BluetoothLEClient extends AbstractClient {
                     if(derRequestPayload.length>=responseLength && derRequestPayload.length!=2){
                         byte[] derResponsePayload = new byte[0];
                         final DERObject requestDER = DERParser.parseDER(derRequestPayload);
-                        switch (stepCounter++){
+                        switch (stepCounter){
                             case 0:
-                                derResponsePayload = paymentRequestReceiveStep.process(requestDER).serializeToDER();
+                                DERObject paymentRequestResponse = paymentRequestReceiveStep.process(requestDER);
+                                if(getPaymentRequestAuthorizer().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+                                    derResponsePayload =paymentRequestResponse.serializeToDER();
+                                    stepCounter++;
+                                }
                                 break;
                             case 1:
                                 PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(),paymentRequestReceiveStep.getBitcoinURI());
                                 derResponsePayload = paymentRefundSendStep.process(requestDER).serializeToDER();
+                                stepCounter++;
                                 break;
                         }
 
