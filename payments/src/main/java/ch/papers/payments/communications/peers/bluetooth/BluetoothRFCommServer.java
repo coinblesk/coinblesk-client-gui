@@ -134,10 +134,12 @@ public class BluetoothRFCommServer extends AbstractServer {
             this.bluetoothAdapter.enable();
         }
 
-        Intent discoverableIntent = new
-                Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.DISCOVERABLE_DURATION);
-        discoverableIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        this.getContext().startActivity(discoverableIntent);
+        if(bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE){
+            Intent discoverableIntent = new
+                    Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.DISCOVERABLE_DURATION);
+            discoverableIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            this.getContext().startActivity(discoverableIntent);
+        }
     }
 }
