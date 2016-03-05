@@ -12,6 +12,7 @@ import ch.papers.payments.WalletService;
 public abstract class AbstractClient extends AbstractPeer {
     private boolean isReadyForInstantPayment = false;
     private final WalletService.WalletServiceBinder walletServiceBinder;
+    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.DUMMY_AUTHORIZER;
 
     protected AbstractClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context);
@@ -32,4 +33,12 @@ public abstract class AbstractClient extends AbstractPeer {
     }
 
     public abstract void onIsReadyForInstantPaymentChange();
+
+    public PaymentRequestAuthorizer getPaymentRequestAuthorizer() {
+        return paymentRequestAuthorizer;
+    }
+
+    public void setPaymentRequestAuthorizer(PaymentRequestAuthorizer paymentRequestAuthorizer) {
+        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+    }
 }

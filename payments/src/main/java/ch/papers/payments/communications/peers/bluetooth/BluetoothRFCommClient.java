@@ -48,7 +48,7 @@ public class BluetoothRFCommClient extends AbstractClient {
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Log.d(TAG, "device found:"+device.getAddress());
+                Log.d(TAG, "device found:" + device.getAddress());
                 try {
                     final BluetoothSocket clientSocket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
                     clientSocket.connect();
@@ -56,7 +56,7 @@ public class BluetoothRFCommClient extends AbstractClient {
                     new Thread(new DHKeyExchangeHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                         @Override
                         public void onSuccess(SecretKeySpec secretKeySpec) {
-                            Log.d(TAG,"exchange successful");
+                            Log.d(TAG, "exchange successful");
                             try {
                                 final Cipher writeCipher = Cipher.getInstance("AES");
                                 writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
@@ -67,7 +67,7 @@ public class BluetoothRFCommClient extends AbstractClient {
                                 final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
                                 final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
 
-                                new Thread(new InstantPaymentClientHandler(encryptedInputStream,encrytpedOutputStream,getWalletServiceBinder())).start();
+                                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
                                 setRunning(true);
                             } catch (NoSuchAlgorithmException e) {
                                 e.printStackTrace();
@@ -91,7 +91,7 @@ public class BluetoothRFCommClient extends AbstractClient {
         }
     };
 
-    public BluetoothRFCommClient(Context context,WalletService.WalletServiceBinder walletServiceBinder) {
+    public BluetoothRFCommClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
     }
 

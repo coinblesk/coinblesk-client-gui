@@ -7,6 +7,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import ch.papers.payments.models.ECKeyWrapper;
@@ -20,10 +21,12 @@ import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 public class InstantPaymentClientHandler extends DERObjectStreamHandler{
     private final static String TAG = InstantPaymentClientHandler.class.getSimpleName();
     private final WalletService.WalletServiceBinder walletServiceBinder;
+    private final PaymentRequestAuthorizer paymentRequestAuthorizer;
     private PaymentRequestReceiveStep paymentRequestReceiveStep;
 
-    public InstantPaymentClientHandler(InputStream inputStream, OutputStream outputStream, WalletService.WalletServiceBinder walletServiceBinder) {
+    public InstantPaymentClientHandler(InputStream inputStream, OutputStream outputStream, WalletService.WalletServiceBinder walletServiceBinder, PaymentRequestAuthorizer paymentRequestAuthorizer) {
         super(inputStream, outputStream);
+        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
         this.walletServiceBinder = walletServiceBinder;
         UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
             @Override
@@ -41,7 +44,9 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
     @Override
     public void run() {
         writeDERObject(paymentRequestReceiveStep.process(readDERObject()));
-        final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder,paymentRequestReceiveStep.getBitcoinURI());
-        writeDERObject(paymentRefundSendStep.process(readDERObject()));
+        if(paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+            final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI());
+            writeDERObject(paymentRefundSendStep.process(readDERObject()));
+        }
     }
 }
