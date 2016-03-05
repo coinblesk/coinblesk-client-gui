@@ -290,18 +290,23 @@ public class UIUtils implements IPreferenceStrings {
         imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
     }
 
-    public static int getLengthFromString(String amount, int mode) {
-        // Escape '.', otherwise won't work
+    public static int getFractionalLengthFromString(String amount) {
+        // Escape '.' otherwise won't work
         String delims = "\\.";
         int length = -1;
         String[] tokens = amount.split(delims);
-
-        if (tokens.length == 1)
-            length = tokens[0].length();
-
         if (tokens.length == 2)
             length = tokens[1].length();
+        return length;
+    }
 
+    public static int getIntegerLengthFromString(String amount){
+        // Escape '.' otherwise won't work
+        String delims = "\\.";
+        int length = -1;
+        String[] tokens = amount.split(delims);
+        if (tokens.length == 1)
+            length = tokens[0].length();
         return length;
     }
 

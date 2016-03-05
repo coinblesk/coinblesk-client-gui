@@ -295,8 +295,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
         final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
-        final int fractionalLength = UIUtils.getLengthFromString(this.amountString, FRACTIONAL_MODE);
-        final int integerLength = UIUtils.getLengthFromString(this.amountString, INTEGER_MODE);
+        final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
+        final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
 
         final boolean isDecimal = UIUtils.isDecimal(amountString);
 
