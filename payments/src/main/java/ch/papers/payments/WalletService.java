@@ -130,15 +130,16 @@ public class WalletService extends Service {
 
 
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
-
+                        Log.d(TAG,"rcv: "+address);
+                        Log.d(TAG,"tx: "+transaction);
                         //This is needed because otherwise we mix up signature order
                         List<ECKey> keys = new ArrayList<ECKey>();
                         keys.add(multisigClientKey);
                         keys.add(multisigServerKey);
-                        Collections.sort(keys,ECKey.PUBKEY_COMPARATOR);
+                        Collections.sort(keys, ECKey.PUBKEY_COMPARATOR);
 
-                        final Script redeemScript =ScriptBuilder.createRedeemScript(2, keys);
-                        Log.d(TAG,transaction.hashForSignature(0,redeemScript, Transaction.SigHash.ALL,false).toString());
+                        final Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
+                        Log.d(TAG, transaction.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false).toString());
                         final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
                         final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures());
 
@@ -147,15 +148,15 @@ public class WalletService extends Service {
                             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
                             // yes, because order matters...
-                            List<TransactionSignature> signatures = keys.indexOf(multisigClientKey)==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+                            List<TransactionSignature> signatures = keys.indexOf(multisigClientKey) == 0 ? ImmutableList.of(clientSignature, serverSignature) : ImmutableList.of(serverSignature, clientSignature);
                             Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
                             transaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
                             transaction.getInput(i).verify();
                         }
 
                         int changeOutput = -1;
-                        for (TransactionOutput transactionOutput :transaction.getOutputs()) {
-                            if(transactionOutput.getAddressFromP2SH(Constants.PARAMS).equals(getCurrentReceiveAddress())){
+                        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                            if (transactionOutput.getAddressFromP2SH(Constants.PARAMS) != null && transactionOutput.getAddressFromP2SH(Constants.PARAMS).equals(getCurrentReceiveAddress())) {
                                 changeOutput = transaction.getOutputs().indexOf(transactionOutput);
                                 break;
                             }
@@ -211,6 +212,22 @@ public class WalletService extends Service {
 
         public TransactionWrapper getTransaction(String transactionHash) {
             return new TransactionWrapper(WalletService.this.kit.wallet().getTransaction(Sha256Hash.wrap(transactionHash)), WalletService.this.kit.wallet());
+        }
+
+        public Address getRefundAddress() {
+            return WalletService.this.kit.wallet().currentReceiveAddress();
+        }
+
+        public ECKey getMultisigClientKey() {
+            return multisigClientKey;
+        }
+
+        public Script getMultisigAddressScript() {
+            return multisigAddressScript;
+        }
+
+        public ECKey getMultisigServerKey() {
+            return multisigServerKey;
         }
     }
 
@@ -381,7 +398,13 @@ public class WalletService extends Service {
         this.multisigServerKey = serverKey;
         this.multisigClientKey = clientKey;
         this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
-        kit.wallet().removeWatchedScripts(kit.wallet().getWatchedScripts());
+
+        for (Script watchedScript:kit.wallet().getWatchedScripts()) {
+            if(!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
+                kit.wallet().removeWatchedScripts(ImmutableList.<Script>of(watchedScript));
+            }
+        }
+
         // now add the right one
         kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }

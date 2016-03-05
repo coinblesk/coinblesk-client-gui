@@ -1,17 +1,24 @@
 package ch.papers.payments.communications.peers.nfc;
 
+import android.content.Intent;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 
-import javax.crypto.spec.SecretKeySpec;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
-import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.Utils;
+import ch.papers.payments.communications.messages.DERObject;
+import ch.papers.payments.communications.messages.DERParser;
+import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
+import ch.papers.payments.communications.peers.steps.Step;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -21,34 +28,75 @@ import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
 public class NFCService extends HostApduService {
     private final static String TAG = NFCService.class.getSimpleName();
 
-    final byte[] buffer = new byte[Constants.BUFFER_SIZE];
-    final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
-    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(Constants.BUFFER_SIZE);
+    private final List<Step> stepList = new ArrayList<Step>();
+    private int stepCounter = 0;
+    private boolean isProcessing = false;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        stepList.clear();
+
+        // Check if intent has extras
+        if (intent.getExtras() != null) {
+            try {
+                String bitcoinUri = intent.getExtras().getString(Constants.BITCOIN_URI_KEY);
+                if(!bitcoinUri.equals("")) {
+                    final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
+                    stepList.add(new PaymentRequestSendStep(bitcoinURI));
+                    stepList.add(new PaymentAuthorizationReceiveStep(bitcoinURI));
+                }
+            } catch (BitcoinURIParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return START_NOT_STICKY;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        new DHKeyExchangeHandler(byteArrayInputStream, byteArrayOutputStream, new OnResultListener<SecretKeySpec>() {
-            @Override
-            public void onSuccess(SecretKeySpec secretKeySpec) {
-                Log.d(TAG,"exchange successful");
-            }
 
-            @Override
-            public void onError(String s) {
-                Log.d(TAG, "error during key exchange:" + s);
-            }
-        });
     }
+
+    byte[] derRequestPayload = new byte[0];
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-
+        Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
+        int derPayloadStartIndex = 0;
         if (this.selectAidApdu(commandApdu)) {
             Log.d(TAG, "hanshake");
+            stepCounter = 0;
+            derPayloadStartIndex = 2;
+            derRequestPayload = new byte[0];
         }
 
-        return new byte[0];
+        byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
+        derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
+
+        int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
+
+        if (derRequestPayload.length < responseLength) {
+            return DERObject.NULLOBJECT.serializeToDER();
+        } else {
+            if(!isProcessing) {
+                final Thread processingThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        isProcessing = true;
+                        final byte[] requestPayload = derRequestPayload;
+                        derRequestPayload = new byte[0];
+                        byte[] derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
+                        Log.d(TAG, "sending response now");
+                        isProcessing = false;
+                        sendResponseApdu(derResponsePayload);
+                    }
+                });
+                processingThread.start();
+            }
+            return null;
+        }
     }
 
     @Override

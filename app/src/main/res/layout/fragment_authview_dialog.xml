@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/qr_dialog_fragment">
+
+    <LinearLayout
+        android:id="@+id/authview_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/amount_textview"
+        style="@style/address_textview"/>
+
+    <TextView
+        android:id="@+id/address_textview"
+        style="@style/address_textview" />
+</LinearLayout>
+

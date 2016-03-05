@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -31,8 +30,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
-import ch.papers.payments.communications.peers.AbstractPeer;
+import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.InstantPaymentServerHandler;
 
 
 /**
@@ -40,7 +40,7 @@ import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class WiFiServer extends AbstractPeer {
+public class WiFiServer extends AbstractServer {
     private final static String TAG = WiFiServer.class.getSimpleName();
 
     private ServerSocket serverSocket;
@@ -70,6 +70,7 @@ public class WiFiServer extends AbstractPeer {
     public void stop() {
         this.manager.removeGroup(channel,new LogActionListener("removeGroup"));
         this.manager.clearLocalServices(channel,new LogActionListener("clearLocalServices"));
+        this.setRunning(false);
     }
 
     @Override
@@ -112,10 +113,7 @@ public class WiFiServer extends AbstractPeer {
                 final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                 final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
-                byte[] amountBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(paymentUri.getAmount().getValue()).array();
-                encrytpedOutputStream.write(paymentUri.getAddress().getHash160());
-                encrytpedOutputStream.write(amountBytes);
-                encrytpedOutputStream.flush();
+                new Thread(new InstantPaymentServerHandler(encryptedInputStream,encrytpedOutputStream,paymentUri)).start();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             } catch (NoSuchPaddingException e) {
@@ -126,6 +124,11 @@ public class WiFiServer extends AbstractPeer {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void cancelPaymentRequest() {
+
     }
 
     private void makeDiscoverable() {
@@ -178,6 +181,7 @@ public class WiFiServer extends AbstractPeer {
                     }
                 } catch (IOException e) {
                 }
+                setRunning(false);
             }
         });
     }

@@ -1,10 +1,16 @@
 package ch.papers.payments.communications.peers.steps;
 
+import android.util.Log;
+
 import org.bitcoinj.uri.BitcoinURI;
 
-import java.nio.ByteBuffer;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
-import ch.papers.payments.Utils;
+import ch.papers.payments.communications.messages.DERInteger;
+import ch.papers.payments.communications.messages.DERObject;
+import ch.papers.payments.communications.messages.DERSequence;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -12,20 +18,20 @@ import ch.papers.payments.Utils;
  * a.decarli@papers.ch
  */
 public class PaymentRequestSendStep implements Step {
-    final private byte[] payload;
+    private final static String TAG = PaymentRequestSendStep.class.getSimpleName();
+    final private DERObject payload;
 
     public PaymentRequestSendStep(BitcoinURI bitcoinURI){
-        byte[] amountBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(bitcoinURI.getAmount().getValue()).array();
-        payload = Utils.concatBytes(amountBytes,bitcoinURI.getAddress().getHash160());
+        Log.d(TAG,"sending" + bitcoinURI);
+        List<DERObject> derObjectList = new ArrayList<DERObject>();
+        derObjectList.add(new DERInteger(BigInteger.valueOf(bitcoinURI.getAmount().getValue())));
+        derObjectList.add(new DERObject(bitcoinURI.getAddress().getHash160()));
+        payload = new DERSequence(derObjectList);
+        Log.d(TAG,"payload size" + payload.serializeToDER().length);
     }
 
     @Override
-    public int expectedInputLength() {
-        return 0;
-    }
-
-    @Override
-    public byte[] process(byte[] input) {
+    public DERObject process(DERObject input) {
         return payload;
     }
 }

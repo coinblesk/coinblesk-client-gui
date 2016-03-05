@@ -37,4 +37,14 @@ public abstract class AbstractPeer implements Peer {
         this.thread = new Thread(runnable);
         this.thread.start();
     }
+
+    @Override
+    public void start() {
+        this.setRunning(true);
+    }
+
+    @Override
+    public void stop() {
+        this.setRunning(false);
+    }
 }

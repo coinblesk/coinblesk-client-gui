@@ -18,6 +18,7 @@ import java.util.List;
 
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.Peer;
+import ch.papers.payments.communications.peers.ServerPeerService;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
@@ -25,13 +26,13 @@ import ch.papers.payments.communications.peers.Peer;
  * a.decarli@papers.ch
  */
 public class ReceivePaymentFragment extends KeyboardFragment {
+    private final static String TAG = ReceivePaymentFragment.class.getSimpleName();
 
     public static Fragment newInstance() {
         return new ReceivePaymentFragment();
     }
 
     private final List<Peer> peers = new ArrayList<Peer>();
-
 
 
     @Override
@@ -55,8 +56,11 @@ public class ReceivePaymentFragment extends KeyboardFragment {
     public void onStart() {
         super.onStart();
 
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
-        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Intent walletServiceIntent = new Intent(this.getActivity(), WalletService.class);
+        this.getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
+        this.getActivity().startService(serverServiceIntent);
     }
 
     @Override

@@ -1,18 +1,11 @@
 package ch.papers.payments.communications.peers.steps;
 
-import com.coinblesk.json.RefundTO;
-import com.coinblesk.util.SerializeUtils;
-import com.google.common.collect.ImmutableList;
+import android.util.Log;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.crypto.TransactionSignature;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 import ch.papers.payments.Constants;
-import ch.papers.payments.communications.http.CoinbleskWebService;
+import ch.papers.payments.communications.messages.DERObject;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -22,6 +15,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * a.decarli@papers.ch
  */
 public class PaymentRefundReceiveStep implements Step {
+    private final static String TAG = PaymentRefundReceiveStep.class.getSimpleName();
+
     private final Retrofit retrofit = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
@@ -34,13 +29,9 @@ public class PaymentRefundReceiveStep implements Step {
     }
 
     @Override
-    public int expectedInputLength() {
-        return 0;
-    }
-
-    @Override
-    public byte[] process(byte[] input) {
-        int refundTransactionSize = input[0];
+    public DERObject process(DERObject input) {
+        Log.d(TAG,"received refund");
+/*        int refundTransactionSize = input[0];
         int refundTransactionSignatureSize = input[refundTransactionSize+1];
 
         byte[] refundTransactionBytes = Arrays.copyOfRange(input, 1, refundTransactionSize);
@@ -60,7 +51,7 @@ public class PaymentRefundReceiveStep implements Step {
             return serverRefundTo.refundTransaction();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        return new byte[0];
+        }*/
+        return null;
     }
 }

@@ -11,6 +11,7 @@ import ch.papers.payments.Utils;
  * a.decarli@papers.ch
  */
 public class DERObject {
+    public static final DERObject NULLOBJECT = new DERObject(new byte[0]);
     private final byte[] payload;
 
     public DERObject(byte[] payload) {
@@ -28,8 +29,8 @@ public class DERObject {
     public byte[] serializeToDER(){
         if(this.payload.length>128){
             // long form
-            byte[] lengthBytes = BigInteger.valueOf(this.payload.length).toByteArray();
-            byte[] lengthByteSize = BigInteger.valueOf(lengthBytes.length).setBit(7).toByteArray();
+            byte[] lengthBytes = Utils.trim(BigInteger.valueOf(this.payload.length).toByteArray());
+            byte[] lengthByteSize = Utils.trim(BigInteger.valueOf(lengthBytes.length).setBit(7).toByteArray());
             return Utils.concatBytes(new byte[]{this.getDERType()},lengthByteSize,lengthBytes, this.payload);
         } else {
             // short form

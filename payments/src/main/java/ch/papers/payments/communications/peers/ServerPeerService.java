@@ -11,7 +11,9 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
+import ch.papers.payments.communications.peers.nfc.NFCServer;
 import ch.papers.payments.communications.peers.wifi.WiFiServer;
 
 /**
@@ -21,34 +23,51 @@ import ch.papers.payments.communications.peers.wifi.WiFiServer;
  */
 public class ServerPeerService extends Service {
 
-    public class PeerServiceBinder extends Binder {
-
+    public class ServerServiceBinder extends Binder {
         public void broadcastPaymentRequest(BitcoinURI paymentUri){
-            for (Peer peer:ServerPeerService.this.peers) {
-                peer.broadcastPaymentRequest(paymentUri);
+            for (AbstractServer server:ServerPeerService.this.servers) {
+                if(server.isRunning()) {
+                    server.broadcastPaymentRequest(paymentUri);
+                }
+            }
+        }
+
+        public void cancelPaymentRequest() {
+            for (AbstractServer server:ServerPeerService.this.servers) {
+                if(server.isRunning()) {
+                    server.cancelPaymentRequest();
+                }
             }
         }
     }
 
-    private final PeerServiceBinder peerServiceBinder = new PeerServiceBinder();
+    private final ServerServiceBinder serverServiceBinder = new ServerServiceBinder();
 
-    private final List<Peer> peers = new ArrayList<Peer>();
+    private final List<AbstractServer> servers = new ArrayList<AbstractServer>();
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return this.peerServiceBinder;
+        return this.serverServiceBinder;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.peers.add(new WiFiServer(this));
-        this.peers.add(new BluetoothRFCommServer(this));
-        //this.peers.add(new BluetoothLEPeer(this));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
 
-        for (Peer peer:this.peers) {
-            peer.start();
-        }
+                for (Peer server:ServerPeerService.this.servers) {
+                    if(server.isSupported()) {
+                        server.start();
+                    }
+                }
+            }
+        }).start();
 
         return Service.START_NOT_STICKY;
     }
@@ -56,8 +75,10 @@ public class ServerPeerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        for (Peer peer:this.peers) {
-            peer.stop();
+        for (Peer server:this.servers) {
+            if(server.isSupported()) {
+                server.stop();
+            }
         }
     }
 }

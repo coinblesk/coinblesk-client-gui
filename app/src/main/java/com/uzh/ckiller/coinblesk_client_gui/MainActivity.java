@@ -37,8 +37,6 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.ClientPeerService;
-import ch.papers.payments.communications.peers.ServerPeerService;
 
 
 /**
@@ -126,8 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
 
                     case R.id.backup:
-                        Intent intent = new Intent(getApplicationContext(), ClientPeerService.class);
-                        startService(intent);
+
                         return true;
                     case R.id.settings:
                         Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_SHORT).show();
