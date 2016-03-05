@@ -28,6 +28,7 @@ import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -280,9 +281,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return UIUtils.formatCoin(this.getContext(), this.amountString, false);
+            return UIUtils.getValue(this.amountString, this.getContext());
         } else {
-            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
+            return exchangeRate.fiatToCoin(this.getFiat());
         }
     }
 
@@ -290,7 +291,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (!isBitcoinLargeAmount) {
             return Fiat.parseFiat(exchangeRate.fiat.currencyCode, this.amountString);
         } else {
-            return exchangeRate.coinToFiat(this.getCoin());
+            return exchangeRate.coinToFiat(UIUtils.getValue(this.amountString, this.getContext()));
         }
     }
 
@@ -309,7 +310,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
             smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
-                    UIUtils.getCoinDenomination(this.getContext())),
+                            UIUtils.getCoinDenomination(this.getContext())),
                     UIUtils.getCoinDenomination(this.getContext())));
         }
     }
@@ -325,29 +326,29 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     @Override
     public void onDigit(int digit) {
 
-        if(isBitcoinLargeAmount) {
+        if (isBitcoinLargeAmount) {
             this.onCoinDigit(digit);
-        }else{
+        } else {
             this.onFiatDigit(digit);
         }
 
     }
 
-    public void onFiatDigit(int digit){
+    public void onFiatDigit(int digit) {
         final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
         final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
         final boolean isDecimal = UIUtils.isDecimal(this.amountString);
 
-        if(isDecimal){
-            if(fractionalLength < FIAT_DECIMAL_THRESHOLD){
+        if (isDecimal) {
+            if (fractionalLength < FIAT_DECIMAL_THRESHOLD) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
             }
         }
 
-        if(!isDecimal){
-            if(integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH){
+        if (!isDecimal) {
+            if (integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -355,7 +356,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
-    public void onCoinDigit(int digit){
+    public void onCoinDigit(int digit) {
         final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
         final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
         final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
@@ -363,7 +364,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         final boolean isDecimal = UIUtils.isDecimal(this.amountString);
 
-        if(isDecimal){
+        if (isDecimal) {
             if (fractionalLength < decimalThreshold) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
@@ -371,7 +372,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             }
         }
 
-        if(!isDecimal){
+        if (!isDecimal) {
             if (integerLength < MAXIMUM_COIN_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();

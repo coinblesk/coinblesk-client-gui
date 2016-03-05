@@ -16,11 +16,14 @@ import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.BtcAutoFormat;
 import org.bitcoinj.utils.BtcFormat;
 import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -99,30 +102,22 @@ public class UIUtils implements IPreferenceStrings {
         return result;
     }
 
-    public static Coin formatCoin(Context context, String amount, boolean reverse) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
 
-        Coin coin = Coin.parseCoin("0");
-        BigDecimal bd = new BigDecimal(amount);
+    public static Coin getValue(String amount, Context context){
+        BigDecimal bdAmount = new BigDecimal(amount);
 
-        switch (coinDenomination) {
-            case COIN:
-                coin = Coin.parseCoin(amount);
-                break;
+        BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
+        switch (getCoinDenomination(context)) {
             case MILLICOIN:
-                coin = Coin.parseCoin(amount);
-//                bd = ((reverse) ? bd.multiply(new BigDecimal(1000)) : bd.divide(new BigDecimal(1000)));
-//                coin = Coin.parseCoin(bd.toString());
+                multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
                 break;
             case MICROCOIN:
-                coin = Coin.parseCoin(amount);
-//                bd = ((reverse) ? bd.multiply(new BigDecimal(1000000)) : bd.divide(new BigDecimal(1000000)));
-//                coin = Coin.parseCoin(bd.toString());
+                multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
                 break;
         }
 
-        return coin;
+        return Coin.valueOf(bdAmount.multiply(multiplicand).longValue());
+
     }
 
 
@@ -304,7 +299,7 @@ public class UIUtils implements IPreferenceStrings {
         return length;
     }
 
-    public static int getIntegerLengthFromString(String amount){
+    public static int getIntegerLengthFromString(String amount) {
         // Escape '.' otherwise won't work
         String delims = "\\.";
         int length = -1;
@@ -314,7 +309,7 @@ public class UIUtils implements IPreferenceStrings {
         return length;
     }
 
-    public static boolean isDecimal(String amount){
+    public static boolean isDecimal(String amount) {
         return ((amount.contains(".")) ? true : false);
 
     }
@@ -334,8 +329,6 @@ public class UIUtils implements IPreferenceStrings {
         }
         return threshold;
     }
-
-
 
 
 }
