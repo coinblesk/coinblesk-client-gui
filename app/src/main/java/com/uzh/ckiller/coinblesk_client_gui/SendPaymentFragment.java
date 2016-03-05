@@ -88,23 +88,30 @@ public class SendPaymentFragment extends KeyboardFragment {
 
                                             final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
                                             authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
-                                            new AlertDialog.Builder(getActivity())
-                                                    .setTitle("Authview")
-                                                    .setView(authViewDialog)
-                                                    .setCancelable(true)
-                                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-                                                            response = false;
-                                                            countDownLatch.countDown();
-                                                        }
-                                                    }).setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
+
+                                            getActivity().runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    new AlertDialog.Builder(getActivity())
+                                                            .setTitle("Authview")
+                                                            .setView(authViewDialog)
+                                                            .setCancelable(true)
+                                                            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(DialogInterface dialog, int which) {
+                                                                    response = false;
+                                                                    countDownLatch.countDown();
+                                                                }
+                                                            }).setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
                                                         @Override
                                                         public void onClick(DialogInterface dialog, int which) {
                                                             response = true;
                                                             countDownLatch.countDown();
                                                         }
                                                     }).show();
+                                                }
+                                            });
+
                                             try {
                                                 countDownLatch.await();
                                             } catch (InterruptedException e) {
