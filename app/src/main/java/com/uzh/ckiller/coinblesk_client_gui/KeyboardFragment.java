@@ -251,9 +251,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return UIUtils.formatCoin(this.getContext(),this.amountString);
+            return UIUtils.formatCoin(this.getContext(), this.amountString);
         } else {
-            return exchangeRate.fiatToCoin(this.getFiat());
+            return UIUtils.formatCoinReverse(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString());
         }
     }
 

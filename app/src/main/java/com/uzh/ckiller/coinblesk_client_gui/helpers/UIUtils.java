@@ -102,7 +102,6 @@ public class UIUtils implements IPreferenceStrings {
     public static Coin formatCoin(Context context, String amount){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String result = "";
 
         Coin coin = Coin.parseCoin(amount);
 
@@ -119,6 +118,27 @@ public class UIUtils implements IPreferenceStrings {
         }
 
     return coin;
+    }
+
+    public static Coin formatCoinReverse(Context context, String amount){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+
+        Coin coin = Coin.parseCoin(amount);
+
+        switch (coinDenomination) {
+            case COIN:
+                // Coin is ok.
+                break;
+            case MILLICOIN:
+                coin = coin.multiply(1000);
+                break;
+            case MICROCOIN:
+                coin = coin.multiply(1000000);
+                break;
+        }
+
+        return coin;
     }
 
     public static String getCoinDenomination(Context context){
