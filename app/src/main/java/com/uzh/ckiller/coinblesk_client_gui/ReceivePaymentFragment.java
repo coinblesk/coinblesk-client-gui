@@ -58,9 +58,6 @@ public class ReceivePaymentFragment extends KeyboardFragment {
 
         Intent walletServiceIntent = new Intent(this.getActivity(), WalletService.class);
         this.getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
-        Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
-        this.getActivity().startService(serverServiceIntent);
     }
 
     @Override

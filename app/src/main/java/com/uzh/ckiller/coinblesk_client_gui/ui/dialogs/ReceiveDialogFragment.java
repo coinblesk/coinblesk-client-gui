@@ -140,14 +140,17 @@ public class ReceiveDialogFragment extends DialogFragment {
         super.onStart();
 
         Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
+        this.getActivity().startService(serverServiceIntent);
         this.getActivity().bindService(serverServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
     }
 
     @Override
     public void onStop() {
-        super.onStop();
+        Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
+        this.getActivity().stopService(serverServiceIntent);
         this.getActivity().unbindService(serviceConnection);
+        super.onStop();
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

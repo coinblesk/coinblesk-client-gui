@@ -194,16 +194,21 @@ public class SendPaymentFragment extends KeyboardFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            clients.add(new WiFiClient(getContext(), walletServiceBinder));
-            clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-            clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
-            clients.add(new NFCClient(getActivity(), walletServiceBinder));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    clients.add(new WiFiClient(getContext(), walletServiceBinder));
+                    clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
+                    clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                    clients.add(new NFCClient(getActivity(), walletServiceBinder));
 
-            for (Peer peer : clients) {
-                if (peer.isSupported()) {
-                    peer.start();
+                    for (Peer peer : clients) {
+                        if (peer.isSupported()) {
+                            peer.start();
+                        }
+                    }
                 }
-            }
+            }).start();
         }
 
         @Override
