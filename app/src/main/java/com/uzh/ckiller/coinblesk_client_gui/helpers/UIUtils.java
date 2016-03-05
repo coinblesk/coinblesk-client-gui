@@ -18,6 +18,7 @@ import com.uzh.ckiller.coinblesk_client_gui.R;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.BtcAutoFormat;
 import org.bitcoinj.utils.BtcFormat;
+import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -35,16 +36,6 @@ import ch.papers.payments.models.TransactionWrapper;
 
 public class UIUtils implements IPreferenceStrings {
 
-    public static SpannableString getLargeAmount(Context context, Coin coin){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
-
-        
-
-
-
-    }
 
     public static SpannableString getLargeBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
 

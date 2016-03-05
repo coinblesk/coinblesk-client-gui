@@ -1,7 +1,9 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.TypedValue;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
@@ -24,7 +27,7 @@ import java.util.List;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener, IPreferenceStrings {
     private String amountString = "0";
     private String sumString = "";
 
@@ -270,6 +273,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
 
+//        largeTextView.setText(UIUtils.getLargeAmount(this.getContext(),coin, fiat));
+//        smallTextView.setText(UIUtils.getSmallAmount(this.getContext(),coin,fiat));
+
         largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
 
         if (this.isBitcoinLargeAmount) {
@@ -307,6 +313,21 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (this.getCoin().isPositive()) {
             this.getDialogFragment().show(this.getFragmentManager(), "keyboard_dialog_fragment");
         }
+    }
+
+    private boolean isBitcoinLargeAmount(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        boolean isLarge = true;
+        switch (isLargeAmount){
+            case BTC_AS_PRIMARY:
+                isLarge = true;
+                break;
+            case FIAT_AS_PRIMARY:
+                isLarge = false;
+                break;
+        }
+        return isLarge;
     }
 
     @Override
