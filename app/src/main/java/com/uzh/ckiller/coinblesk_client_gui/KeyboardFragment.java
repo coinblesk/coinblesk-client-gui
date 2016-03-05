@@ -306,7 +306,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         super.onStart();
         Intent intent = new Intent(this.getActivity(), WalletService.class);
         this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        this.updateAmount();
+        //this.updateAmount();
     }
 
     @Override
@@ -481,10 +481,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            walletServiceBinder.fetchExchangeRate();
             exchangeRate = walletServiceBinder.getExchangeRate();
             IntentFilter filter = new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            walletServiceBinder.fetchExchangeRate();
             updateAmount();
         }
 
