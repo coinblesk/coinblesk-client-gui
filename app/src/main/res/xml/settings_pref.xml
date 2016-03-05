@@ -6,23 +6,35 @@
         android:key="pref_general_settings"
         android:title="@string/pref_general_settings_category_title">
 
-        <EditTextPreference
-            android:defaultValue=""
-            android:dialogMessage="@string/pref_update_username_dialog_message"
-            android:dialogTitle="@string/pref_update_username_dialog_title"
-            android:key="pref_general_username"
-            android:summary="@string/pref_update_username_description"
-            android:title="@string/pref_update_username_title" />
+        <ListPreference
+            android:defaultValue="@string/pref_balance_default_value"
+            android:dialogTitle="@string/pref_balance_dialog_title"
+            android:entries="@array/pref_balance_values"
+            android:entryValues="@array/pref_balance_values"
+            android:key="pref_balance_list"
+            android:summary="@string/pref_balance_description"
+            android:title="@string/pref_balance_title" />
 
         <ListPreference
+            android:defaultValue="@string/pref_currency_default_value"
+            android:dialogTitle="@string/pref_currency_dialog_title"
+            android:entries="@array/pref_currency_entries"
+            android:entryValues="@array/pref_currency_values"
+            android:key="pref_currency_list"
+            android:summary="@string/pref_currency_description"
+            android:title="@string/pref_currency_title" />
+
+        <ListPreference
+            android:defaultValue="@string/pref_bitcoin_rep_default_value"
             android:dialogTitle="@string/pref_bitcoin_rep_dialog_title"
-            android:entries="@array/pref_bitcoin_rep_values"
+            android:entries="@array/pref_bitcoin_rep_entries"
             android:entryValues="@array/pref_bitcoin_rep_values"
             android:key="pref_bitcoin_rep_list"
             android:summary="@string/pref_bitcoin_rep_description"
             android:title="@string/pref_bitcoin_rep_title" />
 
         <ListPreference
+            android:defaultValue="@string/pref_transaction_history_default_value"
             android:dialogTitle="@string/pref_transaction_history_title"
             android:entries="@array/pref_transaction_history_values"
             android:entryValues="@array/pref_transaction_history_values"

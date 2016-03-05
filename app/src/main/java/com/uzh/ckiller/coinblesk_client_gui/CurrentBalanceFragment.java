@@ -1,13 +1,19 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.DialogPreference;
+import android.preference.ListPreference;
+import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
@@ -69,9 +75,16 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
     private void setBalance() {
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(), walletServiceBinder.getBalance().toPlainString(), "BTC"));
-        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), (walletServiceBinder.getBalance().toPlainString().length())));
-        smallBalance.setText(UIUtils.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+
+        // New UIUtils methods using Preferences and BtcFormat
+        largeBalance.setText(UIUtils.getLargeBalance(this.getContext(), walletServiceBinder));
+        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), largeBalance.getText().length()));
+        smallBalance.setText(UIUtils.getSmallBalance(this.getContext(), walletServiceBinder));
+
+        // Old method
+//        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(), walletServiceBinder.getBalance().toPlainString(), "BTC"));
+//        smallBalance.setText(UIUtils.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
+
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {

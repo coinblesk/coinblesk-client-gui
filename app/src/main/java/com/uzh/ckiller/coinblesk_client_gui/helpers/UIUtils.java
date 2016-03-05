@@ -4,25 +4,30 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.media.Image;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
-import android.util.TypedValue;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.BtcAutoFormat;
+import org.bitcoinj.utils.BtcFormat;
+import org.bitcoinj.utils.Fiat;
+
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
+import ch.papers.payments.WalletService;
 import ch.papers.payments.models.TransactionWrapper;
 
 /**
@@ -30,6 +35,116 @@ import ch.papers.payments.models.TransactionWrapper;
  */
 
 public class UIUtils implements IPreferenceStrings {
+
+
+    public static SpannableString getLargeBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+
+        // Get all Preferences
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+
+        // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
+        // TODO -> Does this make sense? What it a user changes his primary currency?
+//        String fiatCurrency = prefs.getString(FIAT_CURRENCY_PREF_KEY, null);
+
+        SpannableString result = new SpannableString("");
+
+        switch (isLargeAmount) {
+            case BTC_AS_PRIMARY:
+                result = toLargeSpannable(context, scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                break;
+            case FIAT_AS_PRIMARY:
+                result = toLargeSpannable(context, walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
+                break;
+        }
+
+        return result;
+    }
+
+    public static SpannableString getSmallBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        SpannableString result = new SpannableString("");
+
+        switch (isLargeAmount) {
+            case BTC_AS_PRIMARY:
+                result = toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
+                break;
+            case FIAT_AS_PRIMARY:
+                result = toSmallSpannable(scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                break;
+        }
+        return result;
+
+    }
+
+    public static String scaleCoin(Coin coin, String coinDenomination) {
+        String result = "";
+        // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
+        switch (coinDenomination) {
+            case COIN:
+                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
+                break;
+            case MILLICOIN:
+                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
+                break;
+            case MICROCOIN:
+                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
+                break;
+        }
+
+        return result;
+    }
+
+    public static Coin formatCoin(Context context, String amount){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+
+        Coin coin = Coin.parseCoin(amount);
+
+        switch (coinDenomination) {
+            case COIN:
+                // Coin is ok.
+                break;
+            case MILLICOIN:
+                coin = coin.divide(1000);
+                break;
+            case MICROCOIN:
+                coin = coin.divide(1000000);
+                break;
+        }
+
+    return coin;
+    }
+
+    public static Coin formatCoinReverse(Context context, String amount){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+
+        Coin coin = Coin.parseCoin(amount);
+
+        switch (coinDenomination) {
+            case COIN:
+                // Coin is ok.
+                break;
+            case MILLICOIN:
+                coin = coin.multiply(1000);
+                break;
+            case MICROCOIN:
+                coin = coin.multiply(1000000);
+                break;
+        }
+
+        return coin;
+    }
+
+    public static String getCoinDenomination(Context context){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+    }
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
         StringBuffer stringBuffer = new StringBuffer(amount + " " + currency);
@@ -39,13 +154,11 @@ public class UIUtils implements IPreferenceStrings {
 
     public static SpannableString toLargeSpannable(Context context, String amount, String currency) {
         final int amountLength = amount.length();
-        SpannableString spannableString = new SpannableString(new StringBuffer(amount + " " + currency));
-        spannableString.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0); // set size
-        spannableString.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);// set color
-        spannableString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, (amountLength + 4), 0);
-
-
-        return spannableString;
+        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency.toString()));
+        result.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0);
+        result.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);
+        result.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, result.length(), 0);
+        return result;
     }
 
     public static int getLargeTextSize(Context context, int amountLength) {
@@ -89,6 +202,7 @@ public class UIUtils implements IPreferenceStrings {
         final int coinLength = friendlyAmount.length() - 3;
 
         // TODO Calculate the Fiat Amount
+        // TODO Insert Fiat Currency
         friendlyAmount.append(" ~ " + "4234.45" + " CHF");
         final int amountLength = friendlyAmount.length();
 
@@ -160,7 +274,7 @@ public class UIUtils implements IPreferenceStrings {
 
     public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> connectionSettings = prefs.getStringSet(CONNECTION_SETTINGS, new HashSet<String>());
+        Set<String> connectionSettings = prefs.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
         // Set the Icon Color and Visibility
         if (connectionSettings != null) {

@@ -1,7 +1,9 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.TypedValue;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
@@ -24,7 +27,7 @@ import java.util.List;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener, IPreferenceStrings {
     private String amountString = "0";
     private String sumString = "";
 
@@ -248,9 +251,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return Coin.parseCoin(this.amountString);
+            return UIUtils.formatCoin(this.getContext(), this.amountString);
         } else {
-            return exchangeRate.fiatToCoin(this.getFiat());
+            return UIUtils.formatCoinReverse(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString());
         }
     }
 
@@ -266,16 +269,18 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
 
+
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
+
         largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
 
         if (this.isBitcoinLargeAmount) {
-            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "BTC"));
+            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, UIUtils.getCoinDenomination(this.getContext())));
             smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), "CHF"));
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "CHF"));
-            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), "BTC"));
+            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), UIUtils.getCoinDenomination(this.getContext())));
         }
     }
 
@@ -305,6 +310,21 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (this.getCoin().isPositive()) {
             this.getDialogFragment().show(this.getFragmentManager(), "keyboard_dialog_fragment");
         }
+    }
+
+    private boolean isBitcoinLargeAmount(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        boolean isLarge = true;
+        switch (isLargeAmount){
+            case BTC_AS_PRIMARY:
+                isLarge = true;
+                break;
+            case FIAT_AS_PRIMARY:
+                isLarge = false;
+                break;
+        }
+        return isLarge;
     }
 
     @Override
