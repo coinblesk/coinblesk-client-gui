@@ -2,14 +2,18 @@ package ch.papers.payments.communications.peers;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
@@ -22,6 +26,10 @@ import ch.papers.payments.communications.peers.wifi.WiFiServer;
  * a.decarli@papers.ch
  */
 public class ServerPeerService extends Service {
+    private final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
+    private final String NFC_ACTIVATED = "nfc-checked";
+    private final String BT_ACTIVATED = "bt-checked";
+    private final String WIFIDIRECT_ACTIVATED = "wifi-checked";
 
     public class ServerServiceBinder extends Binder {
         public void broadcastPaymentRequest(BitcoinURI paymentUri){
@@ -56,10 +64,21 @@ public class ServerPeerService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+
+                if(connectionSettings.contains(NFC_ACTIVATED)){
+                    ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
+                }
+
+                if(connectionSettings.contains(BT_ACTIVATED)){
+                    ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                    ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
+                }
+
+                if(connectionSettings.contains(WIFIDIRECT_ACTIVATED)) {
+                    ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
+                }
 
                 for (Peer server:ServerPeerService.this.servers) {
                     if(server.isSupported()) {

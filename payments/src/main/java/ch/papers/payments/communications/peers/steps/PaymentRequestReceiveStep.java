@@ -46,9 +46,9 @@ public class PaymentRequestReceiveStep implements Step {
 
         Address address;
         if (((DERInteger) derSequence.getChildren().get(1)).getBigInteger().longValue() == 1) {
-            address = Address.fromP2SHHash(Constants.PARAMS, derSequence.getChildren().get(1).getPayload());
+            address = Address.fromP2SHHash(Constants.PARAMS, derSequence.getChildren().get(2).getPayload());
         } else {
-            address = new Address(Constants.PARAMS, derSequence.getChildren().get(1).getPayload());
+            address = new Address(Constants.PARAMS, derSequence.getChildren().get(2).getPayload());
         }
         Log.d(TAG, "received address:" + address);
 

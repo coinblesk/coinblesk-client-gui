@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MotionEventCompat;
@@ -25,7 +27,9 @@ import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import ch.papers.payments.Utils;
@@ -76,10 +80,21 @@ public class SendPaymentFragment extends KeyboardFragment {
                                 @Override
                                 public void run() {
                                     clients.clear();
-                                    clients.add(new WiFiClient(getContext(), walletServiceBinder));
-                                    clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-                                    clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
-                                    clients.add(new NFCClient(getActivity(), walletServiceBinder));
+                                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                                    final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+
+                                    if (connectionSettings.contains(NFC_ACTIVATED)) {
+                                        clients.add(new NFCClient(getActivity(), walletServiceBinder));
+                                    }
+
+                                    if (connectionSettings.contains(BT_ACTIVATED)) {
+                                        clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
+                                        clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                                    }
+
+                                    if (connectionSettings.contains(WIFIDIRECT_ACTIVATED)) {
+                                        clients.add(new WiFiClient(getContext(), walletServiceBinder));
+                                    }
 
                                     for (AbstractClient client : clients) {
                                         if (client.isSupported()) {
