@@ -23,10 +23,10 @@ import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.QREncoder;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
+
+import ch.papers.payments.Utils;
 
 /**
  * Created by ckiller
@@ -35,19 +35,15 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 public class QrDialogFragment extends DialogFragment {
 
     private final static String TAG = QrDialogFragment.class.getName();
-    public final static String QR_PAYLOAD_KEY = "QR_PAYLOAD_KEY";
+    public final static String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
 
-    public static DialogFragment newInstance(Address address, Coin amount){
-        String payload = BitcoinURI.convertToBitcoinURI(address,amount,"","");
+    public static DialogFragment newInstance(BitcoinURI bitcoinURI){
+        String payload = Utils.bitcoinUriToString(bitcoinURI);
         final DialogFragment dialogFragment = new QrDialogFragment();
         final Bundle arguments = new Bundle();
-        arguments.putString(QR_PAYLOAD_KEY,payload);
+        arguments.putString(BITCOIN_URI_KEY,payload);
         dialogFragment.setArguments(arguments);
         return dialogFragment;
-    }
-
-    public static DialogFragment newInstance(Address address){
-        return newInstance(address,Coin.ZERO);
     }
 
     private BitcoinURI bitcoinURI;
@@ -56,7 +52,7 @@ public class QrDialogFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            this.bitcoinURI = new BitcoinURI(this.getArguments().getString(QR_PAYLOAD_KEY));
+            this.bitcoinURI = new BitcoinURI(this.getArguments().getString(BITCOIN_URI_KEY));
         } catch (BitcoinURIParseException e) {
             e.printStackTrace();
         }
@@ -86,12 +82,12 @@ public class QrDialogFragment extends DialogFragment {
 
         final ImageView qrCodeImageView = (ImageView) view.findViewById(R.id.qr_code);
         try {
-            Bitmap qrBitmap = QREncoder.encodeAsBitmap(BitcoinURI.convertToBitcoinURI(this.bitcoinURI.getAddress(),this.bitcoinURI.getAmount(),this.bitcoinURI.getLabel(),this.bitcoinURI.getMessage()));
+            Bitmap qrBitmap = QREncoder.encodeAsBitmap(Utils.bitcoinUriToString(bitcoinURI));
             qrCodeImageView.setImageBitmap(qrBitmap);
         } catch (WriterException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "bitcoin uri: " + BitcoinURI.convertToBitcoinURI(this.bitcoinURI.getAddress(),this.bitcoinURI.getAmount(),this.bitcoinURI.getLabel(),this.bitcoinURI.getMessage()));
+        Log.d(TAG, "bitcoin uri: " + Utils.bitcoinUriToString(bitcoinURI));
 
 
         return view;

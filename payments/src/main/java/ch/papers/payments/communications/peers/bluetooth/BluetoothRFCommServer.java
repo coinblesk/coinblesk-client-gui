@@ -72,6 +72,7 @@ public class BluetoothRFCommServer extends AbstractServer {
                     final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
                     Log.d(TAG,"setting up secure connection");
+                    this.secureConnections.remove(entry);
                     new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri())).start();
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();

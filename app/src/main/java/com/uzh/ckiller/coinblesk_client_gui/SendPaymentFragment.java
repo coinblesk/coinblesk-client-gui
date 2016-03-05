@@ -32,7 +32,10 @@ import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
+import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
+import ch.papers.payments.communications.peers.nfc.NFCClient;
+import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
@@ -42,7 +45,7 @@ import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
 public class SendPaymentFragment extends KeyboardFragment {
     private final static String TAG = SendPaymentFragment.class.getSimpleName();
 
-    private final static float THRESHOLD = 700;
+    private final static float THRESHOLD = 500;
     private ProgressDialog dialog;
     private final List<AbstractClient> clients = new ArrayList<AbstractClient>();
 
@@ -73,61 +76,63 @@ public class SendPaymentFragment extends KeyboardFragment {
                                 @Override
                                 public void run() {
                                     clients.clear();
-                                    //clients.add(new WiFiClient(getContext(), walletServiceBinder));
+                                    clients.add(new WiFiClient(getContext(), walletServiceBinder));
                                     clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-                                    //clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
-                                    //clients.add(new NFCClient(getActivity(), walletServiceBinder));
+                                    clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                                    clients.add(new NFCClient(getActivity(), walletServiceBinder));
 
                                     for (AbstractClient client : clients) {
+                                        if (client.isSupported()) {
 
-                                        client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
-                                            private boolean response = false;
+                                            client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
+                                                private boolean response = false;
 
-                                            @Override
-                                            public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
-                                                final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
-                                                final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                                                final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
-                                                amountTextView.setText(paymentRequest.getAmount().toString());
-                                                final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
-                                                addressTextView.setText(paymentRequest.getAddress().toString());
+                                                @Override
+                                                public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                                                    final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
+                                                    final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
+                                                    final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                                                    amountTextView.setText(paymentRequest.getAmount().toString());
+                                                    final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                                                    addressTextView.setText(paymentRequest.getAddress().toString());
 
-                                                final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
-                                                authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
+                                                    final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+                                                    authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
 
-                                                getActivity().runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        new AlertDialog.Builder(getActivity())
-                                                                .setTitle("Authview")
-                                                                .setView(authViewDialog)
-                                                                .setCancelable(true)
-                                                                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                                                    @Override
-                                                                    public void onClick(DialogInterface dialog, int which) {
-                                                                        response = false;
-                                                                        countDownLatch.countDown();
-                                                                    }
-                                                                }).setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                response = true;
-                                                                countDownLatch.countDown();
-                                                            }
-                                                        }).show();
+                                                    getActivity().runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            new AlertDialog.Builder(getActivity())
+                                                                    .setTitle("Authview")
+                                                                    .setView(authViewDialog)
+                                                                    .setCancelable(true)
+                                                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                                        @Override
+                                                                        public void onClick(DialogInterface dialog, int which) {
+                                                                            response = false;
+                                                                            countDownLatch.countDown();
+                                                                        }
+                                                                    }).setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(DialogInterface dialog, int which) {
+                                                                    response = true;
+                                                                    countDownLatch.countDown();
+                                                                }
+                                                            }).show();
+                                                        }
+                                                    });
+
+                                                    try {
+                                                        countDownLatch.await();
+                                                    } catch (InterruptedException e) {
+                                                        e.printStackTrace();
                                                     }
-                                                });
-
-                                                try {
-                                                    countDownLatch.await();
-                                                } catch (InterruptedException e) {
-                                                    e.printStackTrace();
+                                                    return response;
                                                 }
-                                                return response;
-                                            }
-                                        });
-                                        client.setReadyForInstantPayment(true);
-                                        client.start();
+                                            });
+                                            client.setReadyForInstantPayment(true);
+                                            client.start();
+                                        }
                                     }
                                 }
                             }).start();

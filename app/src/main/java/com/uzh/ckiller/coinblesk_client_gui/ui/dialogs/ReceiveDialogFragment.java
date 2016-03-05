@@ -23,7 +23,6 @@ import android.widget.TextView;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationView;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -35,19 +34,15 @@ import ch.papers.payments.communications.peers.ServerPeerService;
  */
 
 public class ReceiveDialogFragment extends DialogFragment {
-    public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
     private final static String TAG = ReceiveDialogFragment.class.getName();
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
-
-    private TextView amountEditText;
-    private Coin amount;
 
 
     public static DialogFragment newInstance(BitcoinURI bitcoinURI) {
         DialogFragment fragment = new ReceiveDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putString(BITCOIN_URI_KEY, BitcoinURI.convertToBitcoinURI(bitcoinURI.getAddress(), bitcoinURI.getAmount(), bitcoinURI.getLabel(), bitcoinURI.getMessage()));
+        arguments.putString(BITCOIN_URI_KEY, Utils.bitcoinUriToString(bitcoinURI));
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -76,7 +71,7 @@ public class ReceiveDialogFragment extends DialogFragment {
             view.findViewById(R.id.receive_qrcode_touch_area).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    QrDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(getFragmentManager(), "qr-fragment");
+                    QrDialogFragment.newInstance(bitcoinURI).show(getFragmentManager(), "qr-fragment");
                 }
             });
 
@@ -123,13 +118,6 @@ public class ReceiveDialogFragment extends DialogFragment {
         }
 
         return null;
-    }
-
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.amount = Coin.valueOf(this.getArguments().getLong("amount"));
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */

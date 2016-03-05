@@ -205,7 +205,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showQrDialog() {
-        QrDialogFragment.newInstance(this.walletServiceBinder.getCurrentReceiveAddress()).show(this.getSupportFragmentManager(), "qr_dialog_fragment");
+        String bitcoinUriString = BitcoinURI.convertToBitcoinURI(this.walletServiceBinder.getCurrentReceiveAddress(),null, null, null);
+        try {
+            QrDialogFragment.newInstance(new BitcoinURI(bitcoinUriString)).show(this.getSupportFragmentManager(), "qr_dialog_fragment");
+        } catch (BitcoinURIParseException e) {
+            e.printStackTrace();
+        }
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
@@ -246,9 +251,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void setupWindowAnimations() {
-        Slide slide = new Slide();
-        slide.setDuration(1000);
-        getWindow().setExitTransition(slide);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            Slide slide =  new Slide();
+            slide.setDuration(1000);
+            getWindow().setExitTransition(slide);
+        }
     }
 
 

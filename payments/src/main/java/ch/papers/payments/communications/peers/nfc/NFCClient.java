@@ -1,10 +1,12 @@
 package ch.papers.payments.communications.peers.nfc;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
+import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -72,6 +74,7 @@ public class NFCClient extends AbstractClient {
         this.setRunning(true);
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void stop() {
         nfcAdapter.disableReaderMode(this.activity);
@@ -87,6 +90,7 @@ public class NFCClient extends AbstractClient {
         return result;
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onIsReadyForInstantPaymentChange() {
         if(this.isReadyForInstantPayment()) {
