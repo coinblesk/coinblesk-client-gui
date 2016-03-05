@@ -111,12 +111,14 @@ public class UIUtils implements IPreferenceStrings {
                 coin = Coin.parseCoin(amount);
                 break;
             case MILLICOIN:
-                bd = ((reverse) ? bd.multiply(new BigDecimal(1000)) : bd.divide(new BigDecimal(1000)));
-                coin = Coin.parseCoin(bd.toString());
+                coin = Coin.parseCoin(amount);
+//                bd = ((reverse) ? bd.multiply(new BigDecimal(1000)) : bd.divide(new BigDecimal(1000)));
+//                coin = Coin.parseCoin(bd.toString());
                 break;
             case MICROCOIN:
-                bd = ((reverse) ? bd.multiply(new BigDecimal(1000000)) : bd.divide(new BigDecimal(1000000)));
-                coin = Coin.parseCoin(bd.toString());
+                coin = Coin.parseCoin(amount);
+//                bd = ((reverse) ? bd.multiply(new BigDecimal(1000000)) : bd.divide(new BigDecimal(1000000)));
+//                coin = Coin.parseCoin(bd.toString());
                 break;
         }
 

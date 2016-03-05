@@ -22,7 +22,9 @@ public interface IPreferenceStrings {
     String COIN = "BTC";
     String MILLICOIN = "mBTC";
     String MICROCOIN = "μBTC";
-    int MAXIMUM_AMOUNT_LENGTH = 7;
+    int MAXIMUM_COIN_AMOUNT_LENGTH = 7;
+    int MAXIMUM_FIAT_AMOUNT_LENGTH = 6;
+    int FIAT_DECIMAL_THRESHOLD = 2;
 
     // Preference Status Strings
     String NFC_ACTIVATED = "nfc-checked";

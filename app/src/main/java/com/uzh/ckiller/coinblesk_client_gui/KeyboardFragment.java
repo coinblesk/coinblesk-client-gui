@@ -216,6 +216,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
             case R.id.amount_switch_image_view:
                 this.isBitcoinLargeAmount = !this.isBitcoinLargeAmount;
+                this.amountString = "0";
                 this.updateAmount();
                 break;
 
@@ -267,6 +268,16 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
 
+    /*protected Coin getCoin() {
+        if (isBitcoinLargeAmount) {
+            return UIUtils.formatCoin(this.getContext(), this.amountString, false);
+        } else {
+            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
+//            return UIUtils.formatCoinNew(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()));
+//            return UIUtils.scaleCoin(exchangeRate.fiatToCoin(this.getFiat()), UIUtils.getCoinDenomination(this.getContext()));
+        }
+    }*/
+
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
             return UIUtils.formatCoin(this.getContext(), this.amountString, false);
@@ -297,7 +308,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), this.exchangeRate.fiat.getCurrencyCode()));
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
-            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), UIUtils.getCoinDenomination(this.getContext())));
+            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
+                    UIUtils.getCoinDenomination(this.getContext())),
+                    UIUtils.getCoinDenomination(this.getContext())));
         }
     }
 
@@ -312,12 +325,43 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     @Override
     public void onDigit(int digit) {
 
+        if(isBitcoinLargeAmount) {
+            this.onCoinDigit(digit);
+        }else{
+            this.onFiatDigit(digit);
+        }
+
+    }
+
+    public void onFiatDigit(int digit){
+        final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
+        final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
+        final boolean isDecimal = UIUtils.isDecimal(this.amountString);
+
+        if(isDecimal){
+            if(fractionalLength < FIAT_DECIMAL_THRESHOLD){
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
+        }
+
+        if(!isDecimal){
+            if(integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH){
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
+        }
+    }
+
+    public void onCoinDigit(int digit){
         final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
         final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
         final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
         final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
 
-        final boolean isDecimal = UIUtils.isDecimal(amountString);
+        final boolean isDecimal = UIUtils.isDecimal(this.amountString);
 
         if(isDecimal){
             if (fractionalLength < decimalThreshold) {
@@ -328,13 +372,12 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
         if(!isDecimal){
-            if (integerLength < MAXIMUM_AMOUNT_LENGTH) {
+            if (integerLength < MAXIMUM_COIN_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
             }
         }
-
     }
 
 
