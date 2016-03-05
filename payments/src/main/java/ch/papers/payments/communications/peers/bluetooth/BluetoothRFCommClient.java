@@ -113,12 +113,12 @@ public class BluetoothRFCommClient extends AbstractClient {
 
     @Override
     public void stop() {
+        this.setRunning(false);
         try {
             this.socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.setRunning(false);
     }
 
     @Override

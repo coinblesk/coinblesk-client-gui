@@ -179,11 +179,13 @@ public class SendPaymentFragment extends KeyboardFragment {
 
     @Override
     public void onStop() {
-        super.onStop();
-        for (Peer peer : this.clients) {
-            peer.stop();
+        for (AbstractClient peer : this.clients) {
+            if(peer.isRunning()) {
+                peer.stop();
+            }
         }
         this.getActivity().unbindService(serviceConnection);
+        super.onStop();
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
