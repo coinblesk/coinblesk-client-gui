@@ -99,49 +99,30 @@ public class UIUtils implements IPreferenceStrings {
         return result;
     }
 
-    public static Coin formatCoin(Context context, String amount){
+    public static Coin formatCoin(Context context, String amount, boolean reverse) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
 
-        Coin coin = Coin.parseCoin(amount);
+        final int length = amount.length();
+        Coin coin = Coin.parseCoin("0");
 
         switch (coinDenomination) {
             case COIN:
-                // Coin is ok.
+                coin = Coin.parseCoin(amount);
                 break;
             case MILLICOIN:
-                coin = coin.divide(1000);
+                coin = ((reverse) ? coin.multiply(1000) : coin.divide(1000));
                 break;
             case MICROCOIN:
-                coin = coin.divide(1000000);
-                break;
-        }
-
-    return coin;
-    }
-
-    public static Coin formatCoinReverse(Context context, String amount){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
-
-        Coin coin = Coin.parseCoin(amount);
-
-        switch (coinDenomination) {
-            case COIN:
-                // Coin is ok.
-                break;
-            case MILLICOIN:
-                coin = coin.multiply(1000);
-                break;
-            case MICROCOIN:
-                coin = coin.multiply(1000000);
+                coin = ((reverse) ? coin.multiply(1000000) : coin.divide(1000000));
                 break;
         }
 
         return coin;
     }
 
-    public static String getCoinDenomination(Context context){
+
+    public static String getCoinDenomination(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
     }
@@ -163,7 +144,7 @@ public class UIUtils implements IPreferenceStrings {
 
     public static int getLargeTextSize(Context context, int amountLength) {
 
-         /*final int screenLayout = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
+            /*final int screenLayout = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayout) {
             case Configuration.SCREENLAYOUT_SIZE_LARGE:
             case Configuration.SCREENLAYOUT_SIZE_XLARGE:
@@ -173,6 +154,7 @@ public class UIUtils implements IPreferenceStrings {
                 // PHONES
                 break;
         }*/
+
 
         int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
         final int orientation = context.getResources().getConfiguration().orientation;
@@ -306,6 +288,34 @@ public class UIUtils implements IPreferenceStrings {
     private static void makeVisible(Context context, ImageView imageView) {
         imageView.setAlpha(ICON_VISIBLE);
         imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
+    }
+
+    public static int getNumberOfDecimalPlacedFromString(String amount) {
+        // Escape '.', otherwise won't work
+        String delims = "\\.";
+        int length = -1;
+        String[] tokens = amount.split(delims);
+        if (tokens.length == 2) {
+            length = tokens[1].length();
+        }
+        return length;
+    }
+
+    public static int getDecimalThreshold(String coinDenomination) {
+        int threshold = 2;
+        switch (coinDenomination) {
+            case COIN:
+                threshold = 8;
+                break;
+            case MILLICOIN:
+                threshold = 5;
+                break;
+            case MICROCOIN:
+                threshold = 2;
+                break;
+        }
+        return threshold;
+
     }
 
 

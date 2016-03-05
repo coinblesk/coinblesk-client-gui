@@ -251,9 +251,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return UIUtils.formatCoin(this.getContext(), this.amountString);
+            return UIUtils.formatCoin(this.getContext(), this.amountString, false);
         } else {
-            return UIUtils.formatCoinReverse(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString());
+            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
         }
     }
 
@@ -292,10 +292,17 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     @Override
     public void onDigit(int digit) {
-        this.amountString += digit;
-        this.amountString = new BigDecimal(amountString).toString();
-        this.updateAmount();
+
+        final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
+        final int decimalPlacesFromString = UIUtils.getNumberOfDecimalPlacedFromString(this.amountString);
+
+        if (decimalPlacesFromString < UIUtils.getDecimalThreshold(coinDenom)) {
+            this.amountString += digit;
+            this.amountString = new BigDecimal(amountString).toString();
+            this.updateAmount();
+        }
     }
+
 
     @Override
     public void onDot() {
@@ -312,11 +319,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
-    private boolean isBitcoinLargeAmount(){
+    private boolean isBitcoinLargeAmount() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
         boolean isLarge = true;
-        switch (isLargeAmount){
+        switch (isLargeAmount) {
             case BTC_AS_PRIMARY:
                 isLarge = true;
                 break;
