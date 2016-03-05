@@ -17,26 +17,5 @@
     <TextView
         android:id="@+id/address_textview"
         style="@style/address_textview" />
-
-    <Button
-        android:id="@+id/authview_dialog_cancel"
-        style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:padding="@dimen/spacing_normal"
-        android:text="@string/cancel"
-        android:textColor="@color/colorAccent" />
-
-    <Button
-        android:id="@+id/authview_dialog_accept"
-        style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:padding="@dimen/spacing_normal"
-        android:text="@string/accept"
-        android:textColor="@color/colorAccent" />
-
 </LinearLayout>
 

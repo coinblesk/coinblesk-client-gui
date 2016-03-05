@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.ReceiveDialogFragment;
 
@@ -35,12 +34,6 @@ public class ReceivePaymentFragment extends KeyboardFragment {
 
     private final List<Peer> peers = new ArrayList<Peer>();
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG,"fragment resumed");
-    }
 
     @Override
     public void onSharedPrefsUpdated(String customKey) {
