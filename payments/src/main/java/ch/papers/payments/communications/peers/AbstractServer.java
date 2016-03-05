@@ -10,11 +10,23 @@ import org.bitcoinj.uri.BitcoinURI;
  * a.decarli@papers.ch
  */
 public abstract class AbstractServer extends AbstractPeer {
+    private BitcoinURI paymentRequestUri;
     protected AbstractServer(Context context) {
         super(context);
     }
 
-    public abstract void broadcastPaymentRequest(BitcoinURI paymentUri);
+    public void setPaymentRequestUri(BitcoinURI paymentRequestUri) {
+        this.paymentRequestUri = paymentRequestUri;
+        this.onChangePaymentRequest();
+    }
 
-    public abstract void cancelPaymentRequest();
+    public BitcoinURI getPaymentRequestUri() {
+        return paymentRequestUri;
+    }
+
+    public abstract void onChangePaymentRequest();
+
+    public boolean hasPaymentRequestUri() {
+        return paymentRequestUri != null;
+    }
 }

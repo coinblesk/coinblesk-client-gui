@@ -25,7 +25,7 @@ import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
-import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHandler;
 
 /**
@@ -53,11 +53,15 @@ public class BluetoothRFCommClient extends AbstractClient {
                     socket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
                     socket.connect();
 
-                    new Thread(new DHKeyExchangeHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                    new Thread(new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                         @Override
                         public void onSuccess(SecretKeySpec secretKeySpec) {
                             Log.d(TAG, "exchange successful");
                             commonSecretKeySpec = secretKeySpec;
+
+                            if (isReadyForInstantPayment()){
+                                onIsReadyForInstantPaymentChange();
+                            }
                         }
 
                         @Override
@@ -110,6 +114,8 @@ public class BluetoothRFCommClient extends AbstractClient {
         if (!this.bluetoothAdapter.isEnabled()) {
             this.bluetoothAdapter.enable();
         }
+
+        Log.d(TAG,"starting discovery");
 
         final IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         this.getContext().registerReceiver(this.broadcastReceiver, filter);

@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import org.bitcoinj.uri.BitcoinURI;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.communications.peers.AbstractServer;
-import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentServerHandler;
 
 
@@ -53,36 +51,32 @@ public class BluetoothRFCommServer extends AbstractServer {
     }
 
     @Override
-    public void broadcastPaymentRequest(BitcoinURI paymentUri) {
-        for (Map.Entry<SecretKeySpec, BluetoothSocket> entry : secureConnections.entrySet()) {
-            try {
-                final Cipher writeCipher = Cipher.getInstance("AES");
-                writeCipher.init(Cipher.ENCRYPT_MODE, entry.getKey());
+    public void onChangePaymentRequest() {
+        if(this.hasPaymentRequestUri()) {
+            for (Map.Entry<SecretKeySpec, BluetoothSocket> entry : secureConnections.entrySet()) {
+                try {
+                    final Cipher writeCipher = Cipher.getInstance("AES");
+                    writeCipher.init(Cipher.ENCRYPT_MODE, entry.getKey());
 
-                final Cipher readCipher = Cipher.getInstance("AES");
-                readCipher.init(Cipher.DECRYPT_MODE, entry.getKey());
+                    final Cipher readCipher = Cipher.getInstance("AES");
+                    readCipher.init(Cipher.DECRYPT_MODE, entry.getKey());
 
-                final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
-                final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
+                    final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
+                    final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
 
-                new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, paymentUri)).start();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri())).start();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (NoSuchPaddingException e) {
+                    e.printStackTrace();
+                } catch (InvalidKeyException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-
-    @Override
-    public void cancelPaymentRequest() {
-
-    }
-
     @Override
     public void start() {
         makeDiscoverable();
@@ -97,10 +91,11 @@ public class BluetoothRFCommServer extends AbstractServer {
                         BluetoothSocket socket;
                         while ((socket = serverSocket.accept()) != null && isRunning()) {
                             final BluetoothSocket clientSocket = socket;
-                            new Thread(new DHKeyExchangeHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                            new Thread(new DHKeyExchangeServerHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                                 @Override
                                 public void onSuccess(SecretKeySpec secretKeySpec) {
                                     secureConnections.put(secretKeySpec, clientSocket);
+                                    onChangePaymentRequest();
                                 }
 
                                 @Override

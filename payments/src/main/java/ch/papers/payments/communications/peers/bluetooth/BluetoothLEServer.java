@@ -18,8 +18,6 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import org.bitcoinj.uri.BitcoinURI;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,14 +146,11 @@ public class BluetoothLEServer extends AbstractServer {
     }
 
     @Override
-    public void broadcastPaymentRequest(BitcoinURI paymentUri) {
+    public void onChangePaymentRequest() {
         this.stepList.clear();
-        this.stepList.add(new PaymentRequestSendStep(paymentUri));
-        this.stepList.add(new PaymentAuthorizationReceiveStep(paymentUri));
-    }
-
-    @Override
-    public void cancelPaymentRequest() {
-        this.stepList.clear();
+        if(this.hasPaymentRequestUri()) {
+            this.stepList.add(new PaymentRequestSendStep(this.getPaymentRequestUri()));
+            this.stepList.add(new PaymentAuthorizationReceiveStep(this.getPaymentRequestUri()));
+        }
     }
 }

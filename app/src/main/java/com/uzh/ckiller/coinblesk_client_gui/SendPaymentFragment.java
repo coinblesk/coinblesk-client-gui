@@ -12,7 +12,6 @@ import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MotionEventCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,10 +32,6 @@ import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
-import ch.papers.payments.communications.peers.Peer;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
-import ch.papers.payments.communications.peers.nfc.NFCClient;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
 /**
@@ -69,64 +64,73 @@ public class SendPaymentFragment extends KeyboardFragment {
                 float heightValue = event.getY();
                 switch (MotionEventCompat.getActionMasked(event)) {
                     case (MotionEvent.ACTION_DOWN):
-                        Log.d(TAG, "touch down");
                         startPoint = heightValue;
                         return true;
                     case (MotionEvent.ACTION_MOVE):
-                        Log.d(TAG, "touch move");
                         if (!isShowingDialog && heightValue - startPoint > THRESHOLD) {
                             showDialog();
-                            for (AbstractClient client : clients) {
-                                if (client.isRunning()) {
-                                    client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
-                                        private boolean response = false;
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    clients.add(new WiFiClient(getContext(), walletServiceBinder));
+                                    //clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
+                                    //clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                                    //clients.add(new NFCClient(getActivity(), walletServiceBinder));
 
-                                        @Override
-                                        public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
-                                            final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
-                                            final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                                            final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
-                                            amountTextView.setText(paymentRequest.getAmount().toString());
-                                            final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
-                                            addressTextView.setText(paymentRequest.getAddress().toString());
+                                    for (AbstractClient client : clients) {
 
-                                            final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
-                                            authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
+                                        client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
+                                            private boolean response = false;
 
-                                            getActivity().runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    new AlertDialog.Builder(getActivity())
-                                                            .setTitle("Authview")
-                                                            .setView(authViewDialog)
-                                                            .setCancelable(true)
-                                                            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                                                @Override
-                                                                public void onClick(DialogInterface dialog, int which) {
-                                                                    response = false;
-                                                                    countDownLatch.countDown();
-                                                                }
-                                                            }).setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-                                                            response = true;
-                                                            countDownLatch.countDown();
-                                                        }
-                                                    }).show();
+                                            @Override
+                                            public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                                                final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
+                                                final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
+                                                final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                                                amountTextView.setText(paymentRequest.getAmount().toString());
+                                                final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                                                addressTextView.setText(paymentRequest.getAddress().toString());
+
+                                                final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+                                                authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
+
+                                                getActivity().runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        new AlertDialog.Builder(getActivity())
+                                                                .setTitle("Authview")
+                                                                .setView(authViewDialog)
+                                                                .setCancelable(true)
+                                                                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                                    @Override
+                                                                    public void onClick(DialogInterface dialog, int which) {
+                                                                        response = false;
+                                                                        countDownLatch.countDown();
+                                                                    }
+                                                                }).setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                response = true;
+                                                                countDownLatch.countDown();
+                                                            }
+                                                        }).show();
+                                                    }
+                                                });
+
+                                                try {
+                                                    countDownLatch.await();
+                                                } catch (InterruptedException e) {
+                                                    e.printStackTrace();
                                                 }
-                                            });
-
-                                            try {
-                                                countDownLatch.await();
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
+                                                return response;
                                             }
-                                            return response;
-                                        }
-                                    });
-                                    client.setReadyForInstantPayment(true);
+                                        });
+                                        client.start();
+                                        client.setReadyForInstantPayment(true);
+                                    }
                                 }
-                            }
+                            }).start();
+
                             isShowingDialog = true;
                         }
                         break;
@@ -138,6 +142,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                                     client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
                                 }
                             }
+                            clients.clear();
                             dismissDialog();
                             isShowingDialog = false;
                         }
@@ -198,21 +203,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    clients.add(new WiFiClient(getContext(), walletServiceBinder));
-                    clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-                    clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
-                    clients.add(new NFCClient(getActivity(), walletServiceBinder));
 
-                    for (Peer peer : clients) {
-                        if (peer.isSupported()) {
-                            peer.start();
-                        }
-                    }
-                }
-            }).start();
         }
 
         @Override

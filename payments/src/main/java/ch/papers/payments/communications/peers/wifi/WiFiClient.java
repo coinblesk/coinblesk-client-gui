@@ -32,8 +32,7 @@ import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
-import ch.papers.payments.communications.peers.handlers.DHKeyExchangeHandler;
+import ch.papers.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHandler;
 
 /**
@@ -42,7 +41,7 @@ import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHand
  * a.decarli@papers.ch
  */
 public class WiFiClient extends AbstractClient implements WifiP2pManager.ConnectionInfoListener {
-    private final static String TAG = BluetoothRFCommClient.class.getSimpleName();
+    private final static String TAG = WiFiClient.class.getSimpleName();
 
     private WifiP2pManager manager = null;
     private WifiP2pManager.Channel channel = null;
@@ -154,19 +153,21 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                 public void run() {
                     try {
                         socket = new Socket(info.groupOwnerAddress, Constants.SERVICE_PORT);
-                        new DHKeyExchangeHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                        new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
                                 Log.d(TAG, "exchange successful");
                                 commonSecretKeySpec = secretKeySpec;
-
+                                if (isReadyForInstantPayment()){
+                                    onIsReadyForInstantPaymentChange();
+                                }
                             }
 
                             @Override
                             public void onError(String s) {
                                 Log.d(TAG, "error during key exchange:" + s);
                             }
-                        });
+                        }).run();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

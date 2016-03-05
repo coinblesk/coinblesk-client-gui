@@ -11,9 +11,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
-import ch.papers.payments.communications.peers.nfc.NFCServer;
 import ch.papers.payments.communications.peers.wifi.WiFiServer;
 
 /**
@@ -27,7 +24,7 @@ public class ServerPeerService extends Service {
         public void broadcastPaymentRequest(BitcoinURI paymentUri){
             for (AbstractServer server:ServerPeerService.this.servers) {
                 if(server.isRunning()) {
-                    server.broadcastPaymentRequest(paymentUri);
+                    server.setPaymentRequestUri(paymentUri);
                 }
             }
         }
@@ -35,7 +32,7 @@ public class ServerPeerService extends Service {
         public void cancelPaymentRequest() {
             for (AbstractServer server:ServerPeerService.this.servers) {
                 if(server.isRunning()) {
-                    server.cancelPaymentRequest();
+                    server.setPaymentRequestUri(null);
                 }
             }
         }
@@ -57,9 +54,9 @@ public class ServerPeerService extends Service {
             @Override
             public void run() {
                 ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
-                ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
+                //ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                //ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
+                //ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
 
                 for (Peer server:ServerPeerService.this.servers) {
                     if(server.isSupported()) {
