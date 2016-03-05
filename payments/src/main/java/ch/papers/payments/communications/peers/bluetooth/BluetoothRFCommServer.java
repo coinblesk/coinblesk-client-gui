@@ -79,6 +79,11 @@ public class BluetoothRFCommServer extends AbstractServer {
     }
 
     @Override
+    public void cancelPaymentRequest() {
+
+    }
+
+    @Override
     public void start() {
         makeDiscoverable();
 

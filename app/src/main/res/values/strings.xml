@@ -176,6 +176,7 @@
         ]]>
     </string>
     <string name="payment_request_html_subject">New bitcoin payment request</string>
+    <string name="accept">Accept</string>
 
 
 </resources>

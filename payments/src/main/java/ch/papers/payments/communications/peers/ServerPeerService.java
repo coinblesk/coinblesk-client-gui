@@ -31,6 +31,14 @@ public class ServerPeerService extends Service {
                 }
             }
         }
+
+        public void cancelPaymentRequest() {
+            for (AbstractServer server:ServerPeerService.this.servers) {
+                if(server.isRunning()) {
+                    server.cancelPaymentRequest();
+                }
+            }
+        }
     }
 
     private final ServerServiceBinder serverServiceBinder = new ServerServiceBinder();
@@ -45,16 +53,21 @@ public class ServerPeerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.servers.add(new WiFiServer(this));
-        this.servers.add(new BluetoothRFCommServer(this));
-        this.servers.add(new BluetoothLEServer(this));
-        this.servers.add(new NFCServer(this));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
+                ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
 
-        for (Peer server:this.servers) {
-            if(server.isSupported()) {
-                server.start();
+                for (Peer server:ServerPeerService.this.servers) {
+                    if(server.isSupported()) {
+                        server.start();
+                    }
+                }
             }
-        }
+        }).start();
 
         return Service.START_NOT_STICKY;
     }

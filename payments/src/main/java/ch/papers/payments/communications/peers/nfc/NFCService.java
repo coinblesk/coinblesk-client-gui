@@ -40,9 +40,11 @@ public class NFCService extends HostApduService {
         if (intent.getExtras() != null) {
             try {
                 String bitcoinUri = intent.getExtras().getString(Constants.BITCOIN_URI_KEY);
-                final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
-                stepList.add(new PaymentRequestSendStep(bitcoinURI));
-                stepList.add(new PaymentAuthorizationReceiveStep(bitcoinURI));
+                if(!bitcoinUri.equals("")) {
+                    final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
+                    stepList.add(new PaymentRequestSendStep(bitcoinURI));
+                    stepList.add(new PaymentAuthorizationReceiveStep(bitcoinURI));
+                }
             } catch (BitcoinURIParseException e) {
                 e.printStackTrace();
             }

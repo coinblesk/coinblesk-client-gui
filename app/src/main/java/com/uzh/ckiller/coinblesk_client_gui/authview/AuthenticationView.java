@@ -50,8 +50,13 @@ public class AuthenticationView extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(widthMeasureSpec));
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawColor(getContext().getResources().getColor(R.color.main_color_700));//this.generateDigestColor());
+        canvas.drawColor(this.generateDigestColor());
 
         int squareSize = Math.min(canvas.getHeight(), canvas.getWidth());
 
@@ -60,7 +65,7 @@ public class AuthenticationView extends View {
         int circleSize = cellPadding / 8;
 
 
-        this.patternPaint.setColor(getContext().getResources().getColor(R.color.colorAccent));//this.getComplementColor(this.generateDigestColor()));
+        this.patternPaint.setColor(this.getComplementColor(this.generateDigestColor()));
         this.patternPaint.setStrokeWidth(circleSize * 2);
 
         for (int i = 0; i < 4; i++) {
@@ -95,22 +100,9 @@ public class AuthenticationView extends View {
     }
 
     private int getComplementColor(int color) {
-        final int baseColor = Color.BLACK;
-
-        final int baseRed = Color.red(baseColor);
-        final int baseGreen = Color.green(baseColor);
-        final int baseBlue = Color.blue(baseColor);
-
-        final int red = (baseRed + this.toUnsignedInt(digest[3])) / 2;
-        final int green = (baseGreen + this.toUnsignedInt(digest[4])) / 2;
-        final int blue = (baseBlue + this.toUnsignedInt(digest[5])) / 2;
-
-        return Color.rgb(red, green, blue);
-
-/*
         return Color.rgb(255 - Color.red(color),
                 255 - Color.green(color),
-                255 - Color.blue(color));*/
+                255 - Color.blue(color));
     }
 
     private int toUnsignedInt(byte x) {

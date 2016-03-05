@@ -8,6 +8,7 @@ import android.util.Log;
 import org.bitcoinj.uri.BitcoinURI;
 
 import ch.papers.payments.Constants;
+import ch.papers.payments.Utils;
 import ch.papers.payments.communications.peers.AbstractServer;
 
 /**
@@ -23,8 +24,15 @@ public class NFCServer extends AbstractServer {
     @Override
     public void broadcastPaymentRequest(BitcoinURI paymentUri) {
         Intent intent = new Intent(getContext(), NFCService.class);
-        intent.putExtra(Constants.BITCOIN_URI_KEY,paymentUri.getPaymentRequestUrl());
+        intent.putExtra(Constants.BITCOIN_URI_KEY, Utils.bitcoinUriToString(paymentUri));
         Log.d("test",paymentUri.getPaymentRequestUrl());
+        getContext().startService(intent);
+    }
+
+    @Override
+    public void cancelPaymentRequest() {
+        Intent intent = new Intent(getContext(), NFCService.class);
+        intent.putExtra(Constants.BITCOIN_URI_KEY, "");
         getContext().startService(intent);
     }
 

@@ -1,5 +1,7 @@
 package ch.papers.payments;
 
+import org.bitcoinj.uri.BitcoinURI;
+
 import java.util.Arrays;
 
 /**
@@ -8,6 +10,10 @@ import java.util.Arrays;
  * a.decarli@papers.ch
  */
 public class Utils {
+
+    public static String bitcoinUriToString(BitcoinURI bitcoinURI){
+        return BitcoinURI.convertToBitcoinURI(bitcoinURI.getAddress(), bitcoinURI.getAmount(), bitcoinURI.getLabel(), bitcoinURI.getMessage());
+    }
 
     public static byte[] trim(byte[] byteArray){
         int zeroCounter=0;

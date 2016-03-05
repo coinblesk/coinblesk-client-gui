@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -79,6 +80,21 @@ public class ReceiveDialogFragment extends DialogFragment {
             view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    DialogFragment dialogFragment = AuthViewDialogFragment.newInstance(bitcoinURI);
+                    dialogFragment.onDismiss(new DialogInterface() {
+                        @Override
+                        public void cancel() {
+                            Log.d(TAG,"called cancel");
+                            serverServiceBinder.cancelPaymentRequest();
+                        }
+
+                        @Override
+                        public void dismiss() {
+                            Log.d(TAG,"called dismiss");
+                            serverServiceBinder.cancelPaymentRequest();
+                        }
+                    });
+                    dialogFragment.show(getFragmentManager(),"authview-dialog");
                     serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
                 }
             });

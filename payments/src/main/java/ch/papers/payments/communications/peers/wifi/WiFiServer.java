@@ -126,6 +126,11 @@ public class WiFiServer extends AbstractServer {
         }
     }
 
+    @Override
+    public void cancelPaymentRequest() {
+
+    }
+
     private void makeDiscoverable() {
         this.manager = (WifiP2pManager) this.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
         this.channel = this.manager.initialize(this.getContext(), this.getContext().getMainLooper(), null);

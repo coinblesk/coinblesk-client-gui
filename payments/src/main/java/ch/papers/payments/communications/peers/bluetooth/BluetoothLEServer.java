@@ -153,4 +153,9 @@ public class BluetoothLEServer extends AbstractServer {
         this.stepList.add(new PaymentRequestSendStep(paymentUri));
         this.stepList.add(new PaymentAuthorizationReceiveStep(paymentUri));
     }
+
+    @Override
+    public void cancelPaymentRequest() {
+        this.stepList.clear();
+    }
 }

@@ -15,4 +15,6 @@ public abstract class AbstractServer extends AbstractPeer {
     }
 
     public abstract void broadcastPaymentRequest(BitcoinURI paymentUri);
+
+    public abstract void cancelPaymentRequest();
 }
