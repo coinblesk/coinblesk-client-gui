@@ -23,6 +23,9 @@ public interface IPreferenceStrings {
     String MILLICOIN = "mBTC";
     String MICROCOIN = "μBTC";
 
+    int FRACTIONAL_MODE = 1;
+    int INTEGER_MODE = 0;
+
     // Preference Status Strings
     String NFC_ACTIVATED = "nfc-checked";
     String BT_ACTIVATED = "bt-checked";

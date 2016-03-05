@@ -290,15 +290,24 @@ public class UIUtils implements IPreferenceStrings {
         imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
     }
 
-    public static int getNumberOfDecimalPlacedFromString(String amount) {
+    public static int getLengthFromString(String amount, int mode) {
         // Escape '.', otherwise won't work
         String delims = "\\.";
         int length = -1;
         String[] tokens = amount.split(delims);
-        if (tokens.length == 2) {
+
+        if (tokens.length == 1)
+            length = tokens[0].length();
+
+        if (tokens.length == 2)
             length = tokens[1].length();
-        }
+
         return length;
+    }
+
+    public static boolean isDecimal(String amount){
+        return ((amount.contains(".")) ? true : false);
+
     }
 
     public static int getDecimalThreshold(String coinDenomination) {
@@ -315,8 +324,9 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
         return threshold;
-
     }
+
+
 
 
 }

@@ -294,13 +294,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onDigit(int digit) {
 
         final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
-        final int decimalPlacesFromString = UIUtils.getNumberOfDecimalPlacedFromString(this.amountString);
+        final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
+        final int fractionalLength = UIUtils.getLengthFromString(this.amountString, FRACTIONAL_MODE);
+        final int integerLength = UIUtils.getLengthFromString(this.amountString, INTEGER_MODE);
 
-        if (decimalPlacesFromString < UIUtils.getDecimalThreshold(coinDenom)) {
-            this.amountString += digit;
-            this.amountString = new BigDecimal(amountString).toString();
-            this.updateAmount();
+        final boolean isDecimal = UIUtils.isDecimal(amountString);
+
+        if(isDecimal){
+            if (fractionalLength < decimalThreshold) {
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
         }
+
+        if(!isDecimal){
+            if (integerLength < 8) {
+                this.amountString += digit;
+                this.amountString = new BigDecimal(amountString).toString();
+                this.updateAmount();
+            }
+        }
+
     }
 
 
