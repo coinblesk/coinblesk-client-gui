@@ -52,7 +52,7 @@ public class UIUtils implements IPreferenceStrings {
 
         switch (isLargeAmount) {
             case BTC_AS_PRIMARY:
-                result = toLargeSpannable(context, formatCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                result = toLargeSpannable(context, scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
                 break;
             case FIAT_AS_PRIMARY:
                 result = toLargeSpannable(context, walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
@@ -74,14 +74,14 @@ public class UIUtils implements IPreferenceStrings {
                 result = toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
                 break;
             case FIAT_AS_PRIMARY:
-                result = toSmallSpannable(formatCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                result = toSmallSpannable(scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
                 break;
         }
         return result;
 
     }
 
-    public static String formatCoin(Coin coin, String coinDenomination) {
+    public static String scaleCoin(Coin coin, String coinDenomination) {
         String result = "";
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
         switch (coinDenomination) {
@@ -95,7 +95,35 @@ public class UIUtils implements IPreferenceStrings {
                 result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
                 break;
         }
+
         return result;
+    }
+
+    public static Coin formatCoin(Context context, String amount){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+        String result = "";
+
+        Coin coin = Coin.parseCoin(amount);
+
+        switch (coinDenomination) {
+            case COIN:
+                // Coin is ok.
+                break;
+            case MILLICOIN:
+                coin = coin.divide(1000);
+                break;
+            case MICROCOIN:
+                coin = coin.divide(1000000);
+                break;
+        }
+
+    return coin;
+    }
+
+    public static String getCoinDenomination(Context context){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
     }
 
     public static SpannableString toSmallSpannable(String amount, String currency) {

@@ -251,7 +251,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return Coin.parseCoin(this.amountString);
+            return UIUtils.formatCoin(this.getContext(),this.amountString);
         } else {
             return exchangeRate.fiatToCoin(this.getFiat());
         }
@@ -273,17 +273,14 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
 
-//        largeTextView.setText(UIUtils.getLargeAmount(this.getContext(),coin, fiat));
-//        smallTextView.setText(UIUtils.getSmallAmount(this.getContext(),coin,fiat));
-
         largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
 
         if (this.isBitcoinLargeAmount) {
-            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "BTC"));
+            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, UIUtils.getCoinDenomination(this.getContext())));
             smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), "CHF"));
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, "CHF"));
-            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), "BTC"));
+            smallTextView.setText(UIUtils.toSmallSpannable(coin.toPlainString(), UIUtils.getCoinDenomination(this.getContext())));
         }
     }
 
