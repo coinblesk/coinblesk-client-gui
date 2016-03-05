@@ -88,15 +88,31 @@
     <string name="pref_update_username_description">Change your username.</string>
     <string name="pref_update_username_title">Username</string>
 
+    <!--Currency List Dialog-->
+    <string name="pref_balance_default_value">Bitcoin</string>
+    <string name="pref_balance_title">Primary Balance</string>
+    <string name="pref_balance_description">Change your balance representation.</string>
+    <string name="pref_balance_dialog_title">Change primary balance.</string>
+
+
+    <!--Currency List Dialog-->
+    <string name="pref_currency_title">Fiat Currency</string>
+    <string name="pref_currency_description">Change your Currency.</string>
+    <string name="pref_currency_dialog_title">Change your Currency.</string>
+    <string name="pref_currency_default_value">EUR</string>
+
     <!--Bitcoin Representation List Dialog-->
     <string name="pref_bitcoin_rep_title">Bitcoin representation</string>
     <string name="pref_bitcoin_rep_dialog_title">Change the Bitcoin representation.</string>
     <string name="pref_bitcoin_rep_description">Change the Bitcoin representation for coinblesk.</string>
+    <string name="pref_bitcoin_rep_default_value">BTC</string>
+
 
     <!--Transaction History List Dialog-->
     <string name="pref_transaction_history_title">Transaction History</string>
     <string name="pref_transaction_history_dialog_title">Change number of transactions.</string>
     <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history layout.</string>
+    <string name="pref_transaction_history_default_value">Show all transactions</string>
 
     <!--Connection Checkbox Screen-->
     <string name="pref_connection_settings_title">Contactless Payment Settings</string>

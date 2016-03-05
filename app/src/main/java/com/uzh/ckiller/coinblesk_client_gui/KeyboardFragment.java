@@ -266,8 +266,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
 
+
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
+
         largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
 
         if (this.isBitcoinLargeAmount) {
