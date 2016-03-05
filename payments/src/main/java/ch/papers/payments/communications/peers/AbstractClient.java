@@ -12,7 +12,7 @@ import ch.papers.payments.WalletService;
 public abstract class AbstractClient extends AbstractPeer {
     private boolean isReadyForInstantPayment = false;
     private final WalletService.WalletServiceBinder walletServiceBinder;
-    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.DUMMY_AUTHORIZER;
+    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.ALLOW_AUTHORIZER;
 
     protected AbstractClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context);

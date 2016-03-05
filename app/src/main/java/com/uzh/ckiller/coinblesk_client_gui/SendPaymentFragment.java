@@ -1,8 +1,10 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -14,14 +16,22 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationView;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
+
+import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
+import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
+import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.Peer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
@@ -46,7 +56,7 @@ public class SendPaymentFragment extends KeyboardFragment {
 
     @Override
 
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
 
         view.setOnTouchListener(new View.OnTouchListener() {
@@ -62,8 +72,47 @@ public class SendPaymentFragment extends KeyboardFragment {
                     case (MotionEvent.ACTION_MOVE):
                         if (!isShowingDialog && event.getY() - startPoint > THRESHOLD) {
                             showDialog();
-                            for (AbstractClient client:clients) {
-                                if(client.isRunning()) {
+                            for (AbstractClient client : clients) {
+                                if (client.isRunning()) {
+                                    client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
+                                        private boolean response = false;
+
+                                        @Override
+                                        public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                                            final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
+                                            final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
+                                            final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                                            amountTextView.setText(paymentRequest.getAmount().toString());
+                                            final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                                            addressTextView.setText(paymentRequest.getAddress().toString());
+
+                                            final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+                                            authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(paymentRequest).getBytes()));
+                                            new AlertDialog.Builder(getActivity())
+                                                    .setTitle("Authview")
+                                                    .setView(authViewDialog)
+                                                    .setCancelable(true)
+                                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            response = false;
+                                                            countDownLatch.countDown();
+                                                        }
+                                                    }).setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            response = true;
+                                                            countDownLatch.countDown();
+                                                        }
+                                                    }).show();
+                                            try {
+                                                countDownLatch.await();
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                            return response;
+                                        }
+                                    });
                                     client.setReadyForInstantPayment(true);
                                 }
                             }
@@ -72,9 +121,10 @@ public class SendPaymentFragment extends KeyboardFragment {
                         break;
                     default:
                         if (isShowingDialog) {
-                            for (AbstractClient client:clients) {
-                                if(client.isRunning()) {
+                            for (AbstractClient client : clients) {
+                                if (client.isRunning()) {
                                     client.setReadyForInstantPayment(false);
+                                    client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
                                 }
                             }
                             dismissDialog();
@@ -123,7 +173,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     @Override
     public void onStop() {
         super.onStop();
-        for (Peer peer:this.clients) {
+        for (Peer peer : this.clients) {
             peer.stop();
         }
         this.getActivity().unbindService(serviceConnection);
@@ -135,13 +185,13 @@ public class SendPaymentFragment extends KeyboardFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            clients.add(new WiFiClient(getContext(),walletServiceBinder));
-            clients.add(new BluetoothRFCommClient(getContext(),walletServiceBinder));
-            clients.add(new BluetoothLEClient(getContext(),walletServiceBinder));
-            clients.add(new NFCClient(getActivity(),walletServiceBinder));
+            clients.add(new WiFiClient(getContext(), walletServiceBinder));
+            clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
+            clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+            clients.add(new NFCClient(getActivity(), walletServiceBinder));
 
-            for (Peer peer:clients) {
-                if(peer.isSupported()) {
+            for (Peer peer : clients) {
+                if (peer.isSupported()) {
                     peer.start();
                 }
             }

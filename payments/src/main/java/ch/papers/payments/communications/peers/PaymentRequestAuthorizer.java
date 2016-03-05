@@ -8,7 +8,14 @@ import org.bitcoinj.uri.BitcoinURI;
  * a.decarli@papers.ch
  */
 public interface PaymentRequestAuthorizer {
-    PaymentRequestAuthorizer DUMMY_AUTHORIZER = new PaymentRequestAuthorizer() {
+    PaymentRequestAuthorizer DISALLOW_AUTHORIZER = new PaymentRequestAuthorizer() {
+        @Override
+        public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+            return false;
+        }
+    };
+
+    PaymentRequestAuthorizer ALLOW_AUTHORIZER = new PaymentRequestAuthorizer() {
         @Override
         public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
             return true;
