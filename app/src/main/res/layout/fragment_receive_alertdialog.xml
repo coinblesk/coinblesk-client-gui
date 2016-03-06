@@ -9,7 +9,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_micro" />
 
-
     <View
         android:id="@+id/separator"
         android:layout_width="match_parent"

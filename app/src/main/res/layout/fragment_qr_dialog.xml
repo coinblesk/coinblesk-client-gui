@@ -1,24 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/qr_dialog_fragment">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/qr_code"
-        style="@style/qr_code" />
+<android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_gravity="center"
+android:layout_margin="@dimen/card_margin"
+card_view:cardBackgroundColor="@color/material_grey_800"
+card_view:cardElevation="12dp">
 
-    <TextView
-        android:id="@+id/address_textview"
-        style="@style/address_textview" />
+<ImageView
+    android:id="@+id/qr_code"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:minHeight="@dimen/qr_code_size"
+    android:minWidth="@dimen/qr_code_size" />
 
-    <Button
-        android:id="@+id/qr_dialog_copytoclipboard"
-        style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:padding="@dimen/spacing_normal"
-        android:text="@string/qr_code_copy_to_clipboard"
-        android:textColor="@color/colorAccent" />
+</android.support.v7.widget.CardView>
 
-</LinearLayout>
+<TextView
+android:id="@+id/address_textview"
+style="@style/address_textview" />
+
+<Button
+android:id="@+id/qr_dialog_copytoclipboard"
+style="?android:attr/borderlessButtonStyle"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_gravity="right"
+android:padding="@dimen/spacing_normal"
+android:text="@string/qr_code_copy_to_clipboard"
+android:textColor="@color/colorAccent" />
+
+    </LinearLayout>
 

@@ -79,5 +79,13 @@
         <item name="android:layout_margin">6dp</item>
     </style>
 
+    <style name="qr_dialog_fragment">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@color/material_grey_800</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
 
 </resources>
