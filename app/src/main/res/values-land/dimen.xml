@@ -9,4 +9,10 @@
     <dimen name="qr_dialog_size">150dp</dimen>
     <dimen name="qr_code_size">118dp</dimen>
 
+    <dimen name="transaction_icon_size">18dp</dimen>
+    <dimen name="transaction_icon_horizontal_padding">18dp</dimen>
+
+    <dimen name="text_size_receive_item">@dimen/text_size_small</dimen>
+
+
 </resources>

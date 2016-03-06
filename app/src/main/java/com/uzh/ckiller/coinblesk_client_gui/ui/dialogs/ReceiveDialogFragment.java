@@ -14,7 +14,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +26,7 @@ import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationView;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
@@ -89,15 +92,15 @@ public class ReceiveDialogFragment extends DialogFragment {
                     public void onClick(View v) {
 
                         final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
                         amountTextView.setText(bitcoinURI.getAmount().toString());
-                        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
                         addressTextView.setText(bitcoinURI.getAddress().toString());
 
                         final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
                         authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(bitcoinURI).getBytes()));
                         new AlertDialog.Builder(getActivity())
-                                .setTitle("Authview")
+                                .setTitle(getResources().getString(R.string.authview_dialog_title))
                                 .setView(authViewDialog)
                                 .setCancelable(true)
                                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -110,6 +113,7 @@ public class ReceiveDialogFragment extends DialogFragment {
 
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
                     }
+
                 });
             } else {
                 view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.GONE);
@@ -128,6 +132,7 @@ public class ReceiveDialogFragment extends DialogFragment {
         } catch (BitcoinURIParseException e) {
             e.printStackTrace();
         }
+
 
         return null;
     }

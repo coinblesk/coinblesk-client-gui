@@ -53,7 +53,6 @@
     <color name="social_logo">@color/main_color_600</color>
     <color name="light_grey">#fff0f0f0</color>
 
-
-
+    <color name="authview_small_titles">@color/main_color_500</color>
 
 </resources>

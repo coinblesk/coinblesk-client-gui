@@ -38,7 +38,7 @@
                 android:ellipsize="end"
                 android:text="@string/receive_contactless_title"
                 android:textColor="@color/white"
-                android:textSize="@dimen/text_size_medium" />
+                android:textSize="@dimen/text_size_receive_item" />
 
             <TextView
                 android:id="@+id/receive_contactless_description"
@@ -49,7 +49,7 @@
                 android:layout_marginTop="4dp"
                 android:text="@string/receive_contactless_description"
                 android:textColor="@color/white_30_percent"
-                android:textSize="@dimen/text_size_medium" />
+                android:textSize="@dimen/text_size_receive_item" />
 
         </LinearLayout>
 

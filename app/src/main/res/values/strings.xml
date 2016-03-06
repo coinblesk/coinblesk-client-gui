@@ -77,6 +77,13 @@
     <string name="qr_code_copied">Successfully copied to your Clipboard.</string>
     <string name="qr_code_close">Close</string>
 
+    <!--Authview-->
+    <string name="authview_address_title">Your address</string>
+    <string name="authview_amount_title">Requested Amount</string>
+    <string name="authview_authview_title">Your Unique Pattern for Identification</string>
+    <string name="authview_dialog_title">Receive Contactless</string>
+    <string name="snackbar_receive_contactless">Sending out payment requests</string>
+
     <!--Preference Strings-->
     <string name="pref_general_settings_category_title">General Settings</string>
     <string name="pref_payment_settings_category_title">Payment Settings</string>

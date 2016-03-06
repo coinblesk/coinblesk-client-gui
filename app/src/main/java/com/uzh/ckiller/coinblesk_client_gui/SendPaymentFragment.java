@@ -106,9 +106,9 @@ public class SendPaymentFragment extends KeyboardFragment {
                                                 public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
                                                     final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
                                                     final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                                                    final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.amount_textview);
+                                                    final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
                                                     amountTextView.setText(paymentRequest.getAmount().toString());
-                                                    final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.address_textview);
+                                                    final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
                                                     addressTextView.setText(paymentRequest.getAddress().toString());
 
                                                     final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
