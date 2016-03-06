@@ -45,7 +45,7 @@ public class BluetoothRFCommClient extends AbstractClient {
     private BluetoothSocket socket;
     private SecretKeySpec commonSecretKeySpec;
 
-    final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -131,7 +131,7 @@ public class BluetoothRFCommClient extends AbstractClient {
         }
 
         Log.d(TAG, "starting discovery");
-
+        this.singleThreadExecutor = Executors.newSingleThreadExecutor();
         final IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         this.getContext().registerReceiver(this.broadcastReceiver, filter);
         this.bluetoothAdapter.startDiscovery();
@@ -145,7 +145,7 @@ public class BluetoothRFCommClient extends AbstractClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        singleThreadExecutor.shutdown();
+        this.singleThreadExecutor.shutdown();
     }
 
     @Override

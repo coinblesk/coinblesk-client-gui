@@ -55,7 +55,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     private SecretKeySpec commonSecretKeySpec = null;
     private boolean isConnected = false;
 
-    final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -76,6 +76,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     @Override
     public void start() {
         Log.d(TAG,"starting");
+        this.singleThreadExecutor = Executors.newSingleThreadExecutor();
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);

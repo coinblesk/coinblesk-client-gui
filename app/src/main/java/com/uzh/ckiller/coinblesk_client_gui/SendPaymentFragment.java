@@ -38,6 +38,7 @@ import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
+import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
 import ch.papers.payments.communications.peers.nfc.NFCClient;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
@@ -233,7 +234,7 @@ public class SendPaymentFragment extends KeyboardFragment {
 
             if (connectionSettings.contains(BT_ACTIVATED)) {
                 clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-                //clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
             }
 
             if (connectionSettings.contains(WIFIDIRECT_ACTIVATED)) {

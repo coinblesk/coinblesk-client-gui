@@ -73,7 +73,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
 
             if (SerializeUtils.verifySig(prepareHalfSignTO,clientPublicKey)) {
                 Log.d(TAG,"verify was successful!");
-                prepareHalfSignTO.messageSig(txSig);
+                prepareHalfSignTO.messageSig(txSig); //have to reset the txsig because verifySig is nulling it
                 final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                 // let server sign first
                 final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(prepareHalfSignTO).execute().body();
