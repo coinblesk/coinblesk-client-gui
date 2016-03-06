@@ -8,6 +8,7 @@
     <!--QR-Dialog Fragment Landscape Sizes-->
     <dimen name="qr_dialog_size">150dp</dimen>
     <dimen name="qr_code_size">290dp</dimen>
+    <dimen name="authview_size">260dp</dimen>
 
     <dimen name="transaction_icon_size">18dp</dimen>
     <dimen name="transaction_icon_horizontal_padding">18dp</dimen>

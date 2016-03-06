@@ -23,7 +23,7 @@
     <TextView
         android:id="@+id/address_textview"
         style="@style/address_textview"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/qr_dialog_copytoclipboard"
@@ -34,7 +34,7 @@
         android:padding="@dimen/spacing_normal"
         android:text="@string/qr_code_copy_to_clipboard"
         android:textColor="@color/colorAccent"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </LinearLayout>
 
