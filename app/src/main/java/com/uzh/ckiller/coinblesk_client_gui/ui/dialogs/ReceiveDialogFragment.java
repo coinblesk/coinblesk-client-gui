@@ -85,7 +85,7 @@ public class ReceiveDialogFragment extends DialogFragment {
 
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
             final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
-            if(!connectionSettings.isEmpty()) {
+            if (!connectionSettings.isEmpty()) {
                 view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -93,7 +93,7 @@ public class ReceiveDialogFragment extends DialogFragment {
 
                         final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
                         final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
-                        amountTextView.setText(bitcoinURI.getAmount().toString());
+                        amountTextView.setText(UIUtils.scaleCoinForDialogs(bitcoinURI.getAmount(), getContext()));
                         final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
                         addressTextView.setText(bitcoinURI.getAddress().toString());
 

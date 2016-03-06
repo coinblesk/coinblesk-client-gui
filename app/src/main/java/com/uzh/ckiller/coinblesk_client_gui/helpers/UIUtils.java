@@ -102,6 +102,25 @@ public class UIUtils implements IPreferenceStrings {
         return result;
     }
 
+    public static String scaleCoinForDialogs(Coin coin, Context context) {
+        String result = "";
+        String coinDenomination = UIUtils.getCoinDenomination(context);
+        // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
+        switch (coinDenomination) {
+            case COIN:
+                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
+                break;
+            case MILLICOIN:
+                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
+                break;
+            case MICROCOIN:
+                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
+                break;
+        }
+
+        return result + " " + coinDenomination;
+    }
+
 
     public static Coin getValue(String amount, Context context){
         BigDecimal bdAmount = new BigDecimal(amount);

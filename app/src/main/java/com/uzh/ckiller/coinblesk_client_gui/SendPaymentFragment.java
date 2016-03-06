@@ -22,8 +22,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.authview.AuthenticationView;
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.SendDialogFragment;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
@@ -107,7 +109,8 @@ public class SendPaymentFragment extends KeyboardFragment {
                                                     final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
                                                     final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
                                                     final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
-                                                    amountTextView.setText(paymentRequest.getAmount().toString());
+
+                                                    amountTextView.setText(UIUtils.scaleCoinForDialogs(paymentRequest.getAmount(), getContext()));
                                                     final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
                                                     addressTextView.setText(paymentRequest.getAddress().toString());
 

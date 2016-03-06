@@ -83,7 +83,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
 
         Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
         this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-        this.amountEditText.setText(amount.toString());
+        this.amountEditText.setText(UIUtils.scaleCoinForDialogs(amount, getContext()));
 
         view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
