@@ -6,8 +6,4 @@
         android:id="@+id/nav_drawer_logo"
         style="@style/nav_drawer_header_logo_image_view" />
 
-    <TextView
-        android:id="@+id/username"
-        style="@style/nav_drawer_header_username_textview" />
-
 </RelativeLayout>
