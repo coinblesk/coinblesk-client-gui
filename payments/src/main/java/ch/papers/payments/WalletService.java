@@ -46,10 +46,12 @@ import java.util.Date;
 import java.util.List;
 
 import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+import ch.papers.objectstorage.filters.MatchAllFilter;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
-import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.communications.http.CoinbleskWebService;
 import ch.papers.payments.models.ECKeyWrapper;
+import ch.papers.payments.models.ExchangeRateWrapper;
 import ch.papers.payments.models.TransactionWrapper;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 import retrofit2.Response;
@@ -70,8 +72,8 @@ public class WalletService extends Service {
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();
 
-    private String fiatCurrency="USD";
-    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF","430"));
+    private String fiatCurrency = "USD";
+    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
     private WalletAppKit kit;
 
     private Script multisigAddressScript;
@@ -80,7 +82,15 @@ public class WalletService extends Service {
 
     public class WalletServiceBinder extends Binder {
 
-        public ExchangeRate getExchangeRate(){
+        public WalletServiceBinder() {
+            try {
+                exchangeRate = UuidObjectStorage.getInstance().getFirstMatchEntry(new MatchAllFilter(),ExchangeRateWrapper.class).getExchangeRate();
+            } catch (UuidObjectStorageException e) {
+                Log.d(TAG,"could not retrieve old exchangerate from storage, staying with preshiped default");
+            }
+        }
+
+        public ExchangeRate getExchangeRate() {
             return exchangeRate;
         }
 
@@ -143,8 +153,8 @@ public class WalletService extends Service {
 
 
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
-                        Log.d(TAG,"rcv: "+address);
-                        Log.d(TAG,"tx: "+transaction);
+                        Log.d(TAG, "rcv: " + address);
+                        Log.d(TAG, "tx: " + transaction);
                         //This is needed because otherwise we mix up signature order
                         List<ECKey> keys = new ArrayList<ECKey>();
                         keys.add(multisigClientKey);
@@ -210,7 +220,7 @@ public class WalletService extends Service {
         }
 
         public void sendCoins(Address address, Coin amount) {
-            if (multisigAddressScript != null && getUnspentInstantOutputs().size()>0) {
+            if (multisigAddressScript != null && getUnspentInstantOutputs().size() > 0) {
                 instantSendCoins(address, amount);
             } else {
                 try {
@@ -243,7 +253,7 @@ public class WalletService extends Service {
             return multisigServerKey;
         }
 
-        public void fetchExchangeRate(){
+        public void fetchExchangeRate() {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -251,21 +261,25 @@ public class WalletService extends Service {
                         Exchange bitstamp = ExchangeFactory.INSTANCE.createExchange(BitstampExchange.class.getName());
                         PollingMarketDataService marketDataService = bitstamp.getPollingMarketDataService();
                         Ticker ticker;
-                        if(fiatCurrency.equals("USD")) {
+                        if (fiatCurrency.equals("USD")) {
                             ticker = marketDataService.getTicker(CurrencyPair.BTC_USD);
-                        } else if (fiatCurrency.equals("CHF")){
+                        } else if (fiatCurrency.equals("CHF")) {
                             ticker = marketDataService.getTicker(CurrencyPair.BTC_CHF);
                         } else {
                             ticker = marketDataService.getTicker(CurrencyPair.BTC_EUR);
                         }
 
-                        WalletService.this.exchangeRate =  new ExchangeRate(Fiat.valueOf(ticker.getCurrencyPair().counterSymbol,ticker.getAsk().longValue()*10000));
+                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(ticker.getCurrencyPair().counterSymbol, ticker.getAsk().longValue() * 10000));
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
                         Intent exchangeRateChangeIntent = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(exchangeRateChangeIntent);
-                    } catch (IOException e) {
+
+                        UuidObjectStorage.getInstance().deleteEntries(new MatchAllFilter(), ExchangeRateWrapper.class);
+                        UuidObjectStorage.getInstance().addEntry(new ExchangeRateWrapper(exchangeRate), ExchangeRateWrapper.class);
+                        UuidObjectStorage.getInstance().commit();
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -283,20 +297,19 @@ public class WalletService extends Service {
             @Override
             protected void onSetupCompleted() {
                 if (wallet().getKeychainSize() < 1) {
-                    UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.WALLET_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
-                        @Override
-                        public void onSuccess(ECKeyWrapper result) {
-                            wallet().importKey(result.getKey());
+                    ECKeyWrapper walletKey;
+                    try {
+                        walletKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.WALLET_KEY_NAME), ECKeyWrapper.class);
+                    } catch (UuidObjectStorageException e) {
+                        walletKey = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), Constants.WALLET_KEY_NAME);
+                        try {
+                            UuidObjectStorage.getInstance().addEntry(walletKey, ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().commit();
+                        } catch (UuidObjectStorageException e1) {
+                            Log.d(TAG, "couldn't store freshly generated ECKey: " + e.getMessage());
                         }
-
-                        @Override
-                        public void onError(String message) {
-                            ECKeyWrapper walletKey = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), Constants.WALLET_KEY_NAME);
-                            wallet().importKey(walletKey.getKey());
-                            UuidObjectStorage.getInstance().addEntry(walletKey, DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-                            UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
-                        }
-                    }, ECKeyWrapper.class);
+                    }
+                    wallet().importKey(walletKey.getKey());
                 }
 
                 kit.wallet().addEventListener(new AbstractWalletEventListener() {
@@ -340,49 +353,32 @@ public class WalletService extends Service {
                     }
                 });
 
-                UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
-                    @Override
-                    public void onSuccess(final ECKeyWrapper serverKey) {
-                        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
-                            @Override
-                            public void onSuccess(ECKeyWrapper clientKey) {
-                                setupMultiSigAddress(clientKey.getKey(),
-                                        serverKey.getKey());
-                            }
-
-                            @Override
-                            public void onError(String s) {
-
-                            }
-                        }, ECKeyWrapper.class);
-                    }
-
-
-                    @Override
-                    public void onError(String message) {
-                        try {
-
-                            CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
-                            final ECKey clientMultiSigKey = new ECKey();
-                            final KeyTO clientKey = new KeyTO();
-                            clientKey.publicKey(clientMultiSigKey.getPubKey());
-                            Response<KeyTO> response = service.keyExchange(clientKey).execute();
-                            if(response.isSuccess()) {
-                                final KeyTO serverKey = response.body();
-                                final ECKey serverMultiSigKey = ECKey.fromPublicOnly(serverKey.publicKey());
-                                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-                                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-                                UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
-
-                                setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
-                            } else {
-                                Log.d(TAG,response.code()+"");
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                try {
+                    ECKeyWrapper serverKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class);
+                    ECKeyWrapper clientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
+                    setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
+                } catch (UuidObjectStorageException e) {
+                    try {
+                        CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
+                        final ECKey clientMultiSigKey = new ECKey();
+                        final KeyTO clientKey = new KeyTO();
+                        clientKey.publicKey(clientMultiSigKey.getPubKey());
+                        Response<KeyTO> response = service.keyExchange(clientKey).execute();
+                        if (response.isSuccess()) {
+                            final KeyTO serverKey = response.body();
+                            final ECKey serverMultiSigKey = ECKey.fromPublicOnly(serverKey.publicKey());
+                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), ECKeyWrapper.class);
+                            UuidObjectStorage.getInstance().commit();
+                            setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
+                        } else {
+                            Log.d(TAG, response.code() + "");
                         }
+                    } catch (Exception e2) {
+                        Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
                     }
-                }, ECKeyWrapper.class);
+                }
+
 
                 try {
                     kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
@@ -441,8 +437,8 @@ public class WalletService extends Service {
         this.multisigClientKey = clientKey;
         this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
 
-        for (Script watchedScript:kit.wallet().getWatchedScripts()) {
-            if(!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
+        for (Script watchedScript : kit.wallet().getWatchedScripts()) {
+            if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
                 kit.wallet().removeWatchedScripts(ImmutableList.<Script>of(watchedScript));
             }
         }
@@ -464,7 +460,7 @@ public class WalletService extends Service {
         return this.walletServiceBinder;
     }
 
-    private void clearMultisig(){
+    private void clearMultisig() {
         UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
         UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
         UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
