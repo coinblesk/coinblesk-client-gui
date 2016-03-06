@@ -31,11 +31,13 @@ import ch.papers.payments.models.filters.ECKeyWrapperFilter;
  * Papers.ch
  * a.decarli@papers.ch
  */
+
+@TargetApi(Build.VERSION_CODES.KITKAT)
 public class NFCClient extends AbstractClient {
     private final static String TAG = NFCClient.class.getSimpleName();
 
     private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
-    private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+    private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
 
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
@@ -74,7 +76,6 @@ public class NFCClient extends AbstractClient {
         this.setRunning(true);
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void stop() {
         nfcAdapter.disableReaderMode(this.activity);
@@ -90,7 +91,6 @@ public class NFCClient extends AbstractClient {
         return result;
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onIsReadyForInstantPaymentChange() {
         if(this.isReadyForInstantPayment()) {

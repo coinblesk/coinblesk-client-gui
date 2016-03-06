@@ -1,7 +1,9 @@
 package ch.papers.payments.communications.peers.nfc;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.nfc.cardemulation.HostApduService;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -25,6 +27,7 @@ import ch.papers.payments.communications.peers.steps.Step;
  * Papers.ch
  * a.decarli@papers.ch
  */
+@TargetApi(Build.VERSION_CODES.KITKAT)
 public class NFCService extends HostApduService {
     private final static String TAG = NFCService.class.getSimpleName();
 

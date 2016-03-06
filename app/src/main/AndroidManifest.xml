@@ -62,8 +62,6 @@
 
         <service android:name="ch.papers.payments.WalletService" >
         </service>
-        <service android:name="ch.papers.payments.communications.peers.ClientPeerService" >
-        </service>
         <service android:name="ch.papers.payments.communications.peers.ServerPeerService" >
         </service>
         <service

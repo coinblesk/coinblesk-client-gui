@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">payments</string>
-    <string name="aiddescription">aiddescription</string>
-    <string name="servicedesc">servicedesc</string>
+    <string name="aiddescription">Coinblesk InstantPayment</string>
+    <string name="servicedesc">Coinblesk InstantPayment Service</string>
 </resources>
