@@ -3,6 +3,7 @@ package ch.papers.payments.communications.peers.steps;
 import android.util.Log;
 
 import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.json.TxSig;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
@@ -37,7 +38,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
     final private BitcoinURI bitcoinURI;
 
     private final Retrofit retrofit = new Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();
 
@@ -50,30 +51,39 @@ public class PaymentAuthorizationReceiveStep implements Step {
         try {
             final DERSequence inputSequence = (DERSequence) input;
             final ECKey clientPublicKey = ECKey.fromPublicOnly(inputSequence.getChildren().get(0).getPayload());
-            final ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(((DERInteger) inputSequence.getChildren().get(2)).getBigInteger(), ((DERInteger) inputSequence.getChildren().get(3)).getBigInteger());
             final BigInteger timestamp = ((DERInteger)inputSequence.getChildren().get(1)).getBigInteger();
+
+            final TxSig txSig= new TxSig();
+            txSig.sigR(((DERInteger) inputSequence.getChildren().get(2)).getBigInteger().toString());
+            txSig.sigS(((DERInteger) inputSequence.getChildren().get(3)).getBigInteger().toString());
+
 
             Log.d(TAG,"key used for signing"+clientPublicKey.getPublicKeyAsHex());
             Log.d(TAG,"address used for signing"+bitcoinURI.getAddress());
             Log.d(TAG,"timestamp used for signing"+timestamp.longValue());
             Sha256Hash inputHash = Sha256Hash.of(Utils.concatBytes(BigInteger.valueOf(bitcoinURI.getAmount().getValue()).toByteArray(),bitcoinURI.getAddress().getHash160(),timestamp.toByteArray()));
             Log.d(TAG,"hash used for signing"+inputHash);
-            if (clientPublicKey.verify(inputHash, ecdsaSignature)) {
+
+            final PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
+                    .amountToSpend(bitcoinURI.getAmount().longValue())
+                    .clientPublicKey(clientPublicKey.getPubKey())
+                    .p2shAddressTo(bitcoinURI.getAddress().toString())
+                    .messageSig(txSig)
+                    .currentDate(timestamp.longValue());
+
+            if (SerializeUtils.verifySig(prepareHalfSignTO,clientPublicKey)) {
                 Log.d(TAG,"verify was successful!");
+                prepareHalfSignTO.messageSig(txSig);
                 final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                 // let server sign first
-                final PrepareHalfSignTO clientHalfSignTO = new PrepareHalfSignTO();
-                clientHalfSignTO.amountToSpend(bitcoinURI.getAmount().longValue());
-                clientHalfSignTO.clientPublicKey(clientPublicKey.getPubKey());
-                clientHalfSignTO.p2shAddressTo(bitcoinURI.getAddress().toString());
-                final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(clientHalfSignTO).execute().body();
-
+                final PrepareHalfSignTO serverHalfSignTO = service.prepareHalfSign(prepareHalfSignTO).execute().body();
 
                 List<DERObject> derObjectList = new ArrayList<DERObject>();
                 for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures())) {
                     List<DERObject> signatureList = ImmutableList.<DERObject>of(new DERInteger(signature.r),new DERInteger(signature.s));
                     derObjectList.add(new DERSequence(signatureList));
                 }
+
                 byte[] dersequence = new DERSequence(derObjectList).serializeToDER();
                 Log.d(TAG,"sending response"+dersequence.length);
                 Log.d(TAG,"sending response exp"+ DERParser.extractPayloadEndIndex(dersequence));

@@ -1,7 +1,6 @@
 package ch.papers.payments.communications.peers.wifi;
 
 import android.content.Context;
-import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pGroup;
@@ -72,15 +71,7 @@ public class WiFiServer extends AbstractServer {
 
     @Override
     public boolean isSupported() {
-        // see http://stackoverflow.com/questions/23828487/how-can-i-check-my-android-device-support-wifi-direct
-        PackageManager pm = this.getContext().getPackageManager();
-        FeatureInfo[] features = pm.getSystemAvailableFeatures();
-        for (FeatureInfo info : features) {
-            if (info != null && info.name != null && info.name.equalsIgnoreCase("android.hardware.wifi.direct")) {
-                return true;
-            }
-        }
-        return false;
+        return this.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
     }
 
     private final WifiP2pManager.ActionListener groupCreationActionListener = new WifiP2pManager.ActionListener() {

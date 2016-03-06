@@ -13,6 +13,16 @@ public interface PaymentRequestAuthorizer {
         public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
             return false;
         }
+
+        @Override
+        public void onPaymentSuccess() {
+
+        }
+
+        @Override
+        public void onPaymentError(String errorMessage) {
+
+        }
     };
 
     PaymentRequestAuthorizer ALLOW_AUTHORIZER = new PaymentRequestAuthorizer() {
@@ -20,7 +30,21 @@ public interface PaymentRequestAuthorizer {
         public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
             return true;
         }
+
+        @Override
+        public void onPaymentSuccess() {
+
+        }
+
+        @Override
+        public void onPaymentError(String errorMessage) {
+
+        }
     };
 
     public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest);
+
+    public void onPaymentSuccess();
+
+    public void onPaymentError(String errorMessage);
 }

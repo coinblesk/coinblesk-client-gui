@@ -41,8 +41,8 @@ public class Constants {
     public final static String SYMMETRIC_CIPHER_MODE = "AES/CFB8/NoPadding";
 
     // coinblesk server communication
-    public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.36:8080/";
-    //public static final String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    //public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.36:8080/";
+    public static final String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
 
     public static final UUID SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");

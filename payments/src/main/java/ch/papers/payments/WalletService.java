@@ -37,6 +37,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -44,6 +45,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
@@ -293,7 +296,9 @@ public class WalletService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         UuidObjectStorage.getInstance().init(this.getFilesDir());
+        LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
+
             @Override
             protected void onSetupCompleted() {
                 if (wallet().getKeychainSize() < 1) {
@@ -427,8 +432,10 @@ public class WalletService extends Service {
 
         kit.setBlockingStartup(false);
         kit.startAsync().awaitRunning();
+        //clearMultisig();
 
         Log.d(TAG, "wallet started");
+        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.ERROR);;
         return Service.START_NOT_STICKY;
     }
 

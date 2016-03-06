@@ -13,8 +13,6 @@ import android.util.Log;
 
 import java.util.Arrays;
 
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
@@ -23,38 +21,25 @@ import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
-import ch.papers.payments.models.ECKeyWrapper;
-import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
  * Papers.ch
  * a.decarli@papers.ch
  */
+@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BluetoothLEClient extends AbstractClient {
     private final static String TAG = BluetoothLEClient.class.getSimpleName();
-
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private final static int MAX_MTU = 300;
     private final static int MAX_FRAGMENT_SIZE = MAX_MTU - 3;
-
-    private PaymentRequestReceiveStep paymentRequestReceiveStep;
+    private final PaymentRequestReceiveStep paymentRequestReceiveStep;
 
     public BluetoothLEClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
-
-        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
-            @Override
-            public void onSuccess(ECKeyWrapper clientKey) {
-                paymentRequestReceiveStep = new PaymentRequestReceiveStep(clientKey.getKey());
-            }
-
-            @Override
-            public void onError(String s) {
-
-            }
-        }, ECKeyWrapper.class);
+        paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder.getMultisigClientKey());
     }
+
 
     @Override
     public void onIsReadyForInstantPaymentChange() {

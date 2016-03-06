@@ -16,6 +16,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -38,22 +40,22 @@ import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHand
  */
 public class BluetoothRFCommClient extends AbstractClient {
     private final static String TAG = BluetoothRFCommClient.class.getSimpleName();
-
-
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     private BluetoothSocket socket;
+    private SecretKeySpec commonSecretKeySpec;
+
+    final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action) && socket != null) {
+            if (BluetoothDevice.ACTION_FOUND.equals(intent.getAction())) {
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                new Thread(new Runnable() {
+                Log.d(TAG, "device found adding to thread executor:" + device.getAddress());
+                singleThreadExecutor.submit(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d(TAG, "device found:" + device.getAddress());
+                        Log.d(TAG, "starting thread with device:" + device.getAddress());
                         try {
                             final BluetoothSocket deviceSocket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
                             deviceSocket.connect();
@@ -74,14 +76,14 @@ public class BluetoothRFCommClient extends AbstractClient {
                                 }
                             }).run();
                         } catch (Exception e) {
+                            Log.d(TAG, "error with device:" + device.getAddress() + " -> " + e.getMessage());
                         }
                     }
-                }).start();
-
+                });
             }
         }
     };
-    private SecretKeySpec commonSecretKeySpec;
+
 
     public BluetoothRFCommClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
@@ -96,14 +98,14 @@ public class BluetoothRFCommClient extends AbstractClient {
                 IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
                 final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec,ivParameterSpec);
+                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
 
                 final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec,ivParameterSpec);
+                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
 
                 final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
                 final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
-                Log.d(TAG,"setting up secure connection");
+                Log.d(TAG, "setting up secure connection");
                 new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
                 setRunning(true);
             } catch (NoSuchAlgorithmException e) {
@@ -140,9 +142,10 @@ public class BluetoothRFCommClient extends AbstractClient {
         this.setRunning(false);
         try {
             this.socket.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        singleThreadExecutor.shutdown();
     }
 
     @Override

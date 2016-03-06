@@ -20,6 +20,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
@@ -35,11 +37,14 @@ import ch.papers.payments.communications.peers.steps.Step;
  * Papers.ch
  * a.decarli@papers.ch
  */
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BluetoothLEServer extends AbstractServer {
     private final static String TAG = BluetoothLEServer.class.getSimpleName();
 
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private BluetoothGattServer bluetoothGattServer;
+
+
 
     private final List<Step> stepList = new ArrayList<Step>();
 
@@ -60,7 +65,6 @@ public class BluetoothLEServer extends AbstractServer {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void start() {
         if(!this.isRunning() && this.isSupported()) {
@@ -70,9 +74,13 @@ public class BluetoothLEServer extends AbstractServer {
                     (BluetoothManager) this.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
 
             this.bluetoothGattServer = bluetoothManager.openGattServer(this.getContext(), new BluetoothGattServerCallback() {
-                private byte[] derRequestPayload = new byte[0];
-                private byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
-                private int stepCounter = 0;
+                class PaymentState {
+                    byte[] derRequestPayload = new byte[0];
+                    byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                    int stepCounter = 0;
+                }
+
+                private Map<String, PaymentState> connectedDevices = new ConcurrentHashMap<String, PaymentState>();
 
                 @Override
                 public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
@@ -84,13 +92,15 @@ public class BluetoothLEServer extends AbstractServer {
                             break;
                         case BluetoothGatt.STATE_CONNECTED:
                             Log.d(TAG, device.getAddress() + " changed connection state to connected");
-                            this.stepCounter=0;
-                            this.derResponsePayload = stepList.get(stepCounter++).process(DERObject.NULLOBJECT).serializeToDER();
+                            PaymentState paymentState = new PaymentState();
+                            this.connectedDevices.put(device.getAddress(),paymentState);
+                            paymentState.derResponsePayload = stepList.get(paymentState.stepCounter++).process(DERObject.NULLOBJECT).serializeToDER();
                             break;
                         case BluetoothGatt.STATE_DISCONNECTING:
                             Log.d(TAG, device.getAddress() + " changed connection state to disconnecting");
                             break;
                         case BluetoothGatt.STATE_DISCONNECTED:
+                            this.connectedDevices.remove(device.getAddress());
                             Log.d(TAG, device.getAddress() + " changed connection state to disconnected");
                             break;
                         default:
@@ -102,19 +112,21 @@ public class BluetoothLEServer extends AbstractServer {
                 @Override
                 public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
                     Log.d(TAG, device.getAddress() + " requested characteristic read");
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, this.derResponsePayload);
-                    derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                    PaymentState paymentState = this.connectedDevices.get(device.getAddress());
+                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, paymentState.derResponsePayload);
+                    paymentState.derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
                 }
 
                 @Override
                 public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
                     Log.d(TAG, device.getAddress() + " requested characteristic write with " + value.length + " payload");
-                    this.derRequestPayload = Utils.concatBytes(derRequestPayload, value);
-                    int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
-                    if(derRequestPayload.length>=responseLength){
-                        final byte[] requestPayload = derRequestPayload;
-                        this.derRequestPayload = new byte[0];
-                        this.derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
+                    PaymentState paymentState = this.connectedDevices.get(device.getAddress());
+                    paymentState.derRequestPayload = Utils.concatBytes(paymentState.derRequestPayload, value);
+                    int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
+                    if(paymentState.derRequestPayload.length>=responseLength){
+                        final byte[] requestPayload = paymentState.derRequestPayload;
+                        paymentState.derRequestPayload = new byte[0];
+                        paymentState.derResponsePayload = stepList.get(paymentState.stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
                         Log.d(TAG, "sending response now");
                     }
                 }
@@ -143,6 +155,7 @@ public class BluetoothLEServer extends AbstractServer {
         this.bluetoothGattServer.clearServices();
         this.bluetoothGattServer.close();
         this.setRunning(false);
+
     }
 
     @Override

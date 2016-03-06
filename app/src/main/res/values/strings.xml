@@ -200,6 +200,7 @@
     </string>
     <string name="payment_request_html_subject">New bitcoin payment request</string>
     <string name="accept">Accept</string>
+    <string name="payment_succesful_message">Payment was succesful!</string>
 
 
 </resources>
