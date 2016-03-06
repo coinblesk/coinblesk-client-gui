@@ -147,7 +147,8 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
 
     private void sendCoins() {
         try {
-            Coin amount = Coin.valueOf(Long.parseLong(this.amountEditText.getText().toString()));
+//            Coin amount = Coin.valueOf(Long.parseLong(this.amountEditText.getText().toString()));
+            Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
             walletServiceBinder.sendCoins(new Address(Constants.PARAMS, addressEditText.getText().toString()), amount);
         } catch (AddressFormatException e) {
             e.printStackTrace();
