@@ -16,18 +16,13 @@ import com.google.gson.Gson;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Monetary;
-import org.bitcoinj.utils.BtcAutoFormat;
+import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
-import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import ch.papers.payments.WalletService;
@@ -108,13 +103,13 @@ public class UIUtils implements IPreferenceStrings {
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
         switch (coinDenomination) {
             case COIN:
-                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
+                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MILLICOIN:
-                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
+                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MICROCOIN:
-                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
+                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
                 break;
         }
 
@@ -122,7 +117,7 @@ public class UIUtils implements IPreferenceStrings {
     }
 
 
-    public static Coin getValue(String amount, Context context){
+    public static Coin getValue(String amount, Context context) {
         BigDecimal bdAmount = new BigDecimal(amount);
 
         BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
