@@ -8,8 +8,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.json.RefundTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +73,7 @@ public class WalletService extends Service {
     private final static String TAG = WalletService.class.getName();
 
     private final Retrofit retrofit = new Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();
 
@@ -143,18 +145,20 @@ public class WalletService extends Service {
                     try {
                         final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                         // let server sign first
-                        final PrepareHalfSignTO clientHalfSignTO = new PrepareHalfSignTO();
-                        clientHalfSignTO.amountToSpend(amount.longValue());
-                        clientHalfSignTO.clientPublicKey(multisigClientKey.getPubKey());
-                        clientHalfSignTO.p2shAddressTo(address.toString());
+                        final PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
+                                .amountToSpend(amount.longValue())
+                                .clientPublicKey(multisigClientKey.getPubKey())
+                                .p2shAddressTo(address.toString())
+                                .messageSig(null)
+                                .currentDate(System.currentTimeMillis());
+                        SerializeUtils.sign(prepareHalfSignTO, multisigClientKey);
 
-                        Response<PrepareHalfSignTO> prepareHalfSignTOResponse = service.prepareHalfSign(clientHalfSignTO).execute();
+
+                        Response<PrepareHalfSignTO> prepareHalfSignTOResponse = service.prepareHalfSign(prepareHalfSignTO).execute();
                         final PrepareHalfSignTO serverHalfSignTO = prepareHalfSignTOResponse.body();
 
                         // now let us sign and verify
                         final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
-
-
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
                         Log.d(TAG, "rcv: " + address);
                         Log.d(TAG, "tx: " + transaction);
@@ -188,19 +192,24 @@ public class WalletService extends Service {
                             }
                         }
 
-                        /*if(changeOutput >= 0){
+                        if(changeOutput >= 0){
                             // generate refund
-                            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),getCurrentReceiveAddress());
+                            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),multisigClientKey.toAddress(Constants.PARAMS));
                             final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
-                            final RefundTO clientRefundTO = new RefundTO();
-                            clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
-                            clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(clientRefundTransactionSignatures));
-                            clientRefundTO.refundTransaction(refundTransaction.unsafeBitcoinSerialize());
+
+                            RefundTO refundTO = new RefundTO();
+                            refundTO.clientPublicKey(multisigClientKey.getPubKey());
+                            refundTO.clientSignatures(SerializeUtils.serializeSignatures(clientRefundTransactionSignatures));
+                            refundTO.refundTransaction(refundTransaction.unsafeBitcoinSerialize());
+                            refundTO.currentDate(System.currentTimeMillis());
+                            if (refundTO.messageSig() == null) {
+                                SerializeUtils.sign(refundTO, multisigClientKey);
+                            }
 
 
                             // let server sign
-                            final RefundTO serverRefundTo = service.refund(clientRefundTO).execute().body();
-                            final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTo.serverSignatures());
+                            final RefundTO serverRefundTO = service.refund(refundTO).execute().body();
+                            final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTO.serverSignatures());
                             for (int i = 0; i < clientRefundTransactionSignatures.size(); i++) {
                                 final TransactionSignature serverSignature = serverRefundTransactionSignatures.get(i);
                                 final TransactionSignature clientSignature = clientRefundTransactionSignatures.get(i);
@@ -211,8 +220,30 @@ public class WalletService extends Service {
                                 refundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
                                 refundTransaction.getInput(i).verify();
                             }
-                        }*/
+                        }
 
+
+                        CompleteSignTO completeSignTO = new CompleteSignTO()
+                                .clientPublicKey(multisigClientKey.getPubKey())
+                                .p2shAddressTo(address.toString())
+                                .fullSignedTransaction(transaction.unsafeBitcoinSerialize())
+                                .currentDate(System.currentTimeMillis());
+                        if (completeSignTO.messageSig() == null) {
+                            SerializeUtils.sign(completeSignTO, multisigClientKey);
+                        }
+
+                        CompleteSignTO responseCompleteSignTO = service.sign(completeSignTO).execute().body();
+                        Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
+                        switch (responseCompleteSignTO.type().nr()){
+                            case 1:
+                                final Intent instantPaymentSuccesful = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL);
+                                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentSuccesful);
+                                break;
+                            default:
+                                final Intent walletInsufficientBalanceIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED);
+                                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
+                                break;
+                        }
                         // all good our refund tx is safe, we can broadcast
                         kit.peerGroup().broadcastTransaction(transaction);
                     } catch (IOException e) {
@@ -377,7 +408,7 @@ public class WalletService extends Service {
                             UuidObjectStorage.getInstance().commit();
                             setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
                         } else {
-                            Log.d(TAG, response.code() + "");
+                            Log.d(TAG, "error during key setup:"+response.code());
                         }
                     } catch (Exception e2) {
                         Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());

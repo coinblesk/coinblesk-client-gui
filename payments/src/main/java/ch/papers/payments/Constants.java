@@ -36,6 +36,9 @@ public class Constants {
     public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
     public static final String EXCHANGE_RATE_CHANGED_ACTION = "EXCHANGE_RATE_CHANGED_ACTION";
 
+    public static final String INSTANT_PAYMENT_SUCCESSFUL = "INSTANT_PAYMENT_SUCCESSFUL";
+    public static final String INSTANT_PAYMENT_FAILED = "INSTANT_PAYMENT_FAILED";
+
     //Crypto constants
     public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";
     public final static String SYMMETRIC_CIPHER_MODE = "AES/CFB8/NoPadding";

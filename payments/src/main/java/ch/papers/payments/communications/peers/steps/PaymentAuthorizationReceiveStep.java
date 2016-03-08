@@ -8,7 +8,6 @@ import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.papers.payments.Constants;
-import ch.papers.payments.Utils;
 import ch.papers.payments.communications.http.CoinbleskWebService;
 import ch.papers.payments.communications.messages.DERInteger;
 import ch.papers.payments.communications.messages.DERObject;
@@ -37,11 +35,12 @@ public class PaymentAuthorizationReceiveStep implements Step {
 
     final private BitcoinURI bitcoinURI;
 
+    private ECKey clientPublicKey;
+
     private final Retrofit retrofit = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();
-
     public PaymentAuthorizationReceiveStep(BitcoinURI bitcoinURI) {
         this.bitcoinURI = bitcoinURI;
     }
@@ -50,7 +49,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
     public DERObject process(DERObject input) {
         try {
             final DERSequence inputSequence = (DERSequence) input;
-            final ECKey clientPublicKey = ECKey.fromPublicOnly(inputSequence.getChildren().get(0).getPayload());
+            clientPublicKey = ECKey.fromPublicOnly(inputSequence.getChildren().get(0).getPayload());
             final BigInteger timestamp = ((DERInteger)inputSequence.getChildren().get(1)).getBigInteger();
 
             final TxSig txSig= new TxSig();
@@ -61,8 +60,6 @@ public class PaymentAuthorizationReceiveStep implements Step {
             Log.d(TAG,"key used for signing"+clientPublicKey.getPublicKeyAsHex());
             Log.d(TAG,"address used for signing"+bitcoinURI.getAddress());
             Log.d(TAG,"timestamp used for signing"+timestamp.longValue());
-            Sha256Hash inputHash = Sha256Hash.of(Utils.concatBytes(BigInteger.valueOf(bitcoinURI.getAmount().getValue()).toByteArray(),bitcoinURI.getAddress().getHash160(),timestamp.toByteArray()));
-            Log.d(TAG,"hash used for signing"+inputHash);
 
             final PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
                     .amountToSpend(bitcoinURI.getAmount().longValue())
@@ -93,5 +90,9 @@ public class PaymentAuthorizationReceiveStep implements Step {
             e.printStackTrace();
         }
         return new DERInteger(BigInteger.valueOf(-1));
+    }
+
+    public ECKey getClientPublicKey() {
+        return this.clientPublicKey;
     }
 }

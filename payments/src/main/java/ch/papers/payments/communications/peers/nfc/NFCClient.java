@@ -21,6 +21,7 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractClient;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import ch.papers.payments.models.ECKeyWrapper;
@@ -108,12 +109,19 @@ public class NFCClient extends AbstractClient {
 
                                 DERObject refundSendInput = transceiveDER(isoDep, authorizationResponseOutput);
                                 PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI());
-                                DERObject sendFinalSignatureOutput = paymentRefundSendStep.process(refundSendInput);
+                                DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
 
 
+                                DERObject finalSendInput = transceiveDER(isoDep, refundSendOutput);
+                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder().getMultisigClientKey(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction());
+                                DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
+
+                                transceiveDER(isoDep, sendFinalSignatureOutput);
+                                getPaymentRequestAuthorizer().onPaymentSuccess();
                                 isoDep.close();
                             } catch (IOException e) {
                                 Log.d(TAG, e.getMessage());
+                                getPaymentRequestAuthorizer().onPaymentError(e.getMessage());
                             }
                         }
 

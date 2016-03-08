@@ -80,13 +80,14 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        this.getContext().registerReceiver(this.broadcastReceiver, filter);
+
 
         WifiManager wifiManager = (WifiManager) this.getContext().getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
 
         manager = (WifiP2pManager) this.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this.getContext(), this.getContext().getMainLooper(), null);
+        this.getContext().registerReceiver(this.broadcastReceiver, filter);
         manager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
@@ -140,6 +141,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
             this.setRunning(false);
             singleThreadExecutor.shutdown();
+            this.getContext().unregisterReceiver(this.broadcastReceiver);
         } catch (Exception e){
             Log.d(TAG,e.getMessage());
         }

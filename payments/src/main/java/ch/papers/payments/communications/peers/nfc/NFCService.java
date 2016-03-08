@@ -7,20 +7,20 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
-import ch.papers.payments.communications.peers.steps.Step;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -31,22 +31,21 @@ import ch.papers.payments.communications.peers.steps.Step;
 public class NFCService extends HostApduService {
     private final static String TAG = NFCService.class.getSimpleName();
 
-    private final List<Step> stepList = new ArrayList<Step>();
     private int stepCounter = 0;
     private boolean isProcessing = false;
+    private BitcoinURI bitcoinURI;
+    private ECKey clientPublicKey;
+
+    private byte[] derRequestPayload = new byte[0];
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        stepList.clear();
-
         // Check if intent has extras
         if (intent.getExtras() != null) {
             try {
                 String bitcoinUri = intent.getExtras().getString(Constants.BITCOIN_URI_KEY);
                 if(!bitcoinUri.equals("")) {
-                    final BitcoinURI bitcoinURI = new BitcoinURI(bitcoinUri);
-                    stepList.add(new PaymentRequestSendStep(bitcoinURI));
-                    stepList.add(new PaymentAuthorizationReceiveStep(bitcoinURI));
+                    bitcoinURI = new BitcoinURI(bitcoinUri);
                 }
             } catch (BitcoinURIParseException e) {
                 e.printStackTrace();
@@ -56,13 +55,6 @@ public class NFCService extends HostApduService {
         return START_NOT_STICKY;
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-    }
-
-    byte[] derRequestPayload = new byte[0];
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
@@ -70,12 +62,13 @@ public class NFCService extends HostApduService {
         int derPayloadStartIndex = 0;
         if (this.selectAidApdu(commandApdu)) {
             Log.d(TAG, "hanshake");
-            stepCounter = 0;
             derPayloadStartIndex = 2;
             derRequestPayload = new byte[0];
+            stepCounter = 0;
+            clientPublicKey = null;
         }
 
-        byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
+        final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
         derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
 
         int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
@@ -90,10 +83,33 @@ public class NFCService extends HostApduService {
                         isProcessing = true;
                         final byte[] requestPayload = derRequestPayload;
                         derRequestPayload = new byte[0];
-                        byte[] derResponsePayload = stepList.get(stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
-                        Log.d(TAG, "sending response now");
-                        isProcessing = false;
+
+                        byte[] derResponsePayload = new byte[]{};
+                        switch (stepCounter){
+                            case 0:
+                                PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(bitcoinURI);
+                                derResponsePayload = paymentRequestSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                stepCounter++;
+                                break;
+                            case 1:
+                                PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(bitcoinURI);
+                                derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                stepCounter++;
+                                break;
+                            case 2:
+                                final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
+                                derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                stepCounter++;
+                                break;
+                            case 3:
+                                final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(clientPublicKey, bitcoinURI.getAddress());
+                                derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                stepCounter++;
+                                break;
+                        }
                         sendResponseApdu(derResponsePayload);
+                        isProcessing = false;
                     }
                 });
                 processingThread.start();

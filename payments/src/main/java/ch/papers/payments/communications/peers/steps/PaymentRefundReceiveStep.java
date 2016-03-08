@@ -52,6 +52,6 @@ public class PaymentRefundReceiveStep implements Step {
         } catch (IOException e) {
             e.printStackTrace();
         }*/
-        return null;
+        return DERObject.NULLOBJECT;
     }
 }

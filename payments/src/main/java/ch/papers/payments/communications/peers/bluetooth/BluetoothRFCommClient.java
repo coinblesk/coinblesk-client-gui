@@ -146,6 +146,11 @@ public class BluetoothRFCommClient extends AbstractClient {
             e.printStackTrace();
         }
         this.singleThreadExecutor.shutdown();
+        try {
+            this.getContext().unregisterReceiver(this.broadcastReceiver);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
