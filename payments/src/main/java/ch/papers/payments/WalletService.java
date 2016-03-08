@@ -195,7 +195,7 @@ public class WalletService extends Service {
                         if(changeOutput >= 0){
                             // generate refund
                             final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),multisigClientKey.toAddress(Constants.PARAMS));
-                            final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
+                            final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(refundTransaction, redeemScript, multisigClientKey);
 
                             RefundTO refundTO = new RefundTO();
                             refundTO.clientPublicKey(multisigClientKey.getPubKey());
