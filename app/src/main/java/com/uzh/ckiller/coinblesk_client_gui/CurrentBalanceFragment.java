@@ -69,7 +69,7 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
 
         // New UIUtils methods using Preferences and BtcFormat
         largeBalance.setText(UIUtils.getLargeBalance(this.getContext(), walletServiceBinder));
-        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), largeBalance.getText().length()));
+        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(this.getContext(), largeBalance.getText().length()));
         smallBalance.setText(UIUtils.getSmallBalance(this.getContext(), walletServiceBinder));
 
         // Old method
