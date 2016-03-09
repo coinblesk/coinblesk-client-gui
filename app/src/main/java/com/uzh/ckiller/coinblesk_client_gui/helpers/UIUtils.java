@@ -97,7 +97,7 @@ public class UIUtils implements IPreferenceStrings {
         return result;
     }
 
-    public static String scaleCoinForDialogs(Coin coin, Context context) {
+    public static SpannableString scaleCoinForDialogs(Coin coin, Context context) {
         String result = "";
         String coinDenomination = UIUtils.getCoinDenomination(context);
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
@@ -113,7 +113,7 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
 
-        return result + " " + coinDenomination;
+        return UIUtils.toLargeSpannable(context, result, coinDenomination);
     }
 
 
@@ -192,11 +192,36 @@ public class UIUtils implements IPreferenceStrings {
         return textSize;
     }
 
+    public static int getLargeTextSizeForBalance(Context context, int amountLength) {
+
+        int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
+        final int orientation = context.getResources().getConfiguration().orientation;
+        switch (orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                textSize = context.getResources().getInteger(R.integer.text_size_large_landscape);
+                if (amountLength > 10)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium_landscape);
+                if (amountLength > 12)
+                    textSize = context.getResources().getInteger(R.integer.text_size_small_landscape);
+                break;
+            case Configuration.ORIENTATION_PORTRAIT:
+                if (amountLength > 12)
+                    textSize = context.getResources().getInteger(R.integer.text_size_xlarge);
+                if (amountLength > 13)
+                    textSize = context.getResources().getInteger(R.integer.text_size_large);
+                if (amountLength > 14)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium);
+                break;
+        }
+
+        return textSize;
+    }
+
     public static SpannableString toFriendlyAmountString(Context context, TransactionWrapper transaction) {
         StringBuffer friendlyAmount = new StringBuffer(transaction.getAmount().toFriendlyString());
         final int coinLength = friendlyAmount.length() - 3;
 
-        friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()));
+        friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()).toFriendlyString());
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);

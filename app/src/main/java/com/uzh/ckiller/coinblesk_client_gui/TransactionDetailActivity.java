@@ -125,8 +125,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
-        this.unbindService(serviceConnection);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        this.unbindService(serviceConnection);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
