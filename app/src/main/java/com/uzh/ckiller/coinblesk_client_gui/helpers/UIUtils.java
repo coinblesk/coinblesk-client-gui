@@ -97,7 +97,7 @@ public class UIUtils implements IPreferenceStrings {
         return result;
     }
 
-    public static String scaleCoinForDialogs(Coin coin, Context context) {
+    public static SpannableString scaleCoinForDialogs(Coin coin, Context context) {
         String result = "";
         String coinDenomination = UIUtils.getCoinDenomination(context);
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
@@ -113,7 +113,7 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
 
-        return result + " " + coinDenomination;
+        return UIUtils.toLargeSpannable(context, result, coinDenomination);
     }
 
 

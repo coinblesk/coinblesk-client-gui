@@ -100,7 +100,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         });
 
         dialog = new ProgressDialog(this.getContext());
-        dialog.setMessage("Your message..");
+        dialog.setMessage(this.getString(R.string.fragment_send_dialog_scanning));
 
         return view;
     }

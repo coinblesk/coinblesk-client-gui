@@ -162,6 +162,7 @@
     <string name="fragment_send_dialog_send">Send</string>
     <string name="fragment_send_dialog_qr_scan">QR-Scan</string>
     <string name="fragment_send_dialog_cancel">Cancel</string>
+    <string name="fragment_send_dialog_scanning">Scanning for Payment Requests</string>
 
     <!--Customize Button Dialog Strings-->
     <string name="fragment_customize_button_dialog_description_hint">Product</string>
