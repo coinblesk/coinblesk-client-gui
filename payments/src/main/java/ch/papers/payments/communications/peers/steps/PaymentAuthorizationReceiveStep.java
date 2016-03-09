@@ -66,6 +66,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
                     .clientPublicKey(clientPublicKey.getPubKey())
                     .p2shAddressTo(bitcoinURI.getAddress().toString())
                     .messageSig(txSig)
+                    .bloomFilter(inputSequence.getChildren().get(4).getPayload())
                     .currentDate(timestamp.longValue());
 
             if (SerializeUtils.verifySig(prepareHalfSignTO,clientPublicKey)) {

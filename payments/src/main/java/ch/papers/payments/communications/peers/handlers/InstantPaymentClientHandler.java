@@ -33,7 +33,7 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
         Log.d(TAG,"kick off");
         try {
             writeDERObject(DERObject.NULLOBJECT); // we kick off the process
-            PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder.getMultisigClientKey());
+            PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder.getMultisigClientKey(),walletServiceBinder.getUnspentInstantOutputs());
             final DERObject paymentRequestResponse = paymentRequestReceiveStep.process(readDERObject());
             Log.d(TAG, "got request, authorizing user");
             if (paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {

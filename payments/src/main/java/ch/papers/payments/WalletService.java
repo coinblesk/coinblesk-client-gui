@@ -24,6 +24,7 @@ import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.BloomFilter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.ECKey;
@@ -131,7 +132,7 @@ public class WalletService extends Service {
 
         public List<TransactionOutput> getUnspentInstantOutputs() {
             List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
-            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(true, false)) {
+            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(false, false)) {
                 if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
                     unspentInstantOutputs.add(unspentTransactionOutput);
                 }
@@ -144,6 +145,13 @@ public class WalletService extends Service {
                 @Override
                 public void run() {
                     try {
+                        final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
+                        final BloomFilter bloomFilter = new BloomFilter(unspentTransactionOutputs.size(),0.001,42);
+                        for (TransactionOutput transactionOutput:unspentTransactionOutputs) {
+                            bloomFilter.insert(transactionOutput.getOutPointFor().unsafeBitcoinSerialize());
+                        }
+
+                        Log.d(TAG,"hashcode:"+bloomFilter.unsafeBitcoinSerialize().length);
                         final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
                         // let server sign first
                         final PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
@@ -151,6 +159,7 @@ public class WalletService extends Service {
                                 .clientPublicKey(multisigClientKey.getPubKey())
                                 .p2shAddressTo(address.toString())
                                 .messageSig(null)
+                                .bloomFilter(bloomFilter.unsafeBitcoinSerialize())
                                 .currentDate(System.currentTimeMillis());
                         SerializeUtils.sign(prepareHalfSignTO, multisigClientKey);
 
@@ -159,7 +168,6 @@ public class WalletService extends Service {
                         final PrepareHalfSignTO serverHalfSignTO = prepareHalfSignTOResponse.body();
 
                         // now let us sign and verify
-                        final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
                         Log.d(TAG, "rcv: " + address);
                         Log.d(TAG, "tx: " + transaction);

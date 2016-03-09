@@ -62,7 +62,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
 
             CompleteSignTO responseCompleteSignTO = service.sign(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
-
+            return DERObject.NULLOBJECT;
         } catch (IOException e){
             e.printStackTrace();
         }

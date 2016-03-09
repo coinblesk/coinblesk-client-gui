@@ -6,8 +6,10 @@ import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.BloomFilter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -30,9 +32,11 @@ public class PaymentRequestReceiveStep implements Step {
 
     private final ECKey ecKey;
     private BitcoinURI bitcoinURI;
+    private final List<TransactionOutput> unspentOutputs;
 
-    public PaymentRequestReceiveStep(ECKey ecKey) {
+    public PaymentRequestReceiveStep(ECKey ecKey, List<TransactionOutput> unspentOutputs) {
         this.ecKey = ecKey;
+        this.unspentOutputs = unspentOutputs;
     }
 
     public BitcoinURI getBitcoinURI() {
@@ -64,10 +68,16 @@ public class PaymentRequestReceiveStep implements Step {
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         Log.d(TAG, "sign timestamp:" + timestamp.longValue());
 
+        final BloomFilter bloomFilter = new BloomFilter(unspentOutputs.size(), 0.001, 42);
+        for (TransactionOutput transactionOutput:unspentOutputs) {
+            bloomFilter.insert(transactionOutput.getOutPointFor().unsafeBitcoinSerialize());
+        }
+
         PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
                 .amountToSpend(amount.longValue())
                 .clientPublicKey(this.ecKey.getPubKey())
                 .p2shAddressTo(address.toString())
+                .bloomFilter(bloomFilter.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp.longValue());
         SerializeUtils.sign(prepareHalfSignTO, ecKey);
@@ -77,6 +87,7 @@ public class PaymentRequestReceiveStep implements Step {
         derObjectList.add(new DERInteger(timestamp));
         derObjectList.add(new DERInteger(new BigInteger(prepareHalfSignTO.messageSig().sigR())));
         derObjectList.add(new DERInteger(new BigInteger(prepareHalfSignTO.messageSig().sigS())));
+        derObjectList.add(new DERObject(bloomFilter.unsafeBitcoinSerialize()));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
         Log.d(TAG, "responding with eckey and signature total size:" + payloadDerSequence.serializeToDER().length);
