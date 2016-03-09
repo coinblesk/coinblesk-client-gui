@@ -7,6 +7,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import ch.papers.payments.Constants;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
 import ch.papers.payments.communications.peers.nfc.NFCServer;
@@ -80,8 +82,27 @@ public class ServerPeerService extends Service {
                     ServerPeerService.this.servers.add(new WiFiServer(ServerPeerService.this));
                 }
 
-                for (Peer server:ServerPeerService.this.servers) {
+                for (AbstractServer server:ServerPeerService.this.servers) {
                     if(server.isSupported()) {
+                        server.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
+                            @Override
+                            public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                                return true;
+                            }
+
+                            @Override
+                            public void onPaymentSuccess() {
+                                final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                                LocalBroadcastManager.getInstance(ServerPeerService.this).sendBroadcast(instantPaymentSucess);
+                            }
+
+                            @Override
+                            public void onPaymentError(String errorMessage) {
+                                final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,errorMessage);
+                                LocalBroadcastManager.getInstance(ServerPeerService.this).sendBroadcast(instantPaymentFailed);
+                            }
+                        });
                         server.start();
                     }
                 }

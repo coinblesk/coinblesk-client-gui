@@ -73,7 +73,7 @@ public class BluetoothRFCommServer extends AbstractServer {
 
                     Log.d(TAG,"setting up secure connection");
                     this.secureConnections.remove(entry);
-                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri())).start();
+                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer())).start();
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
                 } catch (NoSuchPaddingException e) {

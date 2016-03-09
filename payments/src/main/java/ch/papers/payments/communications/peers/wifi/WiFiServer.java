@@ -106,7 +106,7 @@ public class WiFiServer extends AbstractServer {
                     final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                     final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
                     this.secureConnections.remove(entry);
-                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri())).start();
+                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer())).start();
                 } catch (Exception e) {
                     e.printStackTrace();
                     this.secureConnections.remove(entry);

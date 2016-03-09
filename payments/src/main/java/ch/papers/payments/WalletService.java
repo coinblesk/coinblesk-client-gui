@@ -123,6 +123,7 @@ public class WalletService extends Service {
         public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
             for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {
+                transaction.setExchangeRate(getExchangeRate());
                 transactions.add(new TransactionWrapper(transaction, WalletService.this.kit.wallet()));
             }
             return transactions;
@@ -236,18 +237,21 @@ public class WalletService extends Service {
                         Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
                         switch (responseCompleteSignTO.type().nr()){
                             case 1:
-                                final Intent instantPaymentSuccesful = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL);
+                                final Intent instantPaymentSuccesful = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
                                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentSuccesful);
                                 break;
                             default:
-                                final Intent walletInsufficientBalanceIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED);
-                                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
+                                final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,responseCompleteSignTO.message());
+                                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
                                 break;
                         }
                         // all good our refund tx is safe, we can broadcast
                         kit.peerGroup().broadcastTransaction(transaction);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                        instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,e.getMessage());
+                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
                     }
                 }
             }).start();
@@ -261,7 +265,7 @@ public class WalletService extends Service {
                     final Transaction transaction = WalletService.this.kit.wallet().createSend(address, amount);
                     WalletService.this.kit.peerGroup().broadcastTransaction(transaction);
                 } catch (InsufficientMoneyException e) {
-                    final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE);
+                    final Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
                     LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletInsufficientBalanceIntent);
                 }
             }
@@ -356,7 +360,7 @@ public class WalletService extends Service {
                         walletProgressIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
 
-                        Intent walletCoinsSentIntent = new Intent(Constants.WALLET_COINS_SENT);
+                        Intent walletCoinsSentIntent = new Intent(Constants.WALLET_COINS_SENT_ACTION);
                         walletCoinsSentIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsSentIntent);
                     }
@@ -383,7 +387,7 @@ public class WalletService extends Service {
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
 
 
-                        Intent walletCoinsReceivedIntent = new Intent(Constants.WALLET_COINS_RECEIVED);
+                        Intent walletCoinsReceivedIntent = new Intent(Constants.WALLET_COINS_RECEIVED_ACTION);
                         walletCoinsReceivedIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletCoinsReceivedIntent);
                     }

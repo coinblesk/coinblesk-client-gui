@@ -196,9 +196,7 @@ public class UIUtils implements IPreferenceStrings {
         StringBuffer friendlyAmount = new StringBuffer(transaction.getAmount().toFriendlyString());
         final int coinLength = friendlyAmount.length() - 3;
 
-        // TODO Calculate the Fiat Amount
-        // TODO Insert Fiat Currency
-        friendlyAmount.append(" ~ " + "4234.45" + " CHF");
+        friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()));
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);

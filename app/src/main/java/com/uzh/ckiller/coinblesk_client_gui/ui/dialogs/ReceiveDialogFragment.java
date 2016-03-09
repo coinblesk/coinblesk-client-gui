@@ -4,21 +4,21 @@ package com.uzh.ckiller.coinblesk_client_gui.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.Html;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -34,6 +34,7 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import java.util.HashSet;
 import java.util.Set;
 
+import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.communications.peers.ServerPeerService;
 
@@ -91,26 +92,24 @@ public class ReceiveDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(View v) {
 
-                        final View authViewDialog = inflater.inflate(R.layout.fragment_authview_dialog, null);
-                        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
+                        final View authViewDialogContent = inflater.inflate(R.layout.fragment_authview_dialog, null);
+                        final TextView amountTextView = (TextView) authViewDialogContent.findViewById(R.id.authview_amount_content);
                         amountTextView.setText(UIUtils.scaleCoinForDialogs(bitcoinURI.getAmount(), getContext()));
-                        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
+                        final TextView addressTextView = (TextView) authViewDialogContent.findViewById(R.id.authview_address_content);
                         addressTextView.setText(bitcoinURI.getAddress().toString());
 
-                        final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+                        final LinearLayout authviewContainer = (LinearLayout) authViewDialogContent.findViewById(R.id.authview_container);
                         authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(bitcoinURI).getBytes()));
                         new AlertDialog.Builder(getActivity())
                                 .setTitle(getResources().getString(R.string.authview_dialog_title))
-                                .setView(authViewDialog)
+                                .setView(authViewDialogContent)
                                 .setCancelable(true)
                                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        Log.d(TAG, "called cancel");
                                         serverServiceBinder.cancelPaymentRequest();
                                     }
                                 }).show();
-
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
                     }
 
@@ -118,6 +117,8 @@ public class ReceiveDialogFragment extends DialogFragment {
             } else {
                 view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.GONE);
             }
+
+
 
             return new AlertDialog.Builder(getActivity())
                     .setTitle("Receive Bitcoins")
@@ -139,6 +140,13 @@ public class ReceiveDialogFragment extends DialogFragment {
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
     private ServerPeerService.ServerServiceBinder serverServiceBinder;
+    final BroadcastReceiver transactionListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
+            ReceiveDialogFragment.this.dismiss();
+        }
+    };
 
     @Override
     public void onStart() {
@@ -148,6 +156,11 @@ public class ReceiveDialogFragment extends DialogFragment {
         this.getActivity().startService(serverServiceIntent);
         this.getActivity().bindService(serverServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
+        IntentFilter instantPaymentFilter = new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+        instantPaymentFilter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+        instantPaymentFilter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
+
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(transactionListener, instantPaymentFilter);
     }
 
     @Override
@@ -155,6 +168,7 @@ public class ReceiveDialogFragment extends DialogFragment {
         Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
         this.getActivity().stopService(serverServiceIntent);
         this.getActivity().unbindService(serviceConnection);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(transactionListener);
         super.onStop();
     }
 

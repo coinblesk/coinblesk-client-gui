@@ -1,6 +1,5 @@
 package ch.papers.payments;
 
-import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.TestNet3Params;
 
@@ -13,7 +12,6 @@ import java.util.UUID;
  */
 public class Constants {
     public final static NetworkParameters PARAMS = TestNet3Params.get();
-    public final static BitcoinSerializer BITCOIN_SERIALIZER = new BitcoinSerializer(Constants.PARAMS);
     public final static long UNIX_TIME_MONTH = 60*60*24*30;
     public final static int LOCK_TIME_MONTHS = 3;
     public final static int LOCK_THRESHOLD = 60*4;//https://bitcoin.org/en/developer-reference#block-headers
@@ -24,6 +22,7 @@ public class Constants {
     public static final String MULTISIG_SERVER_KEY_NAME = "server_public_key";
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
+    public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";
 
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
@@ -31,13 +30,13 @@ public class Constants {
     public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";
     public final static String WALLET_TRANSACTIONS_CHANGED_ACTION = "WALLET_TRANSACTIONS_CHANGED_ACTION";
     public final static String WALLET_SCRIPTS_CHANGED_ACTION = "WALLET_SCRIPTS_CHANGED_ACTION";
-    public static final String WALLET_INSUFFICIENT_BALANCE = "WALLET_INSUFFICIENT_BALANCE";
-    public static final String WALLET_COINS_SENT = "WALLET_COINS_SENT";
-    public static final String WALLET_COINS_RECEIVED = "WALLET_COINS_RECEIVED";
-    public static final String EXCHANGE_RATE_CHANGED_ACTION = "EXCHANGE_RATE_CHANGED_ACTION";
+    public static final String WALLET_INSUFFICIENT_BALANCE_ACTION = "WALLET_INSUFFICIENT_BALANCE_ACTION";
+    public static final String WALLET_COINS_SENT_ACTION = "WALLET_COINS_SENT_ACTION";
+    public static final String WALLET_COINS_RECEIVED_ACTION = "WALLET_COINS_RECEIVED_ACTION";
 
-    public static final String INSTANT_PAYMENT_SUCCESSFUL = "INSTANT_PAYMENT_SUCCESSFUL";
-    public static final String INSTANT_PAYMENT_FAILED = "INSTANT_PAYMENT_FAILED";
+    public static final String EXCHANGE_RATE_CHANGED_ACTION = "EXCHANGE_RATE_CHANGED_ACTION";
+    public static final String INSTANT_PAYMENT_SUCCESSFUL_ACTION = "INSTANT_PAYMENT_SUCCESSFUL_ACTION";
+    public static final String INSTANT_PAYMENT_FAILED_ACTION = "INSTANT_PAYMENT_FAILED_ACTION";
 
     //Crypto constants
     public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";
@@ -50,7 +49,7 @@ public class Constants {
 
     public static final UUID SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");
     public static final int SERVICE_PORT = 60030;
-    public final static int DISCOVERABLE_DURATION = 600; //this is unlimited
+    public final static int DISCOVERABLE_DURATION = 600;
     public static final int BUFFER_SIZE=1024;
 
     public static final UUID WRITE_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc3");

@@ -120,7 +120,6 @@ public class NFCClient extends AbstractClient {
                                 getPaymentRequestAuthorizer().onPaymentSuccess();
                                 isoDep.close();
                             } catch (IOException e) {
-                                Log.d(TAG, e.getMessage());
                                 getPaymentRequestAuthorizer().onPaymentError(e.getMessage());
                             }
                         }

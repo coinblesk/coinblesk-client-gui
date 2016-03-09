@@ -92,9 +92,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
             ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
-
-            //TODO Get Exchange Rate from transaction
-            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText("433.43 CHF");
+            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText(""+transaction.getTransaction().getExchangeRate().fiat.toFriendlyString());
 
             // TODO Format the Date properly (make it shorter, without MEZ indication)
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");

@@ -68,6 +68,8 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             filter.addAction(Constants.WALLET_READY_ACTION);
+            filter.addAction(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+
             LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
             recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(walletServiceBinder.getTransactionsByTime()));
         }

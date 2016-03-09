@@ -11,6 +11,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -309,7 +310,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
             smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
-                            UIUtils.getCoinDenomination(this.getContext())),
+                    UIUtils.getCoinDenomination(this.getContext())),
                     UIUtils.getCoinDenomination(this.getContext())));
         }
     }
@@ -501,11 +502,25 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver exchangeRateChangeListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             exchangeRate = walletServiceBinder.getExchangeRate();
             updateAmount();
+        }
+    };
+
+    private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Snackbar.make(getView(), R.string.instant_payment_success_message, Snackbar.LENGTH_LONG).show();
+        }
+    };
+
+    private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Snackbar.make(getView(), String.format(getResources().getString(R.string.instant_payment_error_message),intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY,"")), Snackbar.LENGTH_LONG).show();
         }
     };
 
@@ -515,7 +530,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onStop() {
         super.onStop();
         this.getActivity().unbindService(serviceConnection);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(exchangeRateChangeListener);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentErrorListener);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentSuccessListener);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -525,8 +542,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             exchangeRate = walletServiceBinder.getExchangeRate();
-            IntentFilter filter = new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentErrorListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
             walletServiceBinder.fetchExchangeRate();
             updateAmount();
         }

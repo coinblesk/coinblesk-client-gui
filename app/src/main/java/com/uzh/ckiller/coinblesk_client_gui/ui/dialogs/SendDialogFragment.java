@@ -13,7 +13,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
@@ -104,9 +103,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
         switch (v.getId()) {
             case R.id.fragment_send_dialog_send:
                 sendCoins();
-                Snackbar.make(v, UIUtils.toFriendlySnackbarString(this.getContext(), getResources()
-                        .getString(R.string.snackbar_coins_sent)), Snackbar.LENGTH_SHORT)
-                        .show();
                 break;
             case R.id.fragment_send_dialog_cancel:
                 getDialog().cancel();
@@ -178,8 +174,9 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
 
-            // TODO handle errors
-            IntentFilter filter = new IntentFilter(Constants.WALLET_COINS_SENT);
+            IntentFilter filter = new IntentFilter(Constants.WALLET_COINS_SENT_ACTION);
+            filter.addAction(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+            filter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletCoinsSentReceiver, filter);
         }
 

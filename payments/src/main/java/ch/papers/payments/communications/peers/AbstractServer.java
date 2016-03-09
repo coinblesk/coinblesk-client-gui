@@ -11,6 +11,9 @@ import org.bitcoinj.uri.BitcoinURI;
  */
 public abstract class AbstractServer extends AbstractPeer {
     private BitcoinURI paymentRequestUri;
+    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.ALLOW_AUTHORIZER;
+
+
     protected AbstractServer(Context context) {
         super(context);
     }
@@ -28,5 +31,13 @@ public abstract class AbstractServer extends AbstractPeer {
 
     public boolean hasPaymentRequestUri() {
         return paymentRequestUri != null;
+    }
+
+    public PaymentRequestAuthorizer getPaymentRequestAuthorizer() {
+        return paymentRequestAuthorizer;
+    }
+
+    public void setPaymentRequestAuthorizer(PaymentRequestAuthorizer paymentRequestAuthorizer) {
+        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
     }
 }

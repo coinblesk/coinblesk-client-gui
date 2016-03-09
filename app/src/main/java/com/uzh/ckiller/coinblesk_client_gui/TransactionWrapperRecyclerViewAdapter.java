@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.ocpsoft.pretty.time.PrettyTime;
+
 import java.util.List;
 
 import ch.papers.payments.models.TransactionWrapper;
@@ -19,6 +21,7 @@ import ch.papers.payments.models.TransactionWrapper;
  * a.decarli@papers.ch
  */
 public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<TransactionWrapperRecyclerViewAdapter.ViewHolder> {
+    final PrettyTime prettyTime = new PrettyTime();
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public final View view;
@@ -54,10 +57,10 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final TransactionWrapper transaction = transactionWrappers.get(position);
         holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
-        holder.textViewDescription.setText(transaction.getTransaction().getUpdateTime() + "");
+        holder.textViewDescription.setText(prettyTime.format(transaction.getTransaction().getUpdateTime()));
         holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative() ? R.drawable.ic_send_arrow_48px : R.drawable.ic_receive_arrow_48px);
-        // TODO properly define which Icon to choose from (isMature()) not)
-        holder.imageViewStatus.setImageResource(transaction.getTransaction().isMature() ? R.drawable.ic_clock_white_18dp : R.drawable.ic_checkbox_marked_circle_outline_white_18dp);
+
+        holder.imageViewStatus.setImageResource(transaction.getTransaction().isMature() ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
 
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override

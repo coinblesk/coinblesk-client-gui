@@ -11,9 +11,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MotionEventCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
@@ -130,7 +131,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                                     @Override
                                     public void run() {
                                         new AlertDialog.Builder(getActivity())
-                                                .setTitle("Authview")
+                                                .setTitle(R.string.authview_title)
                                                 .setView(authViewDialog)
                                                 .setCancelable(true)
                                                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -159,13 +160,15 @@ public class SendPaymentFragment extends KeyboardFragment {
 
                             @Override
                             public void onPaymentSuccess() {
-                                Snackbar.make(getView(), R.string.payment_succesful_message, Snackbar.LENGTH_LONG);
-                                stopClients();
+                                final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                                LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentSucess);
                             }
 
                             @Override
                             public void onPaymentError(String errorMessage) {
-                                Snackbar.make(getView(), errorMessage, Snackbar.LENGTH_LONG);
+                                final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,errorMessage);
+                                LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentFailed);
                             }
                         });
                         client.setReadyForInstantPayment(true);
