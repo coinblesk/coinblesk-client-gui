@@ -10,7 +10,6 @@ import android.util.Log;
 
 import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.KeyTO;
-import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.json.RefundTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
@@ -60,8 +59,6 @@ import ch.papers.payments.models.ExchangeRateWrapper;
 import ch.papers.payments.models.TransactionWrapper;
 import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 14/02/16.
@@ -71,11 +68,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class WalletService extends Service {
 
     private final static String TAG = WalletService.class.getName();
-
-    private final Retrofit retrofit = new Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-            .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-            .build();
 
     private String fiatCurrency = "USD";
     private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
@@ -131,7 +123,7 @@ public class WalletService extends Service {
 
         public List<TransactionOutput> getUnspentInstantOutputs() {
             List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
-            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(true, false)) {
+            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(false, false)) {
                 if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
                     unspentInstantOutputs.add(unspentTransactionOutput);
                 }
@@ -144,23 +136,21 @@ public class WalletService extends Service {
                 @Override
                 public void run() {
                     try {
-                        final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
+                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, getUnspentInstantOutputs(), getCurrentReceiveAddress(), address, amount.longValue());
+                        final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                         // let server sign first
-                        final PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
-                                .amountToSpend(amount.longValue())
-                                .clientPublicKey(multisigClientKey.getPubKey())
-                                .p2shAddressTo(address.toString())
-                                .messageSig(null)
-                                .currentDate(System.currentTimeMillis());
-                        SerializeUtils.sign(prepareHalfSignTO, multisigClientKey);
+                        RefundTO transactionTO = new RefundTO();
+                        transactionTO.clientPublicKey(multisigClientKey.getPubKey());
+                        transactionTO.refundTransaction(transaction.unsafeBitcoinSerialize());
+                        transactionTO.currentDate(System.currentTimeMillis());
+                        if (transactionTO.messageSig() == null) {
+                            SerializeUtils.sign(transactionTO, multisigClientKey);
+                        }
 
-
-                        Response<PrepareHalfSignTO> prepareHalfSignTOResponse = service.prepareHalfSign(prepareHalfSignTO).execute();
-                        final PrepareHalfSignTO serverHalfSignTO = prepareHalfSignTOResponse.body();
+                        Response<RefundTO> signTOResponse = service.sign(transactionTO).execute();
+                        final RefundTO signedTO = signTOResponse.body();
 
                         // now let us sign and verify
-                        final List<TransactionOutput> unspentTransactionOutputs = getUnspentInstantOutputs();
-                        final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, unspentTransactionOutputs, getCurrentReceiveAddress(), address, amount.longValue());
                         Log.d(TAG, "rcv: " + address);
                         Log.d(TAG, "tx: " + transaction);
                         //This is needed because otherwise we mix up signature order
@@ -172,7 +162,7 @@ public class WalletService extends Service {
                         final Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
                         Log.d(TAG, transaction.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false).toString());
                         final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(transaction, redeemScript, multisigClientKey);
-                        final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures());
+                        final List<TransactionSignature> serverTransactionSignatures = SerializeUtils.deserializeSignatures(signedTO.serverSignatures());
 
                         for (int i = 0; i < clientTransactionSignatures.size(); i++) {
                             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
@@ -207,9 +197,8 @@ public class WalletService extends Service {
                                 SerializeUtils.sign(refundTO, multisigClientKey);
                             }
 
-
                             // let server sign
-                            final RefundTO serverRefundTO = service.refund(refundTO).execute().body();
+                            final RefundTO serverRefundTO = service.sign(refundTO).execute().body();
                             final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTO.serverSignatures());
                             for (int i = 0; i < clientRefundTransactionSignatures.size(); i++) {
                                 final TransactionSignature serverSignature = serverRefundTransactionSignatures.get(i);
@@ -226,14 +215,13 @@ public class WalletService extends Service {
 
                         CompleteSignTO completeSignTO = new CompleteSignTO()
                                 .clientPublicKey(multisigClientKey.getPubKey())
-                                .p2shAddressTo(address.toString())
                                 .fullSignedTransaction(transaction.unsafeBitcoinSerialize())
                                 .currentDate(System.currentTimeMillis());
                         if (completeSignTO.messageSig() == null) {
                             SerializeUtils.sign(completeSignTO, multisigClientKey);
                         }
 
-                        CompleteSignTO responseCompleteSignTO = service.sign(completeSignTO).execute().body();
+                        CompleteSignTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
                         Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
                         switch (responseCompleteSignTO.type().nr()){
                             case 1:
@@ -399,7 +387,7 @@ public class WalletService extends Service {
                     setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
                 } catch (UuidObjectStorageException e) {
                     try {
-                        CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
+                        CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                         final ECKey clientMultiSigKey = new ECKey();
                         final KeyTO clientKey = new KeyTO();
                         clientKey.publicKey(clientMultiSigKey.getPubKey());
@@ -477,7 +465,10 @@ public class WalletService extends Service {
     private void setupMultiSigAddress(ECKey clientKey, ECKey serverKey) {
         this.multisigServerKey = serverKey;
         this.multisigClientKey = clientKey;
-        this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
+
+        // use own createP2SHOutputScript method to avoid the Guava unsafe byte comparison ("Fatal signal 7 SIGBUS" issue).
+        this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
+        // this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
 
         for (Script watchedScript : kit.wallet().getWatchedScripts()) {
             if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {

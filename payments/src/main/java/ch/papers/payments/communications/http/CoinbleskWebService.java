@@ -36,6 +36,11 @@ public interface CoinbleskWebService {
     @POST("payment/refund-p2sh")
     Call<RefundP2shTO> refund(@Body RefundP2shTO refundP2shTO);
 
-    @POST("payment/complete-sign")
-    Call<CompleteSignTO> sign(@Body CompleteSignTO signTO);
+
+    // new endpoints
+    @POST("payment/sign")
+    Call<RefundTO> sign(@Body RefundTO signTO);
+
+    @POST("payment/verify")
+    Call<CompleteSignTO> verify(@Body CompleteSignTO signTO);
 }

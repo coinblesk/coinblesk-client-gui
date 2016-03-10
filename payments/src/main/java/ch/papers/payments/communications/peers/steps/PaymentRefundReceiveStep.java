@@ -2,12 +2,25 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
+import com.coinblesk.json.RefundTO;
+import com.coinblesk.json.TxSig;
+import com.coinblesk.util.SerializeUtils;
+import com.google.common.collect.ImmutableList;
+
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.crypto.TransactionSignature;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import ch.papers.payments.Constants;
+import ch.papers.payments.communications.http.CoinbleskWebService;
+import ch.papers.payments.communications.messages.DERInteger;
 import ch.papers.payments.communications.messages.DERObject;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import ch.papers.payments.communications.messages.DERParser;
+import ch.papers.payments.communications.messages.DERSequence;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -16,11 +29,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class PaymentRefundReceiveStep implements Step {
     private final static String TAG = PaymentRefundReceiveStep.class.getSimpleName();
-
-    private final Retrofit retrofit = new Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-            .build();
 
     private final ECKey multisigClientKey;
 
@@ -31,27 +39,44 @@ public class PaymentRefundReceiveStep implements Step {
     @Override
     public DERObject process(DERObject input) {
         Log.d(TAG,"received refund");
-/*        int refundTransactionSize = input[0];
-        int refundTransactionSignatureSize = input[refundTransactionSize+1];
 
-        byte[] refundTransactionBytes = Arrays.copyOfRange(input, 1, refundTransactionSize);
-        byte[] refundTransactionSignature =Arrays.copyOfRange(input, refundTransactionSize, refundTransactionSignatureSize);
+        final DERSequence inputSequence = (DERSequence) input;
+        byte[] transactionPayload = inputSequence.getChildren().get(0).getPayload();
+        final BigInteger timestamp = ((DERInteger)inputSequence.getChildren().get(1)).getBigInteger();
 
-        TransactionSignature transactionSignature = new TransactionSignature(TransactionSignature.decodeFromDER(refundTransactionSignature), Transaction.SigHash.ALL, false);
+        final TxSig txSig= new TxSig();
+        txSig.sigR(((DERInteger) inputSequence.getChildren().get(2)).getBigInteger().toString());
+        txSig.sigS(((DERInteger) inputSequence.getChildren().get(3)).getBigInteger().toString());
 
-        final RefundTO clientRefundTO = new RefundTO();
-        clientRefundTO.clientPublicKey(multisigClientKey.getPubKey());
-        clientRefundTO.clientSignatures(SerializeUtils.serializeSignatures(ImmutableList.of(transactionSignature)));
-        clientRefundTO.refundTransaction(refundTransactionBytes);
+        RefundTO refundTO = new RefundTO()
+                .clientPublicKey(multisigClientKey.getPubKey())
+                .refundTransaction(transactionPayload)
+                .messageSig(txSig)
+                .currentDate(timestamp.longValue());
 
+        if (SerializeUtils.verifySig(refundTO,multisigClientKey)) {
+            try {
+                Log.d(TAG, "verify was successful!");
+                refundTO.messageSig(txSig); //have to reset the txsig because verifySig is nulling it
+                final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+                // let server sign first
+                final RefundTO serverHalfSignTO = service.sign(refundTO).execute().body();
 
-        final CoinbleskWebService service = retrofit.create(CoinbleskWebService.class);
-        try {
-            final RefundTO serverRefundTo = service.refund(clientRefundTO).execute().body();
-            return serverRefundTo.refundTransaction();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+                List<DERObject> derObjectList = new ArrayList<DERObject>();
+                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.serverSignatures())) {
+                    List<DERObject> signatureList = ImmutableList.<DERObject>of(new DERInteger(signature.r), new DERInteger(signature.s));
+                    derObjectList.add(new DERSequence(signatureList));
+                }
+
+                byte[] dersequence = new DERSequence(derObjectList).serializeToDER();
+                Log.d(TAG, "sending response" + dersequence.length);
+                Log.d(TAG, "sending response exp" + DERParser.extractPayloadEndIndex(dersequence));
+                return new DERSequence(derObjectList);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
         return DERObject.NULLOBJECT;
     }
 }

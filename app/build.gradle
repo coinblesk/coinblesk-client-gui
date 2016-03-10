@@ -49,6 +49,9 @@ android {
         exclude 'META-INF/license.txt'
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
+        exclude 'lib/x86_64/darwin/libscrypt.dylib'
+        exclude 'lib/x86_64/freebsd/libscrypt.so'
+        exclude 'lib/x86_64/linux/libscrypt.so'
     }
 }
 
@@ -58,7 +61,6 @@ dependencies {
     compile project(':payments')
     //needed for nicer time formatting
     compile 'org.ocpsoft.prettytime:prettytime:1.0.8.Final'
-
 
     //integrated QR generator and scanner
     compile 'com.google.zxing:core:3.2.1'

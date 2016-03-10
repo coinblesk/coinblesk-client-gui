@@ -18,7 +18,6 @@ import java.util.Set;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommServer;
 import ch.papers.payments.communications.peers.nfc.NFCServer;
 import ch.papers.payments.communications.peers.wifi.WiFiServer;
 
@@ -74,7 +73,7 @@ public class ServerPeerService extends Service {
                 }
 
                 if(connectionSettings.contains(BT_ACTIVATED)){
-                    ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
+                    //ServerPeerService.this.servers.add(new BluetoothRFCommServer(ServerPeerService.this));
                     ServerPeerService.this.servers.add(new BluetoothLEServer(ServerPeerService.this));
                 }
 

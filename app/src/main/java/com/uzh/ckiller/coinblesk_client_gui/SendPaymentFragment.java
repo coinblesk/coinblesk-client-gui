@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
 import ch.papers.payments.Constants;
@@ -41,7 +43,6 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothRFCommClient;
 import ch.papers.payments.communications.peers.nfc.NFCClient;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
@@ -66,6 +67,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         View view = super.onCreateView(inflater, container, savedInstanceState);
 
         view.setOnTouchListener(new View.OnTouchListener() {
+            private final Timer timer = new Timer();
             private float startPoint = 0;
             private boolean isShowingDialog = false;
 
@@ -77,22 +79,31 @@ public class SendPaymentFragment extends KeyboardFragment {
                         startPoint = heightValue;
                         return true;
                     case (MotionEvent.ACTION_MOVE):
-                        if (!isShowingDialog && heightValue - startPoint > THRESHOLD) {
-                            showDialog();
-                            readyForInstantPayment();
-                            isShowingDialog = true;
+
+                        if (heightValue - startPoint > THRESHOLD) {
+                            timer.purge();
+                            if (!isShowingDialog) {
+                                showDialog();
+                                readyForInstantPayment();
+                                isShowingDialog = true;
+                            }
                         }
                         break;
                     default:
                         if (isShowingDialog) {
-                            for (AbstractClient client : clients) {
-                                if (client.isRunning()) {
-                                    client.setReadyForInstantPayment(false);
-                                    client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    for (AbstractClient client : clients) {
+                                        if (client.isRunning()) {
+                                            client.setReadyForInstantPayment(false);
+                                            client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
+                                        }
+                                    }
+                                    dismissDialog();
+                                    isShowingDialog = false;
                                 }
-                            }
-                            dismissDialog();
-                            isShowingDialog = false;
+                            }, 5 * 1000);
                         }
                         break;
                 }
@@ -172,7 +183,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                             @Override
                             public void onPaymentError(String errorMessage) {
                                 final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
-                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,errorMessage);
+                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
                                 LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentFailed);
                             }
                         });
@@ -240,9 +251,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                 clients.add(new NFCClient(getActivity(), walletServiceBinder));
             }
 
-
             if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
-                clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
                 clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
             }
 

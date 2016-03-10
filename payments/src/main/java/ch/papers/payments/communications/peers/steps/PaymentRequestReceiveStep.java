@@ -2,12 +2,13 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.json.RefundTO;
+import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERInteger;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERSequence;
@@ -28,15 +30,20 @@ import ch.papers.payments.communications.messages.DERSequence;
 public class PaymentRequestReceiveStep implements Step {
     private final static String TAG = PaymentRequestReceiveStep.class.getSimpleName();
 
-    private final ECKey ecKey;
     private BitcoinURI bitcoinURI;
+    private final long timestamp = System.currentTimeMillis();
+    private final WalletService.WalletServiceBinder walletServiceBinder;
 
-    public PaymentRequestReceiveStep(ECKey ecKey) {
-        this.ecKey = ecKey;
+    public PaymentRequestReceiveStep(WalletService.WalletServiceBinder walletServiceBinder) {
+        this.walletServiceBinder = walletServiceBinder;
     }
 
     public BitcoinURI getBitcoinURI() {
         return bitcoinURI;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     @Override
@@ -64,19 +71,21 @@ public class PaymentRequestReceiveStep implements Step {
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         Log.d(TAG, "sign timestamp:" + timestamp.longValue());
 
-        PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
-                .amountToSpend(amount.longValue())
-                .clientPublicKey(this.ecKey.getPubKey())
-                .p2shAddressTo(address.toString())
+        Transaction fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+
+        RefundTO refundTO = new RefundTO()
+                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .refundTransaction(fullSignedTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp.longValue());
-        SerializeUtils.sign(prepareHalfSignTO, ecKey);
+        SerializeUtils.sign(refundTO, walletServiceBinder.getMultisigClientKey());
 
         final List<DERObject> derObjectList = new ArrayList<DERObject>();
-        derObjectList.add(new DERObject(this.ecKey.getPubKey()));
+        derObjectList.add(new DERObject(walletServiceBinder.getMultisigClientKey().getPubKey()));
+        derObjectList.add(new DERObject(fullSignedTransaction.unsafeBitcoinSerialize()));
         derObjectList.add(new DERInteger(timestamp));
-        derObjectList.add(new DERInteger(new BigInteger(prepareHalfSignTO.messageSig().sigR())));
-        derObjectList.add(new DERInteger(new BigInteger(prepareHalfSignTO.messageSig().sigS())));
+        derObjectList.add(new DERInteger(new BigInteger(refundTO.messageSig().sigR())));
+        derObjectList.add(new DERInteger(new BigInteger(refundTO.messageSig().sigS())));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
         Log.d(TAG, "responding with eckey and signature total size:" + payloadDerSequence.serializeToDER().length);

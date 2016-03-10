@@ -18,8 +18,8 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.bitcoinj.core.ECKey;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,8 +29,9 @@ import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
-import ch.papers.payments.communications.peers.steps.Step;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
@@ -43,10 +44,6 @@ public class BluetoothLEServer extends AbstractServer {
 
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private BluetoothGattServer bluetoothGattServer;
-
-
-
-    private final List<Step> stepList = new ArrayList<Step>();
 
     public BluetoothLEServer(Context context) {
         super(context);
@@ -77,6 +74,7 @@ public class BluetoothLEServer extends AbstractServer {
                 class PaymentState {
                     byte[] derRequestPayload = new byte[0];
                     byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                    ECKey clientKey = null;
                     int stepCounter = 0;
                 }
 
@@ -92,9 +90,11 @@ public class BluetoothLEServer extends AbstractServer {
                             break;
                         case BluetoothGatt.STATE_CONNECTED:
                             Log.d(TAG, device.getAddress() + " changed connection state to connected");
-                            PaymentState paymentState = new PaymentState();
-                            this.connectedDevices.put(device.getAddress(),paymentState);
-                            paymentState.derResponsePayload = stepList.get(paymentState.stepCounter++).process(DERObject.NULLOBJECT).serializeToDER();
+                            if(hasPaymentRequestUri()){
+                                PaymentState paymentState = new PaymentState();
+                                this.connectedDevices.put(device.getAddress(),paymentState);
+                                paymentState.derResponsePayload = new PaymentRequestSendStep(getPaymentRequestUri()).process(DERObject.NULLOBJECT).serializeToDER();
+                            }
                             break;
                         case BluetoothGatt.STATE_DISCONNECTING:
                             Log.d(TAG, device.getAddress() + " changed connection state to disconnecting");
@@ -126,7 +126,23 @@ public class BluetoothLEServer extends AbstractServer {
                     if(paymentState.derRequestPayload.length>=responseLength){
                         final byte[] requestPayload = paymentState.derRequestPayload;
                         paymentState.derRequestPayload = new byte[0];
-                        paymentState.derResponsePayload = stepList.get(paymentState.stepCounter++).process(DERParser.parseDER(requestPayload)).serializeToDER();
+                        switch(paymentState.stepCounter++){
+                            case 0:
+                                final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
+                                paymentState.derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                paymentState.clientKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                break;
+                            case 1:
+                                final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentState.clientKey);
+                                paymentState.derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                break;
+                            case 2:
+                                final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey, getPaymentRequestUri().getAddress());
+                                paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                getPaymentRequestAuthorizer().onPaymentSuccess();
+                                break;
+
+                        }
                         Log.d(TAG, "sending response now");
                     }
                 }
@@ -160,10 +176,5 @@ public class BluetoothLEServer extends AbstractServer {
 
     @Override
     public void onChangePaymentRequest() {
-        this.stepList.clear();
-        if(this.hasPaymentRequestUri()) {
-            this.stepList.add(new PaymentRequestSendStep(this.getPaymentRequestUri()));
-            this.stepList.add(new PaymentAuthorizationReceiveStep(this.getPaymentRequestUri()));
-        }
     }
 }

@@ -13,9 +13,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.Arrays;
 
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.listeners.OnResultListener;
-import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
@@ -24,8 +21,6 @@ import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
-import ch.papers.payments.models.ECKeyWrapper;
-import ch.papers.payments.models.filters.ECKeyWrapperFilter;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -43,24 +38,13 @@ public class NFCClient extends AbstractClient {
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    private PaymentRequestReceiveStep paymentRequestReceiveStep;
+    private final PaymentRequestReceiveStep paymentRequestReceiveStep;
 
     public NFCClient(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
-
-        UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), new OnResultListener<ECKeyWrapper>() {
-            @Override
-            public void onSuccess(ECKeyWrapper clientKey) {
-                paymentRequestReceiveStep = new PaymentRequestReceiveStep(clientKey.getKey());
-            }
-
-            @Override
-            public void onError(String s) {
-
-            }
-        }, ECKeyWrapper.class);
+        this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
 
     }
 
@@ -74,6 +58,8 @@ public class NFCClient extends AbstractClient {
         if (!nfcAdapter.isEnabled()) {
             this.activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
         }
+
+
         this.setRunning(true);
     }
 
@@ -107,17 +93,23 @@ public class NFCClient extends AbstractClient {
                                 DERObject paymentRequestInput = transceiveDER(isoDep, DERObject.NULLOBJECT, true);
                                 DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
 
-                                DERObject refundSendInput = transceiveDER(isoDep, authorizationResponseOutput);
-                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI());
-                                DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
+                                Log.d(TAG, "got request, authorizing user");
+                                //if (getPaymentRequestAuthorizer().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+                                    DERObject refundSendInput = transceiveDER(isoDep, authorizationResponseOutput);
+                                    PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
+                                    DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
 
 
-                                DERObject finalSendInput = transceiveDER(isoDep, refundSendOutput);
-                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder().getMultisigClientKey(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction());
-                                DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
+                                    DERObject finalSendInput = transceiveDER(isoDep, refundSendOutput);
+                                    PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
+                                    DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
 
-                                transceiveDER(isoDep, sendFinalSignatureOutput);
-                                getPaymentRequestAuthorizer().onPaymentSuccess();
+                                    transceiveDER(isoDep, sendFinalSignatureOutput);
+                                    getPaymentRequestAuthorizer().onPaymentSuccess();
+                                //} else {
+                                //    getPaymentRequestAuthorizer().onPaymentError("payment not authorized");
+                                //}
+
                                 isoDep.close();
                             } catch (IOException e) {
                                 getPaymentRequestAuthorizer().onPaymentError(e.getMessage());

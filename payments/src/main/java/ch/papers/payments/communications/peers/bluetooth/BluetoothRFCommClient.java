@@ -16,6 +16,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,7 +34,6 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentClientHandler;
-
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
  * Papers.ch
@@ -42,16 +43,15 @@ public class BluetoothRFCommClient extends AbstractClient {
     private final static String TAG = BluetoothRFCommClient.class.getSimpleName();
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-    private BluetoothSocket socket;
-    private SecretKeySpec commonSecretKeySpec;
-
-    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private Map<BluetoothSocket,SecretKeySpec> connections = new ConcurrentHashMap<BluetoothSocket,SecretKeySpec>();
+    private ExecutorService singleThreadExecutor = Executors.newFixedThreadPool(8);
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             if (BluetoothDevice.ACTION_FOUND.equals(intent.getAction())) {
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 Log.d(TAG, "device found adding to thread executor:" + device.getAddress());
+
                 singleThreadExecutor.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -63,8 +63,7 @@ public class BluetoothRFCommClient extends AbstractClient {
                                 @Override
                                 public void onSuccess(SecretKeySpec secretKeySpec) {
                                     Log.d(TAG, "exchange successful");
-                                    commonSecretKeySpec = secretKeySpec;
-                                    socket = deviceSocket;
+                                    connections.put(deviceSocket,secretKeySpec);
                                     if (isReadyForInstantPayment()) {
                                         onIsReadyForInstantPaymentChange();
                                     }
@@ -91,33 +90,36 @@ public class BluetoothRFCommClient extends AbstractClient {
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
-        if (this.isReadyForInstantPayment() && commonSecretKeySpec != null) {
-            try {
-                final byte[] iv = new byte[16];
-                Arrays.fill(iv, (byte) 0x00);
-                IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+        if (this.isReadyForInstantPayment()) {
+            for(Map.Entry<BluetoothSocket,SecretKeySpec> entry:connections.entrySet()) {
+                try {
+                    connections.remove(entry.getValue());
+                    final byte[] iv = new byte[16];
+                    Arrays.fill(iv, (byte) 0x00);
+                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
-                final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
+                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    writeCipher.init(Cipher.ENCRYPT_MODE, entry.getValue(), ivParameterSpec);
 
-                final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
+                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    readCipher.init(Cipher.DECRYPT_MODE, entry.getValue(), ivParameterSpec);
 
-                final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
-                final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
-                Log.d(TAG, "setting up secure connection");
-                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
-                setRunning(true);
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InvalidAlgorithmParameterException e) {
-                e.printStackTrace();
+                    final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getKey().getOutputStream(), writeCipher);
+                    final InputStream encryptedInputStream = new CipherInputStream(entry.getKey().getInputStream(), readCipher);
+                    Log.d(TAG, "setting up secure connection");
+                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
+                    setRunning(true);
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (NoSuchPaddingException e) {
+                    e.printStackTrace();
+                } catch (InvalidKeyException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InvalidAlgorithmParameterException e) {
+                    e.printStackTrace();
+                }
             }
         } else {
             //TODO block
@@ -140,11 +142,14 @@ public class BluetoothRFCommClient extends AbstractClient {
     @Override
     public void stop() {
         this.setRunning(false);
-        try {
-            this.socket.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        for(BluetoothSocket socket:connections.keySet()) {
+            try {
+                socket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
         this.singleThreadExecutor.shutdown();
         try {
             this.getContext().unregisterReceiver(this.broadcastReceiver);

@@ -11,16 +11,23 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.Arrays;
 
+import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractClient;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import ch.papers.payments.models.RefundTransactionWrapper;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
@@ -37,13 +44,13 @@ public class BluetoothLEClient extends AbstractClient {
 
     public BluetoothLEClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
-        paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder.getMultisigClientKey());
+        this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
     }
 
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
-        if(this.isReadyForInstantPayment()){
+        if (this.isReadyForInstantPayment()) {
             bluetoothAdapter.startLeScan(this.leScanCallback);
         } else {
             bluetoothAdapter.stopLeScan(this.leScanCallback);
@@ -55,7 +62,11 @@ public class BluetoothLEClient extends AbstractClient {
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             bluetoothAdapter.stopLeScan(this);
             device.connectGatt(getContext(), false, new BluetoothGattCallback() {
+                Transaction fullsignedTransaction;
+                Transaction halfsignedRefundTransaction;
                 byte[] derRequestPayload;
+                byte[] derResponsePayload;
+                int byteCounter = 0;
                 int stepCounter = 0;
 
                 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -90,7 +101,7 @@ public class BluetoothLEClient extends AbstractClient {
                 public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
                     super.onMtuChanged(gatt, mtu, status);
                     gatt.discoverServices();
-                    Log.d(TAG, mtu + " mtu changed");
+                    Log.d(TAG, mtu + " mtu changed" + this);
                 }
 
                 @Override
@@ -103,6 +114,7 @@ public class BluetoothLEClient extends AbstractClient {
                     this.stepCounter = 0;
                 }
 
+
                 @Override
                 public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                     super.onCharacteristicRead(gatt, characteristic, status);
@@ -112,34 +124,55 @@ public class BluetoothLEClient extends AbstractClient {
                     this.derRequestPayload = Utils.concatBytes(derRequestPayload, characteristic.getValue());
                     int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
 
-                    if(derRequestPayload.length>=responseLength && derRequestPayload.length!=2){
-                        byte[] derResponsePayload = new byte[0];
+                    if (derRequestPayload.length >= responseLength && derRequestPayload.length != 2) {
+                        derResponsePayload = new byte[0];
                         final DERObject requestDER = DERParser.parseDER(derRequestPayload);
-                        switch (stepCounter){
+                        switch (stepCounter++) {
                             case 0:
                                 DERObject paymentRequestResponse = paymentRequestReceiveStep.process(requestDER);
-                                if(getPaymentRequestAuthorizer().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
-                                    derResponsePayload =paymentRequestResponse.serializeToDER();
-                                    stepCounter++;
+                                if (getPaymentRequestAuthorizer().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+                                    derResponsePayload = paymentRequestResponse.serializeToDER();
+                                } else {
+                                    getPaymentRequestAuthorizer().onPaymentError("unauthorized");
                                 }
                                 break;
                             case 1:
-                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(),paymentRequestReceiveStep.getBitcoinURI());
+                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
                                 derResponsePayload = paymentRefundSendStep.process(requestDER).serializeToDER();
-                                stepCounter++;
+                                fullsignedTransaction = paymentRefundSendStep.getFullSignedTransaction();
+                                halfsignedRefundTransaction = paymentRefundSendStep.getHalfSignedRefundTransaction();
+                                break;
+                            case 2:
+                                final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), fullsignedTransaction, halfsignedRefundTransaction);
+
+                                final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
+                                UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
+                                    @Override
+                                    public void onSuccess(RefundTransactionWrapper refundTransactionWrapper) {
+                                        try {
+                                            UuidObjectStorage.getInstance().commit();
+                                        } catch (UuidObjectStorageException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(String s){
+                                        Log.d(TAG,s);
+                                    }
+                                }, RefundTransactionWrapper.class);
+
+                                derResponsePayload = paymentFinalSignatureSendStep.process(requestDER).serializeToDER();
                                 break;
                         }
-
-                        int byteCounter = 0;
-                        byte[] fragment;
-                        while(byteCounter<derResponsePayload.length){
-                            fragment = Arrays.copyOfRange(derResponsePayload,byteCounter,Math.min(derResponsePayload.length,MAX_FRAGMENT_SIZE));
-                            BluetoothGattCharacteristic writeCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID);
-                            writeCharacteristic.setValue(fragment);
-                            gatt.writeCharacteristic(writeCharacteristic);
-                            byteCounter += fragment.length;
-                        }
                         this.derRequestPayload = new byte[0];
+                        this.byteCounter = 0;
+
+                        writeNextFragment(gatt);
+
+                        if (stepCounter == 3) {
+                            getPaymentRequestAuthorizer().onPaymentSuccess();
+                        }
                     } else {
                         BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
                         gatt.readCharacteristic(readCharacteristic);
@@ -151,8 +184,22 @@ public class BluetoothLEClient extends AbstractClient {
                     super.onCharacteristicWrite(gatt, characteristic, status);
                     Log.d(TAG, gatt.getDevice().getAddress() + " write characteristic:" + status);
                     Log.d(TAG, "write receiving bytes: " + characteristic.getValue().length);
-                    BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
-                    gatt.readCharacteristic(readCharacteristic);
+
+                    if (byteCounter < derResponsePayload.length) {
+                        writeNextFragment(gatt);
+                    } else {
+                        BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
+                        gatt.readCharacteristic(readCharacteristic);
+                    }
+                }
+
+                private void writeNextFragment(BluetoothGatt gatt) {
+                    final byte[] fragment = Arrays.copyOfRange(derResponsePayload, byteCounter, byteCounter + Math.min(derResponsePayload.length, MAX_FRAGMENT_SIZE));
+                    Log.d(TAG, "write characteristics:" + fragment.length + "/" + derResponsePayload.length);
+                    BluetoothGattCharacteristic writeCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID);
+                    writeCharacteristic.setValue(fragment);
+                    gatt.writeCharacteristic(writeCharacteristic);
+                    byteCounter += fragment.length;
                 }
             });
 
