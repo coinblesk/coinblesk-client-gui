@@ -100,7 +100,7 @@ public class ReceiveDialogFragment extends DialogFragment {
 
                         final LinearLayout authviewContainer = (LinearLayout) authViewDialogContent.findViewById(R.id.authview_container);
                         authviewContainer.addView(new AuthenticationView(getContext(), Utils.bitcoinUriToString(bitcoinURI).getBytes()));
-                        new AlertDialog.Builder(getActivity())
+                        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                                 .setTitle(getResources().getString(R.string.authview_dialog_title))
                                 .setView(authViewDialogContent)
                                 .setCancelable(true)
@@ -110,6 +110,18 @@ public class ReceiveDialogFragment extends DialogFragment {
                                         serverServiceBinder.cancelPaymentRequest();
                                     }
                                 }).show();
+
+                        IntentFilter instantPaymentFilter = new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                        instantPaymentFilter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                        instantPaymentFilter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
+                        LocalBroadcastManager.getInstance(getContext()).registerReceiver(new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                alertDialog.dismiss();
+                                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
+                            }
+                        }, instantPaymentFilter);
+
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
                     }
 

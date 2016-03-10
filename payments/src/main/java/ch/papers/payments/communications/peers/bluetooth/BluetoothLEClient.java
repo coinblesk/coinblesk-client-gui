@@ -15,6 +15,9 @@ import org.bitcoinj.core.Transaction;
 
 import java.util.Arrays;
 
+import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
@@ -24,6 +27,7 @@ import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import ch.papers.payments.models.RefundTransactionWrapper;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
@@ -40,7 +44,7 @@ public class BluetoothLEClient extends AbstractClient {
 
     public BluetoothLEClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
-        paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder.getMultisigClientKey(), walletServiceBinder.getUnspentInstantOutputs());
+        this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
     }
 
 
@@ -59,6 +63,7 @@ public class BluetoothLEClient extends AbstractClient {
             bluetoothAdapter.stopLeScan(this);
             device.connectGatt(getContext(), false, new BluetoothGattCallback() {
                 Transaction fullsignedTransaction;
+                Transaction halfsignedRefundTransaction;
                 byte[] derRequestPayload;
                 byte[] derResponsePayload;
                 int byteCounter = 0;
@@ -132,12 +137,31 @@ public class BluetoothLEClient extends AbstractClient {
                                 }
                                 break;
                             case 1:
-                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI());
+                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
                                 derResponsePayload = paymentRefundSendStep.process(requestDER).serializeToDER();
                                 fullsignedTransaction = paymentRefundSendStep.getFullSignedTransaction();
+                                halfsignedRefundTransaction = paymentRefundSendStep.getHalfSignedRefundTransaction();
                                 break;
                             case 2:
-                                final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder().getMultisigClientKey(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), fullsignedTransaction);
+                                final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), fullsignedTransaction, halfsignedRefundTransaction);
+
+                                final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
+                                UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
+                                    @Override
+                                    public void onSuccess(RefundTransactionWrapper refundTransactionWrapper) {
+                                        try {
+                                            UuidObjectStorage.getInstance().commit();
+                                        } catch (UuidObjectStorageException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(String s){
+                                        Log.d(TAG,s);
+                                    }
+                                }, RefundTransactionWrapper.class);
+
                                 derResponsePayload = paymentFinalSignatureSendStep.process(requestDER).serializeToDER();
                                 break;
                         }
@@ -169,7 +193,7 @@ public class BluetoothLEClient extends AbstractClient {
                     }
                 }
 
-                private void writeNextFragment(BluetoothGatt gatt){
+                private void writeNextFragment(BluetoothGatt gatt) {
                     final byte[] fragment = Arrays.copyOfRange(derResponsePayload, byteCounter, byteCounter + Math.min(derResponsePayload.length, MAX_FRAGMENT_SIZE));
                     Log.d(TAG, "write characteristics:" + fragment.length + "/" + derResponsePayload.length);
                     BluetoothGattCharacteristic writeCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID);

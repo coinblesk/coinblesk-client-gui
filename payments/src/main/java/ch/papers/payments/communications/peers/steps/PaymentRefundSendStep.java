@@ -2,18 +2,19 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
+import com.coinblesk.json.RefundTO;
 import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.uri.BitcoinURI;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,31 +34,24 @@ import ch.papers.payments.communications.messages.DERSequence;
 public class PaymentRefundSendStep implements Step {
     private final static String TAG = PaymentRefundSendStep.class.getSimpleName();
 
-    private final List<TransactionOutput> unspentTransactionOutputs;
-    private final Address refundAddress;
     private final BitcoinURI bitcoinURI;
-    private final ECKey multisigClientKey;
-    private final ECKey multisigServerKey;
-    private final Address changeAddress;
+    private final WalletService.WalletServiceBinder walletServiceBinder;
+    private final long timestamp;
 
     private Transaction fullSignedTransaction;
+    private Transaction halfSignedRefundTransaction;
 
-    public PaymentRefundSendStep(WalletService.WalletServiceBinder walletServiceBinder, BitcoinURI bitcoinURI) {
-        this.unspentTransactionOutputs = walletServiceBinder.getUnspentInstantOutputs();
-        this.refundAddress = walletServiceBinder.getRefundAddress();
+    public PaymentRefundSendStep(WalletService.WalletServiceBinder walletServiceBinder, BitcoinURI bitcoinURI, long timestamp) {
+        this.walletServiceBinder = walletServiceBinder;
         this.bitcoinURI = bitcoinURI;
-        this.multisigClientKey = walletServiceBinder.getMultisigClientKey();
-        this.multisigServerKey = walletServiceBinder.getMultisigServerKey();
-        this.changeAddress = walletServiceBinder.getCurrentReceiveAddress();
+        this.timestamp = timestamp;
     }
 
     @Override
     public DERObject process(DERObject input) {
         Log.d(TAG,"staring refund send");
-        final DERSequence transactionSignaturesSequence = (DERSequence) input;
-
         final List<TransactionSignature> serverTransactionSignatures = new ArrayList<TransactionSignature>();
-
+        final DERSequence transactionSignaturesSequence = (DERSequence) input;
         for (DERObject transactionSignature : transactionSignaturesSequence.getChildren()) {
             final DERSequence signature = (DERSequence) transactionSignature;
             TransactionSignature serverSignature = new TransactionSignature(((DERInteger) signature.getChildren().get(0)).getBigInteger(), ((DERInteger) signature.getChildren().get(1)).getBigInteger());
@@ -65,15 +59,16 @@ public class PaymentRefundSendStep implements Step {
             Log.d(TAG,"adding server signature");
         }
 
-        this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, this.unspentTransactionOutputs, this.changeAddress, this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+
         Log.d(TAG,"tx: "+fullSignedTransaction);
         final List<ECKey> keys = new ArrayList<>();
-        keys.add(this.multisigClientKey);
-        keys.add(this.multisigServerKey);
+        keys.add(walletServiceBinder.getMultisigClientKey());
+        keys.add(walletServiceBinder.getMultisigServerKey());
         Collections.sort(keys,ECKey.PUBKEY_COMPARATOR);
 
         Script redeemScript = ScriptBuilder.createRedeemScript(2,keys);
-        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(fullSignedTransaction, redeemScript, multisigClientKey);
+        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(fullSignedTransaction, redeemScript, walletServiceBinder.getMultisigClientKey());
 
         for (int i = 0; i < clientTransactionSignatures.size(); i++) {
             Log.d(TAG,"starting verify");
@@ -81,24 +76,28 @@ public class PaymentRefundSendStep implements Step {
             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
             // yes, because order matters...
-            List<TransactionSignature> signatures = keys.indexOf(multisigClientKey)==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+            List<TransactionSignature> signatures = keys.indexOf(walletServiceBinder.getMultisigClientKey())==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
             Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
             fullSignedTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
             fullSignedTransaction.getInput(i).verify();
             Log.d(TAG,"verify success");
         }
 
-
         // generate refund
-        final Transaction halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(fullSignedTransaction.getOutput(1), refundAddress);
-        final List<TransactionSignature> refundTransactionSignatures = BitcoinUtils.partiallySign(fullSignedTransaction, redeemScript, multisigClientKey);
+        halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(fullSignedTransaction.getOutput(1), walletServiceBinder.getRefundAddress());
 
-        List<DERObject> derObjectList = new ArrayList<>();
+        RefundTO halfSignedRefundTO = new RefundTO()
+                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .refundTransaction(halfSignedRefundTransaction.unsafeBitcoinSerialize())
+                .messageSig(null)
+                .currentDate(timestamp);
+        SerializeUtils.sign(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
 
-        for (TransactionSignature clientSignature:refundTransactionSignatures) {
-            derObjectList.add(new DERSequence(ImmutableList.<DERObject>of(new DERInteger(clientSignature.r),new DERInteger(clientSignature.s))));
-        }
-        derObjectList.add(new DERObject(halfSignedRefundTransaction.bitcoinSerialize()));
+        final List<DERObject> derObjectList = new ArrayList<DERObject>();
+        derObjectList.add(new DERObject(halfSignedRefundTransaction.unsafeBitcoinSerialize()));
+        derObjectList.add(new DERInteger(BigInteger.valueOf(timestamp)));
+        derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigR())));
+        derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigS())));
 
         Log.d(TAG,"all good with refund, sending back");
         return new DERSequence(derObjectList);
@@ -106,5 +105,9 @@ public class PaymentRefundSendStep implements Step {
 
     public Transaction getFullSignedTransaction() {
         return fullSignedTransaction;
+    }
+
+    public Transaction getHalfSignedRefundTransaction() {
+        return halfSignedRefundTransaction;
     }
 }
