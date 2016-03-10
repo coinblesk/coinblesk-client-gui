@@ -49,9 +49,6 @@ android {
         exclude 'META-INF/license.txt'
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
-        exclude 'lib/x86_64/darwin/libscrypt.dylib'
-        exclude 'lib/x86_64/freebsd/libscrypt.so'
-        exclude 'lib/x86_64/linux/libscrypt.so'
     }
 }
 
