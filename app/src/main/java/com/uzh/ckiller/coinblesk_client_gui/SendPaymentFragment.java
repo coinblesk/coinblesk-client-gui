@@ -234,18 +234,19 @@ public class SendPaymentFragment extends KeyboardFragment {
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-            final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+            final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
-            if (connectionSettings.contains(NFC_ACTIVATED)) {
+            if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
                 clients.add(new NFCClient(getActivity(), walletServiceBinder));
             }
 
-            if (connectionSettings.contains(BT_ACTIVATED)) {
+
+            if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
                 clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
                 clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
             }
 
-            if (connectionSettings.contains(WIFIDIRECT_ACTIVATED)) {
+            if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {
                 clients.add(new WiFiClient(getContext(), walletServiceBinder));
             }
         }

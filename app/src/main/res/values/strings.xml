@@ -8,6 +8,12 @@
     <string name="about_coinblesk">About Coinblesk</string>
     <string name="share_coinblesk">Share Coinblesk</string>
 
+    <string name="about_build_info_main"><![CDATA[
+        <b>Coinblesk 2016</b><br>
+        Version %s
+    ]]></string>
+
+
     <!--About Coinblesk Strings-->
     <string name="social_about_text">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
     <string name="social_about_text_short">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.</string>
@@ -30,6 +36,7 @@
     <string name="send">Send</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 
     <!--Not Categorized yet-->
     <string name="action_settings">Settings</string>

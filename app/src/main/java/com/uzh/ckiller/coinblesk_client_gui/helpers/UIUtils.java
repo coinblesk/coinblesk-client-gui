@@ -13,6 +13,7 @@ import android.text.style.RelativeSizeSpan;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
+import com.uzh.ckiller.coinblesk_client_gui.AppConstants;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 
 import org.bitcoinj.core.Coin;
@@ -32,15 +33,15 @@ import ch.papers.payments.models.TransactionWrapper;
  * Created by ckiller on 03/03/16.
  */
 
-public class UIUtils implements IPreferenceStrings {
+public class UIUtils {
 
 
     public static SpannableString getLargeBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
 
         // Get all Preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
 
         // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
         // TODO -> Does this make sense? What it a user changes his primary currency?
@@ -49,10 +50,10 @@ public class UIUtils implements IPreferenceStrings {
         SpannableString result = new SpannableString("");
 
         switch (isLargeAmount) {
-            case BTC_AS_PRIMARY:
+            case AppConstants.BTC_AS_PRIMARY:
                 result = toLargeSpannable(context, scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
                 break;
-            case FIAT_AS_PRIMARY:
+            case AppConstants.FIAT_AS_PRIMARY:
                 result = toLargeSpannable(context, walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
                 break;
         }
@@ -63,15 +64,15 @@ public class UIUtils implements IPreferenceStrings {
     public static SpannableString getSmallBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
         SpannableString result = new SpannableString("");
 
         switch (isLargeAmount) {
-            case BTC_AS_PRIMARY:
+            case AppConstants.BTC_AS_PRIMARY:
                 result = toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
                 break;
-            case FIAT_AS_PRIMARY:
+            case AppConstants.FIAT_AS_PRIMARY:
                 result = toSmallSpannable(scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
                 break;
         }
@@ -83,13 +84,13 @@ public class UIUtils implements IPreferenceStrings {
         String result = "";
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
         switch (coinDenomination) {
-            case COIN:
+            case AppConstants.COIN:
                 result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
                 break;
-            case MILLICOIN:
+            case AppConstants.MILLICOIN:
                 result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
                 break;
-            case MICROCOIN:
+            case AppConstants.MICROCOIN:
                 result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
                 break;
         }
@@ -102,13 +103,13 @@ public class UIUtils implements IPreferenceStrings {
         String coinDenomination = UIUtils.getCoinDenomination(context);
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
         switch (coinDenomination) {
-            case COIN:
+            case AppConstants.COIN:
                 result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
-            case MILLICOIN:
+            case AppConstants.MILLICOIN:
                 result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
-            case MICROCOIN:
+            case AppConstants.MICROCOIN:
                 result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
         }
@@ -125,10 +126,10 @@ public class UIUtils implements IPreferenceStrings {
 
         BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
         switch (getCoinDenomination(context)) {
-            case MILLICOIN:
+            case AppConstants.MILLICOIN:
                 multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
                 break;
-            case MICROCOIN:
+            case AppConstants.MICROCOIN:
                 multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
                 break;
         }
@@ -140,7 +141,7 @@ public class UIUtils implements IPreferenceStrings {
 
     public static String getCoinDenomination(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(BITCOIN_REPRESENTATION_PREF_KEY, null);
+        return prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
     }
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
@@ -299,7 +300,7 @@ public class UIUtils implements IPreferenceStrings {
     }
 
     public static boolean isCustomButtonEmpty(Context context, String customKey) {
-        SharedPreferences prefs = context.getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences(AppConstants.MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
         String json = prefs.getString(customKey, null);
         if (json == null) {
             return true;
@@ -309,7 +310,7 @@ public class UIUtils implements IPreferenceStrings {
     }
 
     public static List<String> getCustomButton(Context context, String customKey) {
-        SharedPreferences prefs = context.getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences(AppConstants.MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
 
         if (UIUtils.isCustomButtonEmpty(context, customKey) == false) {
             String json = prefs.getString(customKey, null);
@@ -331,24 +332,24 @@ public class UIUtils implements IPreferenceStrings {
 
     public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> connectionSettings = prefs.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+        Set<String> connectionSettings = prefs.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
         // Set the Icon Color and Visibility
         if (connectionSettings != null) {
             for (String s : connectionSettings) {
                 switch (s) {
-                    case NFC_ACTIVATED:
-                        if (status.equals(NFC_ACTIVATED)) {
+                    case AppConstants.NFC_ACTIVATED:
+                        if (status.equals(AppConstants.NFC_ACTIVATED)) {
                             makeVisible(context, imageView);
                         }
                         break;
-                    case BT_ACTIVATED:
-                        if (status.equals(BT_ACTIVATED)) {
+                    case AppConstants.BT_ACTIVATED:
+                        if (status.equals(AppConstants.BT_ACTIVATED)) {
                             makeVisible(context, imageView);
                         }
                         break;
-                    case WIFIDIRECT_ACTIVATED:
-                        if (status.equals(WIFIDIRECT_ACTIVATED)) {
+                    case AppConstants.WIFIDIRECT_ACTIVATED:
+                        if (status.equals(AppConstants.WIFIDIRECT_ACTIVATED)) {
                             makeVisible(context, imageView);
                         }
                         break;
@@ -361,7 +362,7 @@ public class UIUtils implements IPreferenceStrings {
     }
 
     private static void makeVisible(Context context, ImageView imageView) {
-        imageView.setAlpha(ICON_VISIBLE);
+        imageView.setAlpha(AppConstants.ICON_VISIBLE);
         imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
     }
 
@@ -393,13 +394,13 @@ public class UIUtils implements IPreferenceStrings {
     public static int getDecimalThreshold(String coinDenomination) {
         int threshold = 2;
         switch (coinDenomination) {
-            case COIN:
+            case AppConstants.COIN:
                 threshold = 4;
                 break;
-            case MILLICOIN:
+            case AppConstants.MILLICOIN:
                 threshold = 5;
                 break;
-            case MICROCOIN:
+            case AppConstants.MICROCOIN:
                 threshold = 2;
                 break;
         }

@@ -16,6 +16,17 @@
             android:layout_height="match_parent"
             android:background="@color/social_about_logo">
 
+            <TextView
+                android:id="@+id/about_build_info"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:padding="@dimen/spacing_normal"
+                android:textSize="@dimen/text_size_xsmall"
+                android:textColor="@color/material_grey_300"
+                android:layout_margin="@dimen/spacing_normal"/>
+
             <ImageView
                 android:id="@+id/social_about_logo_imageview"
                 android:layout_width="wrap_content"
