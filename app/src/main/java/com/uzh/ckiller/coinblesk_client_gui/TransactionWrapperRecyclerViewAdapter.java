@@ -62,7 +62,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
         // TODO this is not the way it works my friend.
         holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative() ? R.drawable.ic_send_arrow_48px : R.drawable.ic_receive_arrow_48px);
 
-        holder.imageViewStatus.setImageResource(transaction.getTransaction().isMature() ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
+        holder.imageViewStatus.setImageResource(transaction.getTransaction().getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
 
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
