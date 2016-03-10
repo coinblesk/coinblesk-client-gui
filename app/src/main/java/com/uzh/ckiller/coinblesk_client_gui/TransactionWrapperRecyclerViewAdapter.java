@@ -2,12 +2,15 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.ocpsoft.pretty.time.PrettyTime;
 
@@ -59,10 +62,16 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
         holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
         holder.textViewDescription.setText(prettyTime.format(transaction.getTransaction().getUpdateTime()));
 
+        // ColorFilters for Pending
+//        <color name="material_light_yellow_900">#f47f1f</color>
+//        lineColorCode.setColorFilter(color);
+
         // TODO this is not the way it works my friend.
         holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative() ? R.drawable.ic_send_arrow_48px : R.drawable.ic_receive_arrow_48px);
 
         holder.imageViewStatus.setImageResource(transaction.getTransaction().getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
+        int colorFilter = UIUtils.getStatusColorFilter(transaction.getTransaction().getConfidence().getDepthInBlocks(), false);
+        holder.imageViewStatus.setColorFilter(colorFilter);
 
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
