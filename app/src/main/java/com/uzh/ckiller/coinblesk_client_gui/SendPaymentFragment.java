@@ -15,6 +15,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MotionEventCompat;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -132,7 +133,11 @@ public class SendPaymentFragment extends KeyboardFragment {
                                 final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
 
                                 amountTextView.setText(UIUtils.scaleCoinForDialogs(paymentRequest.getAmount(), getContext()));
+                                // Setting TextSize via SP doesn't work with SpannableStrings
+//                                amountTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(getContext(), amountTextView.getText().length()));
+
                                 final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
+
                                 addressTextView.setText(paymentRequest.getAddress().toString());
 
                                 final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
