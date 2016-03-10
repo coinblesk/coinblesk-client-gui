@@ -2,7 +2,7 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.json.RefundTO;
+import com.coinblesk.json.SignTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -83,12 +83,13 @@ public class PaymentRefundSendStep implements Step {
             Log.d(TAG,"verify success");
         }
 
+
         // generate refund
         halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(fullSignedTransaction.getOutput(1), walletServiceBinder.getRefundAddress());
 
-        RefundTO halfSignedRefundTO = new RefundTO()
+        SignTO halfSignedRefundTO = new SignTO()
                 .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
-                .refundTransaction(halfSignedRefundTransaction.unsafeBitcoinSerialize())
+                .transaction(halfSignedRefundTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp);
         SerializeUtils.sign(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
