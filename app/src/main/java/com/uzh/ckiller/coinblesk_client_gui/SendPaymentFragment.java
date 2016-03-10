@@ -254,6 +254,7 @@ public class SendPaymentFragment extends KeyboardFragment {
 
             if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
                 clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+                //clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
             }
 
             if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {

@@ -126,7 +126,8 @@ public class NFCClient extends AbstractClient {
                                 }
 
                                 fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + isoDep.getMaxTransceiveLength())));
-                                derResponse = Utils.concatBytes(derResponse, isoDep.transceive(fragment));
+
+                                derResponse = isoDep.transceive(fragment);
                                 fragmentByte += fragment.length;
                                 Log.d(TAG, "fragment size:" + fragment.length);
                             }

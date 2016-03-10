@@ -44,7 +44,7 @@ public class BluetoothRFCommClient extends AbstractClient {
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     private Map<BluetoothSocket,SecretKeySpec> connections = new ConcurrentHashMap<BluetoothSocket,SecretKeySpec>();
-    private ExecutorService singleThreadExecutor = Executors.newFixedThreadPool(8);
+    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -57,6 +57,7 @@ public class BluetoothRFCommClient extends AbstractClient {
                     public void run() {
                         Log.d(TAG, "starting thread with device:" + device.getAddress());
                         try {
+                            Log.d(TAG, "found:" + device.getName());
                             final BluetoothSocket deviceSocket = device.createInsecureRfcommSocketToServiceRecord(Constants.SERVICE_UUID);
                             deviceSocket.connect();
                             new DHKeyExchangeClientHandler(deviceSocket.getInputStream(), deviceSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {

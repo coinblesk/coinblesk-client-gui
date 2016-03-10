@@ -10,14 +10,11 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
-import android.provider.Settings;
 import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.coinblesk.util.Pair;
-
-import org.spongycastle.asn1.x509.Extension;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -129,17 +126,19 @@ public class NFCClientACS extends AbstractClient {
 
     @Override
     public void stop() {
-        if(!this.isRunning()) {
-            Log.d(TAG, "Already turned off ACS");
-        }
-        Log.d(TAG, "Turn off ACS");
-        if (reader != null && reader.isOpened()) {
-               reader.close();
-               reader = null;
-               Log.d(TAG, "Reader closed");
-        }
-        activity.unregisterReceiver(broadcastReceiver);
-        this.setRunning(false);
+        try {
+            if (!this.isRunning()) {
+                Log.d(TAG, "Already turned off ACS");
+            }
+            Log.d(TAG, "Turn off ACS");
+            if (reader != null && reader.isOpened()) {
+                reader.close();
+                reader = null;
+                Log.d(TAG, "Reader closed");
+            }
+            activity.unregisterReceiver(broadcastReceiver);
+            this.setRunning(false);
+        }catch (Exception e){}
     }
 
     @Override
