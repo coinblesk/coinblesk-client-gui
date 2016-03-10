@@ -20,8 +20,13 @@ import com.coinblesk.util.Pair;
 import java.io.IOException;
 import java.util.Arrays;
 
+import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.messages.DERObject;
+import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractClient;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
+import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 
 /**
@@ -41,18 +46,15 @@ public class NFCClientACS extends AbstractClient {
 
     private final Activity activity;
 
-
     private final PaymentRequestReceiveStep paymentRequestReceiveStep;
-    private final NFCClientACSCallback callback;
 
     private Reader reader;
     private BroadcastReceiver broadcastReceiver;
 
-    public NFCClientACS(Activity activity, WalletService.WalletServiceBinder walletServiceBinder, NFCClientACSCallback callback) {
+    public NFCClientACS(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
-        this.callback = callback;
     }
 
     @Override
@@ -69,8 +71,41 @@ public class NFCClientACS extends AbstractClient {
         try {
             Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
             this.reader = pair.element1();
+            setOnStateChangedListener(reader, pair.element0(), new NFCClientACSCallback() {
+                @Override
+                public void tagDiscovered(ACSTransceiver transceiver) {
+                    if(isReadyForInstantPayment()){
+                        try {
+                            DERObject paymentRequestInput = transceiveDER(transceiver, DERObject.NULLOBJECT, true);
+                            DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
+
+                            Log.d(TAG, "got request, authorizing user");
+                            DERObject refundSendInput = transceiveDER(transceiver, authorizationResponseOutput);
+                            PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
+                            DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
+
+
+                            DERObject finalSendInput = transceiveDER(transceiver, refundSendOutput);
+                            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
+                            DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
+
+                            transceiveDER(transceiver, sendFinalSignatureOutput);
+                            getPaymentRequestAuthorizer().onPaymentSuccess();
+                        } catch (Exception e){}
+                    }
+                }
+
+                @Override
+                public void tagFailed() {
+
+                }
+
+                @Override
+                public void nfcTagLost() {
+
+                }
+            });
             broadcastReceiver = createBroadcastReceiver(reader /*, callback*/);
-            setOnStateChangedListener(reader, pair.element0(), callback);
             activity.registerReceiver(broadcastReceiver, filter);
         } catch (IOException e) {
             Log.e(TAG, "unable to create reader", e);
@@ -98,8 +133,43 @@ public class NFCClientACS extends AbstractClient {
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
-
     }
+
+    public DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input, boolean needsSelectAidApdu) throws Exception {
+        Log.d(TAG, "start transceive");
+        byte[] derPayload = input.serializeToDER();
+        byte[] derResponse = new byte[0];
+        int fragmentByte = 0;
+
+        Log.d(TAG, "have to send bytes:" + derPayload.length);
+        while (fragmentByte < derPayload.length) {
+            byte[] fragment = new byte[0];
+            if (needsSelectAidApdu) {
+                fragment = createSelectAidApdu(AID_ANDROID);
+            }
+
+            fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
+            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(fragment));
+            fragmentByte += fragment.length;
+            Log.d(TAG, "fragment size:" + fragment.length);
+        }
+
+        int responseLength = DERParser.extractPayloadEndIndex(derResponse);
+        Log.d(TAG, "expected response lenght:" + responseLength);
+        Log.d(TAG, "actual response lenght:" + derResponse.length);
+
+        while (derResponse.length < responseLength) {
+            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(DERObject.NULLOBJECT.serializeToDER()));
+            Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
+        }
+        Log.d(TAG, "end transceive");
+        return DERParser.parseDER(derResponse);
+    }
+
+    private DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input) throws Exception {
+        return this.transceiveDER(acsTransceiver, input, false);
+    }
+
 
     private byte[] createSelectAidApdu(byte[] aid) {
         byte[] result = new byte[6 + aid.length];

@@ -8,9 +8,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.KeyTO;
-import com.coinblesk.json.RefundTO;
+import com.coinblesk.json.SignTO;
+import com.coinblesk.json.VerifyTO;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -145,16 +145,16 @@ public class WalletService extends Service {
                         final Transaction transaction = BitcoinUtils.createTx(Constants.PARAMS, getUnspentInstantOutputs(), getCurrentReceiveAddress(), address, amount.longValue());
                         final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                         // let server sign first
-                        RefundTO transactionTO = new RefundTO();
+                        SignTO transactionTO = new SignTO();
                         transactionTO.clientPublicKey(multisigClientKey.getPubKey());
-                        transactionTO.refundTransaction(transaction.unsafeBitcoinSerialize());
+                        transactionTO.transaction(transaction.unsafeBitcoinSerialize());
                         transactionTO.currentDate(System.currentTimeMillis());
                         if (transactionTO.messageSig() == null) {
                             SerializeUtils.sign(transactionTO, multisigClientKey);
                         }
 
-                        Response<RefundTO> signTOResponse = service.sign(transactionTO).execute();
-                        final RefundTO signedTO = signTOResponse.body();
+                        Response<SignTO> signTOResponse = service.sign(transactionTO).execute();
+                        final SignTO signedTO = signTOResponse.body();
 
                         // now let us sign and verify
                         Log.d(TAG, "rcv: " + address);
@@ -194,17 +194,16 @@ public class WalletService extends Service {
                             final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),multisigClientKey.toAddress(Constants.PARAMS));
                             final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(refundTransaction, redeemScript, multisigClientKey);
 
-                            RefundTO refundTO = new RefundTO();
+                            SignTO refundTO = new SignTO();
                             refundTO.clientPublicKey(multisigClientKey.getPubKey());
-                            refundTO.clientSignatures(SerializeUtils.serializeSignatures(clientRefundTransactionSignatures));
-                            refundTO.refundTransaction(refundTransaction.unsafeBitcoinSerialize());
+                            refundTO.transaction(refundTransaction.unsafeBitcoinSerialize());
                             refundTO.currentDate(System.currentTimeMillis());
                             if (refundTO.messageSig() == null) {
                                 SerializeUtils.sign(refundTO, multisigClientKey);
                             }
 
                             // let server sign
-                            final RefundTO serverRefundTO = service.sign(refundTO).execute().body();
+                            final SignTO serverRefundTO = service.sign(refundTO).execute().body();
                             final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTO.serverSignatures());
                             for (int i = 0; i < clientRefundTransactionSignatures.size(); i++) {
                                 final TransactionSignature serverSignature = serverRefundTransactionSignatures.get(i);
@@ -219,7 +218,7 @@ public class WalletService extends Service {
                         }
 
 
-                        CompleteSignTO completeSignTO = new CompleteSignTO()
+                        VerifyTO completeSignTO = new VerifyTO()
                                 .clientPublicKey(multisigClientKey.getPubKey())
                                 .fullSignedTransaction(transaction.unsafeBitcoinSerialize())
                                 .currentDate(System.currentTimeMillis());
@@ -227,7 +226,7 @@ public class WalletService extends Service {
                             SerializeUtils.sign(completeSignTO, multisigClientKey);
                         }
 
-                        CompleteSignTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
+                        VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
                         Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
                         switch (responseCompleteSignTO.type().nr()){
                             case 1:
@@ -327,7 +326,7 @@ public class WalletService extends Service {
         UuidObjectStorage.getInstance().init(this.getFilesDir());
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
-        
+
 
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
 
@@ -464,7 +463,6 @@ public class WalletService extends Service {
 
         kit.setBlockingStartup(false);
         kit.startAsync().awaitRunning();
-
         //kit.wallet().reset();
         //clearMultisig();
 

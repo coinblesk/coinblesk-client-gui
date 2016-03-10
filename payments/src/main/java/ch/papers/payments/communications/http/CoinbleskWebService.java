@@ -6,11 +6,12 @@ package ch.papers.payments.communications.http;
  * a.decarli@papers.ch
  */
 
-import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.PrepareHalfSignTO;
 import com.coinblesk.json.RefundP2shTO;
 import com.coinblesk.json.RefundTO;
+import com.coinblesk.json.SignTO;
+import com.coinblesk.json.VerifyTO;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -38,9 +39,9 @@ public interface CoinbleskWebService {
 
 
     // new endpoints
-    @POST("payment/sign")
-    Call<RefundTO> sign(@Body RefundTO signTO);
+    @POST("full-payment/sign")
+    Call<SignTO> sign(@Body SignTO signTO);
 
-    @POST("payment/verify")
-    Call<CompleteSignTO> verify(@Body CompleteSignTO signTO);
+    @POST("full-payment/verify")
+    Call<VerifyTO> verify(@Body VerifyTO verifyTO);
 }

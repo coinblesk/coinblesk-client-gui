@@ -2,8 +2,8 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.json.CompleteSignTO;
 import com.coinblesk.json.TxSig;
+import com.coinblesk.json.VerifyTO;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
@@ -44,15 +44,14 @@ public class PaymentFinalSignatureReceiveStep implements Step {
             txSig.sigR(((DERInteger) derSequence.getChildren().get(2)).getBigInteger().toString());
             txSig.sigS(((DERInteger) derSequence.getChildren().get(3)).getBigInteger().toString());
 
-            CompleteSignTO completeSignTO = new CompleteSignTO()
+            VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
-                    .p2shAddressTo(recipientAddress.toString())
                     .fullSignedTransaction(fullSignedTransaction)
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());
 
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
-            CompleteSignTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
+            VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
             return DERObject.NULLOBJECT;
         } catch (IOException e){

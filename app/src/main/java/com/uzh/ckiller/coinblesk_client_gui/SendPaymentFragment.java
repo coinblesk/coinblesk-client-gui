@@ -15,7 +15,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MotionEventCompat;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,6 +43,7 @@ import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
 import ch.papers.payments.communications.peers.nfc.NFCClient;
+import ch.papers.payments.communications.peers.nfc.NFCClientACS;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
 /**
@@ -249,6 +249,7 @@ public class SendPaymentFragment extends KeyboardFragment {
 
             if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
                 clients.add(new NFCClient(getActivity(), walletServiceBinder));
+                clients.add(new NFCClientACS(getActivity(), walletServiceBinder));
             }
 
             if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {

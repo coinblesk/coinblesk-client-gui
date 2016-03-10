@@ -110,7 +110,17 @@ public class NFCService extends HostApduService {
                                 stepCounter++;
                                 break;
                         }
-                        sendResponseApdu(derResponsePayload);
+
+                        int fragmentByte = 0;
+                        Log.d(TAG, "have to send bytes:" + derResponsePayload.length);
+                        while (fragmentByte < derResponsePayload.length) {
+                            byte[] fragment = new byte[0];
+                            fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derResponsePayload, fragmentByte, Math.min(derResponsePayload.length, fragmentByte + 250)));
+                            sendResponseApdu(fragment);
+                            fragmentByte += fragment.length;
+                            Log.d(TAG, "fragment size:" + fragment.length);
+                        }
+
                         isProcessing = false;
                     }
                 });

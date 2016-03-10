@@ -2,7 +2,7 @@ package ch.papers.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.json.RefundTO;
+import com.coinblesk.json.SignTO;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -57,9 +57,9 @@ public class PaymentAuthorizationReceiveStep implements Step {
             Log.d(TAG,"address used for signing"+bitcoinURI.getAddress());
             Log.d(TAG,"timestamp used for signing"+timestamp.longValue());
 
-            RefundTO refundTO = new RefundTO()
+            SignTO refundTO = new SignTO()
                     .clientPublicKey(clientPublicKey.getPubKey())
-                    .refundTransaction(transactionPayload)
+                    .transaction(transactionPayload)
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());
 
@@ -68,7 +68,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
                 refundTO.messageSig(txSig); //have to reset the txsig because verifySig is nulling it
                 final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                 // let server sign first
-                final RefundTO serverHalfSignTO = service.sign(refundTO).execute().body();
+                final SignTO serverHalfSignTO = service.sign(refundTO).execute().body();
 
                 List<DERObject> derObjectList = new ArrayList<DERObject>();
                 for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.serverSignatures())) {
