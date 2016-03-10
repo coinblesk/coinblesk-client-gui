@@ -261,6 +261,7 @@ public class NFCClientACS extends AbstractClient {
         Log.d(TAG, "pid=" + pid + ", vid="+ vid);
 
         final int maxLen;
+        final boolean acr122u;
         if(pid == 8704 && vid == 1839) {
 			/*
 			 * 64 is the maximum due to a sequence bug in the ACR122u
@@ -273,18 +274,20 @@ public class NFCClientACS extends AbstractClient {
 			 * The same problem arises sometimes even with the length of 54.
 			 */
             maxLen = 53;
+            acr122u = true;
         } else if(pid == 8730 && vid == 1839) {
             /**
              * The ACR1251U can handle larger message, go for the same amount as the android devices, 245
              */
             maxLen = 53;
+            acr122u = false;
         } else {
             throw new IOException("unknow device with pid "+pid+":"+vid);
         }
 
         //ask user for permission
         Log.d(TAG, "ask user for permission");
-        ACSTransceiver transceiver = new ACSTransceiver(reader, maxLen);
+        ACSTransceiver transceiver = new ACSTransceiver(reader, maxLen, acr122u);
         try {
             reader.open(externalDevice);
             //callback.readerOpen(reader, externalDevice, transceiver);
@@ -338,13 +341,18 @@ public class NFCClientACS extends AbstractClient {
 
         final private Reader reader;
         final private int maxLen;
+        final private boolean acr122u;
 
-        private ACSTransceiver(Reader reader, final int maxLen) {
+        private ACSTransceiver(Reader reader, final int maxLen, boolean acr122u) {
             this.reader = reader;
             this.maxLen = maxLen;
+            this.acr122u = acr122u;
         }
 
         private void disableBuzzer() throws ReaderException {
+            if(!acr122u) {
+                return;
+            }
             // Disable the standard buzzer when a tag is detected (Section 6.7). It sounds
             // immediately after placing a tag resulting in people lifting the tag off before
             // we've had a chance to read the ID.
