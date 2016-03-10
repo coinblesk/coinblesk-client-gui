@@ -36,4 +36,9 @@ public class AppConstants {
     // Icon Visibility if a connection Icon is active.
     public static final Float ICON_VISIBLE = new Float(0.8);
 
+    public static final String COLOR_MATERIAL_LIGHT_YELLOW_900 = "#F47F1F";
+    public static final String COLOR_COLOR_ACCENT = "#AEEA00";
+    public static final String COLOR_WHITE = "#FFFFFF";
+
+
 }

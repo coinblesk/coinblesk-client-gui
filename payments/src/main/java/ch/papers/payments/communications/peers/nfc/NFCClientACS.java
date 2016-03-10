@@ -17,6 +17,8 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.coinblesk.util.Pair;
 
+import org.spongycastle.asn1.x509.Extension;
+
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -55,6 +57,13 @@ public class NFCClientACS extends AbstractClient {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
+        if(isSupported()) {
+            UsbManager manager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(activity, 0, new Intent(ACTION_USB_PERMISSION), 0);
+            Reader reader = new Reader(manager);
+            UsbDevice externalDevice = externalReaderAttached(activity, manager, reader);
+            manager.requestPermission(externalDevice, permissionIntent);
+        }
     }
 
     @Override
@@ -64,9 +73,9 @@ public class NFCClientACS extends AbstractClient {
 
     @Override
     public void start() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_USB_PERMISSION);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        if(this.isRunning()) {
+            Log.d(TAG, "Already turned on ACS");
+        }
 
         try {
             Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
@@ -105,6 +114,9 @@ public class NFCClientACS extends AbstractClient {
 
                 }
             });
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ACTION_USB_PERMISSION);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
             broadcastReceiver = createBroadcastReceiver(reader /*, callback*/);
             activity.registerReceiver(broadcastReceiver, filter);
         } catch (IOException e) {
@@ -112,22 +124,21 @@ public class NFCClientACS extends AbstractClient {
             return;
         }
 
-        this.activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
         this.setRunning(true);
     }
 
     @Override
     public void stop() {
-        if(broadcastReceiver != null) {
-            Log.d(TAG, "Turn off ACS: {}");
-            if (reader != null && reader.isOpened()) {
-                reader.close();
-                reader = null;
-                Log.d(TAG, "Reader closed");
-            }
-            activity.unregisterReceiver(broadcastReceiver);
-            broadcastReceiver = null;
+        if(!this.isRunning()) {
+            Log.d(TAG, "Already turned off ACS");
         }
+        Log.d(TAG, "Turn off ACS");
+        if (reader != null && reader.isOpened()) {
+               reader.close();
+               reader = null;
+               Log.d(TAG, "Reader closed");
+        }
+        activity.unregisterReceiver(broadcastReceiver);
         this.setRunning(false);
     }
 
@@ -278,9 +289,7 @@ public class NFCClientACS extends AbstractClient {
             reader.open(externalDevice);
             //callback.readerOpen(reader, externalDevice, transceiver);
         } catch (IllegalArgumentException e) {
-            Log.d(TAG, "could not access device, ask for permission", e);
-            PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
-            manager.requestPermission(externalDevice, permissionIntent);
+            Log.d(TAG, "could not access device, no permissions given?", e);
         }
 
         return new Pair<ACSTransceiver, Reader>(transceiver, reader);
