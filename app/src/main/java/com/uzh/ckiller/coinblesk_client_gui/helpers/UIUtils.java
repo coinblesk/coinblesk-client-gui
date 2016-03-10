@@ -106,14 +106,16 @@ public class UIUtils implements IPreferenceStrings {
                 result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MILLICOIN:
-                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
+                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MICROCOIN:
-                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
+                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
         }
 
+        // 1.3F Size Span necessary - otherwise Overflowing Edge of Dialog
         float sizeSpan = 1.3F;
+
         return toLargeSpannable(context, result, coinDenomination, sizeSpan);
     }
 
@@ -131,7 +133,7 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
 
-        return Coin.valueOf(bdAmount.multiply(multiplicand).longValue());
+        return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
 
     }
 
@@ -258,6 +260,7 @@ public class UIUtils implements IPreferenceStrings {
         final int coinLength = friendlyAmount.length() - 3;
 
         friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()).toFriendlyString());
+        friendlyAmount.append(" as of now");
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);
@@ -391,7 +394,7 @@ public class UIUtils implements IPreferenceStrings {
         int threshold = 2;
         switch (coinDenomination) {
             case COIN:
-                threshold = 8;
+                threshold = 4;
                 break;
             case MILLICOIN:
                 threshold = 5;
