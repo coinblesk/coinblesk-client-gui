@@ -407,5 +407,11 @@ public class UIUtils {
         return threshold;
     }
 
-
+    public static int getStatusColorFilter(int depthInBlock, boolean instantPayment) {
+        if (instantPayment)
+            return Color.parseColor(AppConstants.COLOR_COLOR_ACCENT);
+        if (depthInBlock == 0)
+            return Color.parseColor(AppConstants.COLOR_MATERIAL_LIGHT_YELLOW_900);
+        return Color.parseColor(AppConstants.COLOR_WHITE);
+    }
 }
