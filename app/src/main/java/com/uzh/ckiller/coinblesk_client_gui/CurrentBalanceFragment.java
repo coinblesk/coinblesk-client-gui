@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import ch.papers.payments.Constants;
@@ -27,7 +26,7 @@ import ch.papers.payments.WalletService;
  * Created by ckiller on 10/01/16.
  */
 
-public class CurrentBalanceFragment extends Fragment implements IPreferenceStrings {
+public class CurrentBalanceFragment extends Fragment {
 
     public static CurrentBalanceFragment newInstance(int page) {
         CurrentBalanceFragment fragment = new CurrentBalanceFragment();
@@ -44,9 +43,9 @@ public class CurrentBalanceFragment extends Fragment implements IPreferenceStrin
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, NFC_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, BT_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, WIFIDIRECT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
 
     }
 

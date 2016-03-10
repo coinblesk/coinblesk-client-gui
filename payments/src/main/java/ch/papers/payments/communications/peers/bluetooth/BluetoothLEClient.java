@@ -150,6 +150,7 @@ public class BluetoothLEClient extends AbstractClient {
                                     @Override
                                     public void onSuccess(RefundTransactionWrapper refundTransactionWrapper) {
                                         try {
+
                                             UuidObjectStorage.getInstance().commit();
                                         } catch (UuidObjectStorageException e) {
                                             e.printStackTrace();

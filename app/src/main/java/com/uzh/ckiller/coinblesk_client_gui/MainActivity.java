@@ -133,18 +133,16 @@ public class MainActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
 
                     case R.id.backup:
-
+                        Intent backupAct = new Intent(getApplicationContext(), BackupActivity.class);
+                        startActivity(backupAct);
                         return true;
                     case R.id.settings:
-                        Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_SHORT).show();
                         Intent newAct = new Intent(getApplicationContext(), SettingsActivity.class);
                         startActivity(newAct);
                         return (true);
                     case R.id.about_coinblesk:
                         Intent aboutAct = new Intent(getApplicationContext(), AboutActivity.class);
                         startActivity(aboutAct);
-//                        Intent serviceIntent = new Intent(getApplicationContext(), ServerPeerService.class);
-//                        startService(serviceIntent);
                         return true;
                     default:
                         Toast.makeText(getApplicationContext(), "Somethings Wrong", Toast.LENGTH_SHORT).show();

@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.uzh.ckiller.coinblesk_client_gui.helpers.IPreferenceStrings;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 
@@ -40,7 +39,7 @@ import ch.papers.payments.WalletService;
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener, IPreferenceStrings {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     private String amountString = "0";
     private String sumString = "";
 
@@ -69,9 +68,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, NFC_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, BT_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, WIFIDIRECT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
+        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
 
         this.onKeyboardListener = this;
         return view;
@@ -340,7 +339,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final boolean isDecimal = UIUtils.isDecimal(this.amountString);
 
         if (isDecimal) {
-            if (fractionalLength < FIAT_DECIMAL_THRESHOLD) {
+            if (fractionalLength < AppConstants.FIAT_DECIMAL_THRESHOLD) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -348,7 +347,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
         if (!isDecimal) {
-            if (integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH) {
+            if (integerLength < AppConstants.MAXIMUM_FIAT_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -373,7 +372,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
         if (!isDecimal) {
-            if (integerLength < MAXIMUM_COIN_AMOUNT_LENGTH) {
+            if (integerLength < AppConstants.MAXIMUM_COIN_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -399,13 +398,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private boolean isBitcoinLargeAmount() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
-        String isLargeAmount = prefs.getString(PRIMARY_BALANCE_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
         boolean isLarge = true;
         switch (isLargeAmount) {
-            case BTC_AS_PRIMARY:
+            case AppConstants.BTC_AS_PRIMARY:
                 isLarge = true;
                 break;
-            case FIAT_AS_PRIMARY:
+            case AppConstants.FIAT_AS_PRIMARY:
                 isLarge = false;
                 break;
         }

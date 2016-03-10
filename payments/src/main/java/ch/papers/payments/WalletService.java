@@ -105,11 +105,17 @@ public class WalletService extends Service {
         }
 
         public Coin getBalance() {
-            return WalletService.this.kit.wallet().getBalance();
+            long coinAmount = 0;
+
+            for(TransactionOutput transactionOutput: getUnspentInstantOutputs()){
+                coinAmount+=transactionOutput.getValue().getValue();
+            }
+
+            return Coin.valueOf(coinAmount);
         }
 
         public Fiat getBalanceFiat() {
-            return WalletService.this.exchangeRate.coinToFiat(WalletService.this.kit.wallet().getBalance());
+            return WalletService.this.exchangeRate.coinToFiat(getBalance());
         }
 
         public List<TransactionWrapper> getTransactionsByTime() {
@@ -320,6 +326,9 @@ public class WalletService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         UuidObjectStorage.getInstance().init(this.getFilesDir());
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
+        Utils.fixECKeyComparator();
+        
+
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
 
             @Override
@@ -455,6 +464,8 @@ public class WalletService extends Service {
 
         kit.setBlockingStartup(false);
         kit.startAsync().awaitRunning();
+
+        //kit.wallet().reset();
         //clearMultisig();
 
         Log.d(TAG, "wallet started");

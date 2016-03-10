@@ -60,6 +60,14 @@
                 android:value="com.uzh.ckiller.coinblesk_client_gui.MainActivity" />
         </activity>
 
+        <activity
+            android:name=".BackupActivity"
+            android:parentActivityName="com.uzh.ckiller.coinblesk_client_gui.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.uzh.ckiller.coinblesk_client_gui.MainActivity" />
+        </activity>
+
         <service android:name="ch.papers.payments.WalletService" >
         </service>
         <service android:name="ch.papers.payments.communications.peers.ServerPeerService" >
