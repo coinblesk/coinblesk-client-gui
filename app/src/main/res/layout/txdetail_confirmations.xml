@@ -7,19 +7,19 @@
 
 
     <TextView
-        android:id="@+id/txdetail_confidence_title"
+        android:id="@+id/txdetail_confirmations_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginRight="24dp"
         android:layout_marginTop="8dp"
         android:ellipsize="end"
-        android:text="@string/txdetail_confidence_title"
+        android:text="@string/txdetail_confirmations_title"
         android:textColor="@color/colorAccent"
         android:textSize="@dimen/text_size_small" />
 
     <TextView
-        android:id="@+id/txdetail_confidence_content"
+        android:id="@+id/txdetail_confirmations_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"

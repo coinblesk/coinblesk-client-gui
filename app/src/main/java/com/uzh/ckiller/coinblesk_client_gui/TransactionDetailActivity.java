@@ -31,12 +31,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
+
+import org.bitcoinj.core.Coin;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -79,27 +82,26 @@ public class TransactionDetailActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
     private void setTransactionDetails() {
         TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
 
+        // Differentiate between
         try {
 
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
-            ((TextView) this.findViewById(R.id.txdetail_confidence_content)).setText(transaction.getTransaction().getConfidence().toString());
+            ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getTransaction().getConfidence().toString());
             ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText(""+transaction.getTransaction().getExchangeRate().fiat.toFriendlyString());
-
-            // TODO Format the Date properly (make it shorter, without MEZ indication)
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
-            ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
-            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transaction.getTransaction().getHashAsString());
+            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash.toString());
 
-        }catch(Exception e){
+            // Check if returned fee (Coin) is null
+            if(transaction.getTransaction().getFee() == null){
+                this.findViewById(R.id.txfee).setVisibility(View.GONE);
+            }
+
+            ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -119,6 +121,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         Intent intent = new Intent(this, WalletService.class);
+        this.startService(intent);
         this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -128,6 +131,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
         this.unbindService(serviceConnection);
     }
+
+
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 

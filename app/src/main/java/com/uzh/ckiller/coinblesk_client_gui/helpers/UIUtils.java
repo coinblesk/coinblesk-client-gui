@@ -106,14 +106,17 @@ public class UIUtils implements IPreferenceStrings {
                 result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MILLICOIN:
-                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
+                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
             case MICROCOIN:
-                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin,0,BtcFixedFormat.REPEATING_PLACES);
+                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
                 break;
         }
 
-        return UIUtils.toLargeSpannable(context, result, coinDenomination);
+        // 1.3F Size Span necessary - otherwise Overflowing Edge of Dialog
+        float sizeSpan = 1.3F;
+
+        return toLargeSpannable(context, result, coinDenomination, sizeSpan);
     }
 
 
@@ -130,7 +133,7 @@ public class UIUtils implements IPreferenceStrings {
                 break;
         }
 
-        return Coin.valueOf(bdAmount.multiply(multiplicand).longValue());
+        return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
 
     }
 
@@ -150,6 +153,15 @@ public class UIUtils implements IPreferenceStrings {
         final int amountLength = amount.length();
         SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency.toString()));
         result.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0);
+        result.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);
+        result.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, result.length(), 0);
+        return result;
+    }
+
+    public static SpannableString toLargeSpannable(Context context, String amount, String currency, float sizeSpan) {
+        final int amountLength = amount.length();
+        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency.toString()));
+        result.setSpan(new RelativeSizeSpan(sizeSpan), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, result.length(), 0);
         return result;
@@ -217,11 +229,38 @@ public class UIUtils implements IPreferenceStrings {
         return textSize;
     }
 
+    public static int getLargeTextSizeForDialogs(Context context, int amountLength) {
+
+        int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
+        final int orientation = context.getResources().getConfiguration().orientation;
+        switch (orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                textSize = context.getResources().getInteger(R.integer.text_size_large_landscape);
+                if (amountLength > 8)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium_landscape);
+                if (amountLength > 9)
+                    textSize = context.getResources().getInteger(R.integer.text_size_small_landscape);
+                break;
+            case Configuration.ORIENTATION_PORTRAIT:
+                if (amountLength > 8)
+                    textSize = context.getResources().getInteger(R.integer.text_size_xlarge);
+                if (amountLength > 9)
+                    textSize = context.getResources().getInteger(R.integer.text_size_large);
+                if (amountLength > 10)
+                    textSize = context.getResources().getInteger(R.integer.text_size_medium);
+                break;
+        }
+
+        return textSize;
+    }
+
+
     public static SpannableString toFriendlyAmountString(Context context, TransactionWrapper transaction) {
         StringBuffer friendlyAmount = new StringBuffer(transaction.getAmount().toFriendlyString());
         final int coinLength = friendlyAmount.length() - 3;
 
         friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()).toFriendlyString());
+        friendlyAmount.append(" as of now");
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);
@@ -355,7 +394,7 @@ public class UIUtils implements IPreferenceStrings {
         int threshold = 2;
         switch (coinDenomination) {
             case COIN:
-                threshold = 8;
+                threshold = 4;
                 break;
             case MILLICOIN:
                 threshold = 5;
