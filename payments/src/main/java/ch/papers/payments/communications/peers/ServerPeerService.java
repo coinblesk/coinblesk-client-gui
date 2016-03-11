@@ -46,7 +46,7 @@ public class ServerPeerService extends Service {
                 if(server.isRunning()) {
                     server.setPaymentRequestUri(null);
                 }
-                server.stop();
+                //server.stop();
             }
         }
 

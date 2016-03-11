@@ -99,7 +99,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                                             //client.setReadyForInstantPayment(false);
                                             //client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
                                         } else {
-                                            client.stop();
+                                            //client.stop();
                                         }
                                     }
                                     dismissDialog();

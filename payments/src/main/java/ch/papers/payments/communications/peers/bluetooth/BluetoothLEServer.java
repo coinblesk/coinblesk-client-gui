@@ -20,6 +20,7 @@ import android.util.Log;
 
 import org.bitcoinj.core.ECKey;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,6 +49,7 @@ public class BluetoothLEServer extends AbstractServer {
     public BluetoothLEServer(Context context) {
         super(context);
     }
+    private int maxFragmentSize = 297;
 
     @Override
     public boolean isSupported() {
@@ -109,12 +111,23 @@ public class BluetoothLEServer extends AbstractServer {
                     }
                 }
 
+                private byte[] getNextFragment(PaymentState paymentState) {
+                    byte[] fragment = Arrays.copyOfRange(paymentState.derResponsePayload, 0, Math.min(paymentState.derResponsePayload.length, maxFragmentSize));
+                    paymentState.derResponsePayload = Arrays.copyOfRange(paymentState.derResponsePayload, fragment.length, paymentState.derResponsePayload.length);
+                    Log.d(TAG,"sending next fragment:"+fragment.length);
+                    return fragment;
+                }
+
+
                 @Override
                 public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
                     Log.d(TAG, device.getAddress() + " requested characteristic read");
+
                     PaymentState paymentState = this.connectedDevices.get(device.getAddress());
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, paymentState.derResponsePayload);
-                    paymentState.derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, getNextFragment(paymentState));
+                    if(paymentState.derResponsePayload.length == 0) {
+                        paymentState.derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                    }
                 }
 
                 @Override
