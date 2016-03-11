@@ -9,7 +9,7 @@
         android:id="@+id/social_about_logo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:aspectRatio="@dimen/aspect_phi">
+        app:aspectRatio="@dimen/about_aspect_ratio">
 
         <RelativeLayout
             android:layout_width="match_parent"

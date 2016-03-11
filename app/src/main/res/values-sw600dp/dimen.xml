@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-
+    <item name="about_aspect_ratio" type="dimen" format="float">4</item>
 
 </resources>

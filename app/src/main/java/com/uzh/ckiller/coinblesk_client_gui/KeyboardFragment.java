@@ -406,10 +406,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             // check if it's the first summand
             if (this.sumString.length() == 0) {
                 this.sumString += value;
-                ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
+                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
             } else {
                 this.sumString += ("+" + value);
-                ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
+                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
             }
         }
 
@@ -432,10 +432,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
                 if (this.sumString.length() == 0) {
                     this.sumString += UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1);
-                    ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
+                    ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
                 } else {
                     this.sumString += ("+" + UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1));
-                    ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
+                    ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -502,17 +502,20 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     };
 
+//    UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
+//            .getString(R.string.snackbar_address_copied)
+
     private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Snackbar.make(getView(), R.string.instant_payment_success_message, Snackbar.LENGTH_LONG).show();
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.instant_payment_success_message)), Snackbar.LENGTH_LONG).show();
         }
     };
 
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Snackbar.make(getView(), String.format(getResources().getString(R.string.instant_payment_error_message), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY, "")), Snackbar.LENGTH_LONG).show();
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), String.format(getResources().getString(R.string.instant_payment_error_message), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY, ""))), Snackbar.LENGTH_LONG).show();
         }
     };
 
