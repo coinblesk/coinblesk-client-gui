@@ -285,9 +285,9 @@ public class UIUtils {
     }
 
 
-    public static String appendResult(String amounts) {
+    public static String getSum(String amounts) {
         String delims = "[+]";
-        String result = "";
+        String result = "0";
         String[] tokens = amounts.split(delims);
         if (tokens.length > 1) {
             BigDecimal sum = new BigDecimal(0);
@@ -297,6 +297,15 @@ public class UIUtils {
             result = sum.toString();
         }
         return result;
+    }
+
+    public static boolean stringIsNotZero(String amountString){
+        //Checks if a string is actually of Zero value 0.00 0 0.000 etc.
+        BigDecimal bd = new BigDecimal(amountString);
+        if(bd.compareTo(BigDecimal.ZERO) == 0){
+            return false;
+        }
+        return true;
     }
 
     public static boolean isCustomButtonEmpty(Context context, String customKey) {

@@ -28,6 +28,7 @@ import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.CustomValueDialog;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.w3c.dom.Text;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -130,10 +131,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         view.findViewById(R.id.key_nine).setOnClickListener(this);
         view.findViewById(R.id.key_dot).setOnClickListener(this);
         view.findViewById(R.id.key_zero).setOnClickListener(this);
-        view.findViewById(R.id.key_zero_zero).setOnClickListener(this);
+        view.findViewById(R.id.key_backspace).setOnClickListener(this);
         view.findViewById(R.id.key_accept).setOnClickListener(this);
         view.findViewById(R.id.key_clear).setOnClickListener(this);
-        view.findViewById(R.id.key_multiply).setOnClickListener(this);
+        view.findViewById(R.id.key_subtotal).setOnClickListener(this);
         view.findViewById(R.id.key_plus).setOnClickListener(this);
 
         // Backspace Button
@@ -228,15 +229,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 onPlus(amountString);
                 break;
 
-            case R.id.key_multiply:
-                // TODO Add multiply funct.
+            case R.id.key_subtotal:
+                if (this.amountString.equals("0") && this.sumString.length() > 2) {
+                    this.amountString = UIUtils.getSum(sumString);
+                    updateAmount();
+                }
+                break;
+
+            case R.id.key_backspace:
+                if (this.amountString.length() == 1) {
+                    this.amountString = "0";
+                } else {
+                    this.amountString = this.amountString.substring(0, this.amountString.length() - 1);
+                }
+                this.updateAmount();
                 break;
 
             case R.id.key_clear:
                 this.sumString = "";
                 this.amountString = "0";
                 updateAmount();
-                updateSum();
+                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText("");
+
                 break;
 
             case R.id.key_custom_one:
@@ -266,17 +280,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
     }
-
-
-    /*protected Coin getCoin() {
-        if (isBitcoinLargeAmount) {
-            return UIUtils.formatCoin(this.getContext(), this.amountString, false);
-        } else {
-            return UIUtils.formatCoin(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()).toPlainString(), true);
-//            return UIUtils.formatCoinNew(this.getContext(), exchangeRate.fiatToCoin(this.getFiat()));
-//            return UIUtils.scaleCoin(exchangeRate.fiatToCoin(this.getFiat()), UIUtils.getCoinDenomination(this.getContext()));
-        }
-    }*/
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
@@ -309,7 +312,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
             smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
-                    UIUtils.getCoinDenomination(this.getContext())),
+                            UIUtils.getCoinDenomination(this.getContext())),
                     UIUtils.getCoinDenomination(this.getContext())));
         }
     }
@@ -396,42 +399,25 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
-    private boolean isBitcoinLargeAmount() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
-        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
-        boolean isLarge = true;
-        switch (isLargeAmount) {
-            case AppConstants.BTC_AS_PRIMARY:
-                isLarge = true;
-                break;
-            case AppConstants.FIAT_AS_PRIMARY:
-                isLarge = false;
-                break;
-        }
-        return isLarge;
-    }
 
     @Override
     public void onPlus(String value) {
-        if (this.sumString.length() == 0) {
-            this.sumString += value;
-        } else {
-            this.sumString += ("+" + value);
+        if (UIUtils.stringIsNotZero(this.amountString)) {
+            // check if it's the first summand
+            if (this.sumString.length() == 0) {
+                this.sumString += value;
+                ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
+            } else {
+                this.sumString += ("+" + value);
+                ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
+            }
         }
+
         this.amountString = "0";
         updateAmount();
-        this.updateSum();
     }
-
-
-    private void updateSum() {
-        final TextView sumTextView = (TextView) this.getView().findViewById(R.id.sum_values_text_view);
-        sumTextView.setText((sumString + "=" + UIUtils.appendResult(sumString)));
-    }
-
 
     public void onCustom(int customKey) {
-
         if (UIUtils.isCustomButtonEmpty(this.getContext(), Integer.toString(customKey))) {
             CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
             cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
@@ -443,7 +429,14 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             cvd.show();
         } else {
             try {
-                this.onPlus(UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1));
+
+                if (this.sumString.length() == 0) {
+                    this.sumString += UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1);
+                    ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
+                } else {
+                    this.sumString += ("+" + UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1));
+                    ((TextView)this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -519,7 +512,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Snackbar.make(getView(), String.format(getResources().getString(R.string.instant_payment_error_message),intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY,"")), Snackbar.LENGTH_LONG).show();
+            Snackbar.make(getView(), String.format(getResources().getString(R.string.instant_payment_error_message), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY, "")), Snackbar.LENGTH_LONG).show();
         }
     };
 
