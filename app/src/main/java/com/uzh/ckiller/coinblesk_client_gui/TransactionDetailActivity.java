@@ -17,6 +17,8 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +42,7 @@ import android.widget.TextView;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -61,6 +64,9 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         copyTxButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
+                clipboard.setPrimaryClip(clip);
                 Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
                         .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
                 .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
