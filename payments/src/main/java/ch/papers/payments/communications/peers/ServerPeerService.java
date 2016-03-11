@@ -49,6 +49,15 @@ public class ServerPeerService extends Service {
                 server.stop();
             }
         }
+
+        public boolean hasSupportedServers() {
+            for (AbstractServer server:ServerPeerService.this.servers) {
+                if(server.isSupported()){
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     private final ServerServiceBinder serverServiceBinder = new ServerServiceBinder();
