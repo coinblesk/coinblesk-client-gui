@@ -7,11 +7,19 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.uri.BitcoinURI;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
@@ -34,6 +42,8 @@ public class NFCClient extends AbstractClient {
 
     private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
     private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
+    private static final byte[] KEEPALIVE = {1,2,3,4};
+
 
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
@@ -80,76 +90,161 @@ public class NFCClient extends AbstractClient {
 
     @Override
     public void onIsReadyForInstantPaymentChange() {
+
         if (this.isReadyForInstantPayment()) {
+            Log.d(TAG, "enable reader for NFC");
             nfcAdapter.enableReaderMode(this.activity, new NfcAdapter.ReaderCallback() {
                         @Override
                         public void onTagDiscovered(Tag tag) {
                             try {
                                 IsoDep isoDep = IsoDep.get(tag);
                                 isoDep.connect();
-                                isoDep.setTimeout(5000);
+                                boolean done = false;
+
+                                Log.d(TAG, "first transmit, payment request");
+                                final DERObject paymentRequestInput = transceiveDER(isoDep, DERObject.NULLOBJECT, true);
+                                final AtomicReference<DERObject> refundSendInput = new AtomicReference<DERObject>();
+                                final AtomicReference<DERObject> finalSendInput = new AtomicReference<DERObject>();
+
+                                final AtomicReference<DERObject> authorizationResponseOutput = new AtomicReference<DERObject>();
+                                final AtomicReference<DERObject> paymentRefundSendStep = new AtomicReference<DERObject>();
+                                final AtomicReference<DERObject> sendFinalSignatureOutput = new AtomicReference<DERObject>();
+
+                                final AtomicReference<Transaction> tx = new AtomicReference<Transaction>();
+                                final AtomicReference<Transaction> refund = new AtomicReference<Transaction>();
+
+                                final AtomicReference<BitcoinURI> bitcoinURI = new AtomicReference<BitcoinURI>();
+                                final AtomicLong timestamp = new AtomicLong(-1);
+
+                                Thread authorization = null;
+                                Thread refundSend = null;
+                                Thread finalSend = null;
 
 
-                                DERObject paymentRequestInput = transceiveDER(isoDep, DERObject.NULLOBJECT, true);
-                                DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
+                                while (!done) {
+                                    if (authorizationResponseOutput.get() == null && authorization == null) {
+                                        authorization = new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.d(TAG, "payment details request");
+                                                authorizationResponseOutput.set(paymentRequestReceiveStep.process(paymentRequestInput));
+                                                bitcoinURI.set(paymentRequestReceiveStep.getBitcoinURI());
+                                                timestamp.set(paymentRequestReceiveStep.getTimestamp());
+                                            }
+                                        });
+                                        authorization.start();
+                                    }
 
-                                Log.d(TAG, "got request, authorizing user");
-                                DERObject refundSendInput = transceiveDER(isoDep, authorizationResponseOutput);
-                                PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
-                                DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
+
+                                    if (authorizationResponseOutput.get() != null && refundSendInput.get() == null) {
+                                        Log.d(TAG, "got request, authorizing user");
+                                        refundSendInput.set(transceiveDER(isoDep, authorizationResponseOutput.get()));
+                                    }
 
 
-                                DERObject finalSendInput = transceiveDER(isoDep, refundSendOutput);
-                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
-                                DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
 
-                                transceiveDER(isoDep, sendFinalSignatureOutput);
+                                    if (refundSendInput.get() != null && paymentRefundSendStep.get() == null
+                                            && bitcoinURI!=null && timestamp.get()>=0 && refundSend == null) {
+                                        refundSend = new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.d(TAG, "refund request");
+                                                final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(getWalletServiceBinder(),
+                                                        bitcoinURI.get(), timestamp.get());
+                                                paymentRefundSendStep.set(paymentRefundSendStep1.process(refundSendInput.get()));
+                                                tx.set(paymentRefundSendStep1.getFullSignedTransaction());
+                                                refund.set(paymentRefundSendStep1.getHalfSignedRefundTransaction());
+                                            }
+                                        });
+                                        refundSend.start();
+                                    }
+
+                                    if (paymentRefundSendStep.get() != null && finalSendInput.get() == null) {
+                                        Log.d(TAG, "got request refund, send over NFC");
+                                        finalSendInput.set(transceiveDER(isoDep, paymentRefundSendStep.get()));
+                                    }
+
+                                    if (finalSendInput.get() != null && tx.get()!=null && refund.get()!=null
+                                            && sendFinalSignatureOutput.get() == null && finalSend == null) {
+                                        finalSend = new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.d(TAG, "final request");
+                                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(),
+                                                        paymentRequestReceiveStep.getBitcoinURI().getAddress(), tx.get(), refund.get());
+                                                sendFinalSignatureOutput.set(paymentFinalSignatureSendStep.process(finalSendInput.get()));
+                                            }
+                                        });
+                                        finalSend.start();
+                                    }
+
+                                    if (sendFinalSignatureOutput.get() != null) {
+                                        Log.d(TAG, "got final request, send over NFC");
+                                        DERObject response = transceiveDER(isoDep, sendFinalSignatureOutput.get());
+                                        Log.d(TAG, "we are done, response is: " + response.getPayload().length);
+                                        done = true;
+                                    } else {
+                                        byte[] response = isoDep.transceive(KEEPALIVE);
+                                        Log.d(TAG, "keep alive:"+response.length);
+                                    }
+                                }
+
                                 getPaymentRequestAuthorizer().onPaymentSuccess();
-
                                 isoDep.close();
-                            } catch (IOException e) {
+                            } catch (Throwable e) {
+                                Log.e(TAG, "error", e);
+                                e.printStackTrace();
                                 getPaymentRequestAuthorizer().onPaymentError(e.getMessage());
                             }
                         }
 
-                        public DERObject transceiveDER(IsoDep isoDep, DERObject input, boolean needsSelectAidApdu) throws IOException {
-                            Log.d(TAG, "start transceive");
-                            byte[] derPayload = input.serializeToDER();
-                            byte[] derResponse = new byte[0];
-                            int fragmentByte = 0;
+                        public DERObject transceiveDER(IsoDep isoDep, DERObject input, boolean needsSelectAidApdu) throws IOException, InterruptedException {
 
-                            Log.d(TAG, "have to send bytes:" + derPayload.length);
-                            while (fragmentByte < derPayload.length) {
-                                byte[] fragment = new byte[0];
-                                if (needsSelectAidApdu) {
-                                    fragment = createSelectAidApdu(AID_ANDROID);
+                                Log.d(TAG, "start transceive. ");
+                                byte[] derPayload = input.serializeToDER();
+                                byte[] derResponse = new byte[0];
+                                int fragmentByte = 0;
+
+                                Log.d(TAG, "have to send bytes:" + derPayload.length);
+                                while (fragmentByte < derPayload.length) {
+                                    byte[] fragment = new byte[0];
+                                    if (needsSelectAidApdu) {
+                                        isoDep.transceive(createSelectAidApdu(AID_ANDROID));
+                                        needsSelectAidApdu = false;
+                                    }
+
+                                    fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 245)));
+
+                                    Log.d(TAG, "about to send fragment size:" + fragment.length);
+                                    derResponse = isoDep.transceive(fragment);
+                                    Log.d(TAG, "my client received payload" + Arrays.toString(derResponse));
+                                    fragmentByte += fragment.length;
                                 }
 
-                                fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + isoDep.getMaxTransceiveLength())));
+                                while (Arrays.equals(derResponse, KEEPALIVE)) {
+                                    Log.d(TAG, "keep alive...");
+                                    derResponse = isoDep.transceive(KEEPALIVE);
+                                    Log.d(TAG, "keep alive done, got: " + derResponse.length);
+                                }
 
-                                derResponse = isoDep.transceive(fragment);
-                                fragmentByte += fragment.length;
-                                Log.d(TAG, "fragment size:" + fragment.length);
-                            }
+                                int responseLength = DERParser.extractPayloadEndIndex(derResponse);
+                                Log.d(TAG, "expected response length:" + responseLength+", actual length: "+ derResponse.length);
 
-                            int responseLength = DERParser.extractPayloadEndIndex(derResponse);
-                            Log.d(TAG, "expected response lenght:" + responseLength);
-                            Log.d(TAG, "actual response lenght:" + derResponse.length);
+                                while (derResponse.length < responseLength) {
+                                    derResponse = Utils.concatBytes(derResponse, isoDep.transceive(KEEPALIVE));
+                                    Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
+                                }
+                                Log.d(TAG, "end transceive");
+                                return DERParser.parseDER(derResponse);
 
-                            while (derResponse.length < responseLength) {
-                                derResponse = Utils.concatBytes(derResponse, isoDep.transceive(DERObject.NULLOBJECT.serializeToDER()));
-                                Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
-                            }
-                            Log.d(TAG, "end transceive");
-                            return DERParser.parseDER(derResponse);
                         }
 
-                        private DERObject transceiveDER(IsoDep isoDep, DERObject input) throws IOException {
+                        private DERObject transceiveDER(IsoDep isoDep, DERObject input) throws IOException, InterruptedException {
                             return this.transceiveDER(isoDep, input, false);
                         }
-                    }, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
-                    null);
+                    }, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK, Bundle.EMPTY);
         } else {
+            Log.d(TAG, "disable reader");
             nfcAdapter.disableReaderMode(this.activity);
         }
     }

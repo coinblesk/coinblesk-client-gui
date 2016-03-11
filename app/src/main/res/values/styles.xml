@@ -56,6 +56,19 @@
         <item name="android:scaleType">centerInside</item>
     </style>
 
+    <style name="keyboard_imageview_backspace">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:maxHeight">24dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:maxWidth">24dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:drawablePadding">20dp</item>
+        <item name="android:background">@drawable/cell_shape</item>
+        <item name="android:gravity">center</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
     <style name="keyboard_row">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">0dp</item>

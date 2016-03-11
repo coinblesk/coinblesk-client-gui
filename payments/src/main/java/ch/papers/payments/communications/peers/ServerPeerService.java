@@ -46,7 +46,17 @@ public class ServerPeerService extends Service {
                 if(server.isRunning()) {
                     server.setPaymentRequestUri(null);
                 }
+                //server.stop();
             }
+        }
+
+        public boolean hasSupportedServers() {
+            for (AbstractServer server:ServerPeerService.this.servers) {
+                if(server.isSupported()){
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

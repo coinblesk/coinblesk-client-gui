@@ -75,7 +75,6 @@
     <dimen name="qr_code_size">280dp</dimen>
     <dimen name="qr_dialog_size">312dp</dimen>
 
-
     <!-- Social -->
     <dimen name="social_default_spacing">24dp</dimen>
     <dimen name="social_drawable_padding">8dp</dimen>
@@ -89,5 +88,8 @@
     <dimen name="social_landscape_io_logo_panel_height">224dp</dimen>
     <dimen name="social_landscape_io15_panel_height">224dp</dimen>
     <dimen name="social_landscape_request_extended_height">112dp</dimen>
+
+    <item name="about_aspect_ratio" type="dimen" format="float">1.618</item>
+
 
 </resources>

@@ -16,7 +16,6 @@ import java.util.Arrays;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
-import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
@@ -32,12 +31,20 @@ import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 public class NFCService extends HostApduService {
     private final static String TAG = NFCService.class.getSimpleName();
 
+
     private int stepCounter = 0;
     private boolean isProcessing = false;
     private BitcoinURI bitcoinURI;
     private ECKey clientPublicKey;
 
     private byte[] derRequestPayload = new byte[0];
+    private byte[] derResponsePayload = new byte[0];
+
+    private static final byte[] KEEPALIVE = {1, 2, 3, 4};
+    private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
+    private static final byte[] AID_ANDROID_ACS = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x04};
+    private int maxFragmentSize = 245;
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -45,7 +52,7 @@ public class NFCService extends HostApduService {
         if (intent.getExtras() != null) {
             try {
                 String bitcoinUri = intent.getExtras().getString(Constants.BITCOIN_URI_KEY);
-                if(!bitcoinUri.equals("")) {
+                if (!bitcoinUri.equals("")) {
                     bitcoinURI = new BitcoinURI(bitcoinUri);
                 }
             } catch (BitcoinURIParseException e) {
@@ -59,75 +66,103 @@ public class NFCService extends HostApduService {
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
-        int derPayloadStartIndex = 0;
-        if (this.selectAidApdu(commandApdu)) {
-            Log.d(TAG, "hanshake");
-            derPayloadStartIndex = 2;
-            derRequestPayload = new byte[0];
-            stepCounter = 0;
-            clientPublicKey = null;
-        }
+        try {
+            Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
+            int derPayloadStartIndex = 0;
+            if (this.selectAidApdu(commandApdu)) {
+                Log.d(TAG, "handshake");
+                derPayloadStartIndex = 6 + commandApdu[4];
+                derRequestPayload = new byte[0];
+                derResponsePayload = new byte[0];
+                stepCounter = 0;
+                clientPublicKey = null;
+                isProcessing = false;
 
-        final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
-        derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
-
-        int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
-
-        if (derRequestPayload.length < responseLength) {
-            return DERObject.NULLOBJECT.serializeToDER();
-        } else {
-            if(!isProcessing) {
-                final Thread processingThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        isProcessing = true;
-                        final byte[] requestPayload = derRequestPayload;
-                        derRequestPayload = new byte[0];
-
-                        byte[] derResponsePayload = new byte[]{};
-                        switch (stepCounter){
-                            case 0:
-                                PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(bitcoinURI);
-                                derResponsePayload = paymentRequestSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                stepCounter++;
-                                break;
-                            case 1:
-                                PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(bitcoinURI);
-                                derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
-                                stepCounter++;
-                                break;
-                            case 2:
-                                final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
-                                derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                stepCounter++;
-                                break;
-                            case 3:
-                                final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(clientPublicKey, bitcoinURI.getAddress());
-                                derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                LocalBroadcastManager.getInstance(NFCService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
-                                stepCounter++;
-                                break;
-                        }
-
-                        int fragmentByte = 0;
-                        Log.d(TAG, "have to send bytes:" + derResponsePayload.length);
-                        while (fragmentByte < derResponsePayload.length) {
-                            byte[] fragment = new byte[0];
-                            fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derResponsePayload, fragmentByte, Math.min(derResponsePayload.length, fragmentByte + 250)));
-                            sendResponseApdu(fragment);
-                            fragmentByte += fragment.length;
-                            Log.d(TAG, "fragment size:" + fragment.length);
-                        }
-
-                        isProcessing = false;
-                    }
-                });
-                processingThread.start();
+                byte[] aid = Arrays.copyOfRange(commandApdu, 5, derPayloadStartIndex - 1);
+                if (Arrays.equals(aid, AID_ANDROID)) {
+                    this.maxFragmentSize = 245;
+                } else if (Arrays.equals(aid, AID_ANDROID_ACS)) {
+                    this.maxFragmentSize = 53;
+                }
+                return KEEPALIVE;
             }
+
+            if (hasNextFragment()) {
+                Log.d(TAG, "get next fragment");
+                return getNextFragment();
+            } else {
+                final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
+                if (!Arrays.equals(payload, KEEPALIVE)) {
+                    derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
+                    int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
+                    Log.d(TAG, "expecting response length:" + responseLength +", actual response length:"+derRequestPayload.length);
+
+                    if (derRequestPayload.length >= responseLength && !isProcessing) { // we have an unprocessed request
+                        isProcessing = true;
+                        derResponsePayload = new byte[0];
+
+                        final Thread processingThread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final byte[] requestPayload = derRequestPayload;
+                                derRequestPayload = new byte[0];
+
+                                switch (stepCounter) {
+                                    case 0:
+                                        PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(bitcoinURI);
+                                        derResponsePayload = paymentRequestSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        stepCounter++;
+                                        Log.d(TAG, "got payload1: " + derResponsePayload.length);
+                                        break;
+                                    case 1:
+                                        PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(bitcoinURI);
+                                        derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                        Log.d(TAG, "got payload2: " + derResponsePayload.length);
+                                        stepCounter++;
+                                        break;
+                                    case 2:
+                                        final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
+                                        derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        Log.d(TAG, "got payload3: " + derResponsePayload.length);
+                                        stepCounter++;
+                                        break;
+                                    case 3:
+                                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(clientPublicKey, bitcoinURI.getAddress());
+                                        derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        LocalBroadcastManager.getInstance(NFCService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+                                        Log.d(TAG, "got payload4: " + derResponsePayload.length);
+                                        stepCounter++;
+                                        break;
+                                }
+                            }
+                        });
+                        processingThread.start();
+                    }
+                }
+                Log.d(TAG, "return keep alive: ");
+                return KEEPALIVE;
+
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "hostapud issue", t);
             return null;
         }
+    }
+
+    private boolean hasNextFragment() {
+        return derResponsePayload.length > 0;
+    }
+
+    private byte[] getNextFragment() {
+
+        byte[] fragment = Arrays.copyOfRange(derResponsePayload, 0, Math.min(derResponsePayload.length, maxFragmentSize));
+        derResponsePayload = Arrays.copyOfRange(derResponsePayload, fragment.length, derResponsePayload.length);
+        if (derResponsePayload.length == 0) {
+            isProcessing = false;
+        }
+        Log.d(TAG, "sending next fragment:" + fragment.length);
+        return fragment;
     }
 
     @Override

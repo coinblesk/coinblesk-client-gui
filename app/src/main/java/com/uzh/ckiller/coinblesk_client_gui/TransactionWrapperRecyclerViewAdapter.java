@@ -59,16 +59,10 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final TransactionWrapper transaction = transactionWrappers.get(position);
+
         holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
         holder.textViewDescription.setText(prettyTime.format(transaction.getTransaction().getUpdateTime()));
-
-        // ColorFilters for Pending
-//        <color name="material_light_yellow_900">#f47f1f</color>
-//        lineColorCode.setColorFilter(color);
-
-        // TODO this is not the way it works my friend.
         holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative() ? R.drawable.ic_send_arrow_48px : R.drawable.ic_receive_arrow_48px);
-
         holder.imageViewStatus.setImageResource(transaction.getTransaction().getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
         int colorFilter = UIUtils.getStatusColorFilter(transaction.getTransaction().getConfidence().getDepthInBlocks(), false);
         holder.imageViewStatus.setColorFilter(colorFilter);
