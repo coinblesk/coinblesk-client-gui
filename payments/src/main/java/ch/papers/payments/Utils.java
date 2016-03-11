@@ -84,21 +84,22 @@ public class Utils {
         try {
             setFinalStatic(ECKey.class.getField("PUBKEY_COMPARATOR"),ecKeyComparator);
         } catch (Exception e) {
-            Log.d(TAG,"Error during ECKeyComparator fix: " + e.getMessage(), e);
+            Log.d(TAG,"error during ECKeyComparator fix: "+e.getMessage());
         }
+        Log.d(TAG,"ECKeyComparator fix successful");
     }
 
     private static void setFinalStatic(Field field, Object newValue) throws Exception {
         field.setAccessible(true);
 
-        // remove final modifier from field --> This is not required on Android, final modifier does not exist!
-        // see: https://stackoverflow.com/questions/11185453/android-changing-private-static-final-field-using-java-reflection
-        /*
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        */
-
+        // remove final modifier from field
+        try {
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+        } catch (Exception e){
+            Log.d(TAG,"error during final removal:"+e.getMessage());
+        }
         field.set(null, newValue);
     }
 }

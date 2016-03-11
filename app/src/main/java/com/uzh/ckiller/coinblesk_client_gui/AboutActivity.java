@@ -22,10 +22,19 @@ public class AboutActivity extends AppCompatActivity {
                     openUrl(AppConstants.URL_GITHUB);
                     break;
                 case R.id.social_website:
-                    openUrl(AppConstants.URL_WEBSITE);
+                    openUrl(AppConstants.URL_BITCOIN_CSG_WEBSITE);
                     break;
                 case R.id.social_tos:
                     AboutUtils.showTos(AboutActivity.this);
+                    break;
+                case R.id.uzh_icon_box:
+                    openUrl(AppConstants.URL_UZH_WEBSITE);
+                    break;
+                case R.id.ifi_icon_box:
+                    openUrl(AppConstants.URL_IFI_WEBSITE);
+                    break;
+                case R.id.twitter_icon_box:
+                    openUrl(AppConstants.URL_COINBLESK_TWITTER);
                     break;
             }
         }
@@ -42,6 +51,9 @@ public class AboutActivity extends AppCompatActivity {
         findViewById(R.id.social_github).setOnClickListener(onClickListener);
         findViewById(R.id.social_website).setOnClickListener(onClickListener);
         findViewById(R.id.social_tos).setOnClickListener(onClickListener);
+        findViewById(R.id.ifi_icon_box).setOnClickListener(onClickListener);
+        findViewById(R.id.uzh_icon_box).setOnClickListener(onClickListener);
+        findViewById(R.id.twitter_icon_box).setOnClickListener(onClickListener);
 
         TextView body = (TextView) findViewById(R.id.about_build_info);
         body.setText(Html.fromHtml(getString(R.string.about_build_info_main, BuildConfig.VERSION_NAME)));

@@ -1,5 +1,7 @@
 <issue id="InvalidPackage">
-    <ignore regexp="okio-1.6.0.jar" />
-    <ignore regexp="prov-1.54.0.0.jar" />
-    <ignore regexp="retrofit-2.0.0-beta4.jar" />
+    <ignore regexp=".*qos.*" />
+    <ignore regexp=".*okio.*" />
+    <ignore regexp=".*bitstamp.*" />
+    <ignore regexp=".*retrofit.*" />
+    <ignore regexp=".*prov.*" />
 </issue>

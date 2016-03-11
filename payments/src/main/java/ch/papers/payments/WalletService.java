@@ -228,6 +228,7 @@ public class WalletService extends Service {
 
                         VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
                         Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
+                        Log.d(TAG,"instant payment was "+responseCompleteSignTO.message());
                         switch (responseCompleteSignTO.type().nr()){
                             case 1:
                                 final Intent instantPaymentSuccesful = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);

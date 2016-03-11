@@ -13,6 +13,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ch.papers.payments.Constants;
@@ -39,7 +40,7 @@ public class PaymentRefundReceiveStep implements Step {
     @Override
     public DERObject process(DERObject input) {
         Log.d(TAG,"received refund");
-
+        Log.d(TAG,"my payload"+Arrays.toString(input.getPayload()));
         final DERSequence inputSequence = (DERSequence) input;
         byte[] transactionPayload = inputSequence.getChildren().get(0).getPayload();
         final BigInteger timestamp = ((DERInteger)inputSequence.getChildren().get(1)).getBigInteger();

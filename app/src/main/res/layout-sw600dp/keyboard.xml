@@ -98,10 +98,11 @@
                 style="@style/keyboard_text_view"
                 android:text="@string/key_six" />
 
-            <TextView
-                android:id="@+id/key_multiply"
-                style="@style/keyboard_text_view"
-                android:text="@string/key_multiply" />
+            <ImageView
+                android:id="@+id/key_backspace"
+                style="@style/keyboard_imageview_backspace"
+                android:src="@drawable/ic_backspace_48dp_18pad"
+                android:textIsSelectable="false" />
 
 
         </LinearLayout>
@@ -133,19 +134,19 @@
         <LinearLayout style="@style/keyboard_row">
 
             <TextView
+                android:id="@+id/key_dot"
+                style="@style/keyboard_text_view"
+                android:text="@string/key_dot" />
+
+            <TextView
                 android:id="@+id/key_zero"
                 style="@style/keyboard_text_view"
                 android:text="@string/key_zero" />
 
             <TextView
-                android:id="@+id/key_zero_zero"
-                style="@style/keyboard_text_view"
-                android:text="@string/key_zero_zero" />
-
-            <TextView
-                android:id="@+id/key_dot"
-                style="@style/keyboard_text_view"
-                android:text="@string/key_dot" />
+                android:id="@+id/key_subtotal"
+                style="@style/keyboard_clear_text_view"
+                android:text="@string/key_subtotal" />
 
             <ImageView
                 android:id="@+id/key_accept"

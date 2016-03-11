@@ -75,7 +75,7 @@
     <string name="key_four">4</string>
     <string name="key_five">5</string>
     <string name="key_six">6</string>
-    <string name="key_multiply">x</string>
+    <string name="key_subtotal">SUBTOTAL</string>
 
     <string name="key_one">1</string>
     <string name="key_two">2</string>
@@ -213,8 +213,8 @@
     <string name="payment_request_html_subject">New bitcoin payment request</string>
     <string name="accept">Accept</string>
     <string name="payment_succesful_message">Payment was succesful!</string>
-    <string name="instant_payment_success_message">instant payment successful!</string>
-    <string name="instant_payment_error_message">there was an error during instant payment: %1$s</string>
+    <string name="instant_payment_success_message">Instant Payment was successful</string>
+    <string name="instant_payment_error_message">Unfortunately, there was an error during the instant payment process: %1$s</string>
     <string name="authview_title">Authview</string>
 
 

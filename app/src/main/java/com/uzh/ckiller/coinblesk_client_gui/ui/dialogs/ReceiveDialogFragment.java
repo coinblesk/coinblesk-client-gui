@@ -47,6 +47,7 @@ public class ReceiveDialogFragment extends DialogFragment {
     private final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
 
+    View contactlessTouchView;
 
     public static DialogFragment newInstance(BitcoinURI bitcoinURI) {
         DialogFragment fragment = new ReceiveDialogFragment();
@@ -87,8 +88,9 @@ public class ReceiveDialogFragment extends DialogFragment {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
             final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
             if (!connectionSettings.isEmpty()) {
-                view.findViewById(R.id.receive_contactless_touch_area).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.receive_contactless_touch_area).setOnClickListener(new View.OnClickListener() {
+                contactlessTouchView = view.findViewById(R.id.receive_contactless_touch_area);
+                contactlessTouchView.setVisibility(View.VISIBLE);
+                contactlessTouchView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
 
@@ -190,6 +192,10 @@ public class ReceiveDialogFragment extends DialogFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             serverServiceBinder = (ServerPeerService.ServerServiceBinder) binder;
+
+            if(contactlessTouchView != null && !serverServiceBinder.hasSupportedServers()){
+                contactlessTouchView.setVisibility(View.GONE);
+            }
         }
 
         @Override

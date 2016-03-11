@@ -6,7 +6,10 @@ package com.uzh.ckiller.coinblesk_client_gui;
 public class AppConstants {
 
     public static final String URL_GITHUB = "http://www.github.com/coinblesk";
-    public static final String URL_WEBSITE = "http://www.bitcoin.csg.uzh.ch";
+    public static final String URL_BITCOIN_CSG_WEBSITE = "http://www.bitcoin.csg.uzh.ch";
+    public static final String URL_UZH_WEBSITE = "http://www.uzh.ch";
+    public static final String URL_IFI_WEBSITE = "http://www.ifi.uzh.ch";
+    public static final String URL_COINBLESK_TWITTER = "https://twitter.com/coinblesk";
 
     public static final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
     public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
@@ -14,11 +17,6 @@ public class AppConstants {
     public static final String PRIMARY_BALANCE_PREF_KEY = "pref_balance_list";
     public static final String FIAT_AS_PRIMARY = "Fiat Currency";
     public static final String BTC_AS_PRIMARY = "Bitcoin";
-
-    public static final String FIAT_CURRENCY_PREF_KEY = "pref_currency_list";
-    public static final String EURO_AS_CURRENCY = "EUR";
-    public static final String CHF_AS_CURRENCY = "CHF";
-    public static final String USD_AS_CURRENCY = "USD";
 
     public static final String BITCOIN_REPRESENTATION_PREF_KEY = "pref_bitcoin_rep_list";
     public static final String COIN = "BTC";

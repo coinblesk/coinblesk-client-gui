@@ -18,6 +18,15 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            storeFile file("my-release-key.keystore")
+            storePassword "password"
+            keyAlias "alias_name"
+            keyPassword "password"
+        }
+    }
+
     defaultConfig {
         applicationId "com.uzh.ckiller.coinblesk_client_clean_start"
         minSdkVersion 16
@@ -29,7 +38,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -50,6 +59,10 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
     }
+}
+
+configurations {
+    all*.exclude(group: 'org.java-websocket')
 }
 
 dependencies {
