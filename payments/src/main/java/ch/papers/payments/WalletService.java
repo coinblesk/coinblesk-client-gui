@@ -36,8 +36,10 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.store.WalletProtobufSerializer;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.wallet.Protos;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -316,6 +318,11 @@ public class WalletService extends Service {
                 }
             }).start();
         }
+
+        public byte[] getSerializedWallet() {
+            Protos.Wallet proto = new WalletProtobufSerializer().walletToProto(WalletService.this.kit.wallet());
+            return proto.toByteArray();
+        }
     }
 
     private final WalletServiceBinder walletServiceBinder = new WalletServiceBinder();
@@ -326,7 +333,6 @@ public class WalletService extends Service {
         UuidObjectStorage.getInstance().init(this.getFilesDir());
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
-
 
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
 
@@ -463,6 +469,7 @@ public class WalletService extends Service {
 
         kit.setBlockingStartup(false);
         kit.startAsync().awaitRunning();
+
         //kit.wallet().reset();
         //clearMultisig();
 
@@ -492,7 +499,9 @@ public class WalletService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        this.kit.stopAsync().awaitTerminated();
+        if (this.kit != null) {
+            this.kit.stopAsync().awaitTerminated();
+        }
     }
 
     @Nullable

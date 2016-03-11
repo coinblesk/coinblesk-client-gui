@@ -1,13 +1,19 @@
 package com.uzh.ckiller.coinblesk_client_gui;
 
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import ch.papers.payments.WalletService;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.BackupDialogFragment;
 
 
@@ -56,6 +62,32 @@ public class BackupActivity extends AppCompatActivity {
         }
     }
 
+    private WalletService.WalletServiceBinder walletServiceBinder;
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
 
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, WalletService.class);
+        this.startService(intent);
+        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        this.unbindService(serviceConnection);
+    }
 
 }

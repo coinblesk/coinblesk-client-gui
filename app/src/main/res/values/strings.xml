@@ -43,12 +43,16 @@
     <string name="fragment_backup_title">Backup wallet</string>
     <string name="fragment_backup_password_text_hint">Password</string>
     <string name="fragment_backup_password_again_text_hint">Repeat Password</string>
+    <string name="fragment_backup_passwordmismatch_text">Passwords do not match</string>
+    <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download folder. The backup is encrypted using your password.</string>
 
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 
     <!--Not Categorized yet-->
     <string name="action_settings">Settings</string>
