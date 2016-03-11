@@ -92,7 +92,6 @@ public class NFCClient extends AbstractClient {
 
                                 DERObject paymentRequestInput = transceiveDER(isoDep, DERObject.NULLOBJECT, true);
                                 DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
-
                                 Log.d(TAG, "got request, authorizing user");
                                 DERObject refundSendInput = transceiveDER(isoDep, authorizationResponseOutput);
                                 PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
