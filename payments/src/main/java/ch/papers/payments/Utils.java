@@ -86,16 +86,20 @@ public class Utils {
         } catch (Exception e) {
             Log.d(TAG,"error during ECKeyComparator fix: "+e.getMessage());
         }
+        Log.d(TAG,"ECKeyComparator fix successful");
     }
 
     private static void setFinalStatic(Field field, Object newValue) throws Exception {
         field.setAccessible(true);
 
         // remove final modifier from field
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
+        try {
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+        } catch (Exception e){
+            Log.d(TAG,"error during final removal:"+e.getMessage());
+        }
         field.set(null, newValue);
     }
 }

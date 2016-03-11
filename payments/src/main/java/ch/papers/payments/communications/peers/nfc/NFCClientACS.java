@@ -39,7 +39,8 @@ public class NFCClientACS extends AbstractClient {
     private final static String TAG = NFCClientACS.class.getSimpleName();
 
     private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
-    private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
+    private static final byte[] AID_ANDROID_ACS = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x04};
+    private static final byte[] KEEPALIVE = {1,2,3,4};
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
@@ -54,7 +55,7 @@ public class NFCClientACS extends AbstractClient {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
-        if(isSupported()) {
+        if (isSupported()) {
             UsbManager manager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
             PendingIntent permissionIntent = PendingIntent.getBroadcast(activity, 0, new Intent(ACTION_USB_PERMISSION), 0);
             Reader reader = new Reader(manager);
@@ -70,7 +71,7 @@ public class NFCClientACS extends AbstractClient {
 
     @Override
     public void start() {
-        if(this.isRunning()) {
+        if (this.isRunning()) {
             Log.d(TAG, "Already turned on ACS");
         }
 
@@ -80,24 +81,23 @@ public class NFCClientACS extends AbstractClient {
             setOnStateChangedListener(reader, pair.element0(), new NFCClientACSCallback() {
                 @Override
                 public void tagDiscovered(ACSTransceiver transceiver) {
-                    if(isReadyForInstantPayment()){
-                        try {
-                            DERObject paymentRequestInput = transceiveDER(transceiver, DERObject.NULLOBJECT, true);
-                            DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
+                    try {
+                        DERObject paymentRequestInput = transceiveDER(transceiver, DERObject.NULLOBJECT, true);
+                        DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
 
-                            Log.d(TAG, "got request, authorizing user");
-                            DERObject refundSendInput = transceiveDER(transceiver, authorizationResponseOutput);
-                            PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
-                            DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
+                        Log.d(TAG, "got request, authorizing user");
+                        DERObject refundSendInput = transceiveDER(transceiver, authorizationResponseOutput);
+                        PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
+                        DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
 
 
-                            DERObject finalSendInput = transceiveDER(transceiver, refundSendOutput);
-                            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
-                            DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
+                        DERObject finalSendInput = transceiveDER(transceiver, refundSendOutput);
+                        PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
+                        DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
 
-                            transceiveDER(transceiver, sendFinalSignatureOutput);
-                            getPaymentRequestAuthorizer().onPaymentSuccess();
-                        } catch (Exception e){}
+                        transceiveDER(transceiver, sendFinalSignatureOutput);
+                        getPaymentRequestAuthorizer().onPaymentSuccess();
+                    } catch (Exception e) {
                     }
                 }
 
@@ -138,7 +138,8 @@ public class NFCClientACS extends AbstractClient {
             }
             activity.unregisterReceiver(broadcastReceiver);
             this.setRunning(false);
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
     }
 
     @Override
@@ -155,21 +156,28 @@ public class NFCClientACS extends AbstractClient {
         while (fragmentByte < derPayload.length) {
             byte[] fragment = new byte[0];
             if (needsSelectAidApdu) {
-                fragment = createSelectAidApdu(AID_ANDROID);
+                fragment = createSelectAidApdu(AID_ANDROID_ACS);
             }
 
             fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
-            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(fragment));
+
+
+            Log.d(TAG, "about to send fragment size:" + fragment.length);
+            derResponse = acsTransceiver.write(fragment);
+            Log.d(TAG,"my client received payload"+Arrays.toString(derResponse));
             fragmentByte += fragment.length;
-            Log.d(TAG, "fragment size:" + fragment.length);
+        }
+
+        while(Arrays.equals(derResponse,KEEPALIVE)){
+            derResponse = acsTransceiver.write(KEEPALIVE);
         }
 
         int responseLength = DERParser.extractPayloadEndIndex(derResponse);
         Log.d(TAG, "expected response lenght:" + responseLength);
         Log.d(TAG, "actual response lenght:" + derResponse.length);
 
-        while (derResponse.length < responseLength) {
-            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(DERObject.NULLOBJECT.serializeToDER()));
+        while (derResponse.length < responseLength ) {
+            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
             Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
         }
         Log.d(TAG, "end transceive");
@@ -191,13 +199,11 @@ public class NFCClientACS extends AbstractClient {
     }
 
 
-
-
     private static boolean hasClass(String className) {
-        try  {
+        try {
             Class.forName(className);
             return true;
-        }  catch (final ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             return false;
         }
     }
@@ -224,29 +230,30 @@ public class NFCClientACS extends AbstractClient {
 
         reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
             private boolean disabledBuzzer = false;
+
             public void onStateChange(int slotNum, int prevState, int currState) {
-                Log.d(TAG, "statechange from: "+prevState+" to: "+ currState);
+                Log.d(TAG, "statechange from: " + prevState + " to: " + currState);
 
                 if (currState == Reader.CARD_PRESENT) {
                     try {
                         transceiver.initCard(slotNum);
-                        if(!disabledBuzzer) {
+                        /*if(!disabledBuzzer) {
                             transceiver.disableBuzzer();
                             disabledBuzzer = true;
-                        }
+                        }*/
                         callback.tagDiscovered(transceiver);
                     } catch (ReaderException e) {
                         Log.e(TAG, "Could not connnect reader (ReaderException): ", e);
                         callback.tagFailed();
                     }
-                } else if(currState == Reader.CARD_ABSENT) {
+                } else if (currState == Reader.CARD_ABSENT) {
                     callback.nfcTagLost();
                 }
             }
         });
     }
 
-    public static Pair<ACSTransceiver, Reader> createReaderAndTransceiver(final Context context /*final ReaderOpenCallback callback,*/ ) throws IOException {
+    public static Pair<ACSTransceiver, Reader> createReaderAndTransceiver(final Context context /*final ReaderOpenCallback callback,*/) throws IOException {
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         Reader reader = new Reader(manager);
         UsbDevice externalDevice = externalReaderAttached(context, manager, reader);
@@ -257,12 +264,12 @@ public class NFCClientACS extends AbstractClient {
         int pid = externalDevice.getProductId();
         int vid = externalDevice.getVendorId();
 
-        Log.d(TAG, "pid=" + pid + ", vid="+ vid);
+        Log.d(TAG, "pid=" + pid + ", vid=" + vid);
 
         final int maxLen;
         final boolean acr122u;
-        if(pid == 8704 && vid == 1839) {
-			/*
+        if (pid == 8704 && vid == 1839) {
+            /*
 			 * 64 is the maximum due to a sequence bug in the ACR122u
 			 * http://musclecard.996296
 			 * .n3.nabble.com/ACR122U-response-frames-contain-wrong
@@ -274,14 +281,14 @@ public class NFCClientACS extends AbstractClient {
 			 */
             maxLen = 53;
             acr122u = true;
-        } else if(pid == 8730 && vid == 1839) {
+        } else if (pid == 8730 && vid == 1839) {
             /**
              * The ACR1251U can handle larger message, go for the same amount as the android devices, 245
              */
             maxLen = 53;
             acr122u = false;
         } else {
-            throw new IOException("unknow device with pid "+pid+":"+vid);
+            throw new IOException("unknow device with pid " + pid + ":" + vid);
         }
 
         //ask user for permission
@@ -349,7 +356,7 @@ public class NFCClientACS extends AbstractClient {
         }
 
         private void disableBuzzer() throws ReaderException {
-            if(!acr122u) {
+            if (!acr122u) {
                 return;
             }
             // Disable the standard buzzer when a tag is detected (Section 6.7). It sounds
