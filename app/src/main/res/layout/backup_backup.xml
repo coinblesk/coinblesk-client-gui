@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:aspectRatio="@dimen/backup_aspect_ratio">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/backup_backup"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/backup_backup_touch"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:background="?android:selectableItemBackground"
+                android:clickable="true"
+                android:gravity="center"
+                android:contentDescription="@string/backup_backup_content_description"
+                android:focusable="true"
+                android:text="@string/backup_backup"
+                android:textAppearance="@style/TextAppearance.Body2" />
+
+        </LinearLayout>
+    </com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView>
+
+</LinearLayout>

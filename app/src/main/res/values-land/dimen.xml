@@ -10,6 +10,7 @@
     <dimen name="qr_code_size">290dp</dimen>
     <dimen name="authview_size">180dp</dimen>
 
+    <item name="backup_aspect_ratio" type="dimen" format="float">5</item>
 
     <dimen name="transaction_icon_size">18dp</dimen>
     <dimen name="transaction_icon_horizontal_padding">18dp</dimen>

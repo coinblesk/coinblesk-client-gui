@@ -55,4 +55,8 @@
 
     <color name="authview_small_titles">@color/main_color_500</color>
 
+    <color name="backup_backup">@color/social_about_text</color>
+    <color name="backup_restore">@color/social_about_tos</color>
+    <color name="backup_refresh">@color/social_website</color>
+
 </resources>
