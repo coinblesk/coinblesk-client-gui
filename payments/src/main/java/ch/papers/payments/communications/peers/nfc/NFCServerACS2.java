@@ -82,7 +82,7 @@ public class NFCServerACS2 extends AbstractServer {
 
     @Override
     public void stop() {
-        try {
+/*        try {
             if (!this.isRunning()) {
                 Log.d(TAG, "Already turned off ACS");
             }
@@ -95,7 +95,7 @@ public class NFCServerACS2 extends AbstractServer {
             getContext().unregisterReceiver(broadcastReceiver);
             this.setRunning(false);
         } catch (Exception e) {
-        }
+        }*/
     }
 
     @Override
@@ -154,7 +154,8 @@ public class NFCServerACS2 extends AbstractServer {
         while (fragmentByte < derPayload.length) {
             byte[] fragment = new byte[0];
             if (needsSelectAidApdu) {
-                fragment = createSelectAidApdu(AID_ANDROID_ACS);
+                acsTransceiver.write(createSelectAidApdu(AID_ANDROID_ACS));
+                needsSelectAidApdu = false;
             }
 
             fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
