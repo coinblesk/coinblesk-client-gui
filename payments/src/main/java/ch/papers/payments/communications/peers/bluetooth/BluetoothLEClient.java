@@ -144,7 +144,8 @@ public class BluetoothLEClient extends AbstractClient {
                                 break;
                             case 2:
                                 final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), fullsignedTransaction, halfsignedRefundTransaction);
-
+                                // payment was successful in every way, commit that tx
+                                getWalletServiceBinder().commitTransaction(fullsignedTransaction);
                                 final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
                                 UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
                                     @Override

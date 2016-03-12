@@ -121,6 +121,10 @@ public class WalletService extends Service {
             return WalletService.this.exchangeRate.coinToFiat(getBalance());
         }
 
+        public void commitTransaction(Transaction tx){
+            kit.wallet().commitTx(tx);
+        }
+
         public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
             for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {

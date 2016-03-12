@@ -98,7 +98,6 @@
 -keep class com.xeiam.xchange.bitstamp.dto.marketdata.** {*;}
 
 # spongy castle
-
 -keep class org.spongycastle.crypto.* {*;}
 -keep class org.spongycastle.crypto.digests.* {*;}
 -keep class org.spongycastle.crypto.encodings.* {*;}
@@ -111,10 +110,7 @@
 -keep class org.spongycastle.crypto.signers.* {*;}
 
 -keep class org.spongycastle.jcajce.provider.digest.** {*;}
--keep class org.spongycastle.jcajce.provider.keystore.** {*;}
 -keep class org.spongycastle.jcajce.provider.symmetric.** {*;}
--keep class org.spongycastle.jcajce.spec.* {*;}
--keep class org.spongycastle.jce.** {*;}
 -keep class org.spongycastle.jcajce.provider.asymmetric.** {*;}
--keep class org.spongycastle.crypto.** {*;}
+-keep class org.spongycastle.jcajce.spec.* {*;}
 

@@ -42,7 +42,6 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.nfc.NFCClient2;
 import ch.papers.payments.communications.peers.nfc.NFCClientACS;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
@@ -180,6 +179,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                             public void onPaymentSuccess() {
                                 final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
                                 LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentSucess);
+                                stopClients();
                             }
 
                             @Override

@@ -18,7 +18,6 @@ import java.util.Set;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
-import ch.papers.payments.communications.peers.nfc.NFCClient2;
 import ch.papers.payments.communications.peers.nfc.NFCClient3;
 import ch.papers.payments.communications.peers.wifi.WiFiServer;
 
@@ -104,6 +103,12 @@ public class ServerPeerService extends Service {
                             public void onPaymentSuccess() {
                                 final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
                                 LocalBroadcastManager.getInstance(ServerPeerService.this).sendBroadcast(instantPaymentSucess);
+                                for (Peer server:servers) {
+                                    if(server.isSupported()) {
+                                        server.stop();
+                                    }
+                                }
+                                servers.clear();
                             }
 
                             @Override
@@ -130,5 +135,6 @@ public class ServerPeerService extends Service {
                 server.stop();
             }
         }
+        this.servers.clear();
     }
 }
