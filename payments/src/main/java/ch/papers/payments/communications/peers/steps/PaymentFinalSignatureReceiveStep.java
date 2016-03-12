@@ -7,6 +7,7 @@ import com.coinblesk.json.VerifyTO;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -28,6 +29,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
 
     private final ECKey multisigClientKey;
     private final Address recipientAddress;
+    private Transaction fullSignedTransaction;
 
     public PaymentFinalSignatureReceiveStep(ECKey multisigClientKey, Address recipientAddress) {
         this.multisigClientKey = multisigClientKey;
@@ -38,7 +40,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
     public DERObject process(DERObject input) {
         try {
             final DERSequence derSequence = (DERSequence) input;
-            final byte[] fullSignedTransaction = derSequence.getChildren().get(0).getPayload();
+            this.fullSignedTransaction = new Transaction(Constants.PARAMS,derSequence.getChildren().get(0).getPayload());
             final BigInteger timestamp = ((DERInteger) derSequence.getChildren().get(1)).getBigInteger();
             final TxSig txSig = new TxSig();
             txSig.sigR(((DERInteger) derSequence.getChildren().get(2)).getBigInteger().toString());
@@ -46,7 +48,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
 
             VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
-                    .fullSignedTransaction(fullSignedTransaction)
+                    .fullSignedTransaction(fullSignedTransaction.unsafeBitcoinSerialize())
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());
 
@@ -59,5 +61,9 @@ public class PaymentFinalSignatureReceiveStep implements Step {
         }
 
         return null;
+    }
+
+    public Transaction getFullSignedTransaction() {
+        return fullSignedTransaction;
     }
 }

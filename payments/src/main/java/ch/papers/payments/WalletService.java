@@ -80,6 +80,8 @@ public class WalletService extends Service {
     private ECKey multisigClientKey;
     private ECKey multisigServerKey;
 
+    public static WalletService.WalletServiceBinder WALLET_BINDER;
+
     public class WalletServiceBinder extends Binder {
 
         public WalletServiceBinder() {
@@ -88,6 +90,7 @@ public class WalletService extends Service {
             } catch (UuidObjectStorageException e) {
                 Log.d(TAG,"could not retrieve old exchangerate from storage, staying with preshiped default");
             }
+            WALLET_BINDER = this;
         }
 
         public ExchangeRate getExchangeRate() {
@@ -119,6 +122,10 @@ public class WalletService extends Service {
 
         public Fiat getBalanceFiat() {
             return WalletService.this.exchangeRate.coinToFiat(getBalance());
+        }
+
+        public void commitTransaction(Transaction tx){
+            kit.wallet().commitTx(tx);
         }
 
         public List<TransactionWrapper> getTransactionsByTime() {

@@ -26,6 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentServerHandler;
@@ -51,8 +52,8 @@ public class WiFiServer extends AbstractServer {
     private Map<SecretKeySpec, Socket> secureConnections = new ConcurrentHashMap<SecretKeySpec, Socket>();
 
 
-    public WiFiServer(Context context) {
-        super(context);
+    public WiFiServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
 
     @Override
@@ -106,7 +107,7 @@ public class WiFiServer extends AbstractServer {
                     final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
                     final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
                     this.secureConnections.remove(entry);
-                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer())).start();
+                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer(), this.getWalletServiceBinder())).start();
                 } catch (Exception e) {
                     e.printStackTrace();
                     this.secureConnections.remove(entry);

@@ -289,14 +289,26 @@
 
 
     <style name="TextAppearance.Body2" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">14sp</item> <!-- bug in AppCompat, can remove this when it's fixed -->
+        <item name="android:textSize">14sp</item>
+        <!-- bug in AppCompat, can remove this when it's fixed -->
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
 
     <style name="TextAppearance.Body1" parent="TextAppearance.AppCompat.Body1">
-        <item name="android:textSize">14sp</item> <!-- bug in AppCompat, can remove this when it's fixed -->
+        <item name="android:textSize">14sp</item>
+        <!-- bug in AppCompat, can remove this when it's fixed -->
         <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+
+    <style name="testnet">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">top</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_centerInParent">true</item>
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:orientation">vertical</item>
     </style>
 
 

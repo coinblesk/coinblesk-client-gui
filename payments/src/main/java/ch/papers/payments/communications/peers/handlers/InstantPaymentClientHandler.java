@@ -49,6 +49,8 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
                 final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
                 writeDERObject(paymentFinalSignatureSendStep.process(readDERObject()));
                 Log.d(TAG, "payment was successful, we're done!");
+                // payment was successful in every way, commit that tx
+                walletServiceBinder.commitTransaction(paymentRefundSendStep.getFullSignedTransaction());
                 final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
                 UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
                     @Override

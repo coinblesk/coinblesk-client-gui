@@ -2,7 +2,6 @@ package com.uzh.ckiller.coinblesk_client_gui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,7 @@ import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
 
-import org.ocpsoft.pretty.time.PrettyTime;
+import org.ocpsoft.prettytime.PrettyTime;
 
 import java.util.List;
 
