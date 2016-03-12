@@ -75,7 +75,7 @@ public class ReceiveDialogFragment extends DialogFragment {
                     final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
                     emailIntent.setType("text/html");
                     emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, String.format(getString(R.string.payment_request_html_subject)));
-                    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, Html.fromHtml(String.format(getString(R.string.payment_request_html_content), bitcoinUriString, bitcoinURI.getAddress(), bitcoinURI.getAmount())));
+                    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, Html.fromHtml(String.format(getString(R.string.payment_request_html_content), bitcoinUriString, bitcoinURI.getAmount().toFriendlyString(), bitcoinURI.getAddress())));
                     startActivity(Intent.createChooser(emailIntent, "Email:"));
                 }
             });
