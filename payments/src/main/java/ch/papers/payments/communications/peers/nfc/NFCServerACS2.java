@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import ch.papers.payments.Utils;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractServer;
@@ -47,8 +48,8 @@ public class NFCServerACS2 extends AbstractServer {
     private Reader reader;
     private BroadcastReceiver broadcastReceiver;
 
-    public NFCServerACS2(Context context) {
-        super(context);
+    public NFCServerACS2(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
 
         if (isSupported()) {
             UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
@@ -119,6 +120,8 @@ public class NFCServerACS2 extends AbstractServer {
                             final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), getPaymentRequestUri().getAddress());
                             paymentFinalSignatureReceiveStep.process(paymentFinalSignatureReceiveInput);
 
+
+                            getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                             getPaymentRequestAuthorizer().onPaymentSuccess();
                         } catch (Exception e) {
                         }

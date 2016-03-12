@@ -26,6 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
 import ch.papers.payments.Constants;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
 import ch.papers.payments.communications.peers.handlers.InstantPaymentServerHandler;
@@ -44,8 +45,8 @@ public class BluetoothRFCommServer extends AbstractServer {
 
     private Map<SecretKeySpec, BluetoothSocket> secureConnections = new ConcurrentHashMap<SecretKeySpec, BluetoothSocket>();
 
-    public BluetoothRFCommServer(Context context) {
-        super(context);
+    public BluetoothRFCommServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class BluetoothRFCommServer extends AbstractServer {
 
                     Log.d(TAG,"setting up secure connection");
                     this.secureConnections.remove(entry);
-                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer())).start();
+                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer(), this.getWalletServiceBinder())).start();
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
                 } catch (NoSuchPaddingException e) {

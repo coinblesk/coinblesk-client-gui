@@ -36,6 +36,7 @@ import java.util.Set;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.ServerPeerService;
 import ch.papers.payments.communications.peers.nfc.NFCClient2;
 
@@ -129,7 +130,7 @@ public class ReceiveDialogFragment extends DialogFragment {
                         }, instantPaymentFilter);
 
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
-                        NFCClient2 nfcClient2 = new NFCClient2(getActivity());
+                        NFCClient2 nfcClient2 = new NFCClient2(getActivity(), walletServiceBinder);
                         nfcClient2.bitcoinURI(bitcoinURI);
                         nfcClient2.onChangePaymentRequest();
 
@@ -176,7 +177,10 @@ public class ReceiveDialogFragment extends DialogFragment {
 
         Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
         this.getActivity().startService(serverServiceIntent);
-        this.getActivity().bindService(serverServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        this.getActivity().bindService(serverServiceIntent, peerServiceConnection, Context.BIND_AUTO_CREATE);
+
+        Intent intent = new Intent(this.getActivity(), WalletService.class);
+        this.getActivity().bindService(intent, walletServiceConnection, Context.BIND_AUTO_CREATE);
 
         IntentFilter instantPaymentFilter = new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
         instantPaymentFilter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
@@ -189,21 +193,42 @@ public class ReceiveDialogFragment extends DialogFragment {
     public void onStop() {
         Intent serverServiceIntent = new Intent(this.getActivity(), ServerPeerService.class);
         this.getActivity().stopService(serverServiceIntent);
-        this.getActivity().unbindService(serviceConnection);
+        this.getActivity().unbindService(peerServiceConnection);
+        this.getActivity().unbindService(walletServiceConnection);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(transactionListener);
         super.onStop();
     }
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+
+    private final ServiceConnection walletServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
+
+
+
+    private final ServiceConnection peerServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             serverServiceBinder = (ServerPeerService.ServerServiceBinder) binder;
 
-            if(contactlessTouchView != null && !serverServiceBinder.hasSupportedServers()){
-                contactlessTouchView.setVisibility(View.GONE);
-            }
+            //if(contactlessTouchView != null && !serverServiceBinder.hasSupportedServers()){
+            //    contactlessTouchView.setVisibility(View.GONE);
+            //}
         }
 
         @Override

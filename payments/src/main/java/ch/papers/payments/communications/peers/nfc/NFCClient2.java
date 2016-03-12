@@ -2,7 +2,6 @@ package ch.papers.payments.communications.peers.nfc;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
@@ -10,32 +9,23 @@ import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
-import org.spongycastle.asn1.ASN1Encoding;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
-import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.AbstractServer;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
-import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundReceiveStep;
-import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
-import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 
 /**
@@ -56,7 +46,6 @@ public class NFCClient2 extends AbstractServer {
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    private final PaymentRequestReceiveStep paymentRequestReceiveStep;
 
     private int stepCounter = 0;
     private BitcoinURI bitcoinURI;
@@ -64,12 +53,10 @@ public class NFCClient2 extends AbstractServer {
     private byte[] derResponsePayload = new byte[0];
     private ECKey clientPublicKey;
 
-    public NFCClient2(Activity activity) {
-        super(activity);
+    public NFCClient2(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
-        //quick and dirty
-        this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(WalletService.WALLET_BINDER);
         this.bitcoinURI = getPaymentRequestUri();
     }
 
