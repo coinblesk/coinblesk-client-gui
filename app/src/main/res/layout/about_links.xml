@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView
+    <com.coinblesk.client.ui.widget.AspectRatioView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:aspectRatio="3.236">
@@ -54,7 +54,7 @@
                     android:textAppearance="@style/TextAppearance.Body2" />
             </FrameLayout>
         </LinearLayout>
-    </com.uzh.ckiller.coinblesk_client_gui.ui.widget.AspectRatioView>
+    </com.coinblesk.client.ui.widget.AspectRatioView>
 
 
 </LinearLayout>
