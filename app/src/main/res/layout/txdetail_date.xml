@@ -6,19 +6,19 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/txdetail_exchangerate_title"
+        android:id="@+id/txdetail_date_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginRight="24dp"
         android:layout_marginTop="8dp"
         android:ellipsize="end"
-        android:text="@string/txdetail_exchangerate_title"
+        android:text="@string/txdetail_date_title"
         android:textColor="@color/colorAccent"
         android:textSize="@dimen/text_size_small" />
 
     <TextView
-        android:id="@+id/txdetail_exchangerate_content"
+        android:id="@+id/txdetail_date_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -26,5 +26,6 @@
         android:layout_marginTop="4dp"
         android:textColor="@color/white"
         android:textSize="@dimen/text_size_medium" />
+
 
 </LinearLayout>
