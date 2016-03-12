@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
@@ -18,6 +19,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
+
+import org.bitcoinj.params.TestNet2Params;
+import org.bitcoinj.params.TestNet3Params;
+import org.w3c.dom.Text;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
@@ -37,7 +42,6 @@ public class CurrentBalanceFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // Get all the ImageViews
         View view = getView();
         final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
@@ -46,6 +50,13 @@ public class CurrentBalanceFragment extends Fragment {
         UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
         UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
         UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
+
+        if(Constants.PARAMS.equals(TestNet3Params.get()) || Constants.PARAMS.equals(TestNet2Params.get())){
+            final TextView testnet = (TextView) view.findViewById(R.id.testnet_textview);
+            testnet.setText("Connected to:" + Constants.PARAMS.toString());
+            testnet.setTextColor(Color.parseColor("#ffff4444"));
+            testnet.setVisibility(View.VISIBLE);
+        }
 
     }
 
