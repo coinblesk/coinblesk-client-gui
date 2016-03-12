@@ -9,17 +9,25 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
+import ch.papers.payments.WalletService;
+import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import ch.papers.payments.communications.peers.steps.PaymentRefundReceiveStep;
+import ch.papers.payments.communications.peers.steps.PaymentRefundSendStep;
+import ch.papers.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
 
 /**
@@ -28,14 +36,12 @@ import ch.papers.payments.communications.peers.steps.PaymentRequestSendStep;
  * a.decarli@papers.ch
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class NFCService extends HostApduService {
-    private final static String TAG = NFCService.class.getSimpleName();
+public class NFCService2 extends HostApduService {
+    private final static String TAG = NFCService2.class.getSimpleName();
 
 
     private int stepCounter = 0;
     private boolean isProcessing = false;
-    private BitcoinURI bitcoinURI;
-    private ECKey clientPublicKey;
 
     private byte[] derRequestPayload = new byte[0];
     private byte[] derResponsePayload = new byte[0];
@@ -44,6 +50,11 @@ public class NFCService extends HostApduService {
     private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
     private static final byte[] AID_ANDROID_ACS = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x04};
     private int maxFragmentSize = 245;
+
+    private BitcoinURI bitcoinURI;
+    private long timestamp;
+    private Transaction tx;
+    private Transaction refund;
 
 
     @Override
@@ -75,8 +86,11 @@ public class NFCService extends HostApduService {
                 derRequestPayload = new byte[0];
                 derResponsePayload = new byte[0];
                 stepCounter = 0;
-                clientPublicKey = null;
                 isProcessing = false;
+                bitcoinURI = null;
+                timestamp = 0;
+                tx = null;
+                refund = null;
 
                 byte[] aid = Arrays.copyOfRange(commandApdu, 5, derPayloadStartIndex - 1);
                 if (Arrays.equals(aid, AID_ANDROID)) {
@@ -109,29 +123,29 @@ public class NFCService extends HostApduService {
 
                                 switch (stepCounter) {
                                     case 0:
-                                        PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(bitcoinURI);
-                                        derResponsePayload = paymentRequestSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
+                                        PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(WalletService.WALLET_BINDER);
+                                        derResponsePayload = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        bitcoinURI = paymentRequestReceiveStep.getBitcoinURI();
+                                        timestamp = paymentRequestReceiveStep.getTimestamp();
                                         stepCounter++;
                                         Log.d(TAG, "got payload1: " + derResponsePayload.length);
                                         break;
                                     case 1:
-                                        PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(bitcoinURI);
-                                        derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                        clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                        //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
+                                        final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(WalletService.WALLET_BINDER,
+                                                bitcoinURI, timestamp);
+                                        derResponsePayload = paymentRefundSendStep1.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        tx = paymentRefundSendStep1.getFullSignedTransaction();
+                                        refund = paymentRefundSendStep1.getHalfSignedRefundTransaction();
                                         Log.d(TAG, "got payload2: " + derResponsePayload.length);
                                         stepCounter++;
                                         break;
                                     case 2:
-                                        final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
-                                        derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                        Log.d(TAG, "got payload3: " + derResponsePayload.length);
-                                        stepCounter++;
-                                        break;
-                                    case 3:
-                                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(clientPublicKey, bitcoinURI.getAddress());
-                                        derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                        LocalBroadcastManager.getInstance(NFCService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
-                                        Log.d(TAG, "got payload4: " + derResponsePayload.length);
+                                        //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
+                                        PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(WalletService.WALLET_BINDER,
+                                                bitcoinURI.getAddress(), tx, refund);
+                                        derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                         stepCounter++;
                                         break;
                                 }

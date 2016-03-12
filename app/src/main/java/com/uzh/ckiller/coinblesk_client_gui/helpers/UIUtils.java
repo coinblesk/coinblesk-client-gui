@@ -261,7 +261,7 @@ public class UIUtils {
         final int coinLength = friendlyAmount.length() - 3;
 
         friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()).toFriendlyString());
-        friendlyAmount.append(" as of now");
+        friendlyAmount.append(System.getProperty("line.separator") + "(1 BTC = " + transaction.getTransaction().getExchangeRate().fiat.toFriendlyString() + " as of now)");
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);

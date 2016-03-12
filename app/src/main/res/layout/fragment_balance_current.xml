@@ -9,6 +9,8 @@
         android:id="@+id/balance_card_view"
         style="@style/card_view">
 
+        <include layout="@layout/testnet" />
+
         <include layout="@layout/connections" />
 
         <RelativeLayout
