@@ -42,7 +42,7 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.nfc.NFCClient;
+import ch.papers.payments.communications.peers.nfc.NFCClient2;
 import ch.papers.payments.communications.peers.nfc.NFCClientACS;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
@@ -250,7 +250,7 @@ public class SendPaymentFragment extends KeyboardFragment {
             final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
             if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
-                clients.add(new NFCClient(getActivity(), walletServiceBinder));
+                //clients.add(new NFCClient2(getActivity(), walletServiceBinder));
                 clients.add(new NFCClientACS(getActivity(), walletServiceBinder));
             }
 

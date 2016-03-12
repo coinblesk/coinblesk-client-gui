@@ -37,6 +37,7 @@ import java.util.Set;
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
 import ch.papers.payments.communications.peers.ServerPeerService;
+import ch.papers.payments.communications.peers.nfc.NFCClient2;
 
 /**
  * Created by ckiller
@@ -128,6 +129,10 @@ public class ReceiveDialogFragment extends DialogFragment {
                         }, instantPaymentFilter);
 
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
+                        NFCClient2 nfcClient2 = new NFCClient2(getActivity());
+                        nfcClient2.bitcoinURI(bitcoinURI);
+                        nfcClient2.onChangePaymentRequest();
+
                     }
 
                 });

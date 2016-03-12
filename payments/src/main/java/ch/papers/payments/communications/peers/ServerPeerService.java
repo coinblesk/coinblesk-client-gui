@@ -18,7 +18,8 @@ import java.util.Set;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEServer;
-import ch.papers.payments.communications.peers.nfc.NFCServer;
+import ch.papers.payments.communications.peers.nfc.NFCClient2;
+import ch.papers.payments.communications.peers.nfc.NFCClient3;
 import ch.papers.payments.communications.peers.wifi.WiFiServer;
 
 /**
@@ -79,7 +80,7 @@ public class ServerPeerService extends Service {
                 final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
                 if(connectionSettings.contains(NFC_ACTIVATED)){
-                    ServerPeerService.this.servers.add(new NFCServer(ServerPeerService.this));
+                    ServerPeerService.this.servers.add(new NFCClient3(ServerPeerService.this));
                 }
 
                 if(connectionSettings.contains(BT_ACTIVATED)){
