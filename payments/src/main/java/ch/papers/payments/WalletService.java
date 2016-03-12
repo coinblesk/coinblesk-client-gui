@@ -42,6 +42,7 @@ import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.Protos;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.ArrayList;
@@ -323,6 +324,24 @@ public class WalletService extends Service {
         public byte[] getSerializedWallet() {
             Protos.Wallet proto = new WalletProtobufSerializer().walletToProto(WalletService.this.kit.wallet());
             return proto.toByteArray();
+        }
+
+        public Wallet getWallet() {
+            return WalletService.this.kit.wallet();
+        }
+
+
+        public void prepareWalletReset() {
+            WalletService.this.kit.wallet().reset();
+            WalletService.this.kit.wallet().shutdownAutosaveAndWait();
+            // delete blockstore chain file -- this triggers re-downloading the chain (wallet replay)
+            File blockstore = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
+            blockstore.delete();
+        }
+
+        public void deleteWalletFile() {
+            File wallet = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+            wallet.delete();
         }
     }
 

@@ -205,7 +205,6 @@ public class BackupDialogFragment extends DialogFragment {
         }
     }
 
-
     private void addWalletToZip(ZipOutputStream zos) throws IOException {
         byte[] wallet = walletServiceBinder.getSerializedWallet();
         if (wallet != null && wallet.length > 0) {

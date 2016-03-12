@@ -13,8 +13,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.BackupDialogFragment;
+import com.uzh.ckiller.coinblesk_client_gui.ui.dialogs.BackupRestoreDialogFragment;
+import org.bitcoinj.core.Wallet;
+
+import java.io.File;
 
 
 public class BackupActivity extends AppCompatActivity {
@@ -52,6 +57,9 @@ public class BackupActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Restore.");
+            FragmentManager fm = getSupportFragmentManager();
+            DialogFragment restoreDialog = BackupRestoreDialogFragment.newInstance();
+            restoreDialog.show(fm, "fragment_backup_restore_dialog");
         }
     }
 
@@ -59,6 +67,8 @@ public class BackupActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Refresh.");
+            walletServiceBinder.prepareWalletReset();
+            finishAffinity();
         }
     }
 
@@ -80,7 +90,7 @@ public class BackupActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         Intent intent = new Intent(this, WalletService.class);
-        this.startService(intent);
+        //this.startService(intent);
         this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 

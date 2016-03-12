@@ -47,7 +47,7 @@
     <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download folder. The backup is encrypted using your password.</string>
 
     <string name="fragment_backup_restore_title">Restore Wallet</string>
-    <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password.</string>
+    <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password. The backup file must be in your Download folder.</string>
 
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>
