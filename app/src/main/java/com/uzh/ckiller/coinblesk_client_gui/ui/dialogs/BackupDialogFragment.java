@@ -24,15 +24,20 @@ import android.widget.EditText;
 import android.widget.TextView;
 import static android.view.View.VISIBLE;
 import static android.view.View.INVISIBLE;
+
+import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.payments.Constants;
 import ch.papers.payments.WalletService;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.uzh.ckiller.coinblesk_client_gui.R;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.Encryption;
 import com.uzh.ckiller.coinblesk_client_gui.helpers.UIUtils;
+import org.apache.commons.io.filefilter.NameFileFilter;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -42,11 +47,19 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by Andreas Albrecht
  */
 
+/**
+ * Decrypt backup with openssl:
+ * (1) openssl enc -d -aes-256-cbc -a -in coinblesk_wallet_backup_2016-03-12-16-03-31_encrypted > coinblesk_wallet_backup_2016-03-12-16-03-31_decrypted.zip
+ * (2) enter password
+ * (3) extract zip
+ */
 public class BackupDialogFragment extends DialogFragment {
 
     private WalletService.WalletServiceBinder walletServiceBinder;
@@ -135,52 +148,91 @@ public class BackupDialogFragment extends DialogFragment {
         return pwdMatch;
     }
 
+    private File[] getObjectStorageFiles() {
+        File root = getActivity().getFilesDir();
+        File files[] = root.listFiles((FilenameFilter) new WildcardFileFilter("*.json"));
+        return files;
+    }
+
     private void doBackup() {
-        final File backupFile = getWalletBackupFile();
+        final File backupFile = getWalletBackupFileName();
         final String password = passwordEditText.getText().toString();
         Preconditions.checkState(password.equals(passwordAgainEditText.getText().toString()) && password.length() > 0);
         clearPasswordInput();
 
-        byte[] wallet = walletServiceBinder.getSerializedWallet();
-        if (wallet != null && wallet.length > 0) {
-            Writer out = null;
-            try {
+        Writer fileOut = null;
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final ZipOutputStream zos = new ZipOutputStream(baos);
+            Log.i(TAG, "ZIP File for backup: " + backupFile);
 
-                out = new OutputStreamWriter(new FileOutputStream(backupFile), Charsets.UTF_8);
-                out.write(Encryption.encrypt(wallet, password.toCharArray()));
-                out.flush();
-                Log.i(TAG, "Wallet backup finished. File = [" + backupFile + "]");
+            // assemble all content to backup -- add to zip
+            addObjectStorageFilesToZip(zos);
+            addWalletToZip(zos);
 
-                // ask user whether he wants backup file as mail attachment
-                showSendMailDialog(backupFile);
+            // encrypt zip bytes and write to file
+            zos.close();
+            byte[] plainBackup = baos.toByteArray();
+            String encryptedBackup = Encryption.encrypt(plainBackup, password.toCharArray());
+            fileOut = new OutputStreamWriter(new FileOutputStream(backupFile), Charsets.UTF_8);
+            fileOut.write(encryptedBackup);
+            fileOut.flush();
+            Log.i(TAG, "Wallet backup finished. File = [" + backupFile + "]");
 
-            } catch (Exception e) {
-                Log.w(TAG, "Could not save backup.", e);
+            // ask user whether he wants backup file as mail attachment
+            showSendMailDialog(backupFile);
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Wallet Backup Failed")
-                        .setMessage("The wallet could not be stored on the device: " + e.getMessage())
-                        .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .create()
-                        .show();
-
-            } finally {
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException e) {
-                        Log.d(TAG, "Could not close output writer for backup file.", e);
-                    }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not write to file", e);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle("Wallet Backup Failed")
+                    .setMessage("The wallet could not be stored on the device: " + e.getMessage())
+                    .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create()
+                    .show();
+        } finally {
+            if (fileOut != null) {
+                try {
+                    fileOut.close();
+                } catch (IOException e) {
+                    Log.i(TAG, "Could not close output stream");
                 }
             }
         }
     }
 
-    private File getWalletBackupFile() {
+
+    private void addWalletToZip(ZipOutputStream zos) throws IOException {
+        byte[] wallet = walletServiceBinder.getSerializedWallet();
+        if (wallet != null && wallet.length > 0) {
+            addZipEntry("wallet", wallet, zos);
+        }
+    }
+
+    private void addObjectStorageFilesToZip(ZipOutputStream zos) throws IOException {
+        File files[] = getObjectStorageFiles();
+        for (File f : files) {
+            String filename = f.getName();
+            byte[] bytes = Files.toByteArray(f);
+            addZipEntry(filename, bytes, zos);
+        }
+    }
+
+    private void addZipEntry(String filename, byte[] bytes, ZipOutputStream zos) throws IOException {
+        ZipEntry entry = new ZipEntry(filename);
+        zos.putNextEntry(entry);
+        zos.write(bytes);
+        zos.closeEntry();
+        zos.flush();
+        Log.i(TAG, "Added file to zip: ["+filename+"]");
+    }
+
+
+    private File getWalletBackupFileName() {
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File walletFile = null;
 

@@ -40,11 +40,14 @@
     <string name="backup_refresh">Refresh\n<i>By refreshing your wallet you re-download all your transactions. You won\'t loose your coins.</i></string>
     <string name="backup_refresh_content_description">Refresh your wallet</string>
 
-    <string name="fragment_backup_title">Backup wallet</string>
+    <string name="fragment_backup_title">Backup Wallet</string>
     <string name="fragment_backup_password_text_hint">Password</string>
     <string name="fragment_backup_password_again_text_hint">Repeat Password</string>
     <string name="fragment_backup_passwordmismatch_text">Passwords do not match</string>
     <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download folder. The backup is encrypted using your password.</string>
+
+    <string name="fragment_backup_restore_title">Restore Wallet</string>
+    <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password.</string>
 
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>
