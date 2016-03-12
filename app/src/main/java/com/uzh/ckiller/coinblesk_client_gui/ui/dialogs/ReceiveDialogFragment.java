@@ -119,8 +119,11 @@ public class ReceiveDialogFragment extends DialogFragment {
                         LocalBroadcastManager.getInstance(getContext()).registerReceiver(new BroadcastReceiver() {
                             @Override
                             public void onReceive(Context context, Intent intent) {
-                                alertDialog.dismiss();
                                 LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
+                                try {
+                                    alertDialog.dismiss();
+                                } catch (Exception e){}
+
                             }
                         }, instantPaymentFilter);
 

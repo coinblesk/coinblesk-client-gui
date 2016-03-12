@@ -15,20 +15,15 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontobfuscate
+
 -keep public class * implements ch.papers.objectstorage.models.UuidObject
 -keep public class * extends android.app.Service
 -keep public class * extends android.content.BroadcastReceiver
 
-
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int v(...);
-    public static int i(...);
-    public static int w(...);
-    public static int d(...);
-    public static int e(...);
-}
-
+# Pretty Time
+-keepnames class ** implements org.ocpsoft.prettytime.TimeUnit
+-keep class org.ocpsoft.prettytime.i18n.**
 
 -assumenosideeffects class * implements org.slf4j.Logger {
     public *** trace(...);
@@ -98,3 +93,4 @@
 -dontnote com.google.common.reflect.**
 -dontnote com.google.common.util.concurrent.MoreExecutors
 -dontnote com.google.common.cache.Striped64,com.google.common.cache.Striped64$Cell
+
