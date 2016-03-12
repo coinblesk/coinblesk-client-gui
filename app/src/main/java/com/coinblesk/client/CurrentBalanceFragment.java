@@ -24,8 +24,8 @@ import com.coinblesk.client.helpers.UIUtils;
 import org.bitcoinj.params.TestNet2Params;
 import org.bitcoinj.params.TestNet3Params;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller on 10/01/16.

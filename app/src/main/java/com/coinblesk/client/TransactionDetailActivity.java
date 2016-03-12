@@ -40,9 +40,9 @@ import android.widget.TextView;
 import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
-import ch.papers.payments.models.TransactionWrapper;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.models.TransactionWrapper;
 
 
 public class TransactionDetailActivity extends AppCompatActivity {

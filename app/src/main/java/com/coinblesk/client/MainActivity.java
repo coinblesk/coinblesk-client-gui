@@ -36,7 +36,7 @@ import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.WalletService;
 
 
 /**

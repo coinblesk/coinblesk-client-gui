@@ -16,7 +16,7 @@ import org.ocpsoft.prettytime.PrettyTime;
 
 import java.util.List;
 
-import ch.papers.payments.models.TransactionWrapper;
+import com.coinblesk.payments.models.TransactionWrapper;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 15/02/16.

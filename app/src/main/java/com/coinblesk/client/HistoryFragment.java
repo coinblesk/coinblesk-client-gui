@@ -18,8 +18,8 @@ import android.view.ViewGroup;
 
 import com.coinblesk.client.coinblesk_client_gui.R;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller

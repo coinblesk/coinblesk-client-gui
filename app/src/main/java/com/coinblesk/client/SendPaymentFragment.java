@@ -37,14 +37,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.Utils;
-import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.AbstractClient;
-import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
-import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.nfc.NFCClientACS;
-import ch.papers.payments.communications.peers.wifi.WiFiClient;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.Utils;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.AbstractClient;
+import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
+import com.coinblesk.payments.communications.peers.nfc.NFCClientACS;
+import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.

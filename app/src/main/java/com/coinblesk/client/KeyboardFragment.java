@@ -31,8 +31,8 @@ import org.bitcoinj.utils.Fiat;
 import java.math.BigDecimal;
 import java.util.List;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller on 24/01/16.

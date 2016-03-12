@@ -34,11 +34,11 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import java.util.HashSet;
 import java.util.Set;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.Utils;
-import ch.papers.payments.WalletService;
-import ch.papers.payments.communications.peers.ServerPeerService;
-import ch.papers.payments.communications.peers.nfc.NFCClient2;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.Utils;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.ServerPeerService;
+import com.coinblesk.payments.communications.peers.nfc.NFCClient2;
 
 /**
  * Created by ckiller

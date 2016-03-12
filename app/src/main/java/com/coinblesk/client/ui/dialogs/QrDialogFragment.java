@@ -26,7 +26,7 @@ import com.coinblesk.client.helpers.UIUtils;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import ch.papers.payments.Utils;
+import com.coinblesk.payments.Utils;
 
 /**
  * Created by ckiller

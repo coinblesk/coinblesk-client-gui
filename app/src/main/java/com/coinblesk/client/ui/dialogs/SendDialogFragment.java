@@ -31,8 +31,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import ch.papers.payments.Constants;
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller

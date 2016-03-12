@@ -26,8 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ch.papers.payments.WalletService;
-import ch.papers.payments.models.TransactionWrapper;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.models.TransactionWrapper;
 
 /**
  * Created by ckiller on 03/03/16.

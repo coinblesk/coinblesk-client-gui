@@ -13,7 +13,7 @@ import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import ch.papers.payments.WalletService;
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
