@@ -185,8 +185,8 @@ public class BackupDialogFragment extends DialogFragment {
         } catch (Exception e) {
             Log.w(TAG, "Could not write to file", e);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("Wallet Backup Failed")
-                    .setMessage("The wallet could not be stored on the device: " + e.getMessage())
+            builder.setTitle(R.string.fragment_backup_failed_title)
+                    .setMessage(getString(R.string.fragment_backup_failed_message) + ": " + e.getMessage())
                     .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.dismiss();
@@ -275,7 +275,7 @@ public class BackupDialogFragment extends DialogFragment {
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             final String backupFile = getArguments().getString("backup_file");
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                    .setTitle("Wallet Backup")
+                    .setTitle(R.string.fragment_backup_success_title)
                     .setMessage(Html.fromHtml("The wallet was stored on your device: <pre>"
                             +backupFile+
                             "</pre>.<br /><br />Do you want to send the backup via email?"))

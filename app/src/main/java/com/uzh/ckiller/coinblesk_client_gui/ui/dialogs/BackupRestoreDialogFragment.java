@@ -66,6 +66,7 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         File[] backupFiles = backupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
+                // TODO: implement something nicer than searching by file prefix...
                 return filename.startsWith("coinblesk_wallet_backup");
             }
         });
@@ -162,8 +163,8 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         } catch (Exception e) {
             Log.w(TAG, "Could not restore backup: ", e);
             new AlertDialog.Builder(this.getContext())
-                    .setTitle("Restore Failed")
-                    .setMessage("Could not restore backup from file due to error: " + e.getMessage())
+                    .setTitle(R.string.fragment_backup_restore_failed_title)
+                    .setMessage(getString(R.string.fragment_backup_restore_failed_message) + ": " + e.getMessage())
                     .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

@@ -45,9 +45,14 @@
     <string name="fragment_backup_password_again_text_hint">Repeat Password</string>
     <string name="fragment_backup_passwordmismatch_text">Passwords do not match</string>
     <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download folder. The backup is encrypted using your password.</string>
+    <string name="fragment_backup_failed_title">Wallet Backup Failed</string>
+    <string name="fragment_backup_failed_message">The wallet could not be stored on the device</string>
+    <string name="fragment_backup_success_title">Wallet Backup</string>
 
     <string name="fragment_backup_restore_title">Restore Wallet</string>
     <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password. The backup file must be in your Download folder.</string>
+    <string name="fragment_backup_restore_failed_title">Restore Failed</string>
+    <string name="fragment_backup_restore_failed_message">Could not restore backup from file due to error</string>
 
     <!--Standard Dialog Strings-->
     <string name="send">Send</string>
