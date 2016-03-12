@@ -3,7 +3,7 @@ package ch.papers.payments.communications.peers.nfc;
 /**
  * Created by draft on 10.03.16.
  */
-public interface NFCClientACSCallback {
+public interface NFCServerACSCallback {
     void tagDiscovered(ACSTransceiver transceiver);
 
     void tagFailed();

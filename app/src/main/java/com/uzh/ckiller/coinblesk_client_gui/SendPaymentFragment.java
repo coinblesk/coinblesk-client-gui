@@ -42,7 +42,6 @@ import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.AbstractClient;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.bluetooth.BluetoothLEClient;
-import ch.papers.payments.communications.peers.nfc.NFCClient;
 import ch.papers.payments.communications.peers.nfc.NFCClientACS;
 import ch.papers.payments.communications.peers.wifi.WiFiClient;
 
@@ -96,10 +95,10 @@ public class SendPaymentFragment extends KeyboardFragment {
                                 public void run() {
                                     for (AbstractClient client : clients) {
                                         if (client.isRunning()) {
-                                            //client.setReadyForInstantPayment(false);
-                                            //client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
+                                            client.setReadyForInstantPayment(false);
+                                            client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
                                         } else {
-                                            //client.stop();
+                                            client.stop();
                                         }
                                     }
                                     dismissDialog();
@@ -180,6 +179,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                             public void onPaymentSuccess() {
                                 final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
                                 LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentSucess);
+                                stopClients();
                             }
 
                             @Override
@@ -230,15 +230,34 @@ public class SendPaymentFragment extends KeyboardFragment {
     @Override
     public void onStop() {
         this.stopClients();
+        this.clients.clear();
         this.getActivity().unbindService(serviceConnection);
         super.onStop();
+    }
+
+    private void initClients() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+
+        if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
+            //clients.add(new NFCClient2(getActivity(), walletServiceBinder));
+            clients.add(new NFCClientACS(getActivity(), walletServiceBinder));
+        }
+
+        if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
+            clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
+            //clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
+        }
+
+        if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {
+            clients.add(new WiFiClient(getContext(), walletServiceBinder));
+        }
     }
 
     private void stopClients() {
         for (AbstractClient peer : this.clients) {
             peer.stop();
         }
-        clients.clear();
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -246,22 +265,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-            final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
-
-            if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
-                clients.add(new NFCClient(getActivity(), walletServiceBinder));
-                clients.add(new NFCClientACS(getActivity(), walletServiceBinder));
-            }
-
-            if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
-                clients.add(new BluetoothLEClient(getContext(), walletServiceBinder));
-                //clients.add(new BluetoothRFCommClient(getContext(), walletServiceBinder));
-            }
-
-            if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {
-                clients.add(new WiFiClient(getContext(), walletServiceBinder));
-            }
+            initClients();
         }
 
         @Override

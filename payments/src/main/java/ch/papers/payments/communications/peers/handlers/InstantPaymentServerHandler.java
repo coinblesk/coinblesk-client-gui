@@ -7,6 +7,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.peers.PaymentRequestAuthorizer;
 import ch.papers.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import ch.papers.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
@@ -23,11 +24,13 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
 
     private final BitcoinURI paymentUri;
     private final PaymentRequestAuthorizer paymentRequestAuthorizer;
+    private final WalletService.WalletServiceBinder walletServiceBinder;
 
-    public InstantPaymentServerHandler(InputStream inputStream, OutputStream outputStream, BitcoinURI paymentUri, PaymentRequestAuthorizer paymentRequestAuthorizer) {
+    public InstantPaymentServerHandler(InputStream inputStream, OutputStream outputStream, BitcoinURI paymentUri, PaymentRequestAuthorizer paymentRequestAuthorizer, WalletService.WalletServiceBinder walletServiceBinder) {
         super(inputStream,outputStream);
         this.paymentUri = paymentUri;
         this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+        this.walletServiceBinder = walletServiceBinder;
     }
 
 
@@ -47,6 +50,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
             final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), this.paymentUri.getAddress());
             paymentFinalSignatureReceiveStep.process(readDERObject());
 
+            walletServiceBinder.commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
             paymentRequestAuthorizer.onPaymentSuccess();
             Log.d(TAG, "payment was successful in " + (startTime - System.currentTimeMillis()));
         } catch (Exception e){

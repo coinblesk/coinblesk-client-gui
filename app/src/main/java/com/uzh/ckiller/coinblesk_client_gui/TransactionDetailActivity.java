@@ -95,7 +95,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
         try {
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
             ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getTransaction().getConfidence().toString());
-            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText(""+transaction.getTransaction().getExchangeRate().fiat.toFriendlyString());
+//            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText(""+transaction.getTransaction().getExchangeRate().fiat.toFriendlyString());
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
             ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash.toString());
 

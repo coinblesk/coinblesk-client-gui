@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import ch.papers.payments.Constants;
 import ch.papers.payments.Utils;
+import ch.papers.payments.WalletService;
 import ch.papers.payments.communications.messages.DERObject;
 import ch.papers.payments.communications.messages.DERParser;
 import ch.papers.payments.communications.peers.AbstractServer;
@@ -46,8 +47,8 @@ public class BluetoothLEServer extends AbstractServer {
     private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private BluetoothGattServer bluetoothGattServer;
 
-    public BluetoothLEServer(Context context) {
-        super(context);
+    public BluetoothLEServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
     }
     private int maxFragmentSize = 297;
 
@@ -152,6 +153,8 @@ public class BluetoothLEServer extends AbstractServer {
                             case 2:
                                 final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey, getPaymentRequestUri().getAddress());
                                 paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+
+                                getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                                 getPaymentRequestAuthorizer().onPaymentSuccess();
                                 break;
 
