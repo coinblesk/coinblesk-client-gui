@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(NfcAdapter.getDefaultAdapter(this) != null) {
+        if (NfcAdapter.getDefaultAdapter(this) != null) {
             NfcAdapter.getDefaultAdapter(this).setNdefPushMessage(null, this);
         }
     }
@@ -80,18 +80,9 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final String networkSettings = sharedPreferences.getString(NETWORK_SETTINGS_PREF_KEY, "main-net");
 
-        switch (networkSettings){
+        switch (networkSettings) {
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
-                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin.csg.uzh.ch/coinblesk-server/";
-                Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
-                Constants.RETROFIT = new Retrofit.Builder()
-                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-                        .build();
-                break;
-            default:
-                Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
                 Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
@@ -99,9 +90,18 @@ public class MainActivity extends AppCompatActivity {
                         .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
                         .build();
                 break;
+            default:
+                Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
+                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin.csg.uzh.ch/coinblesk-server/";
+                Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
+                Constants.RETROFIT = new Retrofit.Builder()
+                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
+                        .build();
+                break;
         }
 
-        File objectStorageDir = new File(this.getFilesDir(),Constants.WALLET_FILES_PREFIX+"_uuid_object_storage");
+        File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();
         UuidObjectStorage.getInstance().init(objectStorageDir);
 
@@ -114,11 +114,11 @@ public class MainActivity extends AppCompatActivity {
 
 
         final Intent intent = getIntent();
-        final String scheme=intent.getScheme();
-        if(scheme != null && scheme.equals(BitcoinURI.BITCOIN_SCHEME)){
+        final String scheme = intent.getScheme();
+        if (scheme != null && scheme.equals(BitcoinURI.BITCOIN_SCHEME)) {
             try {
                 BitcoinURI bitcoinURI = new BitcoinURI(intent.getDataString());
-                SendDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(this.getSupportFragmentManager(),"send-dialog");
+                SendDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(this.getSupportFragmentManager(), "send-dialog");
             } catch (BitcoinURIParseException e) {
                 e.printStackTrace();
             }
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showQrDialog() {
-        String bitcoinUriString = BitcoinURI.convertToBitcoinURI(this.walletServiceBinder.getCurrentReceiveAddress(),null, null, null);
+        String bitcoinUriString = BitcoinURI.convertToBitcoinURI(this.walletServiceBinder.getCurrentReceiveAddress(), null, null, null);
         try {
             QrDialogFragment.newInstance(new BitcoinURI(bitcoinUriString)).show(this.getSupportFragmentManager(), "qr_dialog_fragment");
         } catch (BitcoinURIParseException e) {
@@ -268,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TAG,"onStop");
+        Log.d(TAG, "onStop");
         Intent intent = new Intent(this, WalletService.class);
         this.unbindService(this.serviceConnection);
         this.stopService(intent);
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            String currency = prefs.getString("pref_currency_list","USD");
+            String currency = prefs.getString("pref_currency_list", "USD");
             walletServiceBinder.setCurrency(currency);
         }
 
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupWindowAnimations() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            Slide slide =  new Slide();
+            Slide slide = new Slide();
             slide.setDuration(1000);
             getWindow().setExitTransition(slide);
         }
@@ -310,10 +310,10 @@ public class MainActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG,"discovery supported");
+                    Log.d(TAG, "discovery supported");
                     // BLE and BL will be supported
                 } else {
-                    Log.d(TAG,"discovery unsupported");
+                    Log.d(TAG, "discovery unsupported");
                     // BLE and BL will not be supported
                 }
                 return;
