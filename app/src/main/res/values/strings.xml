@@ -228,6 +228,10 @@
     <string name="instant_payment_success_message">Instant Payment was successful</string>
     <string name="instant_payment_error_message">Unfortunately, there was an error during the instant payment process: %1$s</string>
     <string name="authview_title">Authview</string>
+    <string name="pref_advanced_settings_category_title">Advanced</string>
+    <string name="pref_network_dialog_title">Bitcoin Network</string>
+    <string name="pref_network_description">Select the bitcoin network</string>
+    <string name="pref_network_default_value">main-net</string>
 
 
 </resources>

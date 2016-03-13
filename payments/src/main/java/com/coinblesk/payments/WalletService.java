@@ -357,7 +357,6 @@ public class WalletService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        UuidObjectStorage.getInstance().init(this.getFilesDir());
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
 

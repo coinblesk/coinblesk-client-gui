@@ -16,11 +16,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * a.decarli@papers.ch
  */
 public class Constants {
-    public final static NetworkParameters PARAMS = TestNet3Params.get();
+    public static NetworkParameters PARAMS = TestNet3Params.get();
+
     public final static long UNIX_TIME_MONTH = 60*60*24*30;
     public final static int LOCK_TIME_MONTHS = 3;
     public final static int LOCK_THRESHOLD = 60*4;//https://bitcoin.org/en/developer-reference#block-headers
-    public final static String WALLET_FILES_PREFIX = "remote_cbs_wallet_";
+    public static String WALLET_FILES_PREFIX = "mainnet_wallet_";
     public final static String WALLET_KEY_NAME = "remote_wallet_key";
 
     public static final String MULTISIG_CLIENT_KEY_NAME = "remote_client_public_key";
@@ -49,8 +50,8 @@ public class Constants {
 
     // coinblesk server communication
     //public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.176:8080/";
-    public static final String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
-    public static final Retrofit RETROFIT = new Retrofit.Builder()
+    public static String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    public static Retrofit RETROFIT = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
             .build();

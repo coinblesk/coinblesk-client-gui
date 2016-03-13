@@ -33,15 +33,6 @@
             android:summary="@string/pref_bitcoin_rep_description"
             android:title="@string/pref_bitcoin_rep_title" />
 
-        <ListPreference
-            android:defaultValue="@string/pref_transaction_history_default_value"
-            android:dialogTitle="@string/pref_transaction_history_title"
-            android:entries="@array/pref_transaction_history_values"
-            android:entryValues="@array/pref_transaction_history_values"
-            android:key="pref_transaction_history_list"
-            android:summary="@string/pref_transaction_history_description"
-            android:title="@string/pref_transaction_history_title" />
-
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -92,6 +83,21 @@
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/pref_auto_accept_amount_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_payment_advanced_settings"
+        android:title="@string/pref_advanced_settings_category_title">
+
+        <ListPreference
+            android:defaultValue="@string/pref_network_default_value"
+            android:dialogTitle="@string/pref_network_dialog_title"
+            android:entries="@array/pref_network_entries"
+            android:entryValues="@array/pref_network_values"
+            android:key="pref_network_list"
+            android:summary="@string/pref_network_description"
+            android:title="@string/pref_network_dialog_title" />
 
     </PreferenceCategory>
 </PreferenceScreen>
