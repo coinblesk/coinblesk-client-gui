@@ -32,11 +32,20 @@ import android.widget.Toast;
 import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.util.SerializeUtils;
 
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import com.coinblesk.payments.WalletService;
+import java.io.File;
+
+import ch.papers.objectstorage.UuidObjectStorage;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 /**
@@ -46,6 +55,9 @@ import com.coinblesk.payments.WalletService;
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getName();
     private final static int FINE_LOCATION_PERMISSION_REQUEST = 1;
+
+    private final String NETWORK_SETTINGS_PREF_KEY = "pref_network_list";
+
 
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
@@ -65,6 +77,33 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final String networkSettings = sharedPreferences.getString(NETWORK_SETTINGS_PREF_KEY, "main-net");
+
+        switch (networkSettings){
+            case "test-net-3":
+                Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
+                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin.csg.uzh.ch/coinblesk-server/";
+                Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
+                Constants.RETROFIT = new Retrofit.Builder()
+                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
+                        .build();
+                break;
+            default:
+                Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
+                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+                Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
+                Constants.RETROFIT = new Retrofit.Builder()
+                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
+                        .build();
+                break;
+        }
+
+        File objectStorageDir = new File(this.getFilesDir(),Constants.WALLET_FILES_PREFIX+"_uuid_object_storage");
+        objectStorageDir.mkdirs();
+        UuidObjectStorage.getInstance().init(objectStorageDir);
 
         setContentView(R.layout.activity_main);
         initToolbar();

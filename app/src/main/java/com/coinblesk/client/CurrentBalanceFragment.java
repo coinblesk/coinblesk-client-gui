@@ -53,7 +53,7 @@ public class CurrentBalanceFragment extends Fragment {
 
         if(Constants.PARAMS.equals(TestNet3Params.get()) || Constants.PARAMS.equals(TestNet2Params.get())){
             final TextView testnet = (TextView) view.findViewById(R.id.testnet_textview);
-            testnet.setText("Connected to:" + Constants.PARAMS.toString());
+            testnet.setText("Connected to:" + Constants.PARAMS.getClass().getSimpleName());
             testnet.setTextColor(Color.parseColor("#ffff4444"));
             testnet.setVisibility(View.VISIBLE);
         }

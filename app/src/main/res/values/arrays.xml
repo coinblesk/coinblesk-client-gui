@@ -59,5 +59,15 @@
     <!--Empty Array-->
     <string-array name="empty_array"></string-array>
 
+    <!--Network Settings-->
+    <string-array name="pref_network_values">
+        <item>main-net</item>
+        <item>test-net-3</item>
+    </string-array>
+    <string-array name="pref_network_entries">
+        <item>MainNet</item>
+        <item>TestNet3</item>
+    </string-array>
+
 
 </resources>
