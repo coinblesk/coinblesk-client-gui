@@ -12,6 +12,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -19,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -50,6 +54,7 @@ public class ReceiveDialogFragment extends DialogFragment {
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
 
     View contactlessTouchView;
+    NFCClient2 nfcClient2;
 
     public static DialogFragment newInstance(BitcoinURI bitcoinURI) {
         DialogFragment fragment = new ReceiveDialogFragment();
@@ -130,8 +135,34 @@ public class ReceiveDialogFragment extends DialogFragment {
                         }, instantPaymentFilter);
 
                         serverServiceBinder.broadcastPaymentRequest(bitcoinURI);
-                        NFCClient2 nfcClient2 = new NFCClient2(getActivity(), walletServiceBinder);
+                        nfcClient2 = new NFCClient2(getActivity(), walletServiceBinder);
                         nfcClient2.bitcoinURI(bitcoinURI);
+                        nfcClient2.onSuccess(new Runnable(){
+                            @Override
+                            public void run() {
+                                    try {
+                                        Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                                        Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+                                        r.play();
+                                        Log.d(TAG, "play sound");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                            }
+                        });
+                        nfcClient2.onError(new Runnable(){
+                            @Override
+                            public void run() {
+                                try {
+                                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                                    Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+                                    r.play();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
                         nfcClient2.onChangePaymentRequest();
 
                     }
@@ -197,6 +228,9 @@ public class ReceiveDialogFragment extends DialogFragment {
         this.getActivity().unbindService(walletServiceConnection);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(transactionListener);
         super.onStop();
+        if(nfcClient2 != null) {
+            nfcClient2.stop();
+        }
     }
 
 

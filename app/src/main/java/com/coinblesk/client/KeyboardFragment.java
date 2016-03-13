@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -506,6 +509,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            try {
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+                r.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.instant_payment_success_message)), Snackbar.LENGTH_LONG).show();
         }
     };
