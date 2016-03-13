@@ -17,6 +17,7 @@ import java.util.Arrays;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
@@ -117,7 +118,13 @@ public class NFCService2 extends HostApduService {
                                     case 0:
                                         //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
                                         PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(WalletService.WALLET_BINDER);
-                                        derResponsePayload = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                        DERObject obj = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload));
+                                        if(obj == null) {
+                                            //not enough funds
+                                            LocalBroadcastManager.getInstance(NFCService2.this).sendBroadcast(new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
+                                            break;
+                                        }
+                                        derResponsePayload = obj.serializeToDER();
                                         bitcoinURI = paymentRequestReceiveStep.getBitcoinURI();
                                         timestamp = paymentRequestReceiveStep.getTimestamp();
                                         stepCounter++;
