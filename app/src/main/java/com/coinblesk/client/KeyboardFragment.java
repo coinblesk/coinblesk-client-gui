@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -26,6 +28,8 @@ import android.widget.TextView;
 import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -33,9 +37,6 @@ import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller on 24/01/16.
@@ -53,7 +54,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
+        this.isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+
         final View view = inflater.inflate(R.layout.fragment_keyboard, container, false);
+
+
 
         final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayout) {

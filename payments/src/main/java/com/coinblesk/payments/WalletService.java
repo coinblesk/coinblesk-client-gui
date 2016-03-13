@@ -254,6 +254,7 @@ public class WalletService extends Service {
                         // all good our refund tx is safe, we can broadcast
                         kit.peerGroup().broadcastTransaction(transaction);
                     } catch (Exception e) {
+
                         final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
                         instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);

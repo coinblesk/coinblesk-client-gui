@@ -12,9 +12,11 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.widget.ImageView;
 
-import com.google.gson.Gson;
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.models.TransactionWrapper;
+import com.google.gson.Gson;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.BtcFixedFormat;
@@ -25,9 +27,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.models.TransactionWrapper;
 
 /**
  * Created by ckiller on 03/03/16.
@@ -41,7 +40,7 @@ public class UIUtils {
         // Get all Preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
+        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
 
         // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
         // TODO -> Does this make sense? What it a user changes his primary currency?
