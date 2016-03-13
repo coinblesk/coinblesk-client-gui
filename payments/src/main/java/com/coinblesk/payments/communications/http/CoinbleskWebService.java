@@ -12,6 +12,7 @@ import com.coinblesk.json.RefundP2shTO;
 import com.coinblesk.json.RefundTO;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
+import com.coinblesk.payments.models.ExchangeTO;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -44,4 +45,11 @@ public interface CoinbleskWebService {
 
     @POST("full-payment/verify")
     Call<VerifyTO> verify(@Body VerifyTO verifyTO);
+
+    // exchange Rate
+    @GET("wallet/exchangeRate/EUR")
+    Call<ExchangeTO> eurToChf();
+
+    @GET("wallet/exchangeRate/USD")
+    Call<ExchangeTO> usdToChf();
 }

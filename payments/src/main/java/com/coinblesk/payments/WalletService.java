@@ -24,7 +24,6 @@ import com.xeiam.xchange.ExchangeFactory;
 import com.xeiam.xchange.bitstamp.BitstampExchange;
 import com.xeiam.xchange.currency.CurrencyPair;
 import com.xeiam.xchange.dto.marketdata.Ticker;
-import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -254,6 +253,7 @@ public class WalletService extends Service {
                         // all good our refund tx is safe, we can broadcast
                         kit.peerGroup().broadcastTransaction(transaction);
                     } catch (Exception e) {
+
                         final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
                         instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
@@ -302,17 +302,21 @@ public class WalletService extends Service {
                 public void run() {
                     try {
                         Exchange bitstamp = ExchangeFactory.INSTANCE.createExchange(BitstampExchange.class.getName());
-                        PollingMarketDataService marketDataService = bitstamp.getPollingMarketDataService();
-                        Ticker ticker;
+                        Ticker bitstampTicker = bitstamp.getPollingMarketDataService().getTicker(CurrencyPair.BTC_USD);
+                        final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+
+                        double conversionRate = 1.0;
                         if (fiatCurrency.equals("USD")) {
-                            ticker = marketDataService.getTicker(CurrencyPair.BTC_USD);
+
                         } else if (fiatCurrency.equals("CHF")) {
-                            ticker = marketDataService.getTicker(CurrencyPair.BTC_CHF);
+                            conversionRate = (1/Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
                         } else {
-                            ticker = marketDataService.getTicker(CurrencyPair.BTC_EUR);
+                            conversionRate = (1/Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
+                            conversionRate *= Double.parseDouble(service.eurToChf().execute().body().getExchangeRates().get("CHF"));
                         }
 
-                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(ticker.getCurrencyPair().counterSymbol, ticker.getAsk().longValue() * 10000));
+                        Log.d(TAG,"conversion"+conversionRate);
+                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(bitstampTicker.getCurrencyPair().counterSymbol, (long) (bitstampTicker.getAsk().longValue() * 10000 * (1/conversionRate))));
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);

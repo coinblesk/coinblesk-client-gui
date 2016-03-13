@@ -24,6 +24,8 @@
                 android:layout_margin="@dimen/card_margin"
                 card_view:cardBackgroundColor="@color/material_grey_800">
 
+                <include layout="@layout/txdetail_status_icon"/>
+
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     style="@style/Widget.CardContent"
                     android:layout_width="match_parent"
@@ -34,10 +36,6 @@
                     <include layout="@layout/separator_line" />
 
                     <include layout="@layout/txdetail_status" />
-
-                    <!--<include layout="@layout/separator_line" />-->
-
-                    <!--<include layout="@layout/txdetail_date" />-->
 
                     <include layout="@layout/separator_line" />
 

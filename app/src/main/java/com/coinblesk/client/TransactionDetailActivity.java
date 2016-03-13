@@ -35,6 +35,7 @@ import android.transition.Fade;
 import android.transition.Slide;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.coinblesk.client.coinblesk_client_gui.R;
@@ -87,15 +88,18 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private void setTransactionDetails() {
         TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
 
-        // Differentiate between
         try {
+
+            // No one liner because of color filter, sorry
+            final ImageView statusIcon = (ImageView) this.findViewById(R.id.txdetail_status_icon);
+            statusIcon.setImageResource(transaction.getTransaction().getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
+            statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getTransaction().getConfidence().getDepthInBlocks(), false));
+
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
             ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getTransaction().getConfidence().toString());
-//            ((TextView) this.findViewById(R.id.txdetail_exchangerate_content)).setText(""+transaction.getTransaction().getExchangeRate().fiat.toFriendlyString());
             ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
             ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash.toString());
 
-            // Check if returned fee (Coin) is null
             if(transaction.getTransaction().getFee() == null){
                 this.findViewById(R.id.txfee).setVisibility(View.GONE);
             }
