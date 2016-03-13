@@ -81,6 +81,7 @@ public class NFCServerACS2 extends AbstractServer {
 
     @Override
     public void stop() {
+        setPaymentRequestUri(null);
 /*        try {
             if (!this.isRunning()) {
                 Log.d(TAG, "Already turned off ACS");
@@ -108,6 +109,9 @@ public class NFCServerACS2 extends AbstractServer {
                     @Override
                     public void tagDiscovered(ACSTransceiver transceiver) {
                         try {
+                            if(getPaymentRequestUri() == null) {
+                                return;
+                            }
                             final PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(getPaymentRequestUri());
                             DERObject authorizationResponseInput = transceiveDER(transceiver, paymentRequestSendStep.process(DERObject.NULLOBJECT), true);
 
