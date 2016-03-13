@@ -11,15 +11,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
-
-import org.bitcoinj.core.Transaction;
-
-import java.util.Arrays;
-
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.UuidObjectStorageException;
-import ch.papers.objectstorage.listeners.OnResultListener;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
@@ -27,8 +18,18 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import com.coinblesk.payments.models.RefundTransactionWrapper;
+
+import org.bitcoinj.core.Transaction;
+
+import java.util.Arrays;
+import java.util.UUID;
+
+import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+import ch.papers.objectstorage.listeners.OnResultListener;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
@@ -52,7 +53,7 @@ public class BluetoothLEClient extends AbstractClient {
     @Override
     public void onIsReadyForInstantPaymentChange() {
         if (this.isReadyForInstantPayment()) {
-            bluetoothAdapter.startLeScan(this.leScanCallback);
+            bluetoothAdapter.startLeScan(new UUID[]{Constants.SERVICE_UUID},this.leScanCallback);
         } else {
             bluetoothAdapter.stopLeScan(this.leScanCallback);
         }

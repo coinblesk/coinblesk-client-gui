@@ -18,14 +18,6 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
-
-import org.bitcoinj.core.ECKey;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
@@ -33,8 +25,15 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
+
+import org.bitcoinj.core.ECKey;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.
@@ -177,7 +176,7 @@ public class BluetoothLEServer extends AbstractServer {
             bluetoothGattServer.addService(bluetoothGattService);
             bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                             .setConnectable(true).setTimeout(0)
-                            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW).build(),
+                            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).build(),
                     new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
                     });
         }

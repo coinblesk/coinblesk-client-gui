@@ -11,7 +11,10 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCClient3;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerACS2;
@@ -24,15 +27,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.WalletService;
-
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
  * Papers.ch
  * a.decarli@papers.ch
  */
 public class ServerPeerService extends Service {
+    private final static String TAG = ServerPeerService.class.getSimpleName();
+
     private final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
     private final String NFC_ACTIVATED = "nfc-checked";
     private final String BT_ACTIVATED = "bt-checked";
@@ -41,6 +43,7 @@ public class ServerPeerService extends Service {
     public class ServerServiceBinder extends Binder {
         public void broadcastPaymentRequest(BitcoinURI paymentUri) {
             for (AbstractServer server : ServerPeerService.this.servers) {
+                Log.d(TAG,"server: "+server+" - "+server.isSupported());
                 if (server.isRunning()) {
                     server.setPaymentRequestUri(paymentUri);
                 }

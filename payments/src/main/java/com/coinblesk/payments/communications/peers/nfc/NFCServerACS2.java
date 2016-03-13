@@ -13,20 +13,19 @@ import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
-import com.coinblesk.util.Pair;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
-
-import java.io.IOException;
-import java.util.Arrays;
-
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
+import com.coinblesk.util.Pair;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -101,6 +100,7 @@ public class NFCServerACS2 extends AbstractServer {
     @Override
     public void onChangePaymentRequest() {
         if (this.hasPaymentRequestUri()) {
+            Log.d(TAG,"got new payment request url:"+getPaymentRequestUri());
             try {
                 Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
                 this.reader = pair.element1();
