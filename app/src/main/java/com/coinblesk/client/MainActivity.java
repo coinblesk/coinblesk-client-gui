@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
-                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin.csg.uzh.ch/coinblesk-server/";
+                Constants.COINBLESK_SERVER_BASE_URL = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
