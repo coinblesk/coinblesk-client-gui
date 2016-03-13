@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.bitcoinj.core.Transaction;
@@ -138,6 +139,7 @@ public class NFCService2 extends HostApduService {
                                                 bitcoinURI.getAddress(), tx, refund);
                                         derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                         stepCounter++;
+                                        LocalBroadcastManager.getInstance(NFCService2.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
                                         break;
                                 }
                             }

@@ -47,6 +47,8 @@ public class NFCClient2 extends AbstractServer {
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
+    private Runnable success;
+    private Runnable error;
 
     private int stepCounter = 0;
     private BitcoinURI bitcoinURI;
@@ -201,6 +203,10 @@ public class NFCClient2 extends AbstractServer {
                     }
 
                     getPaymentRequestAuthorizer().onPaymentSuccess();
+                    if(success != null) {
+                        Log.d(TAG, "play sound");
+                        success.run();
+                    }
                     isoDep.close();
                 } catch (Throwable e) {
                     Log.e(TAG, "error", e);
@@ -255,5 +261,13 @@ public class NFCClient2 extends AbstractServer {
             }
         }, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK, Bundle.EMPTY);
 
+    }
+
+    public void onSuccess(Runnable runnable) {
+        this.success = runnable;
+    }
+
+    public void onError(Runnable runnable) {
+        this.error = runnable;
     }
 }
