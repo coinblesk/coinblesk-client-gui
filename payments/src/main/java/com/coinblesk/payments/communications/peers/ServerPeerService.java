@@ -117,6 +117,8 @@ public class ServerPeerService extends Service {
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     final Set<String> connectionSettings = sharedPreferences.getStringSet(CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
+                    ServerPeerService.this.servers.clear();
+
                     if (connectionSettings.contains(NFC_ACTIVATED)) {
                         ServerPeerService.this.servers.add(new NFCClient3(ServerPeerService.this, walletServiceBinder));
                         ServerPeerService.this.servers.add(new NFCServerACS2(ServerPeerService.this, walletServiceBinder));

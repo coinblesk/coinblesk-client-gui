@@ -57,6 +57,7 @@ public class NFCServerACS2 extends AbstractServer {
             UsbDevice externalDevice = externalReaderAttached(getContext(), manager, reader);
             manager.requestPermission(externalDevice, permissionIntent);
         }
+        onChangePaymentRequest2();
     }
 
     @Override
@@ -98,9 +99,12 @@ public class NFCServerACS2 extends AbstractServer {
         }*/
     }
 
-    @Override
     public void onChangePaymentRequest() {
-        if (this.hasPaymentRequestUri()) {
+        Log.d(TAG, "hallo"+getPaymentRequestUri());
+    }
+
+    public void onChangePaymentRequest2() {
+
             Log.d(TAG,"got new payment request url:"+getPaymentRequestUri());
             try {
                 Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
@@ -134,18 +138,18 @@ public class NFCServerACS2 extends AbstractServer {
 
                     @Override
                     public void tagFailed() {
-
+                        Log.d(TAG, "tag failed");
                     }
 
                     @Override
                     public void nfcTagLost() {
-
+                        Log.d(TAG, "tag lost");
                     }
                 });
 
-            } catch (IOException e){}
-        } else {
-        }
+            } catch (IOException e){e.printStackTrace();}
+
+
     }
 
     public DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input, boolean needsSelectAidApdu) throws Exception {

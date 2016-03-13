@@ -12,7 +12,7 @@ import com.coinblesk.payments.WalletService;
  * a.decarli@papers.ch
  */
 public abstract class AbstractServer extends AbstractPeer {
-    private BitcoinURI paymentRequestUri;
+    private static BitcoinURI paymentRequestUri;
     private final WalletService.WalletServiceBinder walletServiceBinder;
 
     private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.ALLOW_AUTHORIZER;

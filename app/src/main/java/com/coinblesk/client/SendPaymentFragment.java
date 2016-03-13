@@ -97,7 +97,25 @@ public class SendPaymentFragment extends KeyboardFragment {
                                     for (AbstractClient client : clients) {
                                         if (client.isRunning()) {
                                             client.setReadyForInstantPayment(false);
-                                            client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
+                                            //client.setPaymentRequestAuthorizer(PaymentRequestAuthorizer.DISALLOW_AUTHORIZER);
+                                            client.setPaymentRequestAuthorizer(new PaymentRequestAuthorizer() {
+                                                @Override
+                                                public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                                                    return false;
+                                                }
+
+                                                @Override
+                                                public void onPaymentSuccess() {
+                                                    final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                                                    LocalBroadcastManager.getInstance(getContext()).sendBroadcast(instantPaymentSucess);
+                                                    stopClients();
+                                                }
+
+                                                @Override
+                                                public void onPaymentError(String errorMessage) {
+
+                                                }
+                                            });
                                         } else {
                                             client.stop();
                                         }
