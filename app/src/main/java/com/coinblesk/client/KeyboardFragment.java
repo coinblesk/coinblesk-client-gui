@@ -520,6 +520,20 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     };
 
+    private final BroadcastReceiver insufficientFundsListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+                r.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.insufficient_funds)), Snackbar.LENGTH_LONG).show();
+        }
+    };
+
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -536,6 +550,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(exchangeRateChangeListener);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentErrorListener);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentSuccessListener);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(insufficientFundsListener);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -548,6 +563,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentErrorListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(insufficientFundsListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
             walletServiceBinder.fetchExchangeRate();
             updateAmount();
         }
