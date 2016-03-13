@@ -11,14 +11,14 @@ import android.util.Log;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
-import com.coinblesk.util.BitcoinUtils;
-import com.coinblesk.util.SerializeUtils;
-import com.google.common.collect.ImmutableList;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.models.ECKeyWrapper;
 import com.coinblesk.payments.models.ExchangeRateWrapper;
 import com.coinblesk.payments.models.TransactionWrapper;
 import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
+import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.SerializeUtils;
+import com.google.common.collect.ImmutableList;
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
 import com.xeiam.xchange.bitstamp.BitstampExchange;
@@ -39,6 +39,7 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.store.WalletProtobufSerializer;
@@ -86,9 +87,9 @@ public class WalletService extends Service {
 
         public WalletServiceBinder() {
             try {
-                exchangeRate = UuidObjectStorage.getInstance().getFirstMatchEntry(new MatchAllFilter(),ExchangeRateWrapper.class).getExchangeRate();
+                exchangeRate = UuidObjectStorage.getInstance().getFirstMatchEntry(new MatchAllFilter(), ExchangeRateWrapper.class).getExchangeRate();
             } catch (UuidObjectStorageException e) {
-                Log.d(TAG,"could not retrieve old exchangerate from storage, staying with preshiped default");
+                Log.d(TAG, "could not retrieve old exchangerate from storage, staying with preshiped default");
             }
             WALLET_BINDER = this;
         }
@@ -113,8 +114,8 @@ public class WalletService extends Service {
         public Coin getBalance() {
             long coinAmount = 0;
 
-            for(TransactionOutput transactionOutput: getUnspentInstantOutputs()){
-                coinAmount+=transactionOutput.getValue().getValue();
+            for (TransactionOutput transactionOutput : getUnspentInstantOutputs()) {
+                coinAmount += transactionOutput.getValue().getValue();
             }
 
             return Coin.valueOf(coinAmount);
@@ -124,7 +125,7 @@ public class WalletService extends Service {
             return WalletService.this.exchangeRate.coinToFiat(getBalance());
         }
 
-        public void commitTransaction(Transaction tx){
+        public void commitTransaction(Transaction tx) {
             kit.wallet().commitTx(tx);
         }
 
@@ -199,9 +200,9 @@ public class WalletService extends Service {
                             }
                         }
 
-                        if(changeOutput >= 0){
+                        if (changeOutput >= 0) {
                             // generate refund
-                            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput),multisigClientKey.toAddress(Constants.PARAMS));
+                            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(transaction.getOutput(changeOutput), multisigClientKey.toAddress(Constants.PARAMS));
                             final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(refundTransaction, redeemScript, multisigClientKey);
 
                             SignTO refundTO = new SignTO();
@@ -220,7 +221,7 @@ public class WalletService extends Service {
                                 final TransactionSignature clientSignature = clientRefundTransactionSignatures.get(i);
 
                                 // yes, because order matters...
-                                List<TransactionSignature> signatures = keys.indexOf(multisigClientKey)==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+                                List<TransactionSignature> signatures = keys.indexOf(multisigClientKey) == 0 ? ImmutableList.of(clientSignature, serverSignature) : ImmutableList.of(serverSignature, clientSignature);
                                 Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
                                 refundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
                                 refundTransaction.getInput(i).verify();
@@ -237,16 +238,16 @@ public class WalletService extends Service {
                         }
 
                         VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
-                        Log.d(TAG,"instant payment was "+responseCompleteSignTO.type());
-                        Log.d(TAG,"instant payment was "+responseCompleteSignTO.message());
-                        switch (responseCompleteSignTO.type().nr()){
+                        Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
+                        Log.d(TAG, "instant payment was " + responseCompleteSignTO.message());
+                        switch (responseCompleteSignTO.type().nr()) {
                             case 1:
                                 final Intent instantPaymentSuccesful = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
                                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentSuccesful);
                                 break;
                             default:
                                 final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
-                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,responseCompleteSignTO.message());
+                                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, responseCompleteSignTO.message());
                                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
                                 break;
                         }
@@ -254,7 +255,7 @@ public class WalletService extends Service {
                         kit.peerGroup().broadcastTransaction(transaction);
                     } catch (Exception e) {
                         final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
-                        instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY,e.getMessage());
+                        instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
                     }
                 }
@@ -440,22 +441,23 @@ public class WalletService extends Service {
                             UuidObjectStorage.getInstance().commit();
                             setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
                         } else {
-                            Log.d(TAG, "error during key setup:"+response.code());
+                            Log.d(TAG, "error during key setup:" + response.code());
                         }
                     } catch (Exception e2) {
                         Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
                     }
                 }
+                if (Constants.PARAMS.equals(TestNet3Params.get())) {
+                    // these are testnet peers
+                    try {
+                        kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
+                        kit.peerGroup().addAddress(Inet4Address.getByName("88.198.20.152"));
+                        kit.peerGroup().addAddress(Inet4Address.getByName("52.4.156.236"));
+                        kit.peerGroup().addAddress(Inet4Address.getByName("176.9.24.110"));
+                        kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
+                    } catch (IOException e) {
 
-
-                try {
-                    kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
-                    kit.peerGroup().addAddress(Inet4Address.getByName("88.198.20.152"));
-                    kit.peerGroup().addAddress(Inet4Address.getByName("52.4.156.236"));
-                    kit.peerGroup().addAddress(Inet4Address.getByName("176.9.24.110"));
-                    kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
-                } catch (IOException e) {
-
+                    }
                 }
             }
         };
@@ -486,11 +488,20 @@ public class WalletService extends Service {
             }
         });
 
-        try {
 
-            kit.setCheckpoints(this.getAssets().open("checkpoints-testnet"));
-        } catch (IOException e) {
+        if (Constants.PARAMS.equals(TestNet3Params.get())) {
+            try {
 
+                kit.setCheckpoints(this.getAssets().open("checkpoints-testnet"));
+            } catch (IOException e) {
+
+            }
+        } else {
+            try {
+                kit.setCheckpoints(this.getAssets().open("checkpoints-mainnet"));
+            } catch (IOException e) {
+
+            }
         }
 
         kit.setBlockingStartup(false);
@@ -500,7 +511,8 @@ public class WalletService extends Service {
         //clearMultisig();
 
         Log.d(TAG, "wallet started");
-        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.ERROR);;
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.ERROR);
+        ;
         return Service.START_NOT_STICKY;
     }
 
