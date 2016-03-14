@@ -29,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.Constants;
@@ -102,8 +101,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
-        objectStorageDir.mkdirs();
+        boolean isMkdirSuccessful = objectStorageDir.mkdirs();
+        Log.d(TAG,"mkdir was:"+isMkdirSuccessful);
         UuidObjectStorage.getInstance().init(objectStorageDir);
+
 
         setContentView(R.layout.activity_main);
         initToolbar();

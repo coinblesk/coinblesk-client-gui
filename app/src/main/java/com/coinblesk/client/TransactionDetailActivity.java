@@ -38,9 +38,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
-
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;

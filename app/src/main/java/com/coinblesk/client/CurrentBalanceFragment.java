@@ -18,14 +18,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.params.TestNet2Params;
 import org.bitcoinj.params.TestNet3Params;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller on 10/01/16.

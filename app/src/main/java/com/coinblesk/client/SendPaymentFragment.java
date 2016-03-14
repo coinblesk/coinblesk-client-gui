@@ -22,10 +22,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.authview.AuthenticationView;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.Utils;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.AbstractClient;
+import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
+import com.coinblesk.payments.communications.peers.nfc.NFCClientACS;
+import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -36,15 +43,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.peers.AbstractClient;
-import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
-import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
-import com.coinblesk.payments.communications.peers.nfc.NFCClientACS;
-import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.

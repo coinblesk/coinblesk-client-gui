@@ -1,10 +1,10 @@
 package com.coinblesk.payments.communications.messages;
 
+import com.coinblesk.payments.Utils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.coinblesk.payments.Utils;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 01/03/16.

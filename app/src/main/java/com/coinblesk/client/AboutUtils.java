@@ -13,8 +13,6 @@ import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
-
 /**
  * Created by ckiller on 10/03/16.
  */

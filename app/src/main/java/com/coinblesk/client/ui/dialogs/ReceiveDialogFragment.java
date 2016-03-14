@@ -28,21 +28,20 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.client.R;
 import com.coinblesk.client.authview.AuthenticationView;
 import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.Utils;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.ServerPeerService;
+import com.coinblesk.payments.communications.peers.nfc.NFCClient2;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.peers.ServerPeerService;
-import com.coinblesk.payments.communications.peers.nfc.NFCClient2;
 
 /**
  * Created by ckiller

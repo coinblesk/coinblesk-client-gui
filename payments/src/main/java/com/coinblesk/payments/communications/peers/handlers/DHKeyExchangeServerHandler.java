@@ -2,6 +2,7 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
+import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.communications.messages.DERObject;
 
 import java.io.InputStream;
@@ -15,7 +16,6 @@ import javax.crypto.KeyAgreement;
 import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
-import com.coinblesk.payments.Constants;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 05/03/16.

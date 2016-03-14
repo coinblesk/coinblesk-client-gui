@@ -7,8 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
-
 /**
  * Created by ckiller on 10/01/16.
  */

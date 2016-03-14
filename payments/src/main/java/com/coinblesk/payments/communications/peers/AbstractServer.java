@@ -2,9 +2,9 @@ package com.coinblesk.payments.communications.peers;
 
 import android.content.Context;
 
-import org.bitcoinj.uri.BitcoinURI;
-
 import com.coinblesk.payments.WalletService;
+
+import org.bitcoinj.uri.BitcoinURI;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.

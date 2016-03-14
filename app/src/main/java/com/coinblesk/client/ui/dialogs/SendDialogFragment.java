@@ -20,19 +20,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.coinblesk.client.R;
+import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
-import com.coinblesk.client.coinblesk_client_gui.R;
-import com.coinblesk.client.helpers.UIUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller

@@ -9,11 +9,10 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 
 import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
+import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-
-import com.coinblesk.payments.WalletService;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.

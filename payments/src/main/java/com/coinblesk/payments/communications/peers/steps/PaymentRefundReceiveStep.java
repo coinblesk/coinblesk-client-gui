@@ -4,14 +4,14 @@ import android.util.Log;
 
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.TxSig;
-import com.coinblesk.util.SerializeUtils;
-import com.google.common.collect.ImmutableList;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.messages.DERSequence;
+import com.coinblesk.util.SerializeUtils;
+import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.crypto.TransactionSignature;

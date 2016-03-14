@@ -8,12 +8,6 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.uri.BitcoinURI;
-import org.bitcoinj.uri.BitcoinURIParseException;
-
-import java.util.Arrays;
-
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
@@ -22,6 +16,12 @@ import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
+
+import java.util.Arrays;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.

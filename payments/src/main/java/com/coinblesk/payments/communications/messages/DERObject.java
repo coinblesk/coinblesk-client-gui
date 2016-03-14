@@ -1,9 +1,9 @@
 package com.coinblesk.payments.communications.messages;
 
 
-import java.math.BigInteger;
-
 import com.coinblesk.payments.Utils;
+
+import java.math.BigInteger;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 01/03/16.

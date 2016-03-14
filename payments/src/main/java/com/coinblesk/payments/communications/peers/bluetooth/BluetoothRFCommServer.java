@@ -7,7 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractServer;
+import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
+import com.coinblesk.payments.communications.peers.handlers.InstantPaymentServerHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,10 +31,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import ch.papers.objectstorage.listeners.OnResultListener;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
-import com.coinblesk.payments.communications.peers.handlers.InstantPaymentServerHandler;
 
 
 /**

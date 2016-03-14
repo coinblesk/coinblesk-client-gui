@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import com.coinblesk.client.R;
 import com.google.gson.Gson;
-import com.coinblesk.client.coinblesk_client_gui.R;
 
 import java.util.Arrays;
 import java.util.List;

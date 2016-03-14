@@ -4,6 +4,10 @@ import android.util.Log;
 
 import com.coinblesk.json.TxSig;
 import com.coinblesk.json.VerifyTO;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.payments.communications.messages.DERInteger;
+import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 
 import org.bitcoinj.core.Address;
@@ -12,11 +16,6 @@ import org.bitcoinj.core.Transaction;
 
 import java.io.IOException;
 import java.math.BigInteger;
-
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.communications.messages.DERInteger;
-import com.coinblesk.payments.communications.messages.DERObject;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.

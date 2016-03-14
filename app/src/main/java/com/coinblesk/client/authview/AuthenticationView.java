@@ -8,7 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.view.View;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.client.R;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

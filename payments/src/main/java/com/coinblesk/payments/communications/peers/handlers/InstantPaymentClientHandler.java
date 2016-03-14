@@ -2,7 +2,13 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import com.coinblesk.payments.models.RefundTransactionWrapper;
 
 import org.bitcoinj.core.Transaction;
 
@@ -12,12 +18,6 @@ import java.io.OutputStream;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
 import ch.papers.objectstorage.listeners.OnResultListener;
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
-import com.coinblesk.payments.models.RefundTransactionWrapper;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.

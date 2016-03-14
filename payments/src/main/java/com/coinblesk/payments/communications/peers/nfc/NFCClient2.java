@@ -11,11 +11,14 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
+import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.core.ECKey;
@@ -24,10 +27,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
-
-import com.coinblesk.payments.Utils;
-import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.

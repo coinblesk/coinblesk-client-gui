@@ -13,10 +13,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import com.coinblesk.client.coinblesk_client_gui.R;
-import com.coinblesk.payments.WalletService;
+
 import com.coinblesk.client.ui.dialogs.BackupDialogFragment;
 import com.coinblesk.client.ui.dialogs.BackupRestoreDialogFragment;
+import com.coinblesk.payments.WalletService;
 
 public class BackupActivity extends AppCompatActivity {
 

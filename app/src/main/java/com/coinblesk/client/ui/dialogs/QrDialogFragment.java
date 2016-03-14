@@ -18,15 +18,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.zxing.WriterException;
-import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.QREncoder;
 import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.payments.Utils;
+import com.google.zxing.WriterException;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-
-import com.coinblesk.payments.Utils;
 
 /**
  * Created by ckiller

@@ -2,18 +2,17 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
-import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 04/03/16.

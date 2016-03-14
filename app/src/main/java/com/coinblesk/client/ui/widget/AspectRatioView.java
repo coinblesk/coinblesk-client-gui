@@ -21,7 +21,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.client.R;
 
 
 /**

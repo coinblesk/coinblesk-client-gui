@@ -2,6 +2,8 @@ package com.coinblesk.payments.communications.peers.steps;
 
 import android.util.Log;
 
+import com.coinblesk.payments.communications.messages.DERInteger;
+import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 
 import org.bitcoinj.uri.BitcoinURI;
@@ -9,9 +11,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.coinblesk.payments.communications.messages.DERInteger;
-import com.coinblesk.payments.communications.messages.DERObject;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.

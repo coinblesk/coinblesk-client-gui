@@ -9,9 +9,6 @@ import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.BuildConfig;
-import com.coinblesk.client.coinblesk_client_gui.R;
-
 /**
  * Created by ckiller on 02/03/16.
  */

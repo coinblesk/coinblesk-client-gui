@@ -13,7 +13,7 @@ import android.text.style.RelativeSizeSpan;
 import android.widget.ImageView;
 
 import com.coinblesk.client.AppConstants;
-import com.coinblesk.client.coinblesk_client_gui.R;
+import com.coinblesk.client.R;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
 import com.google.gson.Gson;

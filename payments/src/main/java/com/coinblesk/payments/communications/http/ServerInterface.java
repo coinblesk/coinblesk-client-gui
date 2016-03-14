@@ -1,11 +1,12 @@
 package com.coinblesk.payments.communications.http;
 
+import com.coinblesk.payments.models.User;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 
-import com.coinblesk.payments.models.User;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;

@@ -16,8 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
-
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 

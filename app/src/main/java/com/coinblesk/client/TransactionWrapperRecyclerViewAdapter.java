@@ -9,14 +9,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.payments.models.TransactionWrapper;
 
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.util.List;
-
-import com.coinblesk.payments.models.TransactionWrapper;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 15/02/16.

@@ -3,12 +3,13 @@ package com.coinblesk.payments.communications.peers.steps;
 import android.util.Log;
 
 import com.coinblesk.json.CompleteSignTO;
-import com.coinblesk.util.BitcoinUtils;
-import com.coinblesk.util.SerializeUtils;
-import com.google.common.collect.ImmutableList;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
+import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.SerializeUtils;
+import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
@@ -21,8 +22,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.coinblesk.payments.WalletService;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.

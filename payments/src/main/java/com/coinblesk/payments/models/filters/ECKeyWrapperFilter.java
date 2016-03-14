@@ -1,7 +1,8 @@
 package com.coinblesk.payments.models.filters;
 
-import ch.papers.objectstorage.filters.Filter;
 import com.coinblesk.payments.models.ECKeyWrapper;
+
+import ch.papers.objectstorage.filters.Filter;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 14/02/16.

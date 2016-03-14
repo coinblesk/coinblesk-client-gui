@@ -5,8 +5,6 @@ import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
-
 /**
  * Created by ckiller on 17/01/16.
  */

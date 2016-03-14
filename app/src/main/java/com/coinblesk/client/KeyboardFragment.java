@@ -25,7 +25,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.coinblesk_client_gui.R;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
 import com.coinblesk.payments.Constants;

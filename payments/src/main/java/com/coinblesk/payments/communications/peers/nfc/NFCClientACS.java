@@ -14,7 +14,6 @@ import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
-import com.coinblesk.util.Pair;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
@@ -23,6 +22,7 @@ import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import com.coinblesk.util.Pair;
 
 import java.io.IOException;
 import java.util.Arrays;

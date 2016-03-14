@@ -2,8 +2,8 @@ package com.coinblesk.payments.communications.peers.nfc;
 
 import android.content.Context;
 
-import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.AbstractServer;
 
 /**
  * Created by draft on 12.03.16.
