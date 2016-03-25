@@ -15,7 +15,7 @@ public abstract class AbstractServer extends AbstractPeer {
     private static BitcoinURI paymentRequestUri;
     private final WalletService.WalletServiceBinder walletServiceBinder;
 
-    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.ALLOW_AUTHORIZER;
+    private PaymentRequestDelegate paymentRequestDelegate = PaymentRequestDelegate.ALLOW_DELEGATE;
 
 
     protected AbstractServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
@@ -25,7 +25,6 @@ public abstract class AbstractServer extends AbstractPeer {
 
     public void setPaymentRequestUri(BitcoinURI paymentRequestUri) {
         this.paymentRequestUri = paymentRequestUri;
-        this.onChangePaymentRequest();
     }
 
     public WalletService.WalletServiceBinder getWalletServiceBinder() {
@@ -36,17 +35,15 @@ public abstract class AbstractServer extends AbstractPeer {
         return paymentRequestUri;
     }
 
-    public abstract void onChangePaymentRequest();
-
     public boolean hasPaymentRequestUri() {
         return paymentRequestUri != null;
     }
 
-    public PaymentRequestAuthorizer getPaymentRequestAuthorizer() {
-        return paymentRequestAuthorizer;
+    public PaymentRequestDelegate getPaymentRequestDelegate() {
+        return paymentRequestDelegate;
     }
 
-    public void setPaymentRequestAuthorizer(PaymentRequestAuthorizer paymentRequestAuthorizer) {
-        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+    public void setPaymentRequestDelegate(PaymentRequestDelegate paymentRequestDelegate) {
+        this.paymentRequestDelegate = paymentRequestDelegate;
     }
 }

@@ -2,9 +2,13 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,6 +19,7 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -23,16 +28,31 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Slide;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.coinblesk.client.authview.AuthenticationView;
+import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.peers.AbstractClient;
+import com.coinblesk.payments.communications.peers.AbstractServer;
+import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
+import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
+import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
+import com.coinblesk.payments.communications.peers.nfc.NFCServer;
+import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
+import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
+import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.params.MainNetParams;
@@ -41,6 +61,11 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import retrofit2.Retrofit;
@@ -57,12 +82,11 @@ public class MainActivity extends AppCompatActivity {
 
     private final String NETWORK_SETTINGS_PREF_KEY = "pref_network_list";
 
-
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
-
-//TODO Create Landscape views for all Fragments. E.g. Landscape View for send / receive with smaller representation of the Balance fragment.
+    private final List<AbstractClient> clients = new ArrayList<AbstractClient>();
+    private final List<AbstractServer> servers = new ArrayList<AbstractServer>();
 
     @Override
     protected void onResume() {
@@ -101,8 +125,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
-        boolean isMkdirSuccessful = objectStorageDir.mkdirs();
-        Log.d(TAG,"mkdir was:"+isMkdirSuccessful);
+        objectStorageDir.mkdirs();
         UuidObjectStorage.getInstance().init(objectStorageDir);
 
 
@@ -261,9 +284,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        this.initPeers();
         Intent intent = new Intent(this, WalletService.class);
         this.startService(intent);
         this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
     }
 
     @Override
@@ -272,7 +299,11 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onStop");
         Intent intent = new Intent(this, WalletService.class);
         this.unbindService(this.serviceConnection);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(startClientsBroadcastReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(stopClientsBroadcastReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(startServersBroadcastReceiver);
         this.stopService(intent);
+        this.stopServers();
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -319,8 +350,175 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
-
         }
     }
+
+    /**
+     * Communication part starts here
+     */
+
+    private final BroadcastReceiver startClientsBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            startClients();
+        }
+    };
+
+    private final BroadcastReceiver startServersBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                final BitcoinURI bitcoinURI = new BitcoinURI(intent.getStringExtra(Constants.BITCOIN_URI_KEY));
+                startServers(bitcoinURI);
+            } catch (BitcoinURIParseException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private final BroadcastReceiver stopClientsBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stopClients();
+        }
+    };
+
+    private void initPeers() {
+        this.servers.clear();
+        this.clients.clear();
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+
+        if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
+            servers.add(new NFCServerACS(this, walletServiceBinder));
+            servers.add(new NFCServer(this, walletServiceBinder));
+        }
+
+        if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
+            clients.add(new BluetoothLEClient(this, walletServiceBinder));
+            servers.add(new BluetoothLEServer(this, walletServiceBinder));
+        }
+
+        if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {
+            clients.add(new WiFiClient(this, walletServiceBinder));
+            servers.add(new WiFiServer(this, walletServiceBinder));
+        }
+
+        for (AbstractServer server : servers) {
+            server.setPaymentRequestDelegate(getClientPaymentRequestDelegate());
+        }
+
+        for (AbstractClient client : clients) {
+            client.setPaymentRequestDelegate(getClientPaymentRequestDelegate());
+        }
+    }
+
+    private void startClients() {
+        for (AbstractClient client : clients) {
+            client.start();
+        }
+    }
+
+    private void startServers(BitcoinURI bitcoinURI) {
+        this.showAuthViewAndGetResult(bitcoinURI,false);
+        for (AbstractServer server : servers) {
+            server.start();
+        }
+    }
+
+    private void stopClients() {
+        for (AbstractClient client : clients) {
+            client.stop();
+        }
+    }
+
+    private void stopServers() {
+        for (AbstractServer server : servers) {
+            server.stop();
+        }
+    }
+
+    private PaymentRequestDelegate getClientPaymentRequestDelegate() {
+        return new PaymentRequestDelegate() {
+
+
+            @Override
+            public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
+                return showAuthViewAndGetResult(paymentRequest, true);
+            }
+
+            @Override
+            public void onPaymentSuccess() {
+                final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentSucess);
+                stopClients();
+                stopServers();
+            }
+
+            @Override
+            public void onPaymentError(String errorMessage) {
+                final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentFailed);
+                stopClients();
+                stopServers();
+            }
+        };
+    }
+
+    private boolean authviewResponse = false;
+
+    private boolean showAuthViewAndGetResult(BitcoinURI paymentRequest, boolean isBlocking) {
+        final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
+        final View authViewDialog = LayoutInflater.from(MainActivity.this).inflate(R.layout.fragment_authview_dialog, null);
+        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
+        amountTextView.setText(UIUtils.scaleCoinForDialogs(paymentRequest.getAmount(), MainActivity.this));
+        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
+        addressTextView.setText(paymentRequest.getAddress().toString());
+
+        final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+        authviewContainer.addView(new AuthenticationView(MainActivity.this, Utils.bitcoinUriToString(paymentRequest).getBytes()));
+
+        MainActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.authview_title)
+                        .setView(authViewDialog)
+                        .setCancelable(true)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                authviewResponse = false;
+                                countDownLatch.countDown();
+                            }
+                        })
+                        .setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                authviewResponse = true;
+                                countDownLatch.countDown();
+                            }
+                        })
+                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                stopServers();
+                            }
+                        }).show();
+            }
+        });
+
+        if (isBlocking) {
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return authviewResponse;
+    }
+
 }
 

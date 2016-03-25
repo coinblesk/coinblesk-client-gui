@@ -22,7 +22,6 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -49,26 +48,21 @@ public class WiFiServer extends AbstractServer {
     public static final String SERVICE_INSTANCE = "_wifidemotest";
     public static final String SERVICE_REG_TYPE = "_presence._tcp";
 
-
-    private Map<SecretKeySpec, Socket> secureConnections = new ConcurrentHashMap<SecretKeySpec, Socket>();
-
-
     public WiFiServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
     }
 
     @Override
-    public void start() {
+    public void onStart() {
         WifiManager wifiManager = (WifiManager) this.getContext().getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
         this.makeDiscoverable();
     }
 
     @Override
-    public void stop() {
-        this.manager.removeGroup(channel,new LogActionListener("removeGroup"));
-        this.manager.clearLocalServices(channel,new LogActionListener("clearLocalServices"));
-        this.setRunning(false);
+    public void onStop() {
+        this.manager.removeGroup(channel, new LogActionListener("removeGroup"));
+        this.manager.clearLocalServices(channel, new LogActionListener("clearLocalServices"));
     }
 
     @Override
@@ -81,7 +75,7 @@ public class WiFiServer extends AbstractServer {
         public void onSuccess() {
             final Map<String, String> record = new HashMap<String, String>();
             record.put(TXTRECORD_PROP_AVAILABLE, "visible");
-            manager.addLocalService(channel, WifiP2pDnsSdServiceInfo.newInstance(SERVICE_INSTANCE, SERVICE_REG_TYPE, record),new LogActionListener("addLocalService"));
+            manager.addLocalService(channel, WifiP2pDnsSdServiceInfo.newInstance(SERVICE_INSTANCE, SERVICE_REG_TYPE, record), new LogActionListener("addLocalService"));
         }
 
         @Override
@@ -90,34 +84,6 @@ public class WiFiServer extends AbstractServer {
         }
     };
 
-    @Override
-    public void onChangePaymentRequest() {
-        if(this.hasPaymentRequestUri()) {
-            for (Map.Entry<SecretKeySpec, Socket> entry : secureConnections.entrySet()) {
-                try {
-                    final byte[] iv = new byte[16];
-                    Arrays.fill(iv, (byte) 0x00);
-                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-
-                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                    writeCipher.init(Cipher.ENCRYPT_MODE, entry.getKey(),ivParameterSpec);
-
-                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                    readCipher.init(Cipher.DECRYPT_MODE, entry.getKey(),ivParameterSpec);
-
-                    final OutputStream encrytpedOutputStream = new CipherOutputStream(entry.getValue().getOutputStream(), writeCipher);
-                    final InputStream encryptedInputStream = new CipherInputStream(entry.getValue().getInputStream(), readCipher);
-                    this.secureConnections.remove(entry);
-                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, this.getPaymentRequestUri(), this.getPaymentRequestAuthorizer(), this.getWalletServiceBinder())).start();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    this.secureConnections.remove(entry);
-                }
-            }
-        } else {
-            secureConnections.clear();
-        }
-    }
 
     private void makeDiscoverable() {
         this.manager = (WifiP2pManager) this.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
@@ -126,7 +92,7 @@ public class WiFiServer extends AbstractServer {
         this.manager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
-                if(group != null){
+                if (group != null) {
 
                     manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
                         @Override
@@ -148,7 +114,6 @@ public class WiFiServer extends AbstractServer {
         this.startThread(new Runnable() {
             @Override
             public void run() {
-                setRunning(true);
                 try {
                     serverSocket = new ServerSocket(Constants.SERVICE_PORT);
                     Socket socket;
@@ -158,8 +123,24 @@ public class WiFiServer extends AbstractServer {
                         new Thread(new DHKeyExchangeServerHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
-                                secureConnections.put(secretKeySpec, clientSocket);
-                                onChangePaymentRequest();
+
+                                try {
+                                    final byte[] iv = new byte[16];
+                                    Arrays.fill(iv, (byte) 0x00);
+                                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+                                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                                    final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
+                                    final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
+                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder())).start();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
@@ -170,7 +151,6 @@ public class WiFiServer extends AbstractServer {
                     }
                 } catch (IOException e) {
                 }
-                setRunning(false);
             }
         });
     }

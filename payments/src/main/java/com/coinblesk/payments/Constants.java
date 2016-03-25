@@ -16,11 +16,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * a.decarli@papers.ch
  */
 public class Constants {
+
     public static NetworkParameters PARAMS = TestNet3Params.get();
 
-    public final static long UNIX_TIME_MONTH = 60*60*24*30;
+    public final static long UNIX_TIME_MONTH = 60 * 60 * 24 * 30;
     public final static int LOCK_TIME_MONTHS = 3;
-    public final static int LOCK_THRESHOLD = 60*4;//https://bitcoin.org/en/developer-reference#block-headers
+    public final static int LOCK_THRESHOLD = 60 * 4;//https://bitcoin.org/en/developer-reference#block-headers
     public static String WALLET_FILES_PREFIX = "mainnet_wallet_";
     public final static String WALLET_KEY_NAME = "remote_wallet_key";
 
@@ -41,6 +42,9 @@ public class Constants {
     public static final String WALLET_COINS_RECEIVED_ACTION = "WALLET_COINS_RECEIVED_ACTION";
 
     public static final String EXCHANGE_RATE_CHANGED_ACTION = "EXCHANGE_RATE_CHANGED_ACTION";
+    public static final String START_CLIENTS_ACTION = "START_CLIENTS_ACTION";
+    public static final String STOP_CLIENTS_ACTION = "STOP_CLIENTS_ACTION";
+    public static final String START_SERVERS_ACTION = "START_SERVERS_ACTION";
     public static final String INSTANT_PAYMENT_SUCCESSFUL_ACTION = "INSTANT_PAYMENT_SUCCESSFUL_ACTION";
     public static final String INSTANT_PAYMENT_FAILED_ACTION = "INSTANT_PAYMENT_FAILED_ACTION";
 
@@ -59,10 +63,9 @@ public class Constants {
 
     public static final UUID SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");
     public static final int SERVICE_PORT = 60030;
-    public final static int DISCOVERABLE_DURATION = 600;
-    public static final int BUFFER_SIZE=1024;
+    public static final int BUFFER_SIZE = 1024;
 
     public static final UUID WRITE_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc3");
     public static final UUID READ_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc4");
-    public static final int SYMMETRIC_KEY_SIZE = 128/8;
+    public static final int SYMMETRIC_KEY_SIZE = 128 / 8;
 }

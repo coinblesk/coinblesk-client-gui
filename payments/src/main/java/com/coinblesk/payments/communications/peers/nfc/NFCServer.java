@@ -35,27 +35,21 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class NFCClient2 extends AbstractServer {
-    private final static String TAG = NFCClient2.class.getSimpleName();
+public class NFCServer extends AbstractServer {
+    private final static String TAG = NFCServer.class.getSimpleName();
 
     private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
     private static final byte[] AID_ANDROID = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x03};
-    private static final byte[] KEEPALIVE = {1,2,3,4};
+    private static final byte[] KEEPALIVE = {1, 2, 3, 4};
 
 
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    private Runnable success;
-    private Runnable error;
-
-    private int stepCounter = 0;
     private BitcoinURI bitcoinURI;
-    private byte[] derRequestPayload = new byte[0];
-    private byte[] derResponsePayload = new byte[0];
     private ECKey clientPublicKey;
 
-    public NFCClient2(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
+    public NFCServer(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
@@ -68,40 +62,10 @@ public class NFCClient2 extends AbstractServer {
     }
 
     @Override
-    public void start() {
+    public void onStart() {
         if (!nfcAdapter.isEnabled()) {
             this.activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
         }
-
-
-        this.setRunning(true);
-    }
-
-    @Override
-    public void stop() {
-        nfcAdapter.disableReaderMode(this.activity);
-        this.setRunning(false);
-    }
-
-    private byte[] createSelectAidApdu(byte[] aid) {
-        byte[] result = new byte[6 + aid.length];
-        System.arraycopy(CLA_INS_P1_P2, 0, result, 0, CLA_INS_P1_P2.length);
-        result[4] = (byte) aid.length;
-        System.arraycopy(aid, 0, result, 5, aid.length);
-        result[result.length - 1] = 0;
-        return result;
-    }
-
-    public void bitcoinURI(BitcoinURI bitcoinURI) {
-        this.bitcoinURI = bitcoinURI;
-    }
-
-
-
-
-
-    @Override
-    public void onChangePaymentRequest() {
 
         Log.d(TAG, "enable reader for NFC");
         nfcAdapter.enableReaderMode(this.activity, new NfcAdapter.ReaderCallback() {
@@ -201,16 +165,12 @@ public class NFCClient2 extends AbstractServer {
                         }
                     }
 
-                    getPaymentRequestAuthorizer().onPaymentSuccess();
-                    if(success != null) {
-                        Log.d(TAG, "play sound");
-                        success.run();
-                    }
+                    getPaymentRequestDelegate().onPaymentSuccess();
                     isoDep.close();
                 } catch (Throwable e) {
                     Log.e(TAG, "error", e);
                     e.printStackTrace();
-                    getPaymentRequestAuthorizer().onPaymentError(e.getMessage());
+                    getPaymentRequestDelegate().onPaymentError(e.getMessage());
                 }
             }
 
@@ -259,14 +219,19 @@ public class NFCClient2 extends AbstractServer {
                 return this.transceiveDER(isoDep, input, false);
             }
         }, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK, Bundle.EMPTY);
-
     }
 
-    public void onSuccess(Runnable runnable) {
-        this.success = runnable;
+    @Override
+    public void onStop() {
+        nfcAdapter.disableReaderMode(this.activity);
     }
 
-    public void onError(Runnable runnable) {
-        this.error = runnable;
+    private byte[] createSelectAidApdu(byte[] aid) {
+        byte[] result = new byte[6 + aid.length];
+        System.arraycopy(CLA_INS_P1_P2, 0, result, 0, CLA_INS_P1_P2.length);
+        result[4] = (byte) aid.length;
+        System.arraycopy(aid, 0, result, 5, aid.length);
+        result[result.length - 1] = 0;
+        return result;
     }
 }

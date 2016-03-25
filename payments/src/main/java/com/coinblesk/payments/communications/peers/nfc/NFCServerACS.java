@@ -1,7 +1,6 @@
 package com.coinblesk.payments.communications.peers.nfc;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,10 +17,11 @@ import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
-import com.coinblesk.payments.communications.peers.AbstractClient;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import com.coinblesk.payments.communications.peers.AbstractServer;
+import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 import com.coinblesk.util.Pair;
 
 import java.io.IOException;
@@ -34,45 +34,42 @@ import java.util.Arrays;
  */
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class NFCClientACS extends AbstractClient {
-    private final static String TAG = NFCClientACS.class.getSimpleName();
+public class NFCServerACS extends AbstractServer {
+    private final static String TAG = NFCServerACS.class.getSimpleName();
 
     private static final byte[] CLA_INS_P1_P2 = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
     private static final byte[] AID_ANDROID_ACS = {(byte) 0xF0, 0x0C, 0x01, 0x04, 0x0B, 0x01, 0x04};
-    private static final byte[] KEEPALIVE = {1,2,3,4};
+    private static final byte[] KEEPALIVE = {1, 2, 3, 4};
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-
-    private final Activity activity;
-
-    private final PaymentRequestReceiveStep paymentRequestReceiveStep;
 
     private Reader reader;
     private BroadcastReceiver broadcastReceiver;
 
-    public NFCClientACS(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
-        super(activity, walletServiceBinder);
-        this.activity = activity;
-        this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
+    public NFCServerACS(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
+        super(context, walletServiceBinder);
+
         if (isSupported()) {
-            UsbManager manager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
-            PendingIntent permissionIntent = PendingIntent.getBroadcast(activity, 0, new Intent(ACTION_USB_PERMISSION), 0);
+            UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(getContext(), 0, new Intent(ACTION_USB_PERMISSION), 0);
             Reader reader = new Reader(manager);
-            UsbDevice externalDevice = externalReaderAttached(activity, manager, reader);
+            UsbDevice externalDevice = externalReaderAttached(getContext(), manager, reader);
             manager.requestPermission(externalDevice, permissionIntent);
         }
     }
 
     @Override
     public boolean isSupported() {
-        return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(activity);
+        return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(getContext());
     }
 
     @Override
-    public void start() {
-        if (this.isRunning()) {
-            Log.d(TAG, "Already turned on ACS");
-        }
+    public void onStart() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        broadcastReceiver = createBroadcastReceiver(reader /*, callback*/);
+        getContext().registerReceiver(broadcastReceiver, filter);
 
         try {
             Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
@@ -81,51 +78,49 @@ public class NFCClientACS extends AbstractClient {
                 @Override
                 public void tagDiscovered(ACSTransceiver transceiver) {
                     try {
-                        DERObject paymentRequestInput = transceiveDER(transceiver, DERObject.NULLOBJECT, true);
-                        DERObject authorizationResponseOutput = paymentRequestReceiveStep.process(paymentRequestInput);
+                        if (getPaymentRequestUri() == null) {
+                            return;
+                        }
+                        final PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(getPaymentRequestUri());
+                        DERObject authorizationResponseInput = transceiveDER(transceiver, paymentRequestSendStep.process(DERObject.NULLOBJECT), true);
 
-                        Log.d(TAG, "got request, authorizing user");
-                        DERObject refundSendInput = transceiveDER(transceiver, authorizationResponseOutput);
-                        PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
-                        DERObject refundSendOutput = paymentRefundSendStep.process(refundSendInput);
+                        final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
+                        DERObject paymentRefundReceiveInput = transceiveDER(transceiver, paymentAuthorizationReceiveStep.process(authorizationResponseInput));
+
+                        final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
+                        DERObject paymentFinalSignatureReceiveInput = transceiveDER(transceiver, paymentRefundReceiveStep.process(paymentRefundReceiveInput));
+
+                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), getPaymentRequestUri().getAddress());
+                        paymentFinalSignatureReceiveStep.process(paymentFinalSignatureReceiveInput);
 
 
-                        DERObject finalSendInput = transceiveDER(transceiver, refundSendOutput);
-                        PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
-                        DERObject sendFinalSignatureOutput = paymentFinalSignatureSendStep.process(finalSendInput);
-
-                        transceiveDER(transceiver, sendFinalSignatureOutput);
-                        getPaymentRequestAuthorizer().onPaymentSuccess();
+                        getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                        getPaymentRequestDelegate().onPaymentSuccess();
                     } catch (Exception e) {
                     }
                 }
 
+
                 @Override
                 public void tagFailed() {
-
+                    Log.d(TAG, "tag failed");
                 }
 
                 @Override
                 public void nfcTagLost() {
-
+                    Log.d(TAG, "tag lost");
                 }
             });
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(ACTION_USB_PERMISSION);
-            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-            broadcastReceiver = createBroadcastReceiver(reader /*, callback*/);
-            activity.registerReceiver(broadcastReceiver, filter);
-        } catch (IOException e) {
-            Log.e(TAG, "unable to create reader", e);
-            return;
-        }
 
-        this.setRunning(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void stop() {
-        try {
+    public void onStop() {
+        setPaymentRequestUri(null);
+/*        try {
             if (!this.isRunning()) {
                 Log.d(TAG, "Already turned off ACS");
             }
@@ -135,14 +130,10 @@ public class NFCClientACS extends AbstractClient {
                 reader = null;
                 Log.d(TAG, "Reader closed");
             }
-            activity.unregisterReceiver(broadcastReceiver);
+            getContext().unregisterReceiver(broadcastReceiver);
             this.setRunning(false);
         } catch (Exception e) {
-        }
-    }
-
-    @Override
-    public void onIsReadyForInstantPaymentChange() {
+        }*/
     }
 
     public DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input, boolean needsSelectAidApdu) throws Exception {
@@ -155,7 +146,8 @@ public class NFCClientACS extends AbstractClient {
         while (fragmentByte < derPayload.length) {
             byte[] fragment = new byte[0];
             if (needsSelectAidApdu) {
-                fragment = createSelectAidApdu(AID_ANDROID_ACS);
+                acsTransceiver.write(createSelectAidApdu(AID_ANDROID_ACS));
+                needsSelectAidApdu = false;
             }
 
             fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
@@ -163,11 +155,11 @@ public class NFCClientACS extends AbstractClient {
 
             Log.d(TAG, "about to send fragment size:" + fragment.length);
             derResponse = acsTransceiver.write(fragment);
-            Log.d(TAG,"my client received payload"+Arrays.toString(derResponse));
+            Log.d(TAG, "my client received payload" + Arrays.toString(derResponse));
             fragmentByte += fragment.length;
         }
 
-        while(Arrays.equals(derResponse,KEEPALIVE)){
+        while (Arrays.equals(derResponse, KEEPALIVE)) {
             derResponse = acsTransceiver.write(KEEPALIVE);
         }
 
@@ -175,7 +167,7 @@ public class NFCClientACS extends AbstractClient {
         Log.d(TAG, "expected response lenght:" + responseLength);
         Log.d(TAG, "actual response lenght:" + derResponse.length);
 
-        while (derResponse.length < responseLength ) {
+        while (derResponse.length < responseLength) {
             derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
             Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
         }
@@ -186,7 +178,6 @@ public class NFCClientACS extends AbstractClient {
     private DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input) throws Exception {
         return this.transceiveDER(acsTransceiver, input, false);
     }
-
 
     private byte[] createSelectAidApdu(byte[] aid) {
         byte[] result = new byte[6 + aid.length];
@@ -269,7 +260,7 @@ public class NFCClientACS extends AbstractClient {
         final boolean acr122u;
         if (pid == 8704 && vid == 1839) {
             /*
-			 * 64 is the maximum due to a sequence bug in the ACR122u
+             * 64 is the maximum due to a sequence bug in the ACR122u
 			 * http://musclecard.996296
 			 * .n3.nabble.com/ACR122U-response-frames-contain-wrong
 			 * -sequence-numbers-td5002.html If larger than 64, then I get a
@@ -341,4 +332,6 @@ public class NFCClientACS extends AbstractClient {
             }
         };
     }
+
+
 }

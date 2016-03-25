@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
@@ -27,11 +27,11 @@ import ch.papers.objectstorage.listeners.OnResultListener;
 public class InstantPaymentClientHandler extends DERObjectStreamHandler{
     private final static String TAG = InstantPaymentClientHandler.class.getSimpleName();
     private final WalletService.WalletServiceBinder walletServiceBinder;
-    private final PaymentRequestAuthorizer paymentRequestAuthorizer;
+    private final PaymentRequestDelegate paymentRequestDelegate;
 
-    public InstantPaymentClientHandler(InputStream inputStream, OutputStream outputStream, WalletService.WalletServiceBinder walletServiceBinder, PaymentRequestAuthorizer paymentRequestAuthorizer) {
+    public InstantPaymentClientHandler(InputStream inputStream, OutputStream outputStream, WalletService.WalletServiceBinder walletServiceBinder, PaymentRequestDelegate paymentRequestDelegate) {
         super(inputStream, outputStream);
-        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+        this.paymentRequestDelegate = paymentRequestDelegate;
         this.walletServiceBinder = walletServiceBinder;
     }
 
@@ -43,7 +43,7 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
             PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
             final DERObject paymentRequestResponse = paymentRequestReceiveStep.process(readDERObject());
             Log.d(TAG, "got request, authorizing user");
-            if (paymentRequestAuthorizer.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+            if (paymentRequestDelegate.isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
                 writeDERObject(paymentRequestResponse);
                 final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
                 writeDERObject(paymentRefundSendStep.process(readDERObject()));
@@ -69,10 +69,10 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
                     }
                 }, RefundTransactionWrapper.class);
 
-                paymentRequestAuthorizer.onPaymentSuccess();
+                paymentRequestDelegate.onPaymentSuccess();
             }
         } catch (Exception e){
-            paymentRequestAuthorizer.onPaymentError(e.getMessage());
+            paymentRequestDelegate.onPaymentError(e.getMessage());
         }
     }
 }

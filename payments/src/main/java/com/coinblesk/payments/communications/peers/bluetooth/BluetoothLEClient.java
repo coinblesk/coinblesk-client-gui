@@ -49,16 +49,6 @@ public class BluetoothLEClient extends AbstractClient {
         this.paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
     }
 
-
-    @Override
-    public void onIsReadyForInstantPaymentChange() {
-        if (this.isReadyForInstantPayment()) {
-            bluetoothAdapter.startLeScan(new UUID[]{Constants.SERVICE_UUID},this.leScanCallback);
-        } else {
-            bluetoothAdapter.stopLeScan(this.leScanCallback);
-        }
-    }
-
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -132,10 +122,10 @@ public class BluetoothLEClient extends AbstractClient {
                         switch (stepCounter++) {
                             case 0:
                                 DERObject paymentRequestResponse = paymentRequestReceiveStep.process(requestDER);
-                                if (getPaymentRequestAuthorizer().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
+                                if (getPaymentRequestDelegate().isPaymentRequestAuthorized(paymentRequestReceiveStep.getBitcoinURI())) {
                                     derResponsePayload = paymentRequestResponse.serializeToDER();
                                 } else {
-                                    getPaymentRequestAuthorizer().onPaymentError("unauthorized");
+                                    getPaymentRequestDelegate().onPaymentError("unauthorized");
                                 }
                                 break;
                             case 1:
@@ -161,8 +151,8 @@ public class BluetoothLEClient extends AbstractClient {
                                     }
 
                                     @Override
-                                    public void onError(String s){
-                                        Log.d(TAG,s);
+                                    public void onError(String s) {
+                                        Log.d(TAG, s);
                                     }
                                 }, RefundTransactionWrapper.class);
 
@@ -175,7 +165,7 @@ public class BluetoothLEClient extends AbstractClient {
                         writeNextFragment(gatt);
 
                         if (stepCounter == 3) {
-                            getPaymentRequestAuthorizer().onPaymentSuccess();
+                            getPaymentRequestDelegate().onPaymentSuccess();
                         }
                     } else {
                         BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
@@ -213,5 +203,15 @@ public class BluetoothLEClient extends AbstractClient {
     @Override
     public boolean isSupported() {
         return this.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    }
+
+    @Override
+    protected void onStart() {
+        bluetoothAdapter.startLeScan(new UUID[]{Constants.SERVICE_UUID}, this.leScanCallback);
+    }
+
+    @Override
+    protected void onStop() {
+        bluetoothAdapter.stopLeScan(this.leScanCallback);
     }
 }

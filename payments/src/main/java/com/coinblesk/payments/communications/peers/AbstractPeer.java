@@ -39,12 +39,22 @@ public abstract class AbstractPeer implements Peer {
     }
 
     @Override
-    public void start() {
-        this.setRunning(true);
+    public final void start() {
+        if(isSupported() && !this.isRunning()) {
+            this.setRunning(true);
+            this.onStart();
+        }
     }
 
+    protected abstract void onStart();
+
     @Override
-    public void stop() {
-        this.setRunning(false);
+    public final void stop() {
+        if(this.isRunning()) {
+            this.setRunning(false);
+            this.onStop();
+        }
     }
+
+    protected abstract void onStop();
 }

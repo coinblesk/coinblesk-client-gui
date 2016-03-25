@@ -10,35 +10,23 @@ import com.coinblesk.payments.WalletService;
  * a.decarli@papers.ch
  */
 public abstract class AbstractClient extends AbstractPeer {
-    private boolean isReadyForInstantPayment = false;
     private final WalletService.WalletServiceBinder walletServiceBinder;
-    private PaymentRequestAuthorizer paymentRequestAuthorizer = PaymentRequestAuthorizer.ALLOW_AUTHORIZER;
+    private PaymentRequestDelegate paymentRequestDelegate = PaymentRequestDelegate.ALLOW_DELEGATE;
 
     protected AbstractClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context);
         this.walletServiceBinder = walletServiceBinder;
     }
 
-    public boolean isReadyForInstantPayment() {
-        return isReadyForInstantPayment;
-    }
-
-    public void setReadyForInstantPayment(boolean readyForInstantPayment) {
-        isReadyForInstantPayment = readyForInstantPayment;
-        this.onIsReadyForInstantPaymentChange();
-    }
-
-    public WalletService.WalletServiceBinder getWalletServiceBinder(){
+    public WalletService.WalletServiceBinder getWalletServiceBinder() {
         return this.walletServiceBinder;
     }
 
-    public abstract void onIsReadyForInstantPaymentChange();
-
-    public PaymentRequestAuthorizer getPaymentRequestAuthorizer() {
-        return paymentRequestAuthorizer;
+    public PaymentRequestDelegate getPaymentRequestDelegate() {
+        return paymentRequestDelegate;
     }
 
-    public void setPaymentRequestAuthorizer(PaymentRequestAuthorizer paymentRequestAuthorizer) {
-        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+    public void setPaymentRequestDelegate(PaymentRequestDelegate paymentRequestDelegate) {
+        this.paymentRequestDelegate = paymentRequestDelegate;
     }
 }

@@ -50,6 +50,7 @@ public class BluetoothLEServer extends AbstractServer {
     public BluetoothLEServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
     }
+
     private int maxFragmentSize = 297;
 
     @Override
@@ -66,131 +67,121 @@ public class BluetoothLEServer extends AbstractServer {
     }
 
     @Override
-    public void start() {
-        if(!this.isRunning() && this.isSupported()) {
-            this.setRunning(true);
+    public void onStart() {
+        final BluetoothManager bluetoothManager =
+                (BluetoothManager) this.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
 
-            final BluetoothManager bluetoothManager =
-                    (BluetoothManager) this.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        this.bluetoothGattServer = bluetoothManager.openGattServer(this.getContext(), new BluetoothGattServerCallback() {
+            class PaymentState {
+                byte[] derRequestPayload = new byte[0];
+                byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                ECKey clientKey = null;
+                int stepCounter = 0;
+            }
 
-            this.bluetoothGattServer = bluetoothManager.openGattServer(this.getContext(), new BluetoothGattServerCallback() {
-                class PaymentState {
-                    byte[] derRequestPayload = new byte[0];
-                    byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
-                    ECKey clientKey = null;
-                    int stepCounter = 0;
-                }
+            private Map<String, PaymentState> connectedDevices = new ConcurrentHashMap<String, PaymentState>();
 
-                private Map<String, PaymentState> connectedDevices = new ConcurrentHashMap<String, PaymentState>();
+            @Override
+            public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+                super.onConnectionStateChange(device, status, newState);
 
-                @Override
-                public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-                    super.onConnectionStateChange(device, status, newState);
-
-                    switch (newState){
-                        case BluetoothGatt.STATE_CONNECTING:
-                            Log.d(TAG, device.getAddress() + " changed connection state to connecting");
-                            break;
-                        case BluetoothGatt.STATE_CONNECTED:
-                            Log.d(TAG, device.getAddress() + " changed connection state to connected");
-                            if(hasPaymentRequestUri()){
-                                PaymentState paymentState = new PaymentState();
-                                this.connectedDevices.put(device.getAddress(),paymentState);
-                                paymentState.derResponsePayload = new PaymentRequestSendStep(getPaymentRequestUri()).process(DERObject.NULLOBJECT).serializeToDER();
-                            }
-                            break;
-                        case BluetoothGatt.STATE_DISCONNECTING:
-                            Log.d(TAG, device.getAddress() + " changed connection state to disconnecting");
-                            break;
-                        case BluetoothGatt.STATE_DISCONNECTED:
-                            this.connectedDevices.remove(device.getAddress());
-                            Log.d(TAG, device.getAddress() + " changed connection state to disconnected");
-                            break;
-                        default:
-                            Log.d(TAG, device.getAddress() + " changed connection state to "+newState);
-                            break;
-                    }
-                }
-
-                private byte[] getNextFragment(PaymentState paymentState) {
-                    byte[] fragment = Arrays.copyOfRange(paymentState.derResponsePayload, 0, Math.min(paymentState.derResponsePayload.length, maxFragmentSize));
-                    paymentState.derResponsePayload = Arrays.copyOfRange(paymentState.derResponsePayload, fragment.length, paymentState.derResponsePayload.length);
-                    Log.d(TAG,"sending next fragment:"+fragment.length);
-                    return fragment;
-                }
-
-
-                @Override
-                public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-                    Log.d(TAG, device.getAddress() + " requested characteristic read");
-
-                    PaymentState paymentState = this.connectedDevices.get(device.getAddress());
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, getNextFragment(paymentState));
-                    if(paymentState.derResponsePayload.length == 0) {
-                        paymentState.derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
-                    }
-                }
-
-                @Override
-                public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-                    Log.d(TAG, device.getAddress() + " requested characteristic write with " + value.length + " payload");
-                    PaymentState paymentState = this.connectedDevices.get(device.getAddress());
-                    paymentState.derRequestPayload = Utils.concatBytes(paymentState.derRequestPayload, value);
-                    int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
-                    if(paymentState.derRequestPayload.length>=responseLength){
-                        final byte[] requestPayload = paymentState.derRequestPayload;
-                        paymentState.derRequestPayload = new byte[0];
-                        switch(paymentState.stepCounter++){
-                            case 0:
-                                final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
-                                paymentState.derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                paymentState.clientKey = paymentAuthorizationReceiveStep.getClientPublicKey();
-                                break;
-                            case 1:
-                                final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentState.clientKey);
-                                paymentState.derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                break;
-                            case 2:
-                                final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey, getPaymentRequestUri().getAddress());
-                                paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-
-                                getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
-                                getPaymentRequestAuthorizer().onPaymentSuccess();
-                                break;
-
+                switch (newState) {
+                    case BluetoothGatt.STATE_CONNECTING:
+                        Log.d(TAG, device.getAddress() + " changed connection state to connecting");
+                        break;
+                    case BluetoothGatt.STATE_CONNECTED:
+                        Log.d(TAG, device.getAddress() + " changed connection state to connected");
+                        if (hasPaymentRequestUri()) {
+                            PaymentState paymentState = new PaymentState();
+                            this.connectedDevices.put(device.getAddress(), paymentState);
+                            paymentState.derResponsePayload = new PaymentRequestSendStep(getPaymentRequestUri()).process(DERObject.NULLOBJECT).serializeToDER();
                         }
-                        Log.d(TAG, "sending response now");
-                    }
+                        break;
+                    case BluetoothGatt.STATE_DISCONNECTING:
+                        Log.d(TAG, device.getAddress() + " changed connection state to disconnecting");
+                        break;
+                    case BluetoothGatt.STATE_DISCONNECTED:
+                        this.connectedDevices.remove(device.getAddress());
+                        Log.d(TAG, device.getAddress() + " changed connection state to disconnected");
+                        break;
+                    default:
+                        Log.d(TAG, device.getAddress() + " changed connection state to " + newState);
+                        break;
                 }
-            });
+            }
+
+            private byte[] getNextFragment(PaymentState paymentState) {
+                byte[] fragment = Arrays.copyOfRange(paymentState.derResponsePayload, 0, Math.min(paymentState.derResponsePayload.length, maxFragmentSize));
+                paymentState.derResponsePayload = Arrays.copyOfRange(paymentState.derResponsePayload, fragment.length, paymentState.derResponsePayload.length);
+                Log.d(TAG, "sending next fragment:" + fragment.length);
+                return fragment;
+            }
 
 
+            @Override
+            public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+                Log.d(TAG, device.getAddress() + " requested characteristic read");
 
-            final BluetoothGattCharacteristic writeCharacteristic = new BluetoothGattCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
-            final BluetoothGattCharacteristic readCharacteristic = new BluetoothGattCharacteristic(Constants.READ_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
-            final BluetoothGattService bluetoothGattService = new BluetoothGattService(Constants.SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            bluetoothGattService.addCharacteristic(writeCharacteristic);
-            bluetoothGattService.addCharacteristic(readCharacteristic);
+                PaymentState paymentState = this.connectedDevices.get(device.getAddress());
+                bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, getNextFragment(paymentState));
+                if (paymentState.derResponsePayload.length == 0) {
+                    paymentState.derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+                }
+            }
+
+            @Override
+            public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+                Log.d(TAG, device.getAddress() + " requested characteristic write with " + value.length + " payload");
+                PaymentState paymentState = this.connectedDevices.get(device.getAddress());
+                paymentState.derRequestPayload = Utils.concatBytes(paymentState.derRequestPayload, value);
+                int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
+                if (paymentState.derRequestPayload.length >= responseLength) {
+                    final byte[] requestPayload = paymentState.derRequestPayload;
+                    paymentState.derRequestPayload = new byte[0];
+                    switch (paymentState.stepCounter++) {
+                        case 0:
+                            final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
+                            paymentState.derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                            paymentState.clientKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                            break;
+                        case 1:
+                            final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentState.clientKey);
+                            paymentState.derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                            break;
+                        case 2:
+                            final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey, getPaymentRequestUri().getAddress());
+                            paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+
+                            getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                            getPaymentRequestDelegate().onPaymentSuccess();
+                            break;
+
+                    }
+                    Log.d(TAG, "sending response now");
+                }
+            }
+        });
 
 
-            bluetoothGattServer.addService(bluetoothGattService);
-            bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                            .setConnectable(true).setTimeout(0)
-                            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).build(),
-                    new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
-                    });
-        }
+        final BluetoothGattCharacteristic writeCharacteristic = new BluetoothGattCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        final BluetoothGattCharacteristic readCharacteristic = new BluetoothGattCharacteristic(Constants.READ_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
+        final BluetoothGattService bluetoothGattService = new BluetoothGattService(Constants.SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        bluetoothGattService.addCharacteristic(writeCharacteristic);
+        bluetoothGattService.addCharacteristic(readCharacteristic);
+
+
+        bluetoothGattServer.addService(bluetoothGattService);
+        bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                        .setConnectable(true).setTimeout(0)
+                        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).build(),
+                new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
+                });
+
     }
 
     @Override
-    public void stop() {
+    public void onStop() {
         this.bluetoothGattServer.clearServices();
         this.bluetoothGattServer.close();
-        this.setRunning(false);
-
-    }
-
-    @Override
-    public void onChangePaymentRequest() {
     }
 }

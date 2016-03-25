@@ -25,9 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -36,7 +33,6 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -52,11 +48,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
     private WifiP2pManager manager = null;
     private WifiP2pManager.Channel channel = null;
-    private Socket socket = null;
-    private SecretKeySpec commonSecretKeySpec = null;
-    private boolean isConnected = false;
 
-    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -75,9 +68,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     }
 
     @Override
-    public void start() {
-        Log.d(TAG,"starting");
-        this.singleThreadExecutor = Executors.newSingleThreadExecutor();
+    public void onStart() {
+        Log.d(TAG, "starting");
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -114,7 +106,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     }
 
     @Override
-    public void stop() {
+    public void onStop() {
         try {
             manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
                 @Override
@@ -140,11 +132,10 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                 }
             });
 
-            this.setRunning(false);
             singleThreadExecutor.shutdown();
             this.getContext().unregisterReceiver(this.broadcastReceiver);
-        } catch (Exception e){
-            Log.d(TAG,e.getMessage());
+        } catch (Exception e) {
+            Log.d(TAG, e.getMessage());
         }
     }
 
@@ -168,14 +159,28 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                 @Override
                 public void run() {
                     try {
-                        socket = new Socket(info.groupOwnerAddress, Constants.SERVICE_PORT);
+                        final Socket socket = new Socket(info.groupOwnerAddress, Constants.SERVICE_PORT);
                         new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
                                 Log.d(TAG, "exchange successful");
-                                commonSecretKeySpec = secretKeySpec;
-                                if (isReadyForInstantPayment()) {
-                                    onIsReadyForInstantPaymentChange();
+                                try {
+                                    final byte[] iv = new byte[16];
+                                    Arrays.fill(iv, (byte) 0x00);
+                                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+                                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                                    final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+                                    final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+
+                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate())).start();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
                             }
 
@@ -189,41 +194,6 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                     }
                 }
             });
-        }
-    }
-
-    @Override
-    public void onIsReadyForInstantPaymentChange() {
-        if (this.isReadyForInstantPayment() && commonSecretKeySpec != null) {
-            try {
-                final byte[] iv = new byte[16];
-                Arrays.fill(iv, (byte) 0x00);
-                IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-
-                final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                writeCipher.init(Cipher.ENCRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
-
-                final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                readCipher.init(Cipher.DECRYPT_MODE, commonSecretKeySpec, ivParameterSpec);
-
-                final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
-                final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
-
-                this.setRunning(true);
-                new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestAuthorizer())).start();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InvalidAlgorithmParameterException e) {
-                e.printStackTrace();
-            }
-        } else {
-            // TODO block
         }
     }
 }

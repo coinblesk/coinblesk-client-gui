@@ -7,8 +7,8 @@ import org.bitcoinj.uri.BitcoinURI;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public interface PaymentRequestAuthorizer {
-    PaymentRequestAuthorizer DISALLOW_AUTHORIZER = new PaymentRequestAuthorizer() {
+public interface PaymentRequestDelegate {
+    PaymentRequestDelegate DISALLOW_AUTHORIZER = new PaymentRequestDelegate() {
         @Override
         public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
             return false;
@@ -25,7 +25,7 @@ public interface PaymentRequestAuthorizer {
         }
     };
 
-    PaymentRequestAuthorizer ALLOW_AUTHORIZER = new PaymentRequestAuthorizer() {
+    PaymentRequestDelegate ALLOW_DELEGATE = new PaymentRequestDelegate() {
         @Override
         public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
             return true;

@@ -3,7 +3,7 @@ package com.coinblesk.payments.communications.peers.handlers;
 import android.util.Log;
 
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.peers.PaymentRequestAuthorizer;
+import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
@@ -23,13 +23,13 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
     private final static String TAG = InstantPaymentServerHandler.class.getSimpleName();
 
     private final BitcoinURI paymentUri;
-    private final PaymentRequestAuthorizer paymentRequestAuthorizer;
+    private final PaymentRequestDelegate paymentRequestDelegate;
     private final WalletService.WalletServiceBinder walletServiceBinder;
 
-    public InstantPaymentServerHandler(InputStream inputStream, OutputStream outputStream, BitcoinURI paymentUri, PaymentRequestAuthorizer paymentRequestAuthorizer, WalletService.WalletServiceBinder walletServiceBinder) {
+    public InstantPaymentServerHandler(InputStream inputStream, OutputStream outputStream, BitcoinURI paymentUri, PaymentRequestDelegate paymentRequestDelegate, WalletService.WalletServiceBinder walletServiceBinder) {
         super(inputStream,outputStream);
         this.paymentUri = paymentUri;
-        this.paymentRequestAuthorizer = paymentRequestAuthorizer;
+        this.paymentRequestDelegate = paymentRequestDelegate;
         this.walletServiceBinder = walletServiceBinder;
     }
 
@@ -51,10 +51,10 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
             paymentFinalSignatureReceiveStep.process(readDERObject());
 
             walletServiceBinder.commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
-            paymentRequestAuthorizer.onPaymentSuccess();
+            paymentRequestDelegate.onPaymentSuccess();
             Log.d(TAG, "payment was successful in " + (startTime - System.currentTimeMillis()));
         } catch (Exception e){
-            paymentRequestAuthorizer.onPaymentError(e.getMessage());
+            paymentRequestDelegate.onPaymentError(e.getMessage());
         }
     }
 

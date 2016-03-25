@@ -362,6 +362,7 @@ public class WalletService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
 
@@ -515,8 +516,7 @@ public class WalletService extends Service {
         //clearMultisig();
 
         Log.d(TAG, "wallet started");
-        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.ERROR);
-        ;
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
         return Service.START_NOT_STICKY;
     }
 
