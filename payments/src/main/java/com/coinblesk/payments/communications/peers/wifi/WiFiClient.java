@@ -99,7 +99,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         }, new WifiP2pManager.DnsSdTxtRecordListener() {
             @Override
             public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
-                connect(srcDevice);
+                //connect(srcDevice);
             }
         });
         manager.addServiceRequest(channel, WifiP2pDnsSdServiceRequest.newInstance(), new LogActionListener("addServiceRequest"));
@@ -109,6 +109,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     @Override
     public void onStop() {
         try {
+
             manager.clearServiceRequests(channel, new LogActionListener("clearServiceRequests"));
             manager.stopPeerDiscovery(channel, new LogActionListener("stopPeerDiscovery"));
             manager.cancelConnect(channel, new LogActionListener("cancelConnect"));

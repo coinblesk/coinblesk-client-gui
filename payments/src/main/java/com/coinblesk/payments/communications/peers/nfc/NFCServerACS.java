@@ -74,7 +74,7 @@ public class NFCServerACS extends AbstractServer {
         try {
             Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
             this.reader = pair.element1();
-            setOnStateChangedListener(reader, pair.element0(), new NFCClientACSCallback() {
+            setOnStateChangedListener(reader, pair.element0(), new NFCServerACSCallback() {
                 @Override
                 public void tagDiscovered(ACSTransceiver transceiver) {
                     try {
@@ -214,7 +214,7 @@ public class NFCServerACS extends AbstractServer {
         return null;
     }
 
-    private static void setOnStateChangedListener(final Reader reader, final ACSTransceiver transceiver, final NFCClientACSCallback callback) {
+    private static void setOnStateChangedListener(final Reader reader, final ACSTransceiver transceiver, final NFCServerACSCallback callback) {
 
         Log.d(TAG, "set listener");
 

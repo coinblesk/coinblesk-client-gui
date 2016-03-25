@@ -3,6 +3,7 @@ package com.coinblesk.client;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,7 +27,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.transition.Slide;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -49,6 +49,7 @@ import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
 import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
+import com.coinblesk.payments.communications.peers.nfc.NFCClient;
 import com.coinblesk.payments.communications.peers.nfc.NFCServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
@@ -133,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
         initNavigationView();
         initViewPager();
-        setupWindowAnimations();
         PreferenceManager.setDefaultValues(this, R.xml.settings_pref, false);
 
 
@@ -325,15 +325,6 @@ public class MainActivity extends AppCompatActivity {
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 
-    private void setupWindowAnimations() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            Slide slide = new Slide();
-            slide.setDuration(1000);
-            getWindow().setExitTransition(slide);
-        }
-    }
-
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
@@ -391,8 +382,10 @@ public class MainActivity extends AppCompatActivity {
         final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
 
         if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
+            clients.add(new NFCClient(this, walletServiceBinder));
             servers.add(new NFCServerACS(this, walletServiceBinder));
             servers.add(new NFCServer(this, walletServiceBinder));
+
         }
 
         if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
@@ -421,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startServers(BitcoinURI bitcoinURI) {
-        this.showAuthViewAndGetResult(bitcoinURI,false);
+        this.showAuthViewAndGetResult(bitcoinURI, false);
         for (AbstractServer server : servers) {
             server.setPaymentRequestUri(bitcoinURI);
             server.start();
@@ -447,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
                 boolean result = showAuthViewAndGetResult(paymentRequest, true);
-                if(!result){
+                if (!result) {
                     this.onPaymentError("payment was not authorized!");
                 }
                 return result;
@@ -459,6 +452,9 @@ public class MainActivity extends AppCompatActivity {
                 LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentSucess);
                 stopClients();
                 stopServers();
+                if (authViewDialog != null && authViewDialog.isShowing()) {
+                    authViewDialog.dismiss();
+                }
             }
 
             @Override
@@ -468,29 +464,33 @@ public class MainActivity extends AppCompatActivity {
                 LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentFailed);
                 stopClients();
                 stopServers();
+                if (authViewDialog != null && authViewDialog.isShowing()) {
+                    authViewDialog.dismiss();
+                }
             }
         };
     }
 
+    private Dialog authViewDialog;
     private boolean authviewResponse = false;
 
     private boolean showAuthViewAndGetResult(BitcoinURI paymentRequest, boolean isBlocking) {
         final CountDownLatch countDownLatch = new CountDownLatch(1); //because we need a syncronous answer
-        final View authViewDialog = LayoutInflater.from(MainActivity.this).inflate(R.layout.fragment_authview_dialog, null);
-        final TextView amountTextView = (TextView) authViewDialog.findViewById(R.id.authview_amount_content);
+        final View authView = LayoutInflater.from(MainActivity.this).inflate(R.layout.fragment_authview_dialog, null);
+        final TextView amountTextView = (TextView) authView.findViewById(R.id.authview_amount_content);
         amountTextView.setText(UIUtils.scaleCoinForDialogs(paymentRequest.getAmount(), MainActivity.this));
-        final TextView addressTextView = (TextView) authViewDialog.findViewById(R.id.authview_address_content);
+        final TextView addressTextView = (TextView) authView.findViewById(R.id.authview_address_content);
         addressTextView.setText(paymentRequest.getAddress().toString());
 
-        final LinearLayout authviewContainer = (LinearLayout) authViewDialog.findViewById(R.id.authview_container);
+        final LinearLayout authviewContainer = (LinearLayout) authView.findViewById(R.id.authview_container);
         authviewContainer.addView(new AuthenticationView(MainActivity.this, Utils.bitcoinUriToString(paymentRequest).getBytes()));
 
-        MainActivity.this.runOnUiThread(new Runnable() {
+        this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                new AlertDialog.Builder(MainActivity.this)
+                authViewDialog = new AlertDialog.Builder(MainActivity.this)
                         .setTitle(R.string.authview_title)
-                        .setView(authViewDialog)
+                        .setView(authView)
                         .setCancelable(true)
                         .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                             @Override
@@ -511,7 +511,8 @@ public class MainActivity extends AppCompatActivity {
                             public void onDismiss(DialogInterface dialog) {
                                 stopServers();
                             }
-                        }).show();
+                        }).create();
+                authViewDialog.show();
             }
         });
 

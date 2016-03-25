@@ -72,7 +72,7 @@
         <service android:name="com.coinblesk.payments.communications.peers.ServerPeerService" >
         </service>
         <service
-            android:name="com.coinblesk.payments.communications.peers.nfc.NFCService2"
+            android:name="com.coinblesk.payments.communications.peers.nfc.NFCClientService"
             android:exported="true"
             android:permission="android.permission.BIND_NFC_SERVICE">
             <intent-filter>

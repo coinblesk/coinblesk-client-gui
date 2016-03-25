@@ -86,11 +86,6 @@ public class NFCServer extends AbstractServer {
                     final AtomicReference<DERObject> paymentRefundSendStep = new AtomicReference<DERObject>();
                     final AtomicReference<DERObject> sendFinalSignatureOutput = new AtomicReference<DERObject>();
 
-
-                    //final AtomicReference<Transaction> tx = new AtomicReference<Transaction>();
-                    //final AtomicReference<Transaction> refund = new AtomicReference<Transaction>();
-
-
                     Thread authorization = null;
                     Thread refundSend = null;
                     Thread finalSend = null;

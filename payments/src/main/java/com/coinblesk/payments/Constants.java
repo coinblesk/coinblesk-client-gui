@@ -30,6 +30,7 @@ public class Constants {
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
     public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";
+    public static final String CLIENT_STARTED_KEY = "CLIENT_STARTED_KEY";
 
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
