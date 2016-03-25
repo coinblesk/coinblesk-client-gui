@@ -78,7 +78,7 @@ public class NFCClientService extends HostApduService {
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        if (this.isClientStarted && walletServiceBinder != null) {
+        if (this.isClientStarted && walletServiceBinder != null ) {
             try {
                 Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
                 int derPayloadStartIndex = 0;
@@ -152,6 +152,9 @@ public class NFCClientService extends HostApduService {
                                                     bitcoinURI.getAddress(), tx, refund);
                                             derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                             stepCounter++;
+                                            break;
+                                        case 3:
+                                            walletServiceBinder.commitTransaction(tx);
                                             LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
                                             break;
                                     }
