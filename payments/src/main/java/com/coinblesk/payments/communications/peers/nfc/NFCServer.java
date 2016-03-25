@@ -148,7 +148,7 @@ public class NFCServer extends AbstractServer {
 
                         if (sendFinalSignatureOutput.get() != null) {
                             Log.d(TAG, "got final request, send over NFC ack");
-                            transceiveDER(isoDep,sendFinalSignatureOutput.get());
+                            isoDep.transceive(sendFinalSignatureOutput.get().serializeToDER());
                             done = true;
                         } else {
                             byte[] response = isoDep.transceive(KEEPALIVE);
