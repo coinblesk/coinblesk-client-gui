@@ -41,18 +41,19 @@ android {
         targetSdkVersion 23
         versionCode code
         versionName "1.0."+code
-//        /multiDexEnabled true
     }
 
     buildTypes {
         release {
             minifyEnabled true
+            multiDexEnabled false
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
+            multiDexEnabled true
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

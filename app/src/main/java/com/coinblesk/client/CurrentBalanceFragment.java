@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.coinblesk.client.helpers.UIUtils;
@@ -31,7 +32,7 @@ import org.bitcoinj.params.TestNet3Params;
 
 public class CurrentBalanceFragment extends Fragment {
 
-    public static CurrentBalanceFragment newInstance(int page) {
+    public static CurrentBalanceFragment newInstance() {
         CurrentBalanceFragment fragment = new CurrentBalanceFragment();
         return fragment;
     }
@@ -40,7 +41,7 @@ public class CurrentBalanceFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        View view = getView();
+        final View view = getView();
         final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
@@ -80,16 +81,27 @@ public class CurrentBalanceFragment extends Fragment {
         largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(this.getContext(), largeBalance.getText().length()));
         smallBalance.setText(UIUtils.getSmallBalance(this.getContext(), walletServiceBinder));
 
-        // Old method
-//        largeBalance.setText(UIUtils.toLargeSpannable(this.getContext(), walletServiceBinder.getBalance().toPlainString(), "BTC"));
-//        smallBalance.setText(UIUtils.toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode()));
-
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             setBalance();
+        }
+    };
+
+    private BroadcastReceiver walletProgressBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final double progress = intent.getExtras().getDouble("progress",100);
+            if(getView() != null) {
+                if (progress < 100) {
+                    getView().findViewById(R.id.walletSyncProgressBar).setVisibility(View.VISIBLE);
+                    ((ProgressBar) getView().findViewById(R.id.walletSyncProgressBar)).setProgress((int) progress);
+                } else {
+                    getView().findViewById(R.id.walletSyncProgressBar).setVisibility(View.GONE);
+                }
+            }
         }
     };
 
@@ -107,7 +119,9 @@ public class CurrentBalanceFragment extends Fragment {
         super.onStop();
         this.getActivity().unbindService(serviceConnection);
         LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).unregisterReceiver(walletProgressBroadcastReceiver);
     }
+
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -115,9 +129,12 @@ public class CurrentBalanceFragment extends Fragment {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            IntentFilter filter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
-            filter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
+            IntentFilter balanceIntentFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
+            balanceIntentFilter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
+
+            IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
+            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
             setBalance();
         }
 

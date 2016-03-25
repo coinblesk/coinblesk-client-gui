@@ -524,9 +524,7 @@ public class WalletService extends Service {
         this.multisigServerKey = serverKey;
         this.multisigClientKey = clientKey;
 
-        // use own createP2SHOutputScript method to avoid the Guava unsafe byte comparison ("Fatal signal 7 SIGBUS" issue).
         this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
-        // this.multisigAddressScript = ScriptBuilder.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
 
         for (Script watchedScript : kit.wallet().getWatchedScripts()) {
             if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
