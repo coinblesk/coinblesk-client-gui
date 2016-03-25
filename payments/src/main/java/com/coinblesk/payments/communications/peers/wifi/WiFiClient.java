@@ -49,7 +49,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     private WifiP2pManager manager = null;
     private WifiP2pManager.Channel channel = null;
 
-    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -70,6 +70,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     @Override
     public void onStart() {
         Log.d(TAG, "starting");
+        singleThreadExecutor = Executors.newSingleThreadExecutor();
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -108,29 +109,11 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     @Override
     public void onStop() {
         try {
-            manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
-                @Override
-                public void onSuccess() {
-
-                }
-
-                @Override
-                public void onFailure(int reason) {
-
-                }
-            });
-
-            manager.clearLocalServices(channel, new WifiP2pManager.ActionListener() {
-                @Override
-                public void onSuccess() {
-
-                }
-
-                @Override
-                public void onFailure(int reason) {
-
-                }
-            });
+            manager.clearServiceRequests(channel, new LogActionListener("clearServiceRequests"));
+            manager.stopPeerDiscovery(channel, new LogActionListener("stopPeerDiscovery"));
+            manager.cancelConnect(channel, new LogActionListener("cancelConnect"));
+            manager.removeGroup(channel, new LogActionListener("removeGroup"));
+            manager.clearLocalServices(channel, new LogActionListener("clearLocalServices"));
 
             singleThreadExecutor.shutdown();
             this.getContext().unregisterReceiver(this.broadcastReceiver);

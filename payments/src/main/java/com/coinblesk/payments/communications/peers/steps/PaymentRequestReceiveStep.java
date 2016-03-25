@@ -73,7 +73,6 @@ public class PaymentRequestReceiveStep implements Step {
         Transaction fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
 
         if(fullSignedTransaction == null) {
-            //not enough funds
             return null;
         }
         SignTO refundTO = new SignTO()

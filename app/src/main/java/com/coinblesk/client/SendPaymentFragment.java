@@ -1,8 +1,11 @@
 package com.coinblesk.client;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -29,6 +32,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     public static Fragment newInstance() {
         return new SendPaymentFragment();
     }
+
 
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -59,6 +63,16 @@ public class SendPaymentFragment extends KeyboardFragment {
                         if (heightValue - startPoint > THRESHOLD) {
                             if (!dialog.isShowing()) {
                                 dialog.show();
+                                IntentFilter instantPaymentFinishedIntentFilter = new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                                instantPaymentFinishedIntentFilter.addAction(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+
+                                LocalBroadcastManager.getInstance(getContext()).registerReceiver(new BroadcastReceiver() {
+                                    @Override
+                                    public void onReceive(Context context, Intent intent) {
+                                        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
+                                        dialog.dismiss();
+                                    }
+                                }, instantPaymentFinishedIntentFilter);
                                 LocalBroadcastManager.getInstance(getContext()).sendBroadcast(new Intent(Constants.START_CLIENTS_ACTION));
                             }
                         }
@@ -67,6 +81,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                 return false;
             }
         });
+
 
         return view;
     }

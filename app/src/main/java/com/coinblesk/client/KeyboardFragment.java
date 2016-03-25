@@ -18,6 +18,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +43,7 @@ import java.util.List;
  */
 
 public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
+    private final static String TAG = KeyboardFragment.class.getSimpleName();
     private String amountString = "0";
     private String sumString = "";
 
@@ -58,7 +60,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         this.isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
 
         final View view = inflater.inflate(R.layout.fragment_keyboard, container, false);
-
 
 
         final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
@@ -319,7 +320,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
             smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
-                            UIUtils.getCoinDenomination(this.getContext())),
+                    UIUtils.getCoinDenomination(this.getContext())),
                     UIUtils.getCoinDenomination(this.getContext())));
         }
     }
@@ -543,7 +544,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), String.format(getResources().getString(R.string.instant_payment_error_message), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY, ""))), Snackbar.LENGTH_LONG).show();
+            Log.d(TAG,intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY));
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY)), Snackbar.LENGTH_LONG).show();
         }
     };
 

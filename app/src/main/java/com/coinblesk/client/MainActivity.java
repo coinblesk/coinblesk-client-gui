@@ -284,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        this.initPeers();
         Intent intent = new Intent(this, WalletService.class);
         this.startService(intent);
         this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -312,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            initPeers();
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             String currency = prefs.getString("pref_currency_list", "USD");
             walletServiceBinder.setCurrency(currency);
@@ -423,6 +423,7 @@ public class MainActivity extends AppCompatActivity {
     private void startServers(BitcoinURI bitcoinURI) {
         this.showAuthViewAndGetResult(bitcoinURI,false);
         for (AbstractServer server : servers) {
+            server.setPaymentRequestUri(bitcoinURI);
             server.start();
         }
     }
@@ -445,7 +446,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest) {
-                return showAuthViewAndGetResult(paymentRequest, true);
+                boolean result = showAuthViewAndGetResult(paymentRequest, true);
+                if(!result){
+                    this.onPaymentError("payment was not authorized!");
+                }
+                return result;
             }
 
             @Override
