@@ -2,7 +2,6 @@ package com.coinblesk.payments.communications.peers.nfc;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.nfc.NfcAdapter;
 
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
@@ -14,11 +13,8 @@ import com.coinblesk.payments.communications.peers.AbstractClient;
  * a.decarli@papers.ch
  */
 public class NFCClient extends AbstractClient {
-    private final NfcAdapter nfcAdapter;
-
     public NFCClient(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
-        this.nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
     }
 
     @Override
@@ -37,6 +33,6 @@ public class NFCClient extends AbstractClient {
 
     @Override
     public boolean isSupported() {
-        return this.nfcAdapter != null;
+        return true;
     }
 }

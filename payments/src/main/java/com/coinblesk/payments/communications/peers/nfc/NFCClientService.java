@@ -1,10 +1,14 @@
 package com.coinblesk.payments.communications.peers.nfc;
 
 import android.annotation.TargetApi;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -54,7 +58,19 @@ public class NFCClientService extends HostApduService {
         // Check if intent has extras
         if (intent.getExtras() != null) {
             this.isClientStarted = intent.getExtras().getBoolean(Constants.CLIENT_STARTED_KEY);
+            derRequestPayload = new byte[0];
+            derResponsePayload = new byte[0];
+            stepCounter = 0;
+            isProcessing = false;
+            bitcoinURI = null;
+            timestamp = 0;
+            tx = null;
+            refund = null;
         }
+
+        Intent walletServiceIntent = new Intent(this, WalletService.class);
+        this.startService(walletServiceIntent);
+        this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         return START_NOT_STICKY;
     }
@@ -62,7 +78,7 @@ public class NFCClientService extends HostApduService {
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        if (this.isClientStarted) {
+        if (this.isClientStarted && walletServiceBinder != null) {
             try {
                 Log.d(TAG, "this is command apdu lenght: " + commandApdu.length);
                 int derPayloadStartIndex = 0;
@@ -109,8 +125,7 @@ public class NFCClientService extends HostApduService {
 
                                     switch (stepCounter) {
                                         case 0:
-                                            //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
-                                            PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(WalletService.WALLET_BINDER);
+                                            PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
                                             DERObject obj = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload));
                                             if (obj == null) {
                                                 //not enough funds
@@ -124,8 +139,7 @@ public class NFCClientService extends HostApduService {
                                             Log.d(TAG, "got payload1: " + derResponsePayload.length);
                                             break;
                                         case 1:
-                                            //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
-                                            final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(WalletService.WALLET_BINDER,
+                                            final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(walletServiceBinder,
                                                     bitcoinURI, timestamp);
                                             derResponsePayload = paymentRefundSendStep1.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                             tx = paymentRefundSendStep1.getFullSignedTransaction();
@@ -134,8 +148,7 @@ public class NFCClientService extends HostApduService {
                                             stepCounter++;
                                             break;
                                         case 2:
-                                            //TODO: this is quick and dirty, make the wallet_binder uses broadcast / send,receive
-                                            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(WalletService.WALLET_BINDER,
+                                            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder,
                                                     bitcoinURI.getAddress(), tx, refund);
                                             derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                             stepCounter++;
@@ -156,7 +169,7 @@ public class NFCClientService extends HostApduService {
                 return null;
             }
         } else {
-            return null;
+            return KEEPALIVE;
         }
     }
 
@@ -183,4 +196,28 @@ public class NFCClientService extends HostApduService {
     private boolean selectAidApdu(byte[] apdu) {
         return apdu.length >= 2 && apdu[0] == (byte) 0 && apdu[1] == (byte) 0xa4;
     }
+
+
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+    @Override
+    public void onDestroy() {
+        this.unbindService(this.serviceConnection);
+    }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            walletServiceBinder = null;
+        }
+    };
+    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 }

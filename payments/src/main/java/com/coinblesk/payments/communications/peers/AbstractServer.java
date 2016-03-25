@@ -12,7 +12,7 @@ import org.bitcoinj.uri.BitcoinURI;
  * a.decarli@papers.ch
  */
 public abstract class AbstractServer extends AbstractPeer {
-    private static BitcoinURI paymentRequestUri;
+    private BitcoinURI paymentRequestUri;
     private final WalletService.WalletServiceBinder walletServiceBinder;
 
     private PaymentRequestDelegate paymentRequestDelegate = PaymentRequestDelegate.ALLOW_DELEGATE;

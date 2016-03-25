@@ -22,7 +22,6 @@ import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveSte
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,14 +45,12 @@ public class NFCServer extends AbstractServer {
     private final Activity activity;
     private final NfcAdapter nfcAdapter;
 
-    private BitcoinURI bitcoinURI;
     private ECKey clientPublicKey;
 
     public NFCServer(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
         this.activity = activity;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(this.activity);
-        this.bitcoinURI = getPaymentRequestUri();
     }
 
     @Override
@@ -90,7 +87,7 @@ public class NFCServer extends AbstractServer {
                     Thread refundSend = null;
                     Thread finalSend = null;
 
-                    PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(bitcoinURI);
+                    PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(getPaymentRequestUri());
                     paymentRequestSendStepOutput.set(paymentRequestSendStep.process(null));
                     Log.d(TAG, "got request, received tx, reply with signatures for tx");
                     final DERObject paymentRequestOutput = transceiveDER(isoDep, paymentRequestSendStepOutput.get(), true);
@@ -103,7 +100,7 @@ public class NFCServer extends AbstractServer {
                                 public void run() {
                                     Log.d(TAG, "payment details send, sign tx");
                                     //now we have the tx, that we need to sign, send back ok
-                                    PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(bitcoinURI);
+                                    PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
                                     paymentAuthorizationReceiveOutput.set(paymentAuthorizationReceiveStep.process(paymentRequestOutput));
                                     clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
                                 }
@@ -142,7 +139,7 @@ public class NFCServer extends AbstractServer {
                                 public void run() {
                                     Log.d(TAG, "final request");
                                     final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(
-                                            clientPublicKey, bitcoinURI.getAddress());
+                                            clientPublicKey, getPaymentRequestUri().getAddress());
                                     sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
                                 }
                             });
@@ -151,8 +148,6 @@ public class NFCServer extends AbstractServer {
 
                         if (sendFinalSignatureOutput.get() != null) {
                             Log.d(TAG, "got final request, send over NFC ack");
-                            DERObject response = transceiveDER(isoDep, sendFinalSignatureOutput.get());
-                            Log.d(TAG, "we are done, response is: " + response.getPayload().length);
                             done = true;
                         } else {
                             byte[] response = isoDep.transceive(KEEPALIVE);
