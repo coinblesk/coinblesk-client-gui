@@ -127,18 +127,22 @@ public class WalletService extends Service {
 
         public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
-            for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {
-                transaction.setExchangeRate(getExchangeRate());
-                transactions.add(new TransactionWrapper(transaction, WalletService.this.kit.wallet()));
+            if(kit.wallet()!=null) {
+                for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {
+                    transaction.setExchangeRate(getExchangeRate());
+                    transactions.add(new TransactionWrapper(transaction, WalletService.this.kit.wallet()));
+                }
             }
             return transactions;
         }
 
         public List<TransactionOutput> getUnspentInstantOutputs() {
             List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
-            for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(false, false)) {
-                if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
-                    unspentInstantOutputs.add(unspentTransactionOutput);
+            if (kit.wallet() != null) {
+                for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(false, false)) {
+                    if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
+                        unspentInstantOutputs.add(unspentTransactionOutput);
+                    }
                 }
             }
             return unspentInstantOutputs;
@@ -306,14 +310,14 @@ public class WalletService extends Service {
                         if (fiatCurrency.equals("USD")) {
 
                         } else if (fiatCurrency.equals("CHF")) {
-                            conversionRate = (1/Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
+                            conversionRate = (1 / Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
                         } else {
-                            conversionRate = (1/Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
+                            conversionRate = (1 / Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
                             conversionRate *= Double.parseDouble(service.eurToChf().execute().body().getExchangeRates().get("CHF"));
                         }
 
-                        Log.d(TAG,"conversion"+conversionRate);
-                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(bitstampTicker.getCurrencyPair().counterSymbol, (long) (bitstampTicker.getAsk().longValue() * 10000 * (1/conversionRate))));
+                        Log.d(TAG, "conversion" + conversionRate);
+                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(bitstampTicker.getCurrencyPair().counterSymbol, (long) (bitstampTicker.getAsk().longValue() * 10000 * (1 / conversionRate))));
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
@@ -507,7 +511,7 @@ public class WalletService extends Service {
         }
 
         kit.setBlockingStartup(false);
-        kit.startAsync().awaitRunning();
+        kit.startAsync();
 
         //kit.wallet().reset();
         //clearMultisig();

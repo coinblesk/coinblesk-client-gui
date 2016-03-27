@@ -233,6 +233,7 @@
     <string name="pref_network_dialog_title">Bitcoin Network</string>
     <string name="pref_network_description">Select the bitcoin network</string>
     <string name="pref_network_default_value">main-net</string>
+    <string name="fragment_receive_title">Receive payment</string>
 
 
 </resources>

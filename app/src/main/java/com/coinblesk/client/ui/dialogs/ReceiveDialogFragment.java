@@ -2,6 +2,7 @@ package com.coinblesk.client.ui.dialogs;
 
 //import android.support.v7.app.AlertDialog;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -75,6 +76,13 @@ public class ReceiveDialogFragment extends DialogFragment {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.setTitle(R.string.fragment_receive_title);
+        return dialog;
     }
 }
 
