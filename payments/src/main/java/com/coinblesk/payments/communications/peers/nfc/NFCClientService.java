@@ -69,7 +69,6 @@ public class NFCClientService extends HostApduService {
         }
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
-        this.startService(walletServiceIntent);
         this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         return START_NOT_STICKY;

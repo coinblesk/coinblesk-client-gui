@@ -151,6 +151,10 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
+
+        Intent walletServiceIntent = new Intent(this, WalletService.class);
+        this.startService(walletServiceIntent);
+        this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void initViewPager() {
@@ -284,9 +288,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, WalletService.class);
-        this.startService(intent);
-        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "onStart");
+
         LocalBroadcastManager.getInstance(this).registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
@@ -296,13 +299,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop");
-        Intent intent = new Intent(this, WalletService.class);
-        this.unbindService(this.serviceConnection);
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(startClientsBroadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(stopClientsBroadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(startServersBroadcastReceiver);
-        this.stopService(intent);
         this.stopServers();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+
+        Intent intent = new Intent(this, WalletService.class);
+        //this.stopService(intent);
+        this.unbindService(this.serviceConnection);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

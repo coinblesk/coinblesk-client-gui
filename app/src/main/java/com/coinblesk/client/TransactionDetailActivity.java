@@ -124,7 +124,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         Intent intent = new Intent(this, WalletService.class);
-        this.startService(intent);
         this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -134,8 +133,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
         this.unbindService(serviceConnection);
     }
-
-
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
