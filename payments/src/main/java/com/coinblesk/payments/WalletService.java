@@ -127,7 +127,7 @@ public class WalletService extends Service {
 
         public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
-            if(kit.wallet()!=null) {
+            if (kit.wallet() != null) {
                 for (Transaction transaction : WalletService.this.kit.wallet().getTransactionsByTime()) {
                     transaction.setExchangeRate(getExchangeRate());
                     transactions.add(new TransactionWrapper(transaction, WalletService.this.kit.wallet()));
@@ -317,7 +317,7 @@ public class WalletService extends Service {
                         }
 
                         Log.d(TAG, "conversion" + conversionRate);
-                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(bitstampTicker.getCurrencyPair().counterSymbol, (long) (bitstampTicker.getAsk().longValue() * 10000 * (1 / conversionRate))));
+                        WalletService.this.exchangeRate = new ExchangeRate(Fiat.valueOf(fiatCurrency, (long) (bitstampTicker.getAsk().longValue() * 10000 * (1 / conversionRate))));
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", kit.wallet().getBalance().value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
