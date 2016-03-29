@@ -44,6 +44,11 @@ import java.util.List;
 
 public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     private final static String TAG = KeyboardFragment.class.getSimpleName();
+
+    private final static String KEY_AMOUNT = "amount";
+    private final static String KEY_SUM = "sum";
+    private final static String KEY_IS_BITCOIN_LARGE_AMOUNT = "isBitcoinLargeAmount";
+
     private String amountString = "0";
     private String sumString = "";
 
@@ -53,8 +58,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     protected abstract DialogFragment getDialogFragment();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
         this.isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
@@ -99,7 +103,34 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             this.initCustomButtons("7");
             this.initCustomButtons("8");
         }
+    }
 
+    @Override
+    public void onActivityCreated(Bundle inState) {
+        super.onActivityCreated(inState);
+
+        if (inState != null) {
+            if (inState.containsKey(KEY_AMOUNT)) {
+                amountString = inState.getString(KEY_AMOUNT, "0");
+            }
+            if (inState.containsKey(KEY_SUM)) {
+                sumString = inState.getString(KEY_SUM, "");
+            }
+            if (inState.containsKey(KEY_IS_BITCOIN_LARGE_AMOUNT)) {
+                isBitcoinLargeAmount = inState.getBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, true);
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (amountString != null) {
+            outState.putString(KEY_AMOUNT, amountString);
+        }
+        if (sumString != null) {
+            outState.putString(KEY_SUM, sumString);
+        }
+        outState.putBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, isBitcoinLargeAmount);
     }
 
     private void initStandard(View view) {
@@ -564,8 +595,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             exchangeRate = walletServiceBinder.getExchangeRate();
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
