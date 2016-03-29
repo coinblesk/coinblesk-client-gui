@@ -17,7 +17,7 @@
 #}
 -dontobfuscate
 
--keep public class * implements ch.papers.objectstorage.models.UuidObject
+-keep class * implements ch.papers.objectstorage.models.UuidObject { *; }
 -keep public class * extends android.app.Service
 -keep public class * extends android.content.BroadcastReceiver
 
@@ -31,6 +31,15 @@
     public *** info(...);
     public *** warn(...);
     public *** error(...);
+}
+
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int i(...);
+    public static int w(...);
+    public static int d(...);
+    public static int e(...);
 }
 
 -dontwarn org.slf4j.**
@@ -95,7 +104,14 @@
 -dontnote com.google.common.cache.Striped64,com.google.common.cache.Striped64$Cell
 
 # xchange
+-keep class com.xeiam.xchange.bitstamp.BitstampExchange
 -keep class com.xeiam.xchange.bitstamp.dto.marketdata.** {*;}
+-keepnames class com.fasterxml.jackson.** {
+*;
+}
+-keepnames interface com.fasterxml.jackson.** {
+    *;
+}
 
 # spongy castle
 -keep class org.spongycastle.crypto.* {*;}
@@ -114,3 +130,5 @@
 -keep class org.spongycastle.jcajce.provider.asymmetric.** {*;}
 -keep class org.spongycastle.jcajce.spec.* {*;}
 
+# keep everything that is serialized
+#-keep class com.coinblesk.payments.models.** { *; }
