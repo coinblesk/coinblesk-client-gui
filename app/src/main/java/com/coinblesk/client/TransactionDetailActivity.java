@@ -33,6 +33,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -42,6 +43,8 @@ import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 
 public class TransactionDetailActivity extends AppCompatActivity {
@@ -84,28 +87,30 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
 
     private void setTransactionDetails() {
-        TransactionWrapper transaction = walletServiceBinder.getTransaction(transactionHash);
-
+        final TransactionWrapper txWrapper = walletServiceBinder.getTransaction(transactionHash);
+        final Transaction transaction = txWrapper.getTransaction();
         try {
 
             // No one liner because of color filter, sorry
             final ImageView statusIcon = (ImageView) this.findViewById(R.id.txdetail_status_icon);
-            statusIcon.setImageResource(transaction.getTransaction().getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
-            statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getTransaction().getConfidence().getDepthInBlocks(), false));
+            statusIcon.setImageResource(transaction.getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
+            statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
 
-            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(this.getApplicationContext(), transaction));
-            ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getTransaction().getConfidence().toString());
-            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getTransaction().getUpdateTime() + "");
+            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
+            ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getConfidence().toString());
+            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime() + "");
             ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash.toString());
 
-            if(transaction.getTransaction().getFee() == null){
+            // for incoming tx, fee is null because inputs not known.
+            Coin fee = transaction.getFee();
+            if (fee != null) {
+                ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(fee.toFriendlyString());
+            } else {
                 this.findViewById(R.id.txfee).setVisibility(View.GONE);
             }
 
-            ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(transaction.getTransaction().getFee().toFriendlyString());
-
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(TAG, "setTransactionDetails exception: ", e);
         }
     }
 
@@ -137,8 +142,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
             LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
