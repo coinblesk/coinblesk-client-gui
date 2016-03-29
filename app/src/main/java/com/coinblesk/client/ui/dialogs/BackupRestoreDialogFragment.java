@@ -3,11 +3,7 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -23,7 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-
+import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.Encryption;
 import com.coinblesk.payments.WalletService;
@@ -31,15 +27,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -49,15 +38,13 @@ import java.util.zip.ZipInputStream;
 
 public class BackupRestoreDialogFragment extends DialogFragment {
 
-    private WalletService.WalletServiceBinder walletServiceBinder;
-
     private final static String TAG = BackupRestoreDialogFragment.class.getName();
 
-    private EditText passwordEditText;
-    private Button btnOk;
-    private Spinner fileList;
+    private WalletService.WalletServiceBinder walletServiceBinder;
 
-    private File selectedFile;
+    private EditText txtPassword;
+    private Button btnOk;
+    private Spinner backupFilesList;
 
     public static DialogFragment newInstance() {
         DialogFragment fragment = new BackupRestoreDialogFragment();
@@ -68,37 +55,47 @@ public class BackupRestoreDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_backup_restore_dialog, container);
-        this.passwordEditText = (EditText) view.findViewById(R.id.backup_password_text);
-        this.btnOk = (Button) view.findViewById(R.id.fragment_backup_ok);
-        this.btnOk.setEnabled(false);
+        txtPassword = (EditText) view.findViewById(R.id.backup_password_text);
+        txtPassword.addTextChangedListener(new PasswordNotEmptyTextWatcher());
+
+        btnOk = (Button) view.findViewById(R.id.fragment_backup_ok);
+        btnOk.setEnabled(false);
 
         view.findViewById(R.id.fragment_backup_ok).setOnClickListener(new RestoreOkClickListener());
         view.findViewById(R.id.fragment_backup_cancel).setOnClickListener(new RestoreCancelClickListener());
 
-        passwordEditText.addTextChangedListener(new PasswordNotEmptyTextWatcher());
+        backupFilesList = (Spinner) view.findViewById(R.id.fragment_restore_file_spinner);
+        initBackupFilesList();
 
-        fileList = (Spinner) view.findViewById(R.id.fragment_restore_file_spinner);
+        return view;
+    }
+
+    private void initBackupFilesList() {
         File backupDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File[] backupFiles = backupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
                 // TODO: implement something nicer than searching by file prefix...
-                return filename.startsWith("coinblesk_wallet_backup");
+                return filename.startsWith(AppConstants.BACKUP_FILE_PREFIX);
             }
         });
+        Arrays.sort(backupFiles);
+        ArrayAdapter<File> fileAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, backupFiles);
+        backupFilesList.setAdapter(fileAdapter);
+    }
 
-        ArrayAdapter<File> fileAdapter = new ArrayAdapter<File>(this.getContext(), android.R.layout.simple_list_item_1, backupFiles);
-        fileList.setAdapter(fileAdapter);
-
-        return view;
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.setTitle(R.string.fragment_backup_restore_title);
+        return dialog;
     }
 
     private class RestoreOkClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Execute backup restore.");
-            doRestore();
-
+            restore();
         }
     }
 
@@ -117,7 +114,7 @@ public class BackupRestoreDialogFragment extends DialogFragment {
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            boolean hasPassword = passwordEditText.length() > 0;
+            boolean hasPassword = txtPassword.length() > 0;
             btnOk.setEnabled(hasPassword);
         }
 
@@ -126,9 +123,9 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         }
     }
 
-    private void doRestore() {
-        final String password = passwordEditText.getText().toString();
-        final File selectedBackupFile = (File)fileList.getSelectedItem();
+    private void restore() {
+        final String password = txtPassword.getText().toString();
+        final File selectedBackupFile = (File) backupFilesList.getSelectedItem();
         clearPasswordInput();
         Preconditions.checkState(password != null && password.length() > 0);
         Preconditions.checkState(selectedBackupFile != null && selectedBackupFile.exists());
@@ -136,46 +133,11 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         try {
             final String encryptedBackup = Files.toString(selectedBackupFile, Charsets.UTF_8);
             final byte[] decryptedBackup = Encryption.decryptBytes(encryptedBackup, password.toCharArray());
+            Log.d(TAG, String.format("Decrypted backup file: [%s] (%d bytes)", selectedBackupFile, decryptedBackup.length));
 
-            ZipInputStream zis = null;
-            try {
-                ByteArrayInputStream bais = new ByteArrayInputStream(decryptedBackup);
-                zis = new ZipInputStream(new BufferedInputStream(bais));
-                ZipEntry ze = null;
-                while ((ze = zis.getNextEntry()) != null) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[1024];
-                    int count;
-                    while ((count = zis.read(buffer)) != -1) {
-                        baos.write(buffer, 0, count);
-                    }
-                    String filename = ze.getName();
-                    byte[] fileBytes = baos.toByteArray();
+            extractZip(decryptedBackup);
+            cleanupAfterRestore();
 
-                    OutputStream fos = null;
-                    try {
-                        File extractedFile = new File(getActivity().getFilesDir(), filename);
-                        fos = new BufferedOutputStream(new FileOutputStream(extractedFile));
-                        fos.write(fileBytes);
-                        fos.flush();
-                        Log.i(TAG, "Extracted file from zip: ["+filename+"] -> ["+extractedFile+"]");
-                    } finally {
-                        fos.close();
-                    }
-                }
-
-                cleanupAfterRestore();
-                dismiss();
-
-            } finally {
-                if (zis != null) {
-                    try {
-                        zis.close();
-                    } catch (IOException e) {
-                        Log.w(TAG, "Could not close zip input stream.", e);
-                    }
-                }
-            }
         } catch (Exception e) {
             Log.w(TAG, "Could not restore backup: ", e);
             new AlertDialog.Builder(this.getContext())
@@ -184,34 +146,115 @@ public class BackupRestoreDialogFragment extends DialogFragment {
                     .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
+                            dialog.dismiss();
                         }
                     })
                     .create().show();
         }
     }
 
+    /**
+     * Extracts all files from a zip to disk.
+     * @param zip data (zip format)
+     * @throws IOException
+     */
+    private void extractZip(byte[] zip) throws IOException {
+        ZipInputStream zis = null;
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(zip);
+            zis = new ZipInputStream(new BufferedInputStream(bais));
+            ZipEntry ze = null;
+
+            // extract all entries
+            Log.d(TAG, "Start extracting backup.");
+            int i = 0;
+            while ((ze = zis.getNextEntry()) != null) {
+                extractFromZipAndSaveToFile(zis, ze);
+                ++i;
+            }
+            Log.i(TAG, "Extracted "+i+" elements from backup.");
+
+        } finally {
+            if (zis != null) {
+                try {
+                    zis.close();
+                } catch (IOException e) {
+                    Log.w(TAG, "Could not close zip input stream.", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Extracts the next file from the Zip and stores it on disk.
+     * @param zis Zip
+     * @param ze the next entry
+     * @throws IOException
+     */
+    private void extractFromZipAndSaveToFile(ZipInputStream zis, ZipEntry ze) throws IOException {
+        byte[] data = extractFileFromZip(zis);
+        String filename = ze.getName();
+        File toFile = new File(getActivity().getFilesDir(), filename);
+        saveToFile(toFile, data);
+        Log.i(TAG, "Extracted file from backup: ["+filename+"] -> ["+toFile+"]");
+    }
+
+    /**
+     * Extracts the next file from the ZIP and returns the byte content.
+     * @param zis Zip
+     * @return content
+     * @throws IOException
+     */
+    private byte[] extractFileFromZip(ZipInputStream zis) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int count;
+        while ((count = zis.read(buffer)) != -1) {
+            baos.write(buffer, 0, count);
+        }
+        byte[] data = baos.toByteArray();
+        return data;
+    }
+
+    /**
+     * Writes the data to the file. Directories that do not exist yet are created on demand.
+     * @param file target path
+     * @param data content
+     * @throws IOException
+     */
+    private void saveToFile(File file, byte[] data) throws IOException {
+        OutputStream fos = null;
+        try {
+            File parentDir = file.getParentFile();
+            if (!parentDir.exists()) {
+                parentDir.mkdirs();
+                Log.d(TAG, "Create parent dir: [" + parentDir + "]");
+            }
+            fos = new BufferedOutputStream(new FileOutputStream(file));
+            fos.write(data);
+            fos.flush();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch(IOException e) {
+                    Log.w(TAG, "Could not close file stream.", e);
+                }
+            }
+        }
+    }
+
     private void cleanupAfterRestore() {
         walletServiceBinder.prepareWalletReset();
-        walletServiceBinder.deleteWalletFile();
-        // TODO: fix this. at the moment we must restart the app. otherwise old addresses are displayed (e.g. qr code).
-        android.os.Process.killProcess(android.os.Process.myPid());
+        Intent intent = new Intent(getActivity(), WalletService.class);
+        getActivity().stopService(intent);
+        dismiss();
+        getActivity().finishAffinity();
     }
 
     private void clearPasswordInput() {
-        passwordEditText.setText(null);
+        txtPassword.setText(null);
     }
-
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.setTitle(R.string.fragment_backup_restore_title);
-        return dialog;
-    }
-
-
-
-    /* -------------- WALLET SERVICE BINDER START ----------------*/
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -229,7 +272,7 @@ public class BackupRestoreDialogFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
+        Intent intent = new Intent(getActivity(), WalletService.class);
         this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -239,7 +282,4 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         this.getActivity().unbindService(serviceConnection);
     }
 
-
-    /* -------------- WALLET SERVICE BINDER END ----------------*/
 }
-

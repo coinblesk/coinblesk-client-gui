@@ -3,11 +3,7 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,24 +20,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
+import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.Encryption;
 import com.coinblesk.payments.WalletService;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
+import org.apache.commons.io.FileUtils;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -61,14 +50,14 @@ import static android.view.View.VISIBLE;
  */
 public class BackupDialogFragment extends DialogFragment {
 
-    private WalletService.WalletServiceBinder walletServiceBinder;
-
     private final static String TAG = BackupDialogFragment.class.getName();
 
-    private EditText passwordEditText;
-    private EditText passwordAgainEditText;
+    private WalletService.WalletServiceBinder walletServiceBinder;
+
+    private EditText txtPassword;
+    private EditText txtPasswordAgain;
+    private TextView passwordsMismatchHint;
     private Button btnOk;
-    private TextView passwordsMatchTextView;
 
     public static DialogFragment newInstance() {
         DialogFragment fragment = new BackupDialogFragment();
@@ -79,26 +68,33 @@ public class BackupDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_backup_dialog, container);
-        this.passwordEditText = (EditText) view.findViewById(R.id.backup_password_text);
-        this.passwordAgainEditText = (EditText) view.findViewById(R.id.backup_password_again_text);
-        this.btnOk = (Button) view.findViewById(R.id.fragment_backup_ok);
+        txtPassword = (EditText) view.findViewById(R.id.backup_password_text);
+        txtPasswordAgain = (EditText) view.findViewById(R.id.backup_password_again_text);
+        passwordsMismatchHint = (TextView) view.findViewById(R.id.fragment_backup_passwordmismatch_textview);
+        txtPassword.addTextChangedListener(new PasswordsMatchTextWatcher());
+        txtPasswordAgain.addTextChangedListener(new PasswordsMatchTextWatcher());
+
+        btnOk = (Button) view.findViewById(R.id.fragment_backup_ok);
         btnOk.setEnabled(false);
-        passwordsMatchTextView = (TextView) view.findViewById(R.id.fragment_backup_passwordmismatch_textview);
 
         view.findViewById(R.id.fragment_backup_ok).setOnClickListener(new BackupOkClickListener());
         view.findViewById(R.id.fragment_backup_cancel).setOnClickListener(new BackupCancelClickListener());
 
-        passwordEditText.addTextChangedListener(new PasswordsMatchTextWatcher());
-        passwordAgainEditText.addTextChangedListener(new PasswordsMatchTextWatcher());
-
         return view;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.setTitle(R.string.fragment_backup_title);
+        return dialog;
     }
 
     private class BackupOkClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Execute backup.");
-            doBackup();
+            backup();
             dismiss();
         }
     }
@@ -121,7 +117,7 @@ public class BackupDialogFragment extends DialogFragment {
             // compare passwords and enable/disable button
             boolean passwordsMatch = passwordsMatch();
             btnOk.setEnabled(passwordsMatch);
-            passwordsMatchTextView.setVisibility(passwordsMatch ? INVISIBLE : VISIBLE);
+            passwordsMismatchHint.setVisibility(passwordsMatch ? INVISIBLE : VISIBLE);
         }
 
         @Override
@@ -130,44 +126,31 @@ public class BackupDialogFragment extends DialogFragment {
     }
 
     private void clearPasswordInput() {
-        passwordEditText.setText(null);
-        passwordAgainEditText.setText(null);
-    }
-
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.setTitle(R.string.fragment_backup_title);
-        return dialog;
+        txtPassword.setText(null);
+        txtPasswordAgain.setText(null);
     }
 
     private boolean passwordsMatch() {
-        final String pwd = passwordEditText.getText().toString();
-        final String pwdAgain = passwordAgainEditText.getText().toString();
+        final String pwd = txtPassword.getText().toString();
+        final String pwdAgain = txtPasswordAgain.getText().toString();
         boolean pwdMatch = !pwd.isEmpty() && !pwdAgain.isEmpty() && pwd.contentEquals(pwdAgain);
         return pwdMatch;
     }
 
-    private File[] getObjectStorageFiles() {
-        File root = getActivity().getFilesDir();
-        File files[] = root.listFiles((FilenameFilter) new WildcardFileFilter("*.json"));
-        return files;
-    }
-
-    private void doBackup() {
+    private void backup() {
         final File backupFile = getWalletBackupFileName();
-        final String password = passwordEditText.getText().toString();
-        Preconditions.checkState(password.equals(passwordAgainEditText.getText().toString()) && password.length() > 0);
+        final String password = txtPassword.getText().toString();
+        Preconditions.checkState(password.equals(txtPasswordAgain.getText().toString()) && password.length() > 0);
         clearPasswordInput();
 
         Writer fileOut = null;
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             final ZipOutputStream zos = new ZipOutputStream(baos);
-            Log.i(TAG, "ZIP File for backup: " + backupFile);
+            Log.i(TAG, "Backup file: " + backupFile);
 
-            // assemble all content to backup -- add to zip
-            addObjectStorageFilesToZip(zos);
-            addWalletToZip(zos);
+            // assemble all content to backup
+            addFilesToZip(zos);
 
             // encrypt zip bytes and write to file
             zos.close();
@@ -204,31 +187,35 @@ public class BackupDialogFragment extends DialogFragment {
         }
     }
 
-    private void addWalletToZip(ZipOutputStream zos) throws IOException {
-        byte[] wallet = walletServiceBinder.getSerializedWallet();
-        if (wallet != null && wallet.length > 0) {
-            addZipEntry("wallet", wallet, zos);
-        }
-    }
-
-    private void addObjectStorageFilesToZip(ZipOutputStream zos) throws IOException {
-        File files[] = getObjectStorageFiles();
+    private void addFilesToZip(ZipOutputStream zos) throws IOException {
+        // all files (recursive) in filesDir
+        File root = getActivity().getFilesDir();
+        Collection<File> files = FileUtils.listFiles(root, null, true);
+        Log.d(TAG, String.format("Found %d files in directory [%s]", files.size(), root));
         for (File f : files) {
-            String filename = f.getName();
-            byte[] bytes = Files.toByteArray(f);
-            addZipEntry(filename, bytes, zos);
+            byte[] data = FileUtils.readFileToByteArray(f);
+            String zipName = stripParentPath(f, root);
+            addZipEntry(zipName, data, zos);
         }
     }
 
-    private void addZipEntry(String filename, byte[] bytes, ZipOutputStream zos) throws IOException {
+    private String stripParentPath(File file, File parent) {
+        // make a relative path
+        String zipName = file.getAbsolutePath().replace(parent.getAbsolutePath(), "");
+        if (zipName.startsWith(File.separator)) {
+            zipName = zipName.substring(1);
+        }
+        return zipName;
+    }
+
+    private void addZipEntry(String filename, byte[] data, ZipOutputStream zos) throws IOException {
         ZipEntry entry = new ZipEntry(filename);
         zos.putNextEntry(entry);
-        zos.write(bytes);
+        zos.write(data);
         zos.closeEntry();
         zos.flush();
         Log.i(TAG, "Added file to zip: ["+filename+"]");
     }
-
 
     private File getWalletBackupFileName() {
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -237,7 +224,7 @@ public class BackupDialogFragment extends DialogFragment {
         for (int i = 0; ; ++i) {
             String currentTime = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
             String postfix = i > 0 ? String.format("_%d", i) : "";
-            String fileName = String.format("coinblesk_wallet_backup_%s%s", currentTime, postfix);
+            String fileName = String.format("%s_%s%s", AppConstants.BACKUP_FILE_PREFIX, currentTime, postfix);
 
             walletFile = new File(path, fileName);
             if (!walletFile.exists()) {
@@ -260,24 +247,12 @@ public class BackupDialogFragment extends DialogFragment {
             return frag;
         }
 
-        private void sendMailWithBackup(String backupFile) {
-            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            // The intent does not have a URI, so declare the "text/html". With text/plain, many messengers etc. appear.
-            emailIntent.setType("text/html");
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Wallet Backup");
-            emailIntent.putExtra(Intent.EXTRA_TEXT, "Wallet backup");
-            emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+backupFile));
-            startActivity(Intent.createChooser(emailIntent , "Send wallet backup..."));
-        }
-
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             final String backupFile = getArguments().getString("backup_file");
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                     .setTitle(R.string.fragment_backup_success_title)
-                    .setMessage(Html.fromHtml("The wallet was stored on your device: <pre>"
-                            +backupFile+
-                            "</pre>.<br /><br />Do you want to send the backup via email?"))
+                    .setMessage(Html.fromHtml(String.format(getString(R.string.fragment_backup_success_message), backupFile)))
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Log.d(TAG, "User wants backup as mail attachment");
@@ -295,10 +270,17 @@ public class BackupDialogFragment extends DialogFragment {
             return builder.create();
 
         }
+
+        private void sendMailWithBackup(String backupFile) {
+            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+            // The intent does not have a URI, so declare the "text/html". With text/plain, many messengers etc. appear.
+            emailIntent.setType("text/html");
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.backup_mail_subject));
+            emailIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.backup_mail_message));
+            emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+backupFile));
+            startActivity(Intent.createChooser(emailIntent , getString(R.string.backup_mail_chooser)));
+        }
     }
-
-
-    /* -------------- WALLET SERVICE BINDER START ----------------*/
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -326,6 +308,4 @@ public class BackupDialogFragment extends DialogFragment {
         this.getActivity().unbindService(serviceConnection);
     }
 
-    /* -------------- WALLET SERVICE BINDER END ----------------*/
 }
-

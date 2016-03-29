@@ -38,5 +38,6 @@ public class AppConstants {
     public static final String COLOR_COLOR_ACCENT = "#AEEA00";
     public static final String COLOR_WHITE = "#FFFFFF";
 
+    public static final String BACKUP_FILE_PREFIX = "coinblesk_wallet_backup";
 
 }

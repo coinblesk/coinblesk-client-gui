@@ -345,11 +345,14 @@ public class WalletService extends Service {
 
 
         public void prepareWalletReset() {
+            Log.i(TAG, "Wallet reset");
             WalletService.this.kit.wallet().reset();
-            WalletService.this.kit.wallet().shutdownAutosaveAndWait();
-            // delete blockstore chain file -- this triggers re-downloading the chain (wallet replay)
+            // delete chain file - this triggers re-downloading the chain (wallet replay) in the next start
+            WalletService.this.kit.stopAsync().awaitTerminated();
             File blockstore = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
-            blockstore.delete();
+            if (blockstore.delete()) {
+                Log.i(TAG, "Deleted blockchain file: " + blockstore.toString());
+            }
         }
 
         public void deleteWalletFile() {
@@ -540,6 +543,7 @@ public class WalletService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy");
         if (this.kit != null) {
             this.kit.stopAsync().awaitTerminated();
         }
