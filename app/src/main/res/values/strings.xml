@@ -206,6 +206,8 @@
     <string name="fragment_send_dialog_qr_scan">QR-Scan</string>
     <string name="fragment_send_dialog_cancel">Cancel</string>
     <string name="fragment_send_dialog_scanning">Scanning for Payment Requests</string>
+    <string name="send_address_wrong_network">"Address is not for this network (%1$s)"</string>
+    <string name="send_address_parse_error">Cannot parse address.</string>
 
     <!--Customize Button Dialog Strings-->
     <string name="fragment_customize_button_dialog_description_hint">Product</string>

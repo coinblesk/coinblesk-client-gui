@@ -4,12 +4,7 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -19,17 +14,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-
+import android.widget.Toast;
 import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -47,7 +42,6 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
 
     private EditText addressEditText;
     private EditText amountEditText;
-
 
     public static DialogFragment newInstance(Coin amount) {
         DialogFragment fragment = new SendDialogFragment();
@@ -88,17 +82,17 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
         view.findViewById(R.id.fragment_send_dialog_send).setOnClickListener(this);
 
         return view;
-
     }
 
+    @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.setTitle(R.string.fragment_send_dialog_title);
         return dialog;
     }
 
+    @Override
     public void onClick(View v) {
-
         switch (v.getId()) {
             case R.id.fragment_send_dialog_send:
                 sendCoins();
@@ -110,9 +104,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
                 IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
                 break;
         }
-
-
-        }
+    }
 
 
     @Override
@@ -142,11 +134,16 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
 
     private void sendCoins() {
         try {
-//            Coin amount = Coin.valueOf(Long.parseLong(this.amountEditText.getText().toString()));
-            Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
-            walletServiceBinder.sendCoins(new Address(Constants.PARAMS, addressEditText.getText().toString()), amount);
+            Coin amount = Coin.valueOf(getArguments().getLong(AMOUNT_KEY, 0));
+            Address sendTo = new Address(Constants.PARAMS, addressEditText.getText().toString());
+            walletServiceBinder.sendCoins(sendTo, amount);
+        } catch (WrongNetworkException e) {
+            Toast.makeText(getContext(),
+                    getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
+                    Toast.LENGTH_SHORT)
+                    .show();
         } catch (AddressFormatException e) {
-            e.printStackTrace();
+            Toast.makeText(getContext(), R.string.send_address_parse_error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -169,8 +166,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
 
             IntentFilter filter = new IntentFilter(Constants.WALLET_COINS_SENT_ACTION);
