@@ -247,6 +247,8 @@
     <string name="pref_network_description">Select the bitcoin network</string>
     <string name="pref_network_default_value">main-net</string>
     <string name="fragment_receive_title">Receive payment</string>
+    <string name="restart">Restart</string>
+    <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
 
 
 </resources>
