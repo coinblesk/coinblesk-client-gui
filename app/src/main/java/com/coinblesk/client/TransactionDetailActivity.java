@@ -31,8 +31,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.transition.Fade;
-import android.transition.Slide;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -43,6 +41,7 @@ import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
@@ -73,8 +72,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
             }
         });
 
-        setupWindowAnimations();
-
         Intent intent = getIntent();
         this.transactionHash = intent.getStringExtra(EXTRA_NAME);
 
@@ -82,6 +79,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
     }
 
@@ -155,14 +153,4 @@ public class TransactionDetailActivity extends AppCompatActivity {
         }
     };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
-
-    private void setupWindowAnimations() {
-        Fade fade = new Fade();
-        fade.setDuration(1000);
-        getWindow().setEnterTransition(fade);
-
-        Slide slide = new Slide();
-        slide.setDuration(1000);
-        getWindow().setReturnTransition(slide);
-    }
 }

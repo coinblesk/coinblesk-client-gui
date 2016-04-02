@@ -602,7 +602,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentErrorListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(insufficientFundsListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
-            walletServiceBinder.fetchExchangeRate();
             updateAmount();
         }
 

@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onDestroy");
 
         Intent intent = new Intent(this, WalletService.class);
-        //this.stopService(intent);
+        this.stopService(intent);
         this.unbindService(this.serviceConnection);
     }
 
