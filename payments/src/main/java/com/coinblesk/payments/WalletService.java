@@ -79,8 +79,10 @@ public class WalletService extends Service {
     private Script multisigAddressScript;
     private ECKey multisigClientKey;
     private ECKey multisigServerKey;
+    private double progress = 0.0;
 
     public class WalletServiceBinder extends Binder {
+
 
         public WalletServiceBinder() {
             try {
@@ -359,6 +361,14 @@ public class WalletService extends Service {
             File wallet = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
             wallet.delete();
         }
+
+        public boolean isReady() {
+            return progress >= 100;
+        }
+
+        public double getProgress() {
+            return progress;
+        }
     }
 
     private final WalletServiceBinder walletServiceBinder = new WalletServiceBinder();
@@ -413,9 +423,11 @@ public class WalletService extends Service {
                     @Override
                     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
                         super.onTransactionConfidenceChanged(wallet, tx);
-                        Intent walletProgressIntent = new Intent(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-                        walletProgressIntent.putExtra("transactionHash", tx.getHashAsString());
-                        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                        if (progress >= 100) {
+                            Intent walletProgressIntent = new Intent(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+                            walletProgressIntent.putExtra("transactionHash", tx.getHashAsString());
+                            LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                        }
                     }
 
                     @Override
@@ -487,12 +499,14 @@ public class WalletService extends Service {
                 walletProgressIntent.putExtra("blocksSoFar", blocksSoFar);
                 walletProgressIntent.putExtra("date", date);
                 LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
+                progress = pct;
                 Log.d(TAG, "progress " + pct);
             }
 
             @Override
             protected void doneDownload() {
                 super.doneDownload();
+                progress = 100.0;
                 Log.d(TAG, "done download");
             }
         });
