@@ -2,8 +2,10 @@ package com.coinblesk.payments;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -27,6 +29,7 @@ import com.xeiam.xchange.dto.marketdata.Ticker;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.ECKey;
@@ -72,9 +75,13 @@ public class WalletService extends Service {
 
     private final static String TAG = WalletService.class.getName();
 
+    private final String REFUND_ADDRESS_SETTINGS_PREF_KEY = "pref_refund_address_settings";
+
     private String fiatCurrency = "USD";
     private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
     private WalletAppKit kit;
+
+    private Address refundAddress;
 
     private Script multisigAddressScript;
     private ECKey multisigClientKey;
@@ -473,6 +480,9 @@ public class WalletService extends Service {
                     ECKeyWrapper serverKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class);
                     ECKeyWrapper clientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
                     setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
+
+
+
                 } catch (UuidObjectStorageException e) {
                     try {
                         CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
@@ -494,6 +504,16 @@ public class WalletService extends Service {
                         Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
                     }
                 }
+
+                final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                final String refundAddressString = sharedPreferences.getString(REFUND_ADDRESS_SETTINGS_PREF_KEY, kit.wallet().currentReceiveAddress().toString());
+                try{
+                    refundAddress = new Address(Constants.PARAMS,refundAddressString);
+                } catch (AddressFormatException e) {
+                    refundAddress = kit.wallet().currentReceiveAddress();
+                }
+                sharedPreferences.edit().putString(REFUND_ADDRESS_SETTINGS_PREF_KEY,refundAddress.toString()).commit();
+
                 if (Constants.PARAMS.equals(TestNet3Params.get())) {
                     // these are testnet peers
                     try {
@@ -561,6 +581,7 @@ public class WalletService extends Service {
 
         Log.d(TAG, "wallet started");
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
+
 
 
         return this.walletServiceBinder;

@@ -249,6 +249,8 @@
     <string name="fragment_receive_title">Receive payment</string>
     <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
+    <string name="pref_refund_address_settings_summary">Set you refund transaction address. This is where your money will be sent in case of server default.</string>
+    <string name="pref_refund_address_settings_title">Refund Address</string>
 
 
 </resources>

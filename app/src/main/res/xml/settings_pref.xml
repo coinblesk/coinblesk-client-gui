@@ -47,6 +47,10 @@
             android:key="pref_connection_settings"
             android:summary="@string/pref_connection_settings_summary"
             android:title="@string/pref_connection_settings_title" />
+        <EditTextPreference
+            android:key="pref_refund_address_settings"
+            android:summary="@string/pref_refund_address_settings_summary"
+            android:title="@string/pref_refund_address_settings_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
