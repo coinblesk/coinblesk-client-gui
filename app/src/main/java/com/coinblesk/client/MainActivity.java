@@ -151,10 +151,6 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
-
-        Intent walletServiceIntent = new Intent(this, WalletService.class);
-        this.startService(walletServiceIntent);
-        this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void initViewPager() {
@@ -293,6 +289,9 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
+
+        Intent walletServiceIntent = new Intent(this, WalletService.class);
+        this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -304,6 +303,8 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(stopClientsBroadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(startServersBroadcastReceiver);
         this.stopServers();
+
+        unbindService(serviceConnection);
     }
 
     @Override
@@ -311,9 +312,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
 
-        Intent intent = new Intent(this, WalletService.class);
-        this.stopService(intent);
-        this.unbindService(this.serviceConnection);
+
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

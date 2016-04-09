@@ -373,9 +373,35 @@ public class WalletService extends Service {
 
     private final WalletServiceBinder walletServiceBinder = new WalletServiceBinder();
 
+    private void setupMultiSigAddress(ECKey clientKey, ECKey serverKey) {
+        this.multisigServerKey = serverKey;
+        this.multisigClientKey = clientKey;
+
+        this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
+
+        for (Script watchedScript : kit.wallet().getWatchedScripts()) {
+            if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
+                kit.wallet().removeWatchedScripts(ImmutableList.<Script>of(watchedScript));
+            }
+        }
+
+        // now add the right one
+        kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
+    }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+        if (this.kit != null) {
+            this.kit.stopAsync().awaitTerminated();
+        }
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d(TAG, "on bind");
 
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
@@ -535,38 +561,8 @@ public class WalletService extends Service {
 
         Log.d(TAG, "wallet started");
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
-        return Service.START_NOT_STICKY;
-    }
 
-    private void setupMultiSigAddress(ECKey clientKey, ECKey serverKey) {
-        this.multisigServerKey = serverKey;
-        this.multisigClientKey = clientKey;
 
-        this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
-
-        for (Script watchedScript : kit.wallet().getWatchedScripts()) {
-            if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
-                kit.wallet().removeWatchedScripts(ImmutableList.<Script>of(watchedScript));
-            }
-        }
-
-        // now add the right one
-        kit.wallet().addWatchedScripts(ImmutableList.of(multisigAddressScript));
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
-        if (this.kit != null) {
-            this.kit.stopAsync().awaitTerminated();
-        }
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(TAG, "on bind");
         return this.walletServiceBinder;
     }
 
