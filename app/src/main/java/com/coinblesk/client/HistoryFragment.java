@@ -18,6 +18,9 @@ import android.view.ViewGroup;
 
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.models.TransactionWrapper;
+
+import java.util.ArrayList;
 
 /**
  * Created by ckiller
@@ -32,6 +35,7 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.fragment_history, container, false);
+        recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(new ArrayList<TransactionWrapper>()));
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         return recyclerView;
     }
