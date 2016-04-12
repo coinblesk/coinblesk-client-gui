@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationView;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
@@ -195,7 +196,10 @@ public class MainActivity extends AppCompatActivity {
                 drawerLayout.closeDrawers();
 
                 switch (menuItem.getItemId()) {
-
+                    case R.id.addresses:
+                        Intent addressesAct = new Intent(getApplicationContext(), AddressActivity.class);
+                        startActivity(addressesAct);
+                        return true;
                     case R.id.backup:
                         Intent backupAct = new Intent(getApplicationContext(), BackupActivity.class);
                         startActivity(backupAct);
