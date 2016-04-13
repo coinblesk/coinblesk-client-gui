@@ -51,10 +51,8 @@ public class AddressActivity extends AppCompatActivity
     /**
      * TODO
      * - maybe label mandatory?
-     * - fix action mode vs. toolbar
      * - allow adding from other coinblesk dialogs.
      */
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
