@@ -1,5 +1,6 @@
 package com.coinblesk.client.addresses;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,36 +15,44 @@ import java.util.List;
  * Created by Andreas Albrecht on 11.04.16.
  */
 public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.ViewHolder> {
-
+    private static final String TAG = AddressListAdapter.class.getName();
     private final List<AddressWrapper> addresses;
 
     private final AddressClickHandler itemClickListener;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder
+    static class ViewHolder extends RecyclerView.ViewHolder
                                     implements View.OnLongClickListener {
-        public final View addressItem;
-        public final TextView addressLabel;
-        public final TextView address;
-        public final AddressClickHandler clickListener;
+        final View addressView;
+        final TextView addressLabel;
+        final TextView address;
+        final AddressClickHandler clickListener;
 
-        public ViewHolder(View view, AddressClickHandler clickListener) {
+        ViewHolder(View view, AddressClickHandler clickListener) {
             super(view);
-            addressItem = view;
+            addressView = view;
             this.clickListener = clickListener;
             addressLabel = (TextView) view.findViewById(R.id.address_label);
             address = (TextView) view.findViewById(R.id.address);
 
-            addressItem.setOnLongClickListener(this);
+            addressView.setOnLongClickListener(this);
             addressLabel.setOnLongClickListener(this);
             address.setOnLongClickListener(this);
         }
 
         @Override
         public boolean onLongClick(View v) {
+            Log.d(TAG, "onLongClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
             if (clickListener != null) {
                 return clickListener.onItemLongClick(getAdapterPosition());
             }
             return false;
+        }
+
+        void update(AddressWrapper addressItem) {
+            String label = addressItem.getAddressLabel();
+            String base58 = addressItem.getAddress().toString();
+            addressLabel.setText(label);
+            address.setText(base58);
         }
     }
 
@@ -74,10 +83,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         // - get element from the dataset at this position
         // - replace the contents of the view with that element
         AddressWrapper address = addresses.get(position);
-        String label = address.getAddressLabel();
-        String base58 = address.getAddress().toString();
-        holder.addressLabel.setText(label);
-        holder.address.setText(base58);
+        holder.update(address);
     }
 
     // Return the size of the dataset (invoked by the layout manager)
@@ -90,7 +96,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         return addresses;
     }
 
-    public interface AddressClickHandler {
+    interface AddressClickHandler {
         boolean onItemLongClick(int itemPosition);
     }
 }

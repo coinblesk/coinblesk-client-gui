@@ -1,5 +1,6 @@
 package com.coinblesk.client.addresses;
 
+import android.app.DialogFragment;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -8,8 +9,6 @@ import android.app.Activity;
 
 
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
@@ -50,7 +49,6 @@ public class AddressActivity extends AppCompatActivity
 
     /**
      * TODO
-     * - maybe label mandatory?
      * - allow adding from other coinblesk dialogs.
      */
 
@@ -110,7 +108,7 @@ public class AddressActivity extends AppCompatActivity
                         String msg = "";
                         if (s != null) { msg = String.format(" (%s)", s); }
                         Toast.makeText(AddressActivity.this,
-                                String.format("Could not load addresses %s", msg),
+                                getString(R.string.addresses_msg_load_error, msg),
                                 Toast.LENGTH_LONG)
                                 .show();
                     }
@@ -148,7 +146,7 @@ public class AddressActivity extends AppCompatActivity
                     String result = bitcoinURI.getAddress().toString();
                     showAddAddressDialog(result);
                 } catch (BitcoinURIParseException e) {
-                    Toast.makeText(this, "Not a valid Bitcoin address.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, R.string.send_address_parse_error, Toast.LENGTH_LONG).show();
                 }
 
             }
@@ -168,9 +166,8 @@ public class AddressActivity extends AppCompatActivity
     }
 
     private void showAddAddressDialog(String label, String address) {
-        FragmentManager fm = getSupportFragmentManager();
         DialogFragment frag = EditAddressFragment.newInstance(label, address);
-        frag.show(fm, "fragment_edit_address");
+        frag.show(getFragmentManager(), "fragment_edit_address");
     }
 
     private void scanAddress() {
@@ -210,7 +207,7 @@ public class AddressActivity extends AppCompatActivity
             }
 
             Snackbar.make(recyclerView,
-                    UIUtils.toFriendlySnackbarString(this, "Address saved."),
+                    UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_saved)),
                     Snackbar.LENGTH_LONG)
                     .show();
         }
@@ -238,7 +235,7 @@ public class AddressActivity extends AppCompatActivity
             UuidObjectStorage.getInstance().addEntry(address, AddressWrapper.class);
             UuidObjectStorage.getInstance().commit();
         } catch (Exception e) {
-            Toast.makeText(this, "Could not store address.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.addresses_msg_saved_error, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -349,7 +346,7 @@ public class AddressActivity extends AppCompatActivity
 
         finishActionMode();
         Snackbar.make(recyclerView,
-                UIUtils.toFriendlySnackbarString(this, "Address removed."),
+                UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_removed)),
                 Snackbar.LENGTH_LONG)
                 .show();
     }

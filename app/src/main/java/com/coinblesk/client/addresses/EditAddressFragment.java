@@ -1,13 +1,18 @@
 package com.coinblesk.client.addresses;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
 import android.text.InputType;
+import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -18,13 +23,15 @@ import com.coinblesk.payments.Constants;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.WrongNetworkException;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 
 
 /**
  * This dialog fragment allows adding and editing addresses of the address book.
  */
 public class EditAddressFragment extends DialogFragment {
-
+    private static final String TAG = EditAddressFragment.class.getName();
     private static final String ARG_ADDRESS_LABEL = "address_label";
     private static final String ARG_ADDRESS = "address";
 
@@ -57,32 +64,49 @@ public class EditAddressFragment extends DialogFragment {
         addressEditText = (EditText) view.findViewById(R.id.txtAddress);
 
         final Bundle args = getArguments();
+        String address = null;
+        String addressLabel = null;
         if (args != null) {
             if (args.containsKey(ARG_ADDRESS_LABEL)) {
-                labelEditText.setText(args.getString(ARG_ADDRESS_LABEL));
+                address = args.getString(ARG_ADDRESS_LABEL);
             }
             if (args.containsKey(ARG_ADDRESS)) {
                 // if we get an address, we only display it but do not permit
                 // editing to avoid saving a wrong address.
                 addressEditText.setEnabled(false);
                 addressEditText.setInputType(InputType.TYPE_NULL);
-                addressEditText.setText(args.getString(ARG_ADDRESS));
+                addressLabel = args.getString(ARG_ADDRESS);
             }
         }
+        addressEditText.setText(addressLabel);
+        labelEditText.setText(address);
+        Log.d(TAG, "onCreateDialog with address=" + address + ", and addressLabel=" + addressLabel);
 
-         return new AlertDialog.Builder(getActivity())
+        return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.edit_address_fragment_title)
                 .setView(view)
-                .setPositiveButton(R.string.ok, new OnOkClickListener())
-                .setNegativeButton(R.string.cancel, new OnCancelClickListener())
+                .setPositiveButton(R.string.ok, null) // will be set later in onResume
+                .setNegativeButton(R.string.cancel, null)
                 .create();
     }
 
-    private class OnCancelClickListener implements DialogInterface.OnClickListener {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            dialog.cancel();
-        }
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        /* the click listener is set here such that we can perform input validation (is address correct, and so on).
+         * unfortunately, the AlertDialog with the builder usually does autoDismiss with an additional after a button click.
+         * Thus, we set the click listener manually after show().
+        */
+        final AlertDialog alertDialog = (AlertDialog) getDialog();
+        alertDialog
+                .getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        new OnOkClickListener().onClick(alertDialog, AlertDialog.BUTTON_POSITIVE);
+                    }
+                });
     }
 
     private class OnOkClickListener implements DialogInterface.OnClickListener {
@@ -92,29 +116,104 @@ public class EditAddressFragment extends DialogFragment {
                 return;
             }
 
-            try {
-                final String label = labelEditText.getText().toString().trim();
-                final String address = addressEditText.getText().toString().trim();
-                new Address(Constants.PARAMS, address); // only for validation and correctness
-                final AddressWrapper addressWrapper = new AddressWrapper(label, address);
-                listener.onNewOrChangedAddress(addressWrapper);
-                dialog.dismiss();
-            } catch (WrongNetworkException e) {
-                Toast.makeText(getDialog().getContext(),
-                        getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
-                        Toast.LENGTH_LONG).show();
-            } catch (AddressFormatException e) {
-                Toast.makeText(getDialog().getContext(),
-                        R.string.send_address_parse_error,
-                        Toast.LENGTH_LONG).show();
+            String label = labelEditText.getText().toString().trim();
+            String address = addressEditText.getText().toString().trim();
+            Pair<Boolean, String> result;
+
+            // LABEL VALIDATION
+            result = validateLabel(label);
+            if (result.first) {
+                label = result.second;
+            } else {
+                showToastError(result.second);
+                return;
             }
+
+
+            // ADDRESS VALIDATION
+            result = addressValidation(address);
+            if (result.first) {
+                address = result.second;
+            } else {
+                showToastError(result.second);
+                return;
+            }
+
+            // everything OK
+            final AddressWrapper addressWrapper = new AddressWrapper(label, address);
+            listener.onNewOrChangedAddress(addressWrapper);
+            dialog.dismiss();
         }
     }
 
+    private void showToastError(String message) {
+        Toast.makeText(getDialog().getContext(),
+                message,
+                Toast.LENGTH_SHORT)
+                .show();
+    }
+
+    private Pair<Boolean,String> addressValidation(String address) {
+        // the address can be a Bitcoin address OR an bitcoin Uri from e.g. a QR Code
+        // (from which we can extract the address part).
+        String addressError = null;
+        try {
+            BitcoinURI bitcoinURI = new BitcoinURI(address);
+            if (bitcoinURI.getAddress() != null) {
+                address = bitcoinURI.getAddress().toString();
+                return Pair.create(true, address);
+            }
+        } catch (BitcoinURIParseException e) {
+            // ignore because we try a different approach below.
+        }
+
+        try {
+            // bitcoinURI parsing failed. now try as regular address string
+            Address btcAddress = new Address(Constants.PARAMS, address);
+            return Pair.create(true, address);
+        } catch (WrongNetworkException e) {
+            addressError = getString(R.string.send_address_wrong_network, Constants.PARAMS.getId());
+        } catch (AddressFormatException e) {
+            addressError = getString(R.string.send_address_parse_error);
+        }
+
+        // all conversions failed.
+        return Pair.create(false, addressError);
+    }
+
+    private Pair<Boolean, String> validateLabel(String addressLabel) {
+        if (addressLabel.isEmpty()) {
+            return Pair.create(false, getString(R.string.edit_address_msg_emptylabel));
+        }
+
+        return Pair.create(true, addressLabel);
+    }
+
+    /*
+     * The issue is that depending on the API version, onAttach(context) or onAttach(activity)
+     * gets called. Thus, we have both here because we need the context to set the listener
+     * in onAttachToContext().
+     */
+    @TargetApi(23)
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        onAttachToContext(context);
+    }
 
+    /*
+     * Deprecated on API 23
+     * Use onAttachToContext instead
+     */
+    @SuppressWarnings("deprecation")
+    @Override public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (Build.VERSION.SDK_INT < 23) {
+            onAttachToContext(activity);
+        }
+    }
+
+    private void onAttachToContext(Context context) {
         if (context instanceof AddressFragmentInteractionListener) {
             listener = (AddressFragmentInteractionListener) context;
         } else {

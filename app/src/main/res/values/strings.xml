@@ -292,9 +292,14 @@
 
     <!-- Address book -->
     <string name="edit_address_fragment_title">Address</string>
+    <string name="edit_address_msg_emptylabel">Label is empty.</string>
     <string name="addresses_label_address">Address</string>
     <string name="addresses_label_label">Label</string>
     <string name="action_add">Add</string>
+    <string name="addresses_msg_saved">Address saved.</string>
+    <string name="addresses_msg_saved_error">Could not save address.</string>
+    <string name="addresses_msg_load_error">Could not load address%1$s</string>
+    <string name="addresses_msg_removed">Address removed.</string>
 
 
 </resources>
