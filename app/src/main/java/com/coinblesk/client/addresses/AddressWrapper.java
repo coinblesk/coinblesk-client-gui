@@ -1,7 +1,6 @@
 package com.coinblesk.client.addresses;
 
 import ch.papers.objectstorage.models.AbstractUuidObject;
-import org.bitcoinj.core.Address;
 
 import java.io.Serializable;
 
@@ -11,12 +10,12 @@ import java.io.Serializable;
 public class AddressWrapper extends AbstractUuidObject
                             implements Serializable, Comparable<AddressWrapper> {
 
-    private String addressTitle;
+    private String addressLabel;
     private String address;
 
-    public AddressWrapper(String addressTitle, String address) {
+    public AddressWrapper(String addressLabel, String address) {
         super();
-        this.addressTitle = addressTitle;
+        this.addressLabel = addressLabel;
         this.address = address;
     }
 
@@ -28,12 +27,12 @@ public class AddressWrapper extends AbstractUuidObject
         this.address = address;
     }
 
-    public String getAddressTitle() {
-        return addressTitle;
+    public String getAddressLabel() {
+        return addressLabel;
     }
 
-    public void setAddressTitle(String addressTitle) {
-        this.addressTitle = addressTitle;
+    public void setAddressLabel(String addressLabel) {
+        this.addressLabel = addressLabel;
     }
 
     @Override
@@ -43,27 +42,27 @@ public class AddressWrapper extends AbstractUuidObject
         if (!(obj instanceof AddressWrapper)) { return false; }
         AddressWrapper other = (AddressWrapper) obj;
 
-        return com.google.common.base.Objects.equal(addressTitle, other.addressTitle) &&
+        return com.google.common.base.Objects.equal(addressLabel, other.addressLabel) &&
                 com.google.common.base.Objects.equal(address, other.address);
     }
 
     @Override
     public int hashCode() {
-        return com.google.common.base.Objects.hashCode(addressTitle, address);
+        return com.google.common.base.Objects.hashCode(addressLabel, address);
     }
 
     @Override
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(this)
-                .add("addressTitle", addressTitle)
+                .add("addressLabel", addressLabel)
                 .add("address", address)
                 .toString();
     }
 
     @Override
     public int compareTo(AddressWrapper another) {
-        int title = addressTitle.compareToIgnoreCase(another.getAddressTitle());
-        if (title != 0) { return title; }
+        int label = addressLabel.compareToIgnoreCase(another.getAddressLabel());
+        if (label != 0) { return label; }
         else { return address.compareTo(another.address); }
     }
 }

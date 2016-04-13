@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -19,23 +20,30 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.WrongNetworkException;
 
 
+/**
+ * This dialog fragment allows adding and editing addresses of the address book.
+ */
 public class EditAddressFragment extends DialogFragment {
 
-    private static final String ARG_ADDRESS_TITLE = "address_title";
+    private static final String ARG_ADDRESS_LABEL = "address_label";
     private static final String ARG_ADDRESS = "address";
 
-    private EditText titleEditText;
+    private EditText labelEditText;
     private EditText addressEditText;
     private AddressFragmentInteractionListener listener;
 
     public EditAddressFragment() {
     }
 
-    public static DialogFragment newInstance(String addressTitle, String address) {
+    public static DialogFragment newInstance(String addressLabel, String address) {
         EditAddressFragment fragment = new EditAddressFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_ADDRESS_TITLE, addressTitle);
-        args.putString(ARG_ADDRESS, address);
+        if (addressLabel != null) {
+            args.putString(ARG_ADDRESS_LABEL, addressLabel);
+        }
+        if (address != null) {
+            args.putString(ARG_ADDRESS, address);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -45,16 +53,25 @@ public class EditAddressFragment extends DialogFragment {
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.fragment_edit_address, null);
-        titleEditText = (EditText) view.findViewById(R.id.txtTitle);
+        labelEditText = (EditText) view.findViewById(R.id.txtAddressLabel);
         addressEditText = (EditText) view.findViewById(R.id.txtAddress);
 
-        if (getArguments() != null) {
-            titleEditText.setText(getArguments().getString(ARG_ADDRESS_TITLE));
-            addressEditText.setText(getArguments().getString(ARG_ADDRESS));
+        final Bundle args = getArguments();
+        if (args != null) {
+            if (args.containsKey(ARG_ADDRESS_LABEL)) {
+                labelEditText.setText(args.getString(ARG_ADDRESS_LABEL));
+            }
+            if (args.containsKey(ARG_ADDRESS)) {
+                // if we get an address, we only display it but do not permit
+                // editing to avoid saving a wrong address.
+                addressEditText.setEnabled(false);
+                addressEditText.setInputType(InputType.TYPE_NULL);
+                addressEditText.setText(args.getString(ARG_ADDRESS));
+            }
         }
 
          return new AlertDialog.Builder(getActivity())
-                .setTitle("Address")
+                .setTitle(R.string.edit_address_fragment_title)
                 .setView(view)
                 .setPositiveButton(R.string.ok, new OnOkClickListener())
                 .setNegativeButton(R.string.cancel, new OnCancelClickListener())
@@ -76,15 +93,15 @@ public class EditAddressFragment extends DialogFragment {
             }
 
             try {
-                String title = titleEditText.getText().toString().trim();
-                String address = addressEditText.getText().toString().trim();
-                Address tmp = new Address(Constants.PARAMS, address); // only for validation and correctness
-                AddressWrapper addressWrapper = new AddressWrapper(title, address);
+                final String label = labelEditText.getText().toString().trim();
+                final String address = addressEditText.getText().toString().trim();
+                new Address(Constants.PARAMS, address); // only for validation and correctness
+                final AddressWrapper addressWrapper = new AddressWrapper(label, address);
                 listener.onNewOrChangedAddress(addressWrapper);
                 dialog.dismiss();
             } catch (WrongNetworkException e) {
                 Toast.makeText(getDialog().getContext(),
-                        R.string.send_address_wrong_network,
+                        getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
                         Toast.LENGTH_LONG).show();
             } catch (AddressFormatException e) {
                 Toast.makeText(getDialog().getContext(),
@@ -112,7 +129,13 @@ public class EditAddressFragment extends DialogFragment {
         listener = null;
     }
 
-    public interface AddressFragmentInteractionListener {
+    interface AddressFragmentInteractionListener {
+        /**
+         * Called if item is added or changed.
+         * Note: the address reference may not point to the same
+         *       object even if the item is changed and not new.
+         * @param address
+         */
         void onNewOrChangedAddress(AddressWrapper address);
     }
 }

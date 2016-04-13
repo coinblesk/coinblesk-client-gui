@@ -290,4 +290,11 @@
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
 
+    <!-- Address book -->
+    <string name="edit_address_fragment_title">Address</string>
+    <string name="addresses_label_address">Address</string>
+    <string name="addresses_label_label">Label</string>
+    <string name="action_add">Add</string>
+
+
 </resources>

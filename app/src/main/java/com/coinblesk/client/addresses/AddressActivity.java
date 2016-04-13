@@ -50,14 +50,9 @@ public class AddressActivity extends AppCompatActivity
 
     /**
      * TODO
-     * - in editing mode: only title can be edited (such that we never accidentally change address).
-     * - maybe title mandatory?
+     * - maybe label mandatory?
      * - fix action mode vs. toolbar
-     * - close action mode if item is deleted.
-     * - highlight selected item
-     * - allow adding from clipboard / manually / other coinblesk dialogs.
-     * - rename title to label
-     * - address list empty bug if first item is added.
+     * - allow adding from other coinblesk dialogs.
      */
 
 
@@ -136,7 +131,9 @@ public class AddressActivity extends AppCompatActivity
             case R.id.action_qrcode:
                 scanAddress();
                 return true;
-
+            case R.id.action_add:
+                showAddAddressDialog();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -160,17 +157,21 @@ public class AddressActivity extends AppCompatActivity
         }
     }
 
+    private void showAddAddressDialog() {
+        showAddAddressDialog(null, null);
+    }
+
     private void showAddAddressDialog(String address) {
-        showAddAddressDialog("", address);
+        showAddAddressDialog(null, address);
     }
 
     private void showAddAddressDialog(AddressWrapper address) {
-        showAddAddressDialog(address.getAddressTitle(), address.getAddress());
+        showAddAddressDialog(address.getAddressLabel(), address.getAddress());
     }
 
-    private void showAddAddressDialog(String title, String address) {
+    private void showAddAddressDialog(String label, String address) {
         FragmentManager fm = getSupportFragmentManager();
-        DialogFragment frag = EditAddressFragment.newInstance(title, address);
+        DialogFragment frag = EditAddressFragment.newInstance(label, address);
         frag.show(fm, "fragment_edit_address");
     }
 
@@ -187,7 +188,7 @@ public class AddressActivity extends AppCompatActivity
         /**
          * The problem is that the API wants random access, i.e. a set cannot be used.
          * Thus, we prevent inserting if the address is already present by a simple scan
-         * and consider only the address and not the title.
+         * and consider only the address and not the label.
          */
         synchronized (adapter.getItems()) {
             final int numItems = adapter.getItemCount();
@@ -209,6 +210,11 @@ public class AddressActivity extends AppCompatActivity
                 Log.d(TAG, "New address=" + address);
                 addAddressToList(address);
             }
+
+            Snackbar.make(recyclerView,
+                    UIUtils.toFriendlySnackbarString(this, "Address saved."),
+                    Snackbar.LENGTH_LONG)
+                    .show();
         }
     }
 
@@ -224,7 +230,7 @@ public class AddressActivity extends AppCompatActivity
         // update the existing item.
         AddressWrapper current = adapter.getItems().get(itemIndex);
         current.setAddress(newAddress.getAddress().trim());
-        current.setAddressTitle(newAddress.getAddressTitle().trim());
+        current.setAddressLabel(newAddress.getAddressLabel().trim());
         adapter.notifyItemChanged(itemIndex);
         storeAddress(current);
     }
@@ -249,8 +255,8 @@ public class AddressActivity extends AppCompatActivity
             }
 
             actionMode = startSupportActionMode(actionModeCallback);
-            actionMode.setTag(new Pair<Integer, AddressWrapper>(itemPosition, selected));
-            //view.setSelected(true);
+            actionMode.setTag(new Pair<>(itemPosition, selected));
+            actionMode.setTitle(selected.getAddress());
             return true;
         }
         return false;
@@ -275,26 +281,35 @@ public class AddressActivity extends AppCompatActivity
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-
-            Pair<Integer, AddressWrapper> data = (Pair<Integer, AddressWrapper>) mode.getTag();
-            switch (item.getItemId()) {
-                case R.id.action_copy:
-                    itemActionCopy(data.first, data.second);
-                    return true;
-                case R.id.action_edit:
-                    itemActionEdit(data.first, data.second);
-                    return true;
-                case R.id.action_delete:
-                    itemActionDelete(data.first, data.second);
-                    return true;
-                default:
-                    return false;
+            Pair<Integer, AddressWrapper> data = getAddressWrapper(mode);
+            if(data != null) {
+                switch (item.getItemId()) {
+                    case R.id.action_copy:
+                        itemActionCopy(data.first, data.second);
+                        return true;
+                    case R.id.action_edit:
+                        itemActionEdit(data.first, data.second);
+                        return true;
+                    case R.id.action_delete:
+                        itemActionDelete(data.first, data.second);
+                        return true;
+                    default:
+                        break;
+                }
             }
+            return false;
         }
 
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             actionMode = null;
+        }
+
+        private Pair<Integer, AddressWrapper> getAddressWrapper(ActionMode am) {
+            if (am.getTag() != null) {
+                return Pair.class.cast(am.getTag());
+            }
+            return null;
         }
     };
 
@@ -303,6 +318,7 @@ public class AddressActivity extends AppCompatActivity
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Address", item.getAddress());
         clipboard.setPrimaryClip(clip);
+        finishActionMode();
         Snackbar.make(recyclerView,
                 UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
                 Snackbar.LENGTH_LONG)
@@ -313,6 +329,8 @@ public class AddressActivity extends AppCompatActivity
         Log.d(TAG, "Edit address at position " + itemPosition + ", " + item);
         showAddAddressDialog(item);
         // the adapter is notified about the change later in onNewOrChangedAddress
+        // user is notified after the change
+        finishActionMode();
     }
 
     private void itemActionDelete(int itemPosition, AddressWrapper item) {
@@ -329,6 +347,18 @@ public class AddressActivity extends AppCompatActivity
         boolean removed = adapter.getItems().remove(item);
         if (removed) {
             adapter.notifyItemRemoved(itemPosition);
+        }
+
+        finishActionMode();
+        Snackbar.make(recyclerView,
+                UIUtils.toFriendlySnackbarString(this, "Address removed."),
+                Snackbar.LENGTH_LONG)
+                .show();
+    }
+
+    private void finishActionMode() {
+        if (actionMode != null) {
+            actionMode.finish();
         }
     }
 

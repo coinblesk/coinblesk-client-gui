@@ -54,6 +54,18 @@ public class RecyclerView extends android.support.v7.widget.RecyclerView {
             super.onChanged();
             updateEmptyView();
         }
+
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+            super.onItemRangeInserted(positionStart, itemCount);
+            updateEmptyView();
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+            super.onItemRangeRemoved(positionStart, itemCount);
+            updateEmptyView();
+        }
     }
 
     private void updateEmptyView() {

@@ -22,7 +22,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
     public static class ViewHolder extends RecyclerView.ViewHolder
                                     implements View.OnLongClickListener {
         public final View addressItem;
-        public final TextView addressName;
+        public final TextView addressLabel;
         public final TextView address;
         public final AddressClickHandler clickListener;
 
@@ -30,11 +30,11 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
             super(view);
             addressItem = view;
             this.clickListener = clickListener;
-            addressName = (TextView) view.findViewById(R.id.address_name);
-            address = (TextView) view.findViewById(R.id.address_base58);
+            addressLabel = (TextView) view.findViewById(R.id.address_label);
+            address = (TextView) view.findViewById(R.id.address);
 
             addressItem.setOnLongClickListener(this);
-            addressName.setOnLongClickListener(this);
+            addressLabel.setOnLongClickListener(this);
             address.setOnLongClickListener(this);
         }
 
@@ -74,9 +74,9 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         // - get element from the dataset at this position
         // - replace the contents of the view with that element
         AddressWrapper address = addresses.get(position);
-        String title = address.getAddressTitle();
+        String label = address.getAddressLabel();
         String base58 = address.getAddress().toString();
-        holder.addressName.setText(title);
+        holder.addressLabel.setText(label);
         holder.address.setText(base58);
     }
 
