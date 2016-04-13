@@ -8,32 +8,33 @@
         android:padding="@dimen/card_margin">
 
     <!-- LABEL -->
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="@string/addresses_label_label"
-            android:id="@+id/labelLabel"/>
-    <EditText
+    <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:inputType="text"
-            android:id="@+id/txtAddressLabel"/>
+            android:layout_marginTop="@dimen/spacing_micro">
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:hint="@string/addresses_label_label"
+                android:inputType="text"
+                android:id="@+id/txtAddressLabel"/>
+    </android.support.design.widget.TextInputLayout>
+
+
 
     <!-- ADDRESS -->
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="@string/addresses_label_address"
-            android:id="@+id/labelAddress"/>
-    <EditText
+    <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:inputType="text"
-            android:id="@+id/txtAddress"/>
-
+            android:layout_marginTop="@dimen/spacing_micro">
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:inputType="text"
+                android:hint="@string/addresses_label_address"
+                android:id="@+id/txtAddress"/>
+    </android.support.design.widget.TextInputLayout>
 </LinearLayout>
 

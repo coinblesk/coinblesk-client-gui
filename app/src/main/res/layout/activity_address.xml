@@ -32,5 +32,5 @@
             android:layout_centerHorizontal="true"
             android:visibility="visible"
             android:textSize="@dimen/text_size_large"
-            android:textColor="@color/secondary_text_default_material_dark"/>
+            android:textColor="@color/white_30_percent"/>
 </RelativeLayout>

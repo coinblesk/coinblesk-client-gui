@@ -58,7 +58,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="right|bottom"
                     android:paddingTop="@dimen/card_margin"
-                    android:text="Copy TX" />
+                    android:text="@string/tx_copy"
+                    android:textColor="@color/colorAccent" />
             </android.support.v7.widget.CardView>
         </LinearLayout>
 

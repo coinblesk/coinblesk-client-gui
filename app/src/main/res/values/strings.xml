@@ -292,6 +292,8 @@
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
 
+    <string name="tx_copy">Copy TX</string>
+
     <!-- Address book -->
     <string name="edit_address_fragment_title">Address</string>
     <string name="edit_address_msg_emptylabel">Label is empty.</string>
