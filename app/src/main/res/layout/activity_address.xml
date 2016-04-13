@@ -27,7 +27,7 @@
             android:id="@+id/addresses_empty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="The address list is empty."
+            android:text="@string/addresses_list_empty"
             android:layout_below="@+id/toolbar"
             android:layout_centerHorizontal="true"
             android:visibility="visible"
