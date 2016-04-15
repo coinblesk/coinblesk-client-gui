@@ -171,8 +171,7 @@ public class NFCServer extends AbstractServer {
                     getPaymentRequestDelegate().onPaymentSuccess();
                     isoDep.close();
                 } catch (Throwable e) {
-                    Log.e(TAG, "error", e);
-                    e.printStackTrace();
+                    Log.e(TAG, "Exception in onTagDiscovered", e);
                     getPaymentRequestDelegate().onPaymentError(e.getMessage());
                 }
             }

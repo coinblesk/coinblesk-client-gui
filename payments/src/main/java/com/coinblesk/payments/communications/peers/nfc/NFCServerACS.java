@@ -114,7 +114,7 @@ public class NFCServerACS extends AbstractServer {
             });
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Exception ", e);
         }
     }
 

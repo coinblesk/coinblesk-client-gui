@@ -72,6 +72,7 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
                 paymentRequestDelegate.onPaymentSuccess();
             }
         } catch (Exception e){
+            Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());
         }
     }

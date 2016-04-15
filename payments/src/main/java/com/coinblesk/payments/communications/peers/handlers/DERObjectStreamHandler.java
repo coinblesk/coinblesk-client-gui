@@ -57,7 +57,8 @@ public abstract class DERObjectStreamHandler implements Runnable {
             outputStream.write(derObject.serializeToDER());
             outputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not write DER Object: ", e);
         }
     }
+
 }

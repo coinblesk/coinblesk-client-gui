@@ -40,12 +40,10 @@ public abstract class DHKeyExchangeHandler extends DERObjectStreamHandler {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "SC");
             keyPairGenerator.initialize(ecGenParameterSpec);
             keyPair = keyPairGenerator.generateKeyPair();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            Log.w(TAG, "Could not initialize DHKeyExchange: ", e);
+            // TODO: we should not catch the exception here because we cannot continue with an error and we cannot know what went wrong.
+            // FIXME: catch outside and abort.
         }
     }
 

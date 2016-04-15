@@ -73,7 +73,7 @@ public class PaymentRefundReceiveStep implements Step {
                 Log.d(TAG, "sending response exp" + DERParser.extractPayloadEndIndex(dersequence));
                 return new DERSequence(derObjectList);
             } catch (IOException e){
-                e.printStackTrace();
+                Log.e(TAG, "Exception in the refund step: ", e);
             }
         }
 
