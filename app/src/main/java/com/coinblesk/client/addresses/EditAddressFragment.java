@@ -206,7 +206,8 @@ public class EditAddressFragment extends DialogFragment {
      * Use onAttachToContext instead
      */
     @SuppressWarnings("deprecation")
-    @Override public void onAttach(Activity activity) {
+    @Override
+    public void onAttach(Activity activity) {
         super.onAttach(activity);
         if (Build.VERSION.SDK_INT < 23) {
             onAttachToContext(activity);
