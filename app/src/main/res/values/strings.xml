@@ -2,6 +2,7 @@
     <string name="app_name">coinblesk</string>
 
     <!-- Navigation Drawer Navigation View Redesign -->
+    <string name="addresses">Addresses</string>
     <string name="settings">Settings</string>
     <string name="backup">Backup</string>
     <string name="activate_vendor_mode">Activate Vendor Mode</string>
@@ -15,38 +16,62 @@
 
 
     <!--About Coinblesk Strings-->
-    <string name="social_about_text">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.\nFor further information please visit the official project homepage.\nIf you\'re interested in the source code, please visit github for reference and documentation.</string>
-    <string name="social_about_text_short">Coinblesk is a student project of the University of Zurich, namely of the Communication Systems Group, which is part of the Department of Informatics.</string>
+    <string name="social_about_text">Coinblesk is a student project of the University of Zurich, namely of the
+        Communication Systems Group, which is part of the Department of Informatics.\nFor further information please
+        visit the official project homepage.\nIf you\'re interested in the source code, please visit github for
+        reference and documentation.
+    </string>
+    <string name="social_about_text_short">Coinblesk is a student project of the University of Zurich, namely of the
+        Communication Systems Group, which is part of the Department of Informatics.
+    </string>
     <string name="social_about_text_not_clickable">Can\'t click here.</string>
-    <string name="social_website">Website\n<i>Coinblesk.com</i></string>
-    <string name="social_website_content_description">Website\n<i>Coinblesk.com</i></string>
-    <string name="social_github">Open-Source\n<i>Github.com/coinblesk</i></string>
+    <string name="social_website">Website\n
+        <i>Coinblesk.com</i>
+    </string>
+    <string name="social_website_content_description">Website\n
+        <i>Coinblesk.com</i>
+    </string>
+    <string name="social_github">Open-Source\n
+        <i>Github.com/coinblesk</i>
+    </string>
     <string name="social_github_content_description">Github</string>
     <string name="social_about_tos">\nTerms of Use</string>
     <string name="social_about_tos_content_description">Terms of Use</string>
     <string name="social_about_tos_content">
         This application was developed as part of a various student projects at the Department of Informatics
-        at the University of Zurich in Switzerland.\nWe do not take any responsibility for a possible loss of your Bitcoins
-         in case of a system/hardware failure or by unpredictable malicious third-party influence. Please be aware that this application is
-         still in its Beta Stadium and bugs may occur.
-         \nUniversity of Zurich, 2016
+        at the University of Zurich in Switzerland.\nWe do not take any responsibility for a possible loss of your
+        Bitcoins
+        in case of a system/hardware failure or by unpredictable malicious third-party influence. Please be aware that
+        this application is
+        still in its Beta Stadium and bugs may occur.
+        \nUniversity of Zurich, 2016
     </string>
 
     <!--Backup Screen Strings-->
-    <string name="backup_backup">Backup\n<i>Create an encrypted local backup</i></string>
+    <string name="backup_backup">Backup\n
+        <i>Create an encrypted local backup</i>
+    </string>
     <string name="backup_backup_content_description">Backup your wallet</string>
-    <string name="backup_restore">Restore\n<i>Restore your wallet from an encrypted wallet file</i></string>
+    <string name="backup_restore">Restore\n
+        <i>Restore your wallet from an encrypted wallet file</i>
+    </string>
     <string name="backup_restore_content_description">Restore your wallet</string>
-    <string name="backup_refresh">Refresh\n<i>By refreshing your wallet you re-download all your transactions. You won\'t loose your coins.</i></string>
+    <string name="backup_refresh">Refresh\n
+        <i>By refreshing your wallet you re-download all your transactions. You won\'t loose your coins.</i>
+    </string>
     <string name="backup_refresh_content_description">Refresh your wallet</string>
     <string name="backup_refresh_dialog_title">Refresh Wallet</string>
-    <string name="backup_refresh_dialog_message">If you continue the transaction history and wallet balance will be cleared temporarily. Replaying the blockchain may take a while.</string>
+    <string name="backup_refresh_dialog_message">If you continue the transaction history and wallet balance will be
+        cleared temporarily. Replaying the blockchain may take a while.
+    </string>
 
     <string name="fragment_backup_title">Backup Wallet</string>
     <string name="fragment_backup_password_text_hint">Password</string>
     <string name="fragment_backup_password_again_text_hint">Repeat Password</string>
     <string name="fragment_backup_passwordmismatch_text">Passwords do not match</string>
-    <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download folder. The backup is encrypted using your password.</string>
+    <string name="fragment_backup_description">Your wallet will be stored in a file on this device in the Download
+        folder. The backup is encrypted using your password.
+    </string>
     <string name="fragment_backup_failed_title">Wallet Backup Failed</string>
     <string name="fragment_backup_failed_message">The wallet could not be stored on the device</string>
     <string name="fragment_backup_success_title">Wallet Backup</string>
@@ -61,7 +86,9 @@
     <string name="backup_mail_chooser">Send wallet backup...</string>
 
     <string name="fragment_backup_restore_title">Restore Wallet</string>
-    <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password. The backup file must be in your Download folder.</string>
+    <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password. The backup
+        file must be in your Download folder.
+    </string>
     <string name="fragment_backup_restore_failed_title">Restore Failed</string>
     <string name="fragment_backup_restore_failed_message">Could not restore backup from file due to error</string>
 
@@ -151,14 +178,16 @@
     <!--Transaction History List Dialog-->
     <string name="pref_transaction_history_title">Transaction History</string>
     <string name="pref_transaction_history_dialog_title">Change number of transactions.</string>
-    <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history layout.</string>
+    <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history
+        layout.
+    </string>
     <string name="pref_transaction_history_default_value">Show all transactions</string>
 
     <!--Connection Checkbox Screen-->
     <string name="pref_connection_settings_title">Contactless Payment Settings</string>
     <string name="pref_connection_settings_summary">Define contactless payment protocols.</string>
     <string name="pref_connection_nfc_summary">Use NFC for Contactless Payment</string>
-    <string name="pref_connection_nfc_title">Activate NFC </string>
+    <string name="pref_connection_nfc_title">Activate NFC</string>
 
 
     <!--Transaction Fee-->
@@ -167,7 +196,8 @@
 
     <!--Transaction Fee - Fee Amount-->
     <string name="pref_fee_amount_default_value">1</string>
-    <string name="pref_fee_amount_description">Defined Percentage of the payment will be added as transaction fee.</string>
+    <string name="pref_fee_amount_description">Defined Percentage of the payment will be added as transaction fee.
+    </string>
     <string name="pref_fee_amount_title">Fee Amount in Perecentage (%)</string>
 
 
@@ -180,11 +210,11 @@
     <string name="pref_auto_accept_amount_title">Auto-Accept Payment Limit</string>
 
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-    sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
-    laborum.
+        eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+        nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
+        sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
+        laborum.
     </string>
 
 
@@ -197,6 +227,8 @@
     <string name="txdetail_fee_title">Fee</string>
     <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
+
+    <string name="transaction_history_empty">No transactions yet.</string>
 
     <!--Send Dialog Strings-->
     <string name="fragment_send_dialog_address_edit_text_hint">Recipient\s address</string>
@@ -240,7 +272,9 @@
     <string name="payment_succesful_message">Payment was succesful!</string>
     <string name="instant_payment_success_message">Instant Payment was successful</string>
     <string name="insufficient_funds">Insufficient Funds</string>
-    <string name="instant_payment_error_message">Unfortunately, there was an error during the instant payment process: %1$s</string>
+    <string name="instant_payment_error_message">Unfortunately, there was an error during the instant payment process:
+        %1$s
+    </string>
     <string name="authview_title">Authview</string>
     <string name="pref_advanced_settings_category_title">Advanced</string>
     <string name="pref_network_dialog_title">Bitcoin Network</string>
@@ -249,8 +283,27 @@
     <string name="fragment_receive_title">Receive payment</string>
     <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
-    <string name="pref_refund_address_settings_summary">Set you refund transaction address. This is where your money will be sent in case of server default.</string>
+    <string name="pref_refund_address_settings_summary">Set you refund transaction address. This is where your money
+        will be sent in case of server default.
+    </string>
     <string name="pref_refund_address_settings_title">Refund Address</string>
 
+    <string name="action_copy">Copy</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+
+    <string name="tx_copy">Copy TX</string>
+
+    <!-- Address book -->
+    <string name="edit_address_fragment_title">Address</string>
+    <string name="edit_address_msg_emptylabel">Label is empty.</string>
+    <string name="addresses_label_address">Address</string>
+    <string name="addresses_label_label">Label</string>
+    <string name="action_add">Add</string>
+    <string name="addresses_msg_saved">Address saved.</string>
+    <string name="addresses_msg_saved_error">Could not save address.</string>
+    <string name="addresses_msg_load_error">Could not load address%1$s</string>
+    <string name="addresses_msg_removed">Address removed.</string>
+    <string name="addresses_list_empty">The address list is empty.</string>
 
 </resources>

@@ -1,12 +1,6 @@
 package com.coinblesk.client;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -25,12 +19,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -256,7 +248,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
             case R.id.amount_switch_image_view:
                 this.isBitcoinLargeAmount = !this.isBitcoinLargeAmount;
-                this.amountString = "0";
                 this.updateAmount();
                 break;
 
