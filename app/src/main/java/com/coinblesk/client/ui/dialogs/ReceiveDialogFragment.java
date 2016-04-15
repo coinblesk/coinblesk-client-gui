@@ -1,6 +1,5 @@
 package com.coinblesk.client.ui.dialogs;
 
-//import android.support.v7.app.AlertDialog;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -9,14 +8,13 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.coinblesk.client.R;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
-
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -73,7 +71,7 @@ public class ReceiveDialogFragment extends DialogFragment {
 
             return view;
         } catch (BitcoinURIParseException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not parse Bitcoin URI: ", e);
         }
         return null;
     }
