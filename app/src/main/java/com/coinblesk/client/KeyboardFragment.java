@@ -50,13 +50,17 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     protected abstract DialogFragment getDialogFragment();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onCreate(Bundle state) {
+        super.onCreate(state);
+        Log.d(TAG, "onCreate");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
-        this.isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+        isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+    }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_keyboard, container, false);
-
 
         final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayout) {
@@ -473,7 +477,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
-    private void initCustomButton(String customKey) {
+    protected void initCustomButton(String customKey) {
 
         List<String> contentList = UIUtils.getCustomButton(getContext(), customKey);
 

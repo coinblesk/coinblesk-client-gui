@@ -267,6 +267,8 @@ public class WalletService extends Service {
                         final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
                         instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(instantPaymentFailed);
+
+                        Log.e(TAG, "Exception in instantSendCoins: ", e);
                     }
                 }
             }).start();
@@ -337,7 +339,7 @@ public class WalletService extends Service {
                         UuidObjectStorage.getInstance().addEntry(new ExchangeRateWrapper(exchangeRate), ExchangeRateWrapper.class);
                         UuidObjectStorage.getInstance().commit();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.w(TAG, "Exception in fetchExchangeRate: ", e);
                     }
                 }
             }).start();
@@ -523,7 +525,7 @@ public class WalletService extends Service {
                         kit.peerGroup().addAddress(Inet4Address.getByName("176.9.24.110"));
                         kit.peerGroup().addAddress(Inet4Address.getByName("144.76.175.228"));
                     } catch (IOException e) {
-
+                        Log.i(TAG, "Exception while adding peers: ", e);
                     }
                 }
             }
@@ -563,13 +565,13 @@ public class WalletService extends Service {
 
                 kit.setCheckpoints(this.getAssets().open("checkpoints-testnet"));
             } catch (IOException e) {
-
+                Log.w(TAG, "Exception while setting checkpoints: ", e);
             }
         } else {
             try {
                 kit.setCheckpoints(this.getAssets().open("checkpoints-mainnet"));
             } catch (IOException e) {
-
+                Log.w(TAG, "Exception while setting checkpoints: ", e);
             }
         }
 

@@ -119,43 +119,47 @@ public class NFCClientService extends HostApduService {
                             final Thread processingThread = new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    final byte[] requestPayload = derRequestPayload;
-                                    derRequestPayload = new byte[0];
+                                    try {
+                                        final byte[] requestPayload = derRequestPayload;
+                                        derRequestPayload = new byte[0];
 
-                                    switch (stepCounter) {
-                                        case 0:
-                                            PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
-                                            DERObject obj = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload));
-                                            if (obj == null) {
-                                                //not enough funds
-                                                LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
+                                        switch (stepCounter) {
+                                            case 0:
+                                                PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
+                                                DERObject obj = paymentRequestReceiveStep.process(DERParser.parseDER(requestPayload));
+                                                if (obj == null) {
+                                                    //not enough funds
+                                                    LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
+                                                    break;
+                                                }
+                                                derResponsePayload = obj.serializeToDER();
+                                                bitcoinURI = paymentRequestReceiveStep.getBitcoinURI();
+                                                timestamp = paymentRequestReceiveStep.getTimestamp();
+                                                stepCounter++;
+                                                Log.d(TAG, "got payload1: " + derResponsePayload.length);
                                                 break;
-                                            }
-                                            derResponsePayload = obj.serializeToDER();
-                                            bitcoinURI = paymentRequestReceiveStep.getBitcoinURI();
-                                            timestamp = paymentRequestReceiveStep.getTimestamp();
-                                            stepCounter++;
-                                            Log.d(TAG, "got payload1: " + derResponsePayload.length);
-                                            break;
-                                        case 1:
-                                            final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(walletServiceBinder,
-                                                    bitcoinURI, timestamp);
-                                            derResponsePayload = paymentRefundSendStep1.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                            tx = paymentRefundSendStep1.getFullSignedTransaction();
-                                            refund = paymentRefundSendStep1.getHalfSignedRefundTransaction();
-                                            Log.d(TAG, "got payload2: " + derResponsePayload.length);
-                                            stepCounter++;
-                                            break;
-                                        case 2:
-                                            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder,
-                                                    bitcoinURI.getAddress(), tx, refund);
-                                            derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                            stepCounter++;
-                                            break;
-                                        case 3:
-                                            walletServiceBinder.commitTransaction(tx);
-                                            LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
-                                            break;
+                                            case 1:
+                                                final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(walletServiceBinder,
+                                                        bitcoinURI, timestamp);
+                                                derResponsePayload = paymentRefundSendStep1.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                                tx = paymentRefundSendStep1.getFullSignedTransaction();
+                                                refund = paymentRefundSendStep1.getHalfSignedRefundTransaction();
+                                                Log.d(TAG, "got payload2: " + derResponsePayload.length);
+                                                stepCounter++;
+                                                break;
+                                            case 2:
+                                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder,
+                                                        bitcoinURI.getAddress(), tx, refund);
+                                                derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                                stepCounter++;
+                                                break;
+                                            case 3:
+                                                walletServiceBinder.commitTransaction(tx);
+                                                LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+                                                break;
+                                        }
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Exception in processing thread: ", e);
                                     }
                                 }
                             });

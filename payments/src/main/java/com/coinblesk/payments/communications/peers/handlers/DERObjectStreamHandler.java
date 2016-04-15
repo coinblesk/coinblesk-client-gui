@@ -46,7 +46,7 @@ public abstract class DERObjectStreamHandler implements Runnable {
             Log.d(TAG,"reading bytes:"+requestPayload.length);
             return DERParser.parseDER(requestPayload);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.w(TAG, "Exception in readDERObject: ", e);
         }
         return DERObject.NULLOBJECT;
     }

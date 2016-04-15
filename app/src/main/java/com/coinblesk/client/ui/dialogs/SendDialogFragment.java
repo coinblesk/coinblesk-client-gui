@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,11 +67,12 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
         this.addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
+        final String addressStr = getArguments().getString(ADDRESS_KEY, "");
         try {
-            Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
+            Address address = new Address(Constants.PARAMS, addressStr);
             this.addressEditText.setText(address.toString());
         } catch (AddressFormatException e) {
-
+            Log.w(TAG, "Could not parse address: " + addressStr);
         }
 
         Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));

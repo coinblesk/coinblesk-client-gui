@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.View;
 
 import com.coinblesk.client.R;
@@ -21,6 +22,9 @@ import java.util.List;
  * a.decarli@papers.ch
  */
 public class AuthenticationView extends View {
+
+    private static final String TAG = AuthenticationView.class.getName();
+
     private final byte[] digest;
     private final List<Point> points = new ArrayList<Point>();
     private final Paint dotPaint = new Paint();
@@ -34,6 +38,7 @@ public class AuthenticationView extends View {
             messageDigest.update(key);
             digest = messageDigest.digest();
         } catch (NoSuchAlgorithmException e) {
+            Log.w(TAG, "MessageDigest algorithm not found.");
         }
         this.digest = digest;
         this.dotPaint.setColor(getContext().getResources().getColor(R.color.colorPrimaryDark));

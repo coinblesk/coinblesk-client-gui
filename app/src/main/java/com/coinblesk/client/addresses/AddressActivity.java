@@ -45,7 +45,6 @@ public class AddressActivity extends AppCompatActivity
 
     private RecyclerView recyclerView;
     private AddressListAdapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
 
     /**
      * TODO
@@ -78,7 +77,7 @@ public class AddressActivity extends AppCompatActivity
 
         recyclerView.setHasFixedSize(true);
 
-        layoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
         adapter = new AddressListAdapter(null, this);
@@ -302,7 +301,9 @@ public class AddressActivity extends AppCompatActivity
 
         private Pair<Integer, AddressWrapper> getAddressWrapper(ActionMode am) {
             if (am.getTag() != null) {
-                return Pair.class.cast(am.getTag());
+                @SuppressWarnings("unchecked")
+                Pair<Integer, AddressWrapper> address = Pair.class.cast(am.getTag());
+                return address;
             }
             return null;
         }

@@ -2,17 +2,7 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
@@ -29,23 +19,17 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
-
+import ch.papers.objectstorage.UuidObjectStorage;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
-import com.coinblesk.client.authview.AuthenticationView;
-import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.AbstractServer;
@@ -58,11 +42,12 @@ import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
-
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -70,10 +55,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-
-import ch.papers.objectstorage.UuidObjectStorage;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 
 /**
@@ -144,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
 
         final Intent intent = getIntent();
         final String scheme = intent.getScheme();
-        if (scheme != null && scheme.equals(BitcoinURI.BITCOIN_SCHEME)) {
+        if (scheme != null && scheme.equals(Constants.PARAMS.getUriScheme())) {
             final String uri = intent.getDataString();
             try {
                 BitcoinURI bitcoinURI = new BitcoinURI(uri);
@@ -364,7 +345,6 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
                     Log.d(TAG, "discovery unsupported");
                     // BLE and BL will not be supported
                 }
-                return;
             }
         }
     }
