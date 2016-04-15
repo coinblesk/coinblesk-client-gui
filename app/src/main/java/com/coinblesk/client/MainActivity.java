@@ -391,6 +391,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
     };
 
     private void initPeers() {
+        // TODO: do we need to stop the servers/clients first before we lose the references?
         this.servers.clear();
         this.clients.clear();
 

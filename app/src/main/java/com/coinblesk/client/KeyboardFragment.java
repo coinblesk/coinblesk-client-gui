@@ -563,8 +563,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG,intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY));
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY)), Snackbar.LENGTH_LONG).show();
+            final String msg = intent.getExtras().getString(
+                    Constants.ERROR_MESSAGE_KEY, getString(R.string.instant_payment_error_message));
+            Log.d(TAG, msg);
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), msg), Snackbar.LENGTH_LONG)
+                    .show();
         }
     };
 
