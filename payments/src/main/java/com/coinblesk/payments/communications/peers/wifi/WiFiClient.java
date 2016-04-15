@@ -162,7 +162,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
 
-                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate())).start();
+                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate()), "WiFiClient.InstantPaymentClientHandler").start();
                                 } catch (Exception e) {
                                     Log.w(TAG, "Exception onSuccess: ", e);
                                 }

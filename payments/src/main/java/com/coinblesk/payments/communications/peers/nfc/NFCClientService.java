@@ -162,7 +162,7 @@ public class NFCClientService extends HostApduService {
                                         Log.w(TAG, "Exception in processing thread: ", e);
                                     }
                                 }
-                            });
+                            }, "NFCClient.Processing");
                             processingThread.start();
                         }
                     }

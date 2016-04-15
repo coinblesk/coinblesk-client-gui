@@ -108,7 +108,7 @@ public class NFCServer extends AbstractServer {
                                         Log.w(TAG, "Exception at authorization step: ", e);
                                     }
                                 }
-                            });
+                            }, "NFCServer.Authorization");
                             authorization.start();
                         }
 
@@ -132,7 +132,7 @@ public class NFCServer extends AbstractServer {
                                         Log.w(TAG, "Exception at refund step: ", e);
                                     }
                                 }
-                            });
+                            }, "NFCServer.Refund");
                             refundSend.start();
                         }
 
@@ -154,7 +154,7 @@ public class NFCServer extends AbstractServer {
                                         Log.w(TAG, "Exception at signature step: ", e);
                                     }
                                 }
-                            });
+                            }, "NFCServer.Sign");
                             finalSend.start();
                         }
 

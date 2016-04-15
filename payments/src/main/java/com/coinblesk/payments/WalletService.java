@@ -271,7 +271,7 @@ public class WalletService extends Service {
                         Log.e(TAG, "Exception in instantSendCoins: ", e);
                     }
                 }
-            }).start();
+            }, "WalletService.SendCoins").start();
         }
 
         public void sendCoins(Address address, Coin amount) {
@@ -342,7 +342,7 @@ public class WalletService extends Service {
                         Log.w(TAG, "Exception in fetchExchangeRate: ", e);
                     }
                 }
-            }).start();
+            }, "WalletService.ExchangeRate").start();
         }
 
         public byte[] getSerializedWallet() {

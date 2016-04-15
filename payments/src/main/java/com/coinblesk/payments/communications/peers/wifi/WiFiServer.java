@@ -146,7 +146,7 @@ public class WiFiServer extends AbstractServer {
 
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
-                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder())).start();
+                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder()), "WiFiServer.InstantPaymentServerHandler").start();
                                 } catch (Exception e) {
                                     Log.e(TAG, "Exception in onSuccess: ", e);
                                 }
@@ -156,7 +156,7 @@ public class WiFiServer extends AbstractServer {
                             public void onError(String s) {
                                 Log.d(TAG, "error during key exchange:" + s);
                             }
-                        })).start();
+                        }), "WiFiServer.DHKeyExchange").start();
                     }
                 } catch (Exception e) {
                     // SocketException closed is expected here, when onStop is called
