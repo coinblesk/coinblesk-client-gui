@@ -35,6 +35,10 @@
 
                     <include layout="@layout/separator_line" />
 
+                    <include layout="@layout/txdetail_address_to" />
+
+                    <include layout="@layout/separator_line" />
+
                     <include layout="@layout/txdetail_status" />
 
                     <include layout="@layout/separator_line" />

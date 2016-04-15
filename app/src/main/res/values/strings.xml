@@ -227,6 +227,7 @@
     <string name="txdetail_fee_title">Fee</string>
     <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
+    <string name="txdetail_address_to_title">Address</string>
 
     <string name="transaction_history_empty">No transactions yet.</string>
 
