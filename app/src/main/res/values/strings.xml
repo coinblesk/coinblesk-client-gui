@@ -237,6 +237,7 @@
     <string name="fragment_send_dialog_title">Send Bitcoins</string>
     <string name="fragment_send_dialog_send">Send</string>
     <string name="fragment_send_dialog_qr_scan">QR-Scan</string>
+    <string name="fragment_send_dialog_address">Address</string>
     <string name="fragment_send_dialog_cancel">Cancel</string>
     <string name="fragment_send_dialog_scanning">Scanning for Payment Requests</string>
     <string name="send_address_wrong_network">"Address is not for this network (%1$s)"</string>

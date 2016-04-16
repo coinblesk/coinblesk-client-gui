@@ -1,7 +1,10 @@
 package com.coinblesk.client.addresses;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,14 +29,17 @@ public class AddressList extends DialogFragment {
     private AddressListAdapter adapter;
     private RecyclerView recyclerView;
 
-    public AddressList newInstance() {
+    public static AddressList newInstance() {
         return new AddressList();
+    }
+
+    public AddressList() {
+        adapter = new AddressListAdapter();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        adapter = new AddressListAdapter();
         loadAddresses();
     }
 
@@ -71,8 +77,17 @@ public class AddressList extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView");
-        View v = inflater.inflate(R.layout.address_list, container, false);
+        if (getShowsDialog()) {
+            // fragment is shown as a dialog -> UI is initialized in the onCreateDialog
+            return super.onCreateView(inflater, container, savedInstanceState);
+        } else {
+            View v = inflater.inflate(R.layout.address_list, container, false);
+            initView(v);
+            return v;
+        }
+    }
 
+    private void initView(View v) {
         recyclerView = (RecyclerView) v.findViewById(R.id.address_list);
         recyclerView.setHasFixedSize(true);
 
@@ -83,10 +98,25 @@ public class AddressList extends DialogFragment {
         recyclerView.setEmptyView(empty);
 
         recyclerView.setAdapter(adapter);
-
-        return v;
     }
 
+    @Override
+    public Dialog onCreateDialog(Bundle state) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
+        View view = getActivity().getLayoutInflater().inflate(R.layout.address_list, null);
+        builder.setView(view)
+                .setTitle(R.string.addresses)
+                .setCancelable(true)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+        initView(view);
+        return builder.create();
+    }
 
     public void setItemClickListener(AddressListAdapter.AddressItemClickListener itemClickListener) {
         adapter.setItemClickListener(itemClickListener);

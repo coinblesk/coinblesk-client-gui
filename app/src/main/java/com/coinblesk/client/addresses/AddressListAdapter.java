@@ -70,8 +70,8 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
     }
 
     public interface AddressItemClickListener {
-        void onItemClick(int itemPosition);
-        boolean onItemLongClick(int itemPosition);
+        void onItemClick(AddressWrapper item, int itemPosition);
+        boolean onItemLongClick(AddressWrapper item, int itemPosition);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder
@@ -101,7 +101,9 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         public boolean onLongClick(View v) {
             Log.d(TAG, "onLongClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
             if (itemClickListener != null) {
-                return itemClickListener.onItemLongClick(getAdapterPosition());
+                int pos = getAdapterPosition();
+                AddressWrapper item = getItems().get(pos);
+                return itemClickListener.onItemLongClick(item, pos);
             }
             return false;
         }
@@ -110,7 +112,9 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         public void onClick(View v) {
             Log.d(TAG, "onClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
             if (itemClickListener != null) {
-                itemClickListener.onItemClick(getAdapterPosition());
+                int pos = getAdapterPosition();
+                AddressWrapper item = getItems().get(pos);
+                itemClickListener.onItemClick(item, pos);
             }
         }
 

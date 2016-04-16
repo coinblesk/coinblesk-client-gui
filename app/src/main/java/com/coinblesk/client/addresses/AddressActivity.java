@@ -198,25 +198,22 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onItemLongClick(int itemPosition) {
-        int numItems = addressListAdapter.getItemCount();
-        if (itemPosition >= 0 && itemPosition < numItems) {
-            AddressWrapper selected = addressListAdapter.getItems().get(itemPosition);
-
+    public boolean onItemLongClick(AddressWrapper item, int itemPosition) {
+        if (item != null) {
             if (actionMode != null) {
                 return false; // already open
             }
 
             actionMode = startSupportActionMode(actionModeCallback);
-            actionMode.setTag(new Pair<>(itemPosition, selected));
-            actionMode.setTitle(selected.getAddress());
+            actionMode.setTag(new Pair<>(itemPosition, item));
+            actionMode.setTitle(item.getAddress());
             return true;
         }
         return false;
     }
 
     @Override
-    public void onItemClick(int itemPosition) {
+    public void onItemClick(AddressWrapper item, int itemPosition) {
         // ignore short clicks on items.
     }
 

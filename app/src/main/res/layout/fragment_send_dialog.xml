@@ -51,16 +51,41 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_marginLeft="@dimen/card_margin"
+                      android:layout_centerVertical="true"
+                      android:orientation="horizontal" >
+            <ImageButton
+                    android:id="@+id/fragment_send_dialog_qr_scan"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_normal"
+                    android:src="@drawable/ic_qrcode_scan_white_24dp"
+                    android:text="@string/fragment_send_dialog_qr_scan"
+                    android:contentDescription="@string/fragment_send_dialog_qr_scan"
+                    android:textColor="@color/colorAccent"
+                    android:tint="@color/colorAccent"
+                    android:adjustViewBounds="true"/>
 
-        <Button
-            android:id="@+id/fragment_send_dialog_qr_scan"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="@dimen/spacing_normal"
-            android:text="@string/fragment_send_dialog_qr_scan"
-            android:textColor="@color/colorAccent" />
+            <ImageButton
+                    android:id="@+id/fragment_send_dialog_address"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_normal"
+                    android:src="@drawable/ic_import_contacts"
+                    android:text="@string/fragment_send_dialog_address"
+                    android:contentDescription="@string/fragment_send_dialog_address"
+                    android:textColor="@color/colorAccent"
+                    android:tint="@color/colorAccent"
+                    android:adjustViewBounds="true"/>
+
+        </LinearLayout>
+
 
         <Button
             android:id="@+id/fragment_send_dialog_cancel"
