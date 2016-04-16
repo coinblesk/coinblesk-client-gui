@@ -50,7 +50,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
             final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
             paymentFinalSignatureReceiveStep.process(readDERObject());
 
-            walletServiceBinder.commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+            walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
             paymentRequestDelegate.onPaymentSuccess();
             Log.d(TAG, "payment was successful in " + (System.currentTimeMillis()-startTime) + "ms");
         } catch (Exception e){

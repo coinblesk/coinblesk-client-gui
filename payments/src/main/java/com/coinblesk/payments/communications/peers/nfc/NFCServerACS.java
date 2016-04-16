@@ -94,7 +94,7 @@ public class NFCServerACS extends AbstractServer {
                         paymentFinalSignatureReceiveStep.process(paymentFinalSignatureReceiveInput);
 
 
-                        getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                         getPaymentRequestDelegate().onPaymentSuccess();
                     } catch (Exception e) {
                         Log.e(TAG, "Exception in tagDiscovered: ", e);

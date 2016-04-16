@@ -152,7 +152,7 @@ public class BluetoothLEServer extends AbstractServer {
                             final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey);
                             paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
 
-                            getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                            getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                             getPaymentRequestDelegate().onPaymentSuccess();
                             break;
 

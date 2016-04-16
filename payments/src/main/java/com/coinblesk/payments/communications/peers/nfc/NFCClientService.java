@@ -153,7 +153,7 @@ public class NFCClientService extends HostApduService {
                                                 stepCounter++;
                                                 break;
                                             case 3:
-                                                walletServiceBinder.commitTransaction(tx);
+                                                walletServiceBinder.commitAndBroadcastTransaction(tx);
                                                 LocalBroadcastManager.getInstance(NFCClientService.this).sendBroadcast(new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
                                                 break;
                                         }

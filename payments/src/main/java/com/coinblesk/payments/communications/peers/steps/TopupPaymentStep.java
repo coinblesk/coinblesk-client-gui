@@ -1,0 +1,62 @@
+package com.coinblesk.payments.communications.peers.steps;
+
+import android.content.Intent;
+
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.PaymentProtocol;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.payments.models.RefundTransactionWrapper;
+import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsuffientFunds;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Wallet;
+
+import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+
+/**
+ * Created by Alessandro De Carli (@a_d_c_) on 16/04/16.
+ * Papers.ch
+ * a.decarli@papers.ch
+ */
+public class TopupPaymentStep implements Step {
+
+    private final WalletService.WalletServiceBinder walletServiceBinder;
+
+    public TopupPaymentStep(WalletService.WalletServiceBinder walletServiceBinder) {
+        this.walletServiceBinder = walletServiceBinder;
+    }
+
+    @Override
+    public DERObject process(DERObject input) {
+        DERObject output = DERObject.NULLOBJECT;
+        try {
+            final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getMultisigReceiveAddress());
+            final Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+            this.walletServiceBinder.getWallet().signTransaction(sendRequest);
+            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), walletServiceBinder.getRefundAddress());
+
+            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, refundTransaction, sendRequest.tx);
+            PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(walletServiceBinder.getMultisigClientKey());
+
+            output = paymentFinalSignatureSendStep.process(input);
+            output = paymentFinalSignatureReceiveStep.process(output);
+
+            this.walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+            UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(paymentFinalSignatureSendStep.getFullSignedRefundTransation()), RefundTransactionWrapper.class);
+            UuidObjectStorage.getInstance().commit();
+
+        } catch (CoinbleskException e) {
+            e.printStackTrace();
+        } catch (InsuffientFunds insuffientFunds) {
+            Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
+            walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);
+        } catch (UuidObjectStorageException e) {
+            e.printStackTrace();
+        }
+        return output;
+    }
+}

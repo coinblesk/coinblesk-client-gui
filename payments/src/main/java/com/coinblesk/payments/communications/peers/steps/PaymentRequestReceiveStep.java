@@ -1,5 +1,6 @@
 package com.coinblesk.payments.communications.peers.steps;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.coinblesk.json.SignTO;
@@ -76,14 +77,18 @@ public class PaymentRequestReceiveStep implements Step {
         try {
             fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
         } catch (CoinbleskException e) {
-            e.printStackTrace();
+            Intent instantPaymentFailedIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+            instantPaymentFailedIntent.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
+            walletServiceBinder.getLocalBroadcastManager().sendBroadcast(instantPaymentFailedIntent);
         } catch (InsuffientFunds insuffientFunds) {
-            insuffientFunds.printStackTrace();
+            Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
+            walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);
         }
 
         if (fullSignedTransaction == null) {
             return null;
         }
+
         SignTO refundTO = new SignTO()
                 .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
