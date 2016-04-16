@@ -30,13 +30,13 @@ import java.util.List;
 public class PaymentFinalSignatureSendStep implements Step {
     private final static String TAG = PaymentFinalSignatureSendStep.class.getSimpleName();
 
-    private final Transaction transaction;
+    private final Transaction fullSignedTransaction;
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private final Transaction halfSignedRefundTransaction;
 
     public PaymentFinalSignatureSendStep(WalletService.WalletServiceBinder walletServiceBinder, Transaction fullSignedTransaction, Transaction halfSignedRefundTransaction) {
         this.walletServiceBinder = walletServiceBinder;
-        this.transaction = fullSignedTransaction;
+        this.fullSignedTransaction = fullSignedTransaction;
         this.halfSignedRefundTransaction = halfSignedRefundTransaction;
     }
 
@@ -78,7 +78,7 @@ public class PaymentFinalSignatureSendStep implements Step {
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         VerifyTO completeSignTO = new VerifyTO()
                 .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
-                .transaction(transaction.unsafeBitcoinSerialize())
+                .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                 .currentDate(timestamp.longValue());
 
         if (completeSignTO.messageSig() == null) {
@@ -87,7 +87,7 @@ public class PaymentFinalSignatureSendStep implements Step {
 
 
         final List<DERObject> derObjectList = new ArrayList<DERObject>();
-        derObjectList.add(new DERObject(transaction.unsafeBitcoinSerialize()));
+        derObjectList.add(new DERObject(fullSignedTransaction.unsafeBitcoinSerialize()));
         derObjectList.add(new DERInteger(timestamp));
         derObjectList.add(new DERInteger(new BigInteger(completeSignTO.messageSig().sigR())));
         derObjectList.add(new DERInteger(new BigInteger(completeSignTO.messageSig().sigS())));
