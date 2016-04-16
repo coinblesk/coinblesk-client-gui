@@ -78,8 +78,6 @@
 
         <service android:name="com.coinblesk.payments.WalletService" >
         </service>
-        <service android:name="com.coinblesk.payments.communications.peers.ServerPeerService" >
-        </service>
         <service
             android:name="com.coinblesk.payments.communications.peers.nfc.NFCClientService"
             android:exported="true"

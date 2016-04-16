@@ -10,12 +10,16 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 import com.coinblesk.client.R;
+import com.coinblesk.client.addresses.AddressList;
+import com.coinblesk.client.addresses.AddressListAdapter;
+import com.coinblesk.client.addresses.AddressWrapper;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
@@ -32,7 +36,9 @@ import org.bitcoinj.uri.BitcoinURIParseException;
  * Created by ckiller
  */
 
-public class SendDialogFragment extends DialogFragment implements View.OnClickListener {
+public class SendDialogFragment extends DialogFragment
+                                            implements View.OnClickListener {
+
     public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
 
     public static final String AMOUNT_KEY = "AMOUNT_KEY";
@@ -66,11 +72,12 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
         this.addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
+        final String addressStr = getArguments().getString(ADDRESS_KEY, "");
         try {
-            Address address = new Address(Constants.PARAMS,this.getArguments().getString(ADDRESS_KEY,""));
+            Address address = new Address(Constants.PARAMS, addressStr);
             this.addressEditText.setText(address.toString());
         } catch (AddressFormatException e) {
-
+            Log.w(TAG, "Could not parse address: " + addressStr);
         }
 
         Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
@@ -80,6 +87,7 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
         view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_send).setOnClickListener(this);
+        view.findViewById(R.id.fragment_send_dialog_address).setOnClickListener(this);
 
         return view;
     }
@@ -103,7 +111,30 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
             case R.id.fragment_send_dialog_qr_scan:
                 IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
                 break;
+            case R.id.fragment_send_dialog_address:
+                openAddressList();
+                break;
         }
+    }
+
+    private void openAddressList() {
+        final AddressList addressListDialog = AddressList.newInstance();
+        addressListDialog.show(getFragmentManager(), "address_list_dialog");
+        addressListDialog.setItemClickListener(new AddressListAdapter.AddressItemClickListener() {
+            @Override
+            public void onItemClick(AddressWrapper item, int itemPosition) {
+                if (item != null) {
+                    addressEditText.setText(item.getAddress());
+                }
+                addressListDialog.dismiss();
+            }
+
+            @Override
+            public boolean onItemLongClick(AddressWrapper item, int itemPosition) {
+                // long click is ignored
+                return false;
+            }
+        });
     }
 
 
@@ -180,6 +211,8 @@ public class SendDialogFragment extends DialogFragment implements View.OnClickLi
             walletServiceBinder = null;
         }
     };
+
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
+
 }
 

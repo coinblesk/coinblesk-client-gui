@@ -46,7 +46,7 @@ public abstract class DERObjectStreamHandler implements Runnable {
             Log.d(TAG,"reading bytes:"+requestPayload.length);
             return DERParser.parseDER(requestPayload);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.w(TAG, "Exception in readDERObject: ", e);
         }
         return DERObject.NULLOBJECT;
     }
@@ -57,7 +57,8 @@ public abstract class DERObjectStreamHandler implements Runnable {
             outputStream.write(derObject.serializeToDER());
             outputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not write DER Object: ", e);
         }
     }
+
 }

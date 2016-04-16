@@ -162,9 +162,9 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
 
-                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate())).start();
+                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate()), "WiFiClient.InstantPaymentClientHandler").start();
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    Log.w(TAG, "Exception onSuccess: ", e);
                                 }
                             }
 
@@ -173,8 +173,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                                 Log.d(TAG, "error during key exchange:" + s);
                             }
                         }).run();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Exception during connection: ", e);
                     }
                 }
             });

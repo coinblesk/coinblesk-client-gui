@@ -52,8 +52,9 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
 
             walletServiceBinder.commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
             paymentRequestDelegate.onPaymentSuccess();
-            Log.d(TAG, "payment was successful in " + (startTime - System.currentTimeMillis()));
+            Log.d(TAG, "payment was successful in " + (System.currentTimeMillis()-startTime) + "ms");
         } catch (Exception e){
+            Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());
         }
     }

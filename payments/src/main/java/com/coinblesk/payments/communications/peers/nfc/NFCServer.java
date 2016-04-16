@@ -98,13 +98,17 @@ public class NFCServer extends AbstractServer {
                             authorization = new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d(TAG, "payment details send, sign tx");
-                                    //now we have the tx, that we need to sign, send back ok
-                                    PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
-                                    paymentAuthorizationReceiveOutput.set(paymentAuthorizationReceiveStep.process(paymentRequestOutput));
-                                    clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                    try {
+                                        Log.d(TAG, "payment details send, sign tx");
+                                        //now we have the tx, that we need to sign, send back ok
+                                        PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
+                                        paymentAuthorizationReceiveOutput.set(paymentAuthorizationReceiveStep.process(paymentRequestOutput));
+                                        clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Exception at authorization step: ", e);
+                                    }
                                 }
-                            });
+                            }, "NFCServer.Authorization");
                             authorization.start();
                         }
 
@@ -120,11 +124,15 @@ public class NFCServer extends AbstractServer {
                             refundSend = new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d(TAG, "got request, sign refund");
-                                    final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
-                                    paymentRefundSendStep.set(paymentRefundReceiveStep.process(refundSendInput.get()));
+                                    try {
+                                        Log.d(TAG, "got request, sign refund");
+                                        final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(clientPublicKey);
+                                        paymentRefundSendStep.set(paymentRefundReceiveStep.process(refundSendInput.get()));
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Exception at refund step: ", e);
+                                    }
                                 }
-                            });
+                            }, "NFCServer.Refund");
                             refundSend.start();
                         }
 
@@ -137,12 +145,16 @@ public class NFCServer extends AbstractServer {
                             finalSend = new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d(TAG, "final request");
-                                    final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(
-                                            clientPublicKey, getPaymentRequestUri().getAddress());
-                                    sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
+                                    try {
+                                        Log.d(TAG, "final request");
+                                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(
+                                                clientPublicKey, getPaymentRequestUri().getAddress());
+                                        sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Exception at signature step: ", e);
+                                    }
                                 }
-                            });
+                            }, "NFCServer.Sign");
                             finalSend.start();
                         }
 
@@ -159,8 +171,7 @@ public class NFCServer extends AbstractServer {
                     getPaymentRequestDelegate().onPaymentSuccess();
                     isoDep.close();
                 } catch (Throwable e) {
-                    Log.e(TAG, "error", e);
-                    e.printStackTrace();
+                    Log.e(TAG, "Exception in onTagDiscovered", e);
                     getPaymentRequestDelegate().onPaymentError(e.getMessage());
                 }
             }

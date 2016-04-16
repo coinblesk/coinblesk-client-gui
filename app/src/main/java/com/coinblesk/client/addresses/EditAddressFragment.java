@@ -68,18 +68,19 @@ public class EditAddressFragment extends DialogFragment {
         String addressLabel = null;
         if (args != null) {
             if (args.containsKey(ARG_ADDRESS_LABEL)) {
-                address = args.getString(ARG_ADDRESS_LABEL);
+                addressLabel = args.getString(ARG_ADDRESS_LABEL);
+
             }
             if (args.containsKey(ARG_ADDRESS)) {
                 // if we get an address, we only display it but do not permit
                 // editing to avoid saving a wrong address.
                 addressEditText.setEnabled(false);
                 addressEditText.setInputType(InputType.TYPE_NULL);
-                addressLabel = args.getString(ARG_ADDRESS);
+                address = args.getString(ARG_ADDRESS);
             }
         }
-        addressEditText.setText(addressLabel);
-        labelEditText.setText(address);
+        addressEditText.setText(address);
+        labelEditText.setText(addressLabel);
         Log.d(TAG, "onCreateDialog with address=" + address + ", and addressLabel=" + addressLabel);
 
         return new AlertDialog.Builder(getActivity())
@@ -206,7 +207,8 @@ public class EditAddressFragment extends DialogFragment {
      * Use onAttachToContext instead
      */
     @SuppressWarnings("deprecation")
-    @Override public void onAttach(Activity activity) {
+    @Override
+    public void onAttach(Activity activity) {
         super.onAttach(activity);
         if (Build.VERSION.SDK_INT < 23) {
             onAttachToContext(activity);

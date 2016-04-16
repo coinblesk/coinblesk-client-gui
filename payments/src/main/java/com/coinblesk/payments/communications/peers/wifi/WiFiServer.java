@@ -44,9 +44,9 @@ public class WiFiServer extends AbstractServer {
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
 
-    public static final String TXTRECORD_PROP_AVAILABLE = "available";
-    public static final String SERVICE_INSTANCE = "_wifidemotest";
-    public static final String SERVICE_REG_TYPE = "_presence._tcp";
+    private static final String TXTRECORD_PROP_AVAILABLE = "available";
+    private static final String SERVICE_INSTANCE = "_wifidemotest";
+    private static final String SERVICE_REG_TYPE = "_presence._tcp";
 
     public WiFiServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
@@ -61,6 +61,15 @@ public class WiFiServer extends AbstractServer {
 
     @Override
     public void onStop() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+                serverSocket = null;
+            } catch (IOException e) {
+                Log.w(TAG, "Exception while closing socket: ", e);
+            }
+        }
+
         this.manager.removeGroup(channel, new LogActionListener("removeGroup"));
         this.manager.clearLocalServices(channel, new LogActionListener("clearLocalServices"));
     }
@@ -137,9 +146,9 @@ public class WiFiServer extends AbstractServer {
 
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
-                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder())).start();
+                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder()), "WiFiServer.InstantPaymentServerHandler").start();
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    Log.e(TAG, "Exception in onSuccess: ", e);
                                 }
                             }
 
@@ -147,9 +156,11 @@ public class WiFiServer extends AbstractServer {
                             public void onError(String s) {
                                 Log.d(TAG, "error during key exchange:" + s);
                             }
-                        })).start();
+                        }), "WiFiServer.DHKeyExchange").start();
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
+                    // SocketException closed is expected here, when onStop is called
+                    Log.e(TAG, "Exception in WiFi server: ", e);
                 }
             }
         });

@@ -56,7 +56,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
             return DERObject.NULLOBJECT;
         } catch (IOException e){
-            e.printStackTrace();
+            Log.e(TAG, "Exception in the signature step: ", e);
         }
 
         return null;

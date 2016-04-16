@@ -53,7 +53,7 @@ public class QrDialogFragment extends DialogFragment {
         try {
             this.bitcoinURI = new BitcoinURI(this.getArguments().getString(BITCOIN_URI_KEY));
         } catch (BitcoinURIParseException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not parse Bitcoin URI: ", e);
         }
     }
 
@@ -84,7 +84,7 @@ public class QrDialogFragment extends DialogFragment {
             Bitmap qrBitmap = QREncoder.encodeAsBitmap(Utils.bitcoinUriToString(bitcoinURI));
             qrCodeImageView.setImageBitmap(qrBitmap);
         } catch (WriterException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Could not create QR Code.");
         }
         Log.d(TAG, "bitcoin uri: " + Utils.bitcoinUriToString(bitcoinURI));
 

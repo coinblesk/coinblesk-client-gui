@@ -81,7 +81,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
                 return new DERSequence(derObjectList);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Exception in the authorization step: ", e);
         }
         return new DERInteger(BigInteger.valueOf(-1));
     }

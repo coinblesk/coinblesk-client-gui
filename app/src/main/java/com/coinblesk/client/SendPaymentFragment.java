@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -41,9 +42,16 @@ public class SendPaymentFragment extends KeyboardFragment {
 
         final ProgressDialog dialog = new ProgressDialog(this.getContext());
         dialog.setMessage(this.getString(R.string.fragment_send_dialog_scanning));
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+            }
+        });
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 LocalBroadcastManager.getInstance(getContext()).sendBroadcast(new Intent(Constants.STOP_CLIENTS_ACTION));
             }
         });

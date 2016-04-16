@@ -24,4 +24,9 @@
         <item name="android:colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AlertDialogAccent" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
+    </style>
+
 </resources>

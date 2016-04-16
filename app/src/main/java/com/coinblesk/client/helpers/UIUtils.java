@@ -10,6 +10,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.coinblesk.client.AppConstants;
@@ -34,6 +35,8 @@ import java.util.Set;
 
 public class UIUtils {
 
+
+    private static final String TAG = UIUtils.class.getName();
 
     public static SpannableString getLargeBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
 
@@ -329,7 +332,7 @@ public class UIUtils {
                 contentList = Arrays.asList(contentArray);
                 return contentList;
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Could not decode content from json to a list.");
             }
         }
 

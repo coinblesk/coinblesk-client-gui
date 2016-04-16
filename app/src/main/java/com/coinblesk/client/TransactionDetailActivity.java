@@ -1,29 +1,6 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.coinblesk.client;
 
-import android.content.BroadcastReceiver;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -36,14 +13,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
-
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+
+import java.util.List;
 
 
 public class TransactionDetailActivity extends AppCompatActivity {
@@ -61,7 +40,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         copyTxButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE);
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
                 clipboard.setPrimaryClip(clip);
                 Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
@@ -77,10 +56,11 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
     }
 
 
@@ -96,8 +76,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
             ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getConfidence().toString());
-            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime() + "");
-            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash.toString());
+            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime().toString());
+            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash);
 
             // for incoming tx, fee is null because inputs not known.
             Coin fee = transaction.getFee();
@@ -107,9 +87,41 @@ public class TransactionDetailActivity extends AppCompatActivity {
                 this.findViewById(R.id.txfee).setVisibility(View.GONE);
             }
 
+            String addressSentTo = getSentToAddress(txWrapper);
+            if (addressSentTo != null) {
+                ((TextView) this.findViewById(R.id.txdetail_address_to_content)).setText(addressSentTo);
+            } else {
+                findViewById(R.id.txdetail_address_to).setVisibility(View.GONE);
+            }
+
         } catch (Exception e) {
             Log.w(TAG, "setTransactionDetails exception: ", e);
         }
+    }
+
+    private String getSentToAddress(TransactionWrapper txWrapper) {
+        if (txWrapper.getAmount().isPositive()) {
+            // incoming
+            return null;
+        }
+        List<TransactionOutput> outputs = txWrapper.getTransaction().getOutputs();
+        // due to space limitations we only display if we have exactly 1 out address (which is not ours, i.e. the change)
+        String addressTo = null;
+        if (outputs.size() <= 2) {
+            for (TransactionOutput o : outputs) {
+                if (o.isMineOrWatched(walletServiceBinder.getWallet())) {
+                    continue;
+                }
+
+                Address to;
+                if ((to = o.getAddressFromP2PKHScript(Constants.PARAMS)) != null) {
+                    addressTo = to.toString();
+                } else if ((to = o.getAddressFromP2SH(Constants.PARAMS)) != null) {
+                    addressTo = to.toString();
+                }
+            }
+        }
+        return addressTo;
     }
 
 

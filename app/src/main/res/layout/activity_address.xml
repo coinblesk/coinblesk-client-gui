@@ -15,22 +15,10 @@
             android:elevation="4dp"
             app:theme="@style/AppThemeMaterial" />
 
-    <com.coinblesk.client.ui.widget.RecyclerView
-            android:id="@+id/addresslist"
+    <fragment android:name="com.coinblesk.client.addresses.AddressList"
+            android:id="@+id/fragment_address_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical"
-            android:layout_below="@+id/toolbar"
-    />
-
-    <TextView
-            android:id="@+id/addresses_empty"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/addresses_list_empty"
-            android:layout_below="@+id/toolbar"
-            android:layout_centerHorizontal="true"
-            android:visibility="visible"
-            android:textSize="@dimen/text_size_large"
-            android:textColor="@color/white_30_percent"/>
+            android:layout_below="@+id/toolbar" />
+
 </RelativeLayout>

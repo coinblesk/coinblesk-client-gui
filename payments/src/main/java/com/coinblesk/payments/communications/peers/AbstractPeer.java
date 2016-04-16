@@ -2,6 +2,8 @@ package com.coinblesk.payments.communications.peers;
 
 import android.content.Context;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 26/02/16.
  * Papers.ch
@@ -10,8 +12,8 @@ import android.content.Context;
 public abstract class AbstractPeer implements Peer {
     private final Context context;
     private boolean isRunning = false;
-
-    private Thread thread = new Thread();
+    private static final AtomicInteger threadId = new AtomicInteger(0);
+    private Thread thread;
 
     protected AbstractPeer(Context context) {
         this.context = context;
@@ -34,7 +36,8 @@ public abstract class AbstractPeer implements Peer {
     }
 
     protected void startThread(Runnable runnable){
-        this.thread = new Thread(runnable);
+        String threadName = getClass().getSimpleName()+"-"+threadId.getAndIncrement();
+        this.thread = new Thread(runnable, threadName);
         this.thread.start();
     }
 

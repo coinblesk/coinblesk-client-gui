@@ -50,13 +50,17 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     protected abstract DialogFragment getDialogFragment();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onCreate(Bundle state) {
+        super.onCreate(state);
+        Log.d(TAG, "onCreate");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
-        this.isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+        isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+    }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_keyboard, container, false);
-
 
         final int screenLayout = getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayout) {
@@ -468,53 +472,51 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                     ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error onCustom " + customKey + ": ", e);
             }
         }
     }
 
+    protected void initCustomButton(String customKey) {
 
-    public void initCustomButton(String customKey) {
-
-        List<String> contentList = UIUtils.getCustomButton(this.getContext(), customKey);
+        List<String> contentList = UIUtils.getCustomButton(getContext(), customKey);
 
         if (contentList != null) {
+            View button = null;
             switch (customKey) {
                 case "1":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_one))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_one);
                     break;
                 case "2":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_two))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_two);
                     break;
                 case "3":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_three))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_three);
                     break;
                 case "4":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_four))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_four);
                     break;
                 case "5":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_five))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_five);
                     break;
                 case "6":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_six))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_six);
                     break;
                 case "7":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_seven))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_seven);
                     break;
                 case "8":
-                    ((TextView) this.getActivity().findViewById(R.id.key_custom_eight))
-                            .setText(UIUtils.formatCustomButton(contentList.get(0), contentList.get(1)));
+                    button = getActivity().findViewById(R.id.key_custom_eight);
                     break;
+                default:
+                    button = null;
+            }
+
+            if (button != null) {
+                String buttonText = UIUtils.formatCustomButton(contentList.get(0), contentList.get(1));
+                ((TextView) button).setText(buttonText);
             }
         }
-
     }
 
     private void initCustomButtons(String customKey) {
@@ -532,19 +534,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     };
 
-//    UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
-//            .getString(R.string.snackbar_address_copied)
-
     private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            try {
-                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
-                r.play();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            playNotificationSound();
             Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.instant_payment_success_message)), Snackbar.LENGTH_LONG).show();
         }
     };
@@ -552,22 +545,29 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver insufficientFundsListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            try {
-                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
-                r.play();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            playNotificationSound();
             Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.insufficient_funds)), Snackbar.LENGTH_LONG).show();
         }
     };
 
+    private void playNotificationSound() {
+        try {
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+            r.play();
+        } catch (Exception e) {
+            Log.e(TAG, "Error playing notification.", e);
+        }
+    }
+
     private final BroadcastReceiver instantPaymentErrorListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG,intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY));
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY)), Snackbar.LENGTH_LONG).show();
+            final String msg = intent.getExtras().getString(
+                    Constants.ERROR_MESSAGE_KEY, getString(R.string.instant_payment_error_message));
+            Log.d(TAG, msg);
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), msg), Snackbar.LENGTH_LONG)
+                    .show();
         }
     };
 

@@ -227,6 +227,7 @@
     <string name="txdetail_fee_title">Fee</string>
     <string name="txdetail_txhash_title">Transaction</string>
     <string name="txdetail_date_title">Date</string>
+    <string name="txdetail_address_to_title">Address</string>
 
     <string name="transaction_history_empty">No transactions yet.</string>
 
@@ -236,6 +237,7 @@
     <string name="fragment_send_dialog_title">Send Bitcoins</string>
     <string name="fragment_send_dialog_send">Send</string>
     <string name="fragment_send_dialog_qr_scan">QR-Scan</string>
+    <string name="fragment_send_dialog_address">Address</string>
     <string name="fragment_send_dialog_cancel">Cancel</string>
     <string name="fragment_send_dialog_scanning">Scanning for Payment Requests</string>
     <string name="send_address_wrong_network">"Address is not for this network (%1$s)"</string>

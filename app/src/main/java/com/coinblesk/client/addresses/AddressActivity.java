@@ -1,51 +1,39 @@
 package com.coinblesk.client.addresses;
 
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.app.Activity;
-
-
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.Toolbar;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
-import ch.papers.objectstorage.listeners.OnResultListener;
-
 import com.coinblesk.client.R;
-
 import com.coinblesk.client.helpers.UIUtils;
-import com.coinblesk.client.ui.widget.RecyclerView;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import java.util.Collections;
-import java.util.List;
-
 public class AddressActivity extends AppCompatActivity
                             implements EditAddressFragment.AddressFragmentInteractionListener,
-                                        AddressListAdapter.AddressClickHandler {
+                                       AddressListAdapter.AddressItemClickListener {
 
     private final static String TAG = AddressActivity.class.getName();
     private static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
 
-    private RecyclerView recyclerView;
-    private AddressListAdapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
+    private AddressList addressList;
+    private AddressListAdapter addressListAdapter;
 
     /**
      * TODO
@@ -54,12 +42,16 @@ public class AddressActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
-
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address);
-
         initToolbar();
+    }
+
+    @Override
+    protected void onStart() {
+        Log.d(TAG, "onStart");
+        super.onStart();
         initAddressList();
     }
 
@@ -74,45 +66,11 @@ public class AddressActivity extends AppCompatActivity
     }
 
     private void initAddressList() {
-        recyclerView = (RecyclerView) findViewById(R.id.addresslist);
+        addressList = (AddressList) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_address_list);
 
-        recyclerView.setHasFixedSize(true);
-
-        layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-
-        adapter = new AddressListAdapter(null, this);
-        recyclerView.setAdapter(adapter);
-
-        View empty = findViewById(R.id.addresses_empty);
-        recyclerView.setEmptyView(empty);
-
-        loadAddresses();
-    }
-
-    private void loadAddresses() {
-        UuidObjectStorage
-                .getInstance()
-                .getEntriesAsList(new OnResultListener<List<AddressWrapper>>() {
-                    @Override
-                    public void onSuccess(List<AddressWrapper> objects) {
-                        if (objects != null && !objects.isEmpty()) {
-                            Collections.sort(objects);
-                            adapter.getItems().addAll(objects);
-                            adapter.notifyDataSetChanged();
-                        }
-                    }
-
-                    @Override
-                    public void onError(String s) {
-                        String msg = "";
-                        if (s != null) { msg = String.format(" (%s)", s); }
-                        Toast.makeText(AddressActivity.this,
-                                getString(R.string.addresses_msg_load_error, msg),
-                                Toast.LENGTH_LONG)
-                                .show();
-                    }
-                }, AddressWrapper.class);
+        addressList.setItemClickListener(this);
+        addressListAdapter = addressList.getAdapter();
     }
 
     @Override
@@ -185,11 +143,11 @@ public class AddressActivity extends AppCompatActivity
          * Thus, we prevent inserting if the address is already present by a simple scan
          * and consider only the address and not the label.
          */
-        synchronized (adapter.getItems()) {
-            final int numItems = adapter.getItemCount();
+        synchronized (addressListAdapter.getItems()) {
+            final int numItems = addressListAdapter.getItemCount();
             int existingIndex = -1;
             for (int i = 0; i < numItems; ++i) {
-                AddressWrapper item = adapter.getItems().get(i);
+                AddressWrapper item = addressListAdapter.getItems().get(i);
                 if (item.getAddress().equals(address.getAddress())) {
                     existingIndex = i;
                     break;
@@ -198,7 +156,7 @@ public class AddressActivity extends AppCompatActivity
 
             if (existingIndex >= 0) {
                 Log.d(TAG, "Address already exists, update it. old="
-                        + adapter.getItems().get(existingIndex)
+                        + addressListAdapter.getItems().get(existingIndex)
                         + ", new=" + address);
                 updateAddressInList(existingIndex, address);
             } else {
@@ -206,7 +164,7 @@ public class AddressActivity extends AppCompatActivity
                 addAddressToList(address);
             }
 
-            Snackbar.make(recyclerView,
+            Snackbar.make(findViewById(android.R.id.content),
                     UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_saved)),
                     Snackbar.LENGTH_LONG)
                     .show();
@@ -215,18 +173,18 @@ public class AddressActivity extends AppCompatActivity
 
     private void addAddressToList(AddressWrapper address) {
         // add new item
-        final int last = adapter.getItemCount();
-        adapter.getItems().add(address);
-        adapter.notifyItemInserted(last);
+        final int last = addressListAdapter.getItemCount();
+        addressListAdapter.getItems().add(address);
+        addressListAdapter.notifyItemInserted(last);
         storeAddress(address);
     }
 
     private void updateAddressInList(int itemIndex, AddressWrapper newAddress) {
         // update the existing item.
-        AddressWrapper current = adapter.getItems().get(itemIndex);
+        AddressWrapper current = addressListAdapter.getItems().get(itemIndex);
         current.setAddress(newAddress.getAddress().trim());
         current.setAddressLabel(newAddress.getAddressLabel().trim());
-        adapter.notifyItemChanged(itemIndex);
+        addressListAdapter.notifyItemChanged(itemIndex);
         storeAddress(current);
     }
 
@@ -240,21 +198,23 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onItemLongClick(int itemPosition) {
-        int numItems = adapter.getItemCount();
-        if (itemPosition >= 0 && itemPosition < numItems) {
-            AddressWrapper selected = adapter.getItems().get(itemPosition);
-
+    public boolean onItemLongClick(AddressWrapper item, int itemPosition) {
+        if (item != null) {
             if (actionMode != null) {
-                return false; // already open but not closed yet.
+                return false; // already open
             }
 
             actionMode = startSupportActionMode(actionModeCallback);
-            actionMode.setTag(new Pair<>(itemPosition, selected));
-            actionMode.setTitle(selected.getAddress());
+            actionMode.setTag(new Pair<>(itemPosition, item));
+            actionMode.setTitle(item.getAddress());
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onItemClick(AddressWrapper item, int itemPosition) {
+        // ignore short clicks on items.
     }
 
 
@@ -302,7 +262,9 @@ public class AddressActivity extends AppCompatActivity
 
         private Pair<Integer, AddressWrapper> getAddressWrapper(ActionMode am) {
             if (am.getTag() != null) {
-                return Pair.class.cast(am.getTag());
+                @SuppressWarnings("unchecked")
+                Pair<Integer, AddressWrapper> address = Pair.class.cast(am.getTag());
+                return address;
             }
             return null;
         }
@@ -314,7 +276,7 @@ public class AddressActivity extends AppCompatActivity
         ClipData clip = ClipData.newPlainText("Address", item.getAddress());
         clipboard.setPrimaryClip(clip);
         finishActionMode();
-        Snackbar.make(recyclerView,
+        Snackbar.make(findViewById(android.R.id.content),
                 UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
                 Snackbar.LENGTH_LONG)
                 .show();
@@ -339,13 +301,13 @@ public class AddressActivity extends AppCompatActivity
             Log.w("Delete Failed.", e);
         }
 
-        boolean removed = adapter.getItems().remove(item);
+        boolean removed = addressListAdapter.getItems().remove(item);
         if (removed) {
-            adapter.notifyItemRemoved(itemPosition);
+            addressListAdapter.notifyItemRemoved(itemPosition);
         }
 
         finishActionMode();
-        Snackbar.make(recyclerView,
+        Snackbar.make(findViewById(android.R.id.content),
                 UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_removed)),
                 Snackbar.LENGTH_LONG)
                 .show();

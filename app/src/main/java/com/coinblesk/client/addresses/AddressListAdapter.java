@@ -16,47 +16,12 @@ import java.util.List;
  */
 public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.ViewHolder> {
     private static final String TAG = AddressListAdapter.class.getName();
+
     private final List<AddressWrapper> addresses;
 
-    private final AddressClickHandler itemClickListener;
+    private AddressItemClickListener itemClickListener;
 
-    static class ViewHolder extends RecyclerView.ViewHolder
-                                    implements View.OnLongClickListener {
-        final View addressView;
-        final TextView addressLabel;
-        final TextView address;
-        final AddressClickHandler clickListener;
-
-        ViewHolder(View view, AddressClickHandler clickListener) {
-            super(view);
-            addressView = view;
-            this.clickListener = clickListener;
-            addressLabel = (TextView) view.findViewById(R.id.address_label);
-            address = (TextView) view.findViewById(R.id.address);
-
-            addressView.setOnLongClickListener(this);
-            addressLabel.setOnLongClickListener(this);
-            address.setOnLongClickListener(this);
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            Log.d(TAG, "onLongClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
-            if (clickListener != null) {
-                return clickListener.onItemLongClick(getAdapterPosition());
-            }
-            return false;
-        }
-
-        void update(AddressWrapper addressItem) {
-            String label = addressItem.getAddressLabel();
-            String base58 = addressItem.getAddress().toString();
-            addressLabel.setText(label);
-            address.setText(base58);
-        }
-    }
-
-    public AddressListAdapter(List<AddressWrapper> addresses, AddressClickHandler itemClickListener) {
+    public AddressListAdapter(List<AddressWrapper> addresses, AddressItemClickListener itemClickListener) {
         this.addresses = addresses != null ? addresses : new ArrayList<AddressWrapper>();
         this.itemClickListener = itemClickListener;
     }
@@ -73,7 +38,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
                     .from(parent.getContext())
                     .inflate(R.layout.address_item, parent, false);
 
-        ViewHolder vh = new ViewHolder(v, itemClickListener);
+        ViewHolder vh = new ViewHolder(v);
         return vh;
     }
 
@@ -96,7 +61,68 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         return addresses;
     }
 
-    interface AddressClickHandler {
-        boolean onItemLongClick(int itemPosition);
+    public void setItemClickListener(AddressItemClickListener itemClickListener) {
+        this.itemClickListener = itemClickListener;
+    }
+
+    public AddressItemClickListener getItemClickListener() {
+        return itemClickListener;
+    }
+
+    public interface AddressItemClickListener {
+        void onItemClick(AddressWrapper item, int itemPosition);
+        boolean onItemLongClick(AddressWrapper item, int itemPosition);
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder
+            implements View.OnLongClickListener,
+            View.OnClickListener {
+        final View addressView;
+        final TextView addressLabel;
+        final TextView address;
+
+        ViewHolder(View view) {
+            super(view);
+            addressView = view;
+            addressLabel = (TextView) view.findViewById(R.id.address_label);
+            address = (TextView) view.findViewById(R.id.address);
+
+            addressView.setOnLongClickListener(this);
+            addressView.setOnClickListener(this);
+
+            addressLabel.setOnLongClickListener(this);
+            addressLabel.setOnClickListener(this);
+
+            address.setOnLongClickListener(this);
+            address.setOnClickListener(this);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            Log.d(TAG, "onLongClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
+            if (itemClickListener != null) {
+                int pos = getAdapterPosition();
+                AddressWrapper item = getItems().get(pos);
+                return itemClickListener.onItemLongClick(item, pos);
+            }
+            return false;
+        }
+
+        @Override
+        public void onClick(View v) {
+            Log.d(TAG, "onClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
+            if (itemClickListener != null) {
+                int pos = getAdapterPosition();
+                AddressWrapper item = getItems().get(pos);
+                itemClickListener.onItemClick(item, pos);
+            }
+        }
+
+        void update(AddressWrapper addressItem) {
+            String label = addressItem.getAddressLabel();
+            String base58 = addressItem.getAddress();
+            addressLabel.setText(label);
+            address.setText(base58);
+        }
     }
 }
