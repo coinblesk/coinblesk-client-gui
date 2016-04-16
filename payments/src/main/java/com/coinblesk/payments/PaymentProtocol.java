@@ -79,8 +79,11 @@ public class PaymentProtocol {
         final long lockTime = unixTime + (Constants.LOCK_TIME_MONTHS * Constants.UNIX_TIME_MONTH);
         refundTransaction.addInput(output);
 
+
         Coin remainingAmount = output.getValue();
-        remainingAmount = remainingAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        if(remainingAmount.isGreaterThan(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)) {
+            remainingAmount = remainingAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        }
         refundTransaction.addOutput(remainingAmount, toAddress);
         refundTransaction.setLockTime(lockTime);
 

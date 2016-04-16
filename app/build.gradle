@@ -86,7 +86,6 @@ configurations {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-
     compile project(':payments')
     //needed for nicer time formatting
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'

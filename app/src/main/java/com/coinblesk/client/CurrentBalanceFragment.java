@@ -135,7 +135,9 @@ public class CurrentBalanceFragment extends Fragment {
 
             IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
-            setBalance();
+            if(walletServiceBinder.isReady()) {
+                setBalance();
+            }
         }
 
         @Override

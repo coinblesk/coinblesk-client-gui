@@ -148,8 +148,7 @@ public class NFCClientService extends HostApduService {
                                                 stepCounter++;
                                                 break;
                                             case 2:
-                                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder,
-                                                        bitcoinURI.getAddress(), tx, refund);
+                                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, tx, refund);
                                                 derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                                 stepCounter++;
                                                 break;

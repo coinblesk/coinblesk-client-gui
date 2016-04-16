@@ -47,7 +47,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
             final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
             writeDERObject(paymentRefundReceiveStep.process(readDERObject()));
 
-            final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), this.paymentUri.getAddress());
+            final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
             paymentFinalSignatureReceiveStep.process(readDERObject());
 
             walletServiceBinder.commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());

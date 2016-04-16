@@ -10,6 +10,8 @@ import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsuffientFunds;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
@@ -58,7 +60,13 @@ public class PaymentRefundSendStep implements Step {
             Log.d(TAG,"adding server signature");
         }
 
-        this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        try {
+            this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        } catch (CoinbleskException e) {
+            e.printStackTrace();
+        } catch (InsuffientFunds insuffientFunds) {
+            insuffientFunds.printStackTrace();
+        }
 
         Log.d(TAG,"tx: "+fullSignedTransaction);
         final List<ECKey> keys = new ArrayList<>();

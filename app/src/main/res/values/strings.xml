@@ -307,5 +307,6 @@
     <string name="addresses_msg_load_error">Could not load address%1$s</string>
     <string name="addresses_msg_removed">Address removed.</string>
     <string name="addresses_list_empty">The address list is empty.</string>
-
+    <string name="aiddescription">Coinblesk InstantPayment</string>
+    <string name="servicedesc">Coinblesk InstantPayment Service</string>
 </resources>

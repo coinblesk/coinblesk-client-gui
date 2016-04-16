@@ -1,23 +1,17 @@
 package com.coinblesk.payments.communications.http;
 
 import com.coinblesk.json.KeyTO;
-import com.coinblesk.json.PrepareHalfSignTO;
+import com.coinblesk.payments.Constants;
+import com.coinblesk.payments.models.ECKeyWrapper;
 import com.coinblesk.util.SerializeUtils;
-import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
 
 import junit.framework.Assert;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.junit.Test;
 
 import java.io.File;
 
 import ch.papers.objectstorage.UuidObjectStorage;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.models.ECKeyWrapper;
-
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -50,25 +44,5 @@ public class IntegrationTest {
             UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), ECKeyWrapper.class);
             UuidObjectStorage.getInstance().commit();
         }
-    }
-
-    @Test
-    public void instantPayment() throws Exception {
-        UuidObjectStorage.getInstance().init(new File(""));
-        ECKey clientMultiSigKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class).getKey();
-        ECKey serverMultiSigKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class).getKey();
-
-        Coin amount = Coin.valueOf(100000);
-        Address receiver = new Address(Constants.PARAMS,"2N7XnaqojjKEErSDJwzu3i8MVR6iVdNY5kQ");
-
-        PrepareHalfSignTO prepareHalfSignTO = new PrepareHalfSignTO()
-                .amountToSpend(amount.longValue())
-                .clientPublicKey(clientMultiSigKey.getPubKey())
-                .p2shAddressTo(receiver.toString())
-                .messageSig(null)
-                .currentDate(System.currentTimeMillis());
-        SerializeUtils.sign(prepareHalfSignTO, clientMultiSigKey);
-
-
     }
 }

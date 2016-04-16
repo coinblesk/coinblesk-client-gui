@@ -90,7 +90,7 @@ public class NFCServerACS extends AbstractServer {
                         final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
                         DERObject paymentFinalSignatureReceiveInput = transceiveDER(transceiver, paymentRefundReceiveStep.process(paymentRefundReceiveInput));
 
-                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), getPaymentRequestUri().getAddress());
+                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
                         paymentFinalSignatureReceiveStep.process(paymentFinalSignatureReceiveInput);
 
 

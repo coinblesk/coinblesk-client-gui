@@ -2,7 +2,7 @@ package com.coinblesk.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.json.CompleteSignTO;
+import com.coinblesk.json.VerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
@@ -11,7 +11,6 @@ import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -35,7 +34,7 @@ public class PaymentFinalSignatureSendStep implements Step{
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private final Transaction fullSignedRefundTransaction;
 
-    public PaymentFinalSignatureSendStep(WalletService.WalletServiceBinder walletServiceBinder, Address recipientAddress, Transaction transaction, Transaction fullSignedRefundTransaction) {
+    public PaymentFinalSignatureSendStep(WalletService.WalletServiceBinder walletServiceBinder, Transaction transaction, Transaction fullSignedRefundTransaction) {
         this.walletServiceBinder = walletServiceBinder;
         this.transaction = transaction;
         this.fullSignedRefundTransaction = fullSignedRefundTransaction;
@@ -75,9 +74,9 @@ public class PaymentFinalSignatureSendStep implements Step{
 
 
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-        CompleteSignTO completeSignTO = new CompleteSignTO()
+        VerifyTO completeSignTO = new VerifyTO()
                 .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
-                .fullSignedTransaction(transaction.unsafeBitcoinSerialize())
+                .transaction(transaction.unsafeBitcoinSerialize())
                 .currentDate(timestamp.longValue());
 
         if (completeSignTO.messageSig() == null) {

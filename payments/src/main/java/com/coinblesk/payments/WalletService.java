@@ -16,9 +16,12 @@ import com.coinblesk.json.VerifyTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.models.ECKeyWrapper;
 import com.coinblesk.payments.models.ExchangeRateWrapper;
+import com.coinblesk.payments.models.RefundTransactionWrapper;
 import com.coinblesk.payments.models.TransactionWrapper;
 import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
 import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsuffientFunds;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 import com.xeiam.xchange.Exchange;
@@ -37,6 +40,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionBroadcast;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -104,11 +108,11 @@ public class WalletService extends Service {
         }
 
         public Address getCurrentReceiveAddress() {
-            if (multisigAddressScript != null) {
-                return multisigAddressScript.getToAddress(Constants.PARAMS);
-            } else {
-                return WalletService.this.kit.wallet().currentReceiveAddress();
-            }
+            return WalletService.this.kit.wallet().currentReceiveAddress();
+        }
+
+        public Address getMultisigReceiveAddress() {
+            return multisigAddressScript.getToAddress(Constants.PARAMS);
         }
 
         public void setCurrency(String currency) {
@@ -149,7 +153,7 @@ public class WalletService extends Service {
             List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
             if (kit.wallet() != null) {
                 for (TransactionOutput unspentTransactionOutput : kit.wallet().calculateAllSpendCandidates(false, false)) {
-                    if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getCurrentReceiveAddress())) {
+                    if (unspentTransactionOutput.getScriptPubKey().getToAddress(Constants.PARAMS).equals(this.getMultisigReceiveAddress())) {
                         unspentInstantOutputs.add(unspentTransactionOutput);
                     }
                 }
@@ -157,7 +161,66 @@ public class WalletService extends Service {
             return unspentInstantOutputs;
         }
 
+        public void lockFundsForInstantPayment() {
+            try {
+                final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+
+                final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), getCurrentReceiveAddress(), getMultisigReceiveAddress());
+                final Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+                kit.wallet().signTransaction(sendRequest);
+
+                // generate refund
+                final List<ECKey> keys = new ArrayList<ECKey>();
+                keys.add(multisigClientKey);
+                keys.add(multisigServerKey);
+                Collections.sort(keys, ECKey.PUBKEY_COMPARATOR);
+                final Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
+                final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), getCurrentReceiveAddress());
+                final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(refundTransaction, redeemScript, multisigClientKey);
+
+                SignTO refundTO = new SignTO();
+                refundTO.clientPublicKey(multisigClientKey.getPubKey());
+                refundTO.transaction(refundTransaction.unsafeBitcoinSerialize());
+                refundTO.currentDate(System.currentTimeMillis());
+                if (refundTO.messageSig() == null) {
+                    SerializeUtils.sign(refundTO, multisigClientKey);
+                }
+
+                // let server sign
+                final SignTO serverRefundTO = service.sign(refundTO).execute().body();
+                final List<TransactionSignature> serverRefundTransactionSignatures = SerializeUtils.deserializeSignatures(serverRefundTO.serverSignatures());
+                for (int i = 0; i < clientRefundTransactionSignatures.size(); i++) {
+                    final TransactionSignature serverSignature = serverRefundTransactionSignatures.get(i);
+                    final TransactionSignature clientSignature = clientRefundTransactionSignatures.get(i);
+
+                    // yes, because order matters...
+                    List<TransactionSignature> signatures = keys.indexOf(multisigClientKey) == 0 ? ImmutableList.of(clientSignature, serverSignature) : ImmutableList.of(serverSignature, clientSignature);
+                    Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
+                    refundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
+                    refundTransaction.getInput(i).verify();
+                }
+
+                sendRequest.tx.verify();
+                kit.wallet().commitTx(sendRequest.tx);
+                TransactionBroadcast transactionBroadcast = kit.peerGroup().broadcastTransaction(sendRequest.tx);
+                Log.d(TAG,""+transactionBroadcast.broadcast());
+                UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(refundTransaction), RefundTransactionWrapper.class);
+                UuidObjectStorage.getInstance().commit();
+
+
+            } catch (CoinbleskException e) {
+                e.printStackTrace();
+            } catch (InsuffientFunds insuffientFunds) {
+                insuffientFunds.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (UuidObjectStorageException e) {
+                e.printStackTrace();
+            }
+        }
+
         public void instantSendCoins(final Address address, final Coin amount) {
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -240,7 +303,7 @@ public class WalletService extends Service {
 
                         VerifyTO completeSignTO = new VerifyTO()
                                 .clientPublicKey(multisigClientKey.getPubKey())
-                                .fullSignedTransaction(transaction.unsafeBitcoinSerialize())
+                                .transaction(transaction.unsafeBitcoinSerialize())
                                 .currentDate(System.currentTimeMillis());
                         if (completeSignTO.messageSig() == null) {
                             SerializeUtils.sign(completeSignTO, multisigClientKey);
@@ -433,8 +496,9 @@ public class WalletService extends Service {
                         }
                     }
                     wallet().importKey(walletKey.getKey());
-                }
 
+                }
+                //walletServiceBinder.lockFundsForInstantPayment();
                 kit.wallet().addEventListener(new AbstractWalletEventListener() {
                     @Override
                     public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -467,6 +531,12 @@ public class WalletService extends Service {
 
                     @Override
                     public void onCoinsReceived(Wallet w, Transaction tx, Coin prevBalance, Coin newBalance) {
+                        for(TransactionOutput transactionOutput : tx.getOutputs()) {
+                            if(transactionOutput.isMine(w) && transactionOutput.isAvailableForSpending()) {
+                                walletServiceBinder.lockFundsForInstantPayment();
+                            }
+                        }
+
                         Intent walletProgressIntent = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
                         walletProgressIntent.putExtra("balance", newBalance.value);
                         LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
@@ -482,7 +552,6 @@ public class WalletService extends Service {
                     ECKeyWrapper serverKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class);
                     ECKeyWrapper clientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
                     setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
-
 
 
                 } catch (UuidObjectStorageException e) {
@@ -509,12 +578,12 @@ public class WalletService extends Service {
 
                 final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 final String refundAddressString = sharedPreferences.getString(REFUND_ADDRESS_SETTINGS_PREF_KEY, kit.wallet().currentReceiveAddress().toString());
-                try{
-                    refundAddress = new Address(Constants.PARAMS,refundAddressString);
+                try {
+                    refundAddress = new Address(Constants.PARAMS, refundAddressString);
                 } catch (AddressFormatException e) {
                     refundAddress = kit.wallet().currentReceiveAddress();
                 }
-                sharedPreferences.edit().putString(REFUND_ADDRESS_SETTINGS_PREF_KEY,refundAddress.toString()).commit();
+                sharedPreferences.edit().putString(REFUND_ADDRESS_SETTINGS_PREF_KEY, refundAddress.toString()).commit();
 
                 if (Constants.PARAMS.equals(TestNet3Params.get())) {
                     // these are testnet peers
@@ -555,6 +624,8 @@ public class WalletService extends Service {
             protected void doneDownload() {
                 super.doneDownload();
                 progress = 100.0;
+                Intent walletProgressIntent = new Intent(Constants.WALLET_READY_ACTION);
+                LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(walletProgressIntent);
                 Log.d(TAG, "done download");
             }
         });
@@ -583,7 +654,6 @@ public class WalletService extends Service {
 
         Log.d(TAG, "wallet started");
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
-
 
 
         return this.walletServiceBinder;
