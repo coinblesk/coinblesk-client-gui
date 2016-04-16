@@ -40,7 +40,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionBroadcast;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -175,7 +174,7 @@ public class WalletService extends Service {
                 keys.add(multisigServerKey);
                 Collections.sort(keys, ECKey.PUBKEY_COMPARATOR);
                 final Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
-                final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), getCurrentReceiveAddress());
+                final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), getRefundAddress());
                 final List<TransactionSignature> clientRefundTransactionSignatures = BitcoinUtils.partiallySign(refundTransaction, redeemScript, multisigClientKey);
 
                 SignTO refundTO = new SignTO();
@@ -202,8 +201,7 @@ public class WalletService extends Service {
 
                 sendRequest.tx.verify();
                 kit.wallet().commitTx(sendRequest.tx);
-                TransactionBroadcast transactionBroadcast = kit.peerGroup().broadcastTransaction(sendRequest.tx);
-                Log.d(TAG,""+transactionBroadcast.broadcast());
+                kit.peerGroup().broadcastTransaction(sendRequest.tx).broadcast();
                 UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(refundTransaction), RefundTransactionWrapper.class);
                 UuidObjectStorage.getInstance().commit();
 
@@ -356,7 +354,7 @@ public class WalletService extends Service {
         }
 
         public Address getRefundAddress() {
-            return WalletService.this.kit.wallet().currentReceiveAddress();
+            return refundAddress;
         }
 
         public ECKey getMultisigClientKey() {

@@ -74,7 +74,7 @@ public class PaymentRequestReceiveStep implements Step {
 
         Transaction fullSignedTransaction = null;
         try {
-            fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+            fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
         } catch (CoinbleskException e) {
             e.printStackTrace();
         } catch (InsuffientFunds insuffientFunds) {
