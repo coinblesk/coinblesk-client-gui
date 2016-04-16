@@ -24,6 +24,9 @@ import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -138,6 +141,30 @@ public class UIUtils {
 
         return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
 
+    }
+
+    public static String coinToAmount(Coin coin, Context context) {
+        // transform a given coin value to the "amount string".
+        BigDecimal coinAmount = new BigDecimal(coin.getValue());
+        BigDecimal div;
+        switch (getCoinDenomination(context)) {
+            case AppConstants.MILLICOIN:
+                div = new BigDecimal(Coin.MILLICOIN.getValue());
+                break;
+            case AppConstants.MICROCOIN:
+                div = new BigDecimal(Coin.MICROCOIN.getValue());
+                break;
+            default:
+                div = new BigDecimal(Coin.COIN.getValue());
+        }
+        DecimalFormat df = new DecimalFormat("#.####");
+        df.setRoundingMode(RoundingMode.DOWN);
+        df.setMaximumFractionDigits(4);
+        DecimalFormatSymbols decFormat = new DecimalFormatSymbols();
+        decFormat.setDecimalSeparator('.');
+        df.setDecimalFormatSymbols(decFormat);
+        String amount = df.format(coinAmount.divide(div));
+        return amount;
     }
 
 

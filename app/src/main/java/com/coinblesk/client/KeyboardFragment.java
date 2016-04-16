@@ -351,6 +351,15 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
+    protected void setAmountByCoin(Coin newAmount) {
+        if (isBitcoinLargeAmount) {
+            amountString = UIUtils.coinToAmount(newAmount, getContext());
+        } else {
+            amountString = exchangeRate.coinToFiat(newAmount).toPlainString();
+        }
+        updateAmount();
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -428,8 +437,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     @Override
     public void onEnter() {
-        if (this.getCoin().isPositive()) {
-            this.getDialogFragment().show(this.getFragmentManager(), "keyboard_dialog_fragment");
+        if (getCoin().isPositive()) {
+            DialogFragment fragment = getDialogFragment();
+            if (fragment != null) {
+                fragment.show(this.getFragmentManager(), "keyboard_dialog_fragment");
+            }
         }
     }
 
@@ -603,4 +615,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
+
+    protected WalletService.WalletServiceBinder getWalletServiceBinder() {
+        return walletServiceBinder;
+    }
 }
