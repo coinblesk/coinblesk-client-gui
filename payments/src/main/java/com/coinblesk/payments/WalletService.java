@@ -87,7 +87,7 @@ public class WalletService extends Service {
     private double progress = 0.0;
 
     public class WalletServiceBinder extends Binder {
-        
+
         public WalletServiceBinder() {
             try {
                 exchangeRate = UuidObjectStorage.getInstance().getFirstMatchEntry(new MatchAllFilter(), ExchangeRateWrapper.class).getExchangeRate();

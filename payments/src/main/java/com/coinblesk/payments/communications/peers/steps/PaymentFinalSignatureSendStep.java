@@ -27,17 +27,17 @@ import java.util.List;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class PaymentFinalSignatureSendStep implements Step{
+public class PaymentFinalSignatureSendStep implements Step {
     private final static String TAG = PaymentFinalSignatureSendStep.class.getSimpleName();
 
     private final Transaction transaction;
     private final WalletService.WalletServiceBinder walletServiceBinder;
-    private final Transaction fullSignedRefundTransaction;
+    private final Transaction halfSignedRefundTransaction;
 
-    public PaymentFinalSignatureSendStep(WalletService.WalletServiceBinder walletServiceBinder, Transaction transaction, Transaction fullSignedRefundTransaction) {
+    public PaymentFinalSignatureSendStep(WalletService.WalletServiceBinder walletServiceBinder, Transaction fullSignedTransaction, Transaction halfSignedRefundTransaction) {
         this.walletServiceBinder = walletServiceBinder;
-        this.transaction = transaction;
-        this.fullSignedRefundTransaction = fullSignedRefundTransaction;
+        this.transaction = fullSignedTransaction;
+        this.halfSignedRefundTransaction = halfSignedRefundTransaction;
     }
 
     @Override
@@ -48,28 +48,30 @@ public class PaymentFinalSignatureSendStep implements Step{
             final DERSequence signature = (DERSequence) transactionSignature;
             TransactionSignature serverSignature = new TransactionSignature(((DERInteger) signature.getChildren().get(0)).getBigInteger(), ((DERInteger) signature.getChildren().get(1)).getBigInteger());
             serverTransactionSignatures.add(serverSignature);
-            Log.d(TAG,"adding server signature");
+            Log.d(TAG, "adding server signature");
         }
 
         final List<ECKey> keys = new ArrayList<>();
         keys.add(walletServiceBinder.getMultisigClientKey());
         keys.add(walletServiceBinder.getMultisigServerKey());
-        Collections.sort(keys,ECKey.PUBKEY_COMPARATOR);
+        Collections.sort(keys, ECKey.PUBKEY_COMPARATOR);
 
-        Script redeemScript = ScriptBuilder.createRedeemScript(2,keys);
-        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(fullSignedRefundTransaction, redeemScript, walletServiceBinder.getMultisigClientKey());
+        Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
+        final List<TransactionSignature> clientTransactionSignatures = BitcoinUtils.partiallySign(halfSignedRefundTransaction, redeemScript, walletServiceBinder.getMultisigClientKey());
 
         for (int i = 0; i < clientTransactionSignatures.size(); i++) {
-            Log.d(TAG,"starting verify");
+            Log.d(TAG, "starting verify");
             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
 
             // yes, because order matters...
-            List<TransactionSignature> signatures = keys.indexOf(walletServiceBinder.getMultisigClientKey())==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
+
+            List<TransactionSignature> signatures = keys.indexOf(walletServiceBinder.getMultisigClientKey()) == 0 ? ImmutableList.of(clientSignature, serverSignature) : ImmutableList.of(serverSignature, clientSignature);
             Script p2SHMultiSigInputScript = ScriptBuilder.createP2SHMultiSigInputScript(signatures, redeemScript);
-            fullSignedRefundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
-            fullSignedRefundTransaction.getInput(i).verify();
-            Log.d(TAG,"verify success");
+            halfSignedRefundTransaction.getInput(i).setScriptSig(p2SHMultiSigInputScript);
+            halfSignedRefundTransaction.getInput(i).verify();
+
+            Log.d(TAG, "verify success");
         }
 
 
@@ -96,6 +98,6 @@ public class PaymentFinalSignatureSendStep implements Step{
     }
 
     public Transaction getFullSignedRefundTransation() {
-        return fullSignedRefundTransaction;
+        return halfSignedRefundTransaction;
     }
 }

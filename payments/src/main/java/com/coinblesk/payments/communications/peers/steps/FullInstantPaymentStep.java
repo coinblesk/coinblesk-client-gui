@@ -31,14 +31,17 @@ public class FullInstantPaymentStep implements Step {
         PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(paymentRequest);
         PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(walletServiceBinder, paymentRequest, paymentRequestReceiveStep.getTimestamp());
         PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(walletServiceBinder.getMultisigClientKey());
-        PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, paymentRefundSendStep.getHalfSignedRefundTransaction(), paymentRefundSendStep.getFullSignedTransaction());
-        PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(walletServiceBinder.getMultisigClientKey());
+
+
 
         DERObject output = paymentRequestSendStep.process(input);
         output = paymentRequestReceiveStep.process(output);
         output = paymentAuthorizationReceiveStep.process(output);
         output = paymentRefundSendStep.process(output);
         output = paymentRefundReceiveStep.process(output);
+
+        PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder,  paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
+        PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(walletServiceBinder.getMultisigClientKey());
         output = paymentFinalSignatureSendStep.process(output);
         output = paymentFinalSignatureReceiveStep.process(output);
 
