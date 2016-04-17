@@ -5,7 +5,7 @@ import android.util.Log;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import com.coinblesk.payments.models.RefundTransactionWrapper;
@@ -24,7 +24,7 @@ import ch.papers.objectstorage.listeners.OnResultListener;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class InstantPaymentClientHandler extends DERObjectStreamHandler{
+public class InstantPaymentClientHandler extends DERObjectStreamHandler {
     private final static String TAG = InstantPaymentClientHandler.class.getSimpleName();
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private final PaymentRequestDelegate paymentRequestDelegate;
@@ -37,7 +37,7 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
 
     @Override
     public void run() {
-        Log.d(TAG,"kick off");
+        Log.d(TAG, "kick off");
         try {
             writeDERObject(DERObject.NULLOBJECT); // we kick off the process
             PaymentRequestReceiveStep paymentRequestReceiveStep = new PaymentRequestReceiveStep(walletServiceBinder);
@@ -47,12 +47,12 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
                 writeDERObject(paymentRequestResponse);
                 final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(this.walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI(), paymentRequestReceiveStep.getTimestamp());
                 writeDERObject(paymentRefundSendStep.process(readDERObject()));
-                final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
-                writeDERObject(paymentFinalSignatureSendStep.process(readDERObject()));
+                final PaymentFinalSignatureOutpointsSendStep paymentFinalSignatureOutpointsSendStep = new PaymentFinalSignatureOutpointsSendStep(walletServiceBinder, paymentRequestReceiveStep.getBitcoinURI().getAddress(), paymentRefundSendStep.getClientSignatures(), paymentRefundSendStep.getServerSignatures(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
+                writeDERObject(paymentFinalSignatureOutpointsSendStep.process(readDERObject()));
                 Log.d(TAG, "payment was successful, we're done!");
                 // payment was successful in every way, commit that tx
                 walletServiceBinder.commitAndBroadcastTransaction(paymentRefundSendStep.getFullSignedTransaction());
-                final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
+                final Transaction fullsignedRefundTransaction = paymentFinalSignatureOutpointsSendStep.getFullSignedRefundTransation();
                 UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
                     @Override
                     public void onSuccess(RefundTransactionWrapper refundTransactionWrapper) {
@@ -64,14 +64,14 @@ public class InstantPaymentClientHandler extends DERObjectStreamHandler{
                     }
 
                     @Override
-                    public void onError(String s){
-                        Log.d(TAG,s);
+                    public void onError(String s) {
+                        Log.d(TAG, s);
                     }
                 }, RefundTransactionWrapper.class);
 
                 paymentRequestDelegate.onPaymentSuccess();
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());
         }
