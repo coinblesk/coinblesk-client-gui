@@ -86,7 +86,7 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
             VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.message());
-            fullSignedTransaction = new Transaction(Constants.PARAMS, responseCompleteSignTO.fullTx());
+            fullSignedTransaction = new Transaction(Constants.PARAMS, responseCompleteSignTO.transaction());
             return DERObject.NULLOBJECT;
         } catch (IOException e) {
             Log.e(TAG, "Exception in the signature step: ", e);
