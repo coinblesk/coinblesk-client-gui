@@ -205,10 +205,9 @@ public class WalletService extends Service {
                         if (fiatCurrency.equals("USD")) {
 
                         } else if (fiatCurrency.equals("CHF")) {
-                            conversionRate = (1 / Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
+                            conversionRate = Double.parseDouble(service.chfToUsd().execute().body().rate());
                         } else {
-                            conversionRate = (1 / Double.parseDouble(service.usdToChf().execute().body().getExchangeRates().get("CHF")));
-                            conversionRate *= Double.parseDouble(service.eurToChf().execute().body().getExchangeRates().get("CHF"));
+                            conversionRate = Double.parseDouble(service.eurToUsd().execute().body().rate());
                         }
 
                         Log.d(TAG, "conversion" + conversionRate);
