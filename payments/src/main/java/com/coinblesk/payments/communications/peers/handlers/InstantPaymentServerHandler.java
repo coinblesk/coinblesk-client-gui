@@ -5,7 +5,7 @@ import android.util.Log;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
@@ -27,7 +27,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
     private final WalletService.WalletServiceBinder walletServiceBinder;
 
     public InstantPaymentServerHandler(InputStream inputStream, OutputStream outputStream, BitcoinURI paymentUri, PaymentRequestDelegate paymentRequestDelegate, WalletService.WalletServiceBinder walletServiceBinder) {
-        super(inputStream,outputStream);
+        super(inputStream, outputStream);
         this.paymentUri = paymentUri;
         this.paymentRequestDelegate = paymentRequestDelegate;
         this.walletServiceBinder = walletServiceBinder;
@@ -38,7 +38,7 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
     public void run() {
         try {
             long startTime = System.currentTimeMillis();
-            final PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(paymentUri);
+            final PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(this.paymentUri);
             writeDERObject(paymentRequestSendStep.process(readDERObject()));
 
             final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(this.paymentUri);
@@ -47,13 +47,13 @@ public class InstantPaymentServerHandler extends DERObjectStreamHandler {
             final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
             writeDERObject(paymentRefundReceiveStep.process(readDERObject()));
 
-            final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
-            paymentFinalSignatureReceiveStep.process(readDERObject());
+            final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), paymentAuthorizationReceiveStep.getServerSignatures(), this.paymentUri);
+            paymentFinalSignatureOutpointsReceiveStep.process(readDERObject());
 
-            walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+            walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureOutpointsReceiveStep.getFullSignedTransaction());
             paymentRequestDelegate.onPaymentSuccess();
-            Log.d(TAG, "payment was successful in " + (System.currentTimeMillis()-startTime) + "ms");
-        } catch (Exception e){
+            Log.d(TAG, "payment was successful in " + (System.currentTimeMillis() - startTime) + "ms");
+        } catch (Exception e) {
             Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());
         }

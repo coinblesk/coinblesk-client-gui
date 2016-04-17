@@ -12,19 +12,22 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.coinblesk.json.TxSig;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
@@ -51,7 +54,8 @@ public class NFCClientService extends HostApduService {
     private Transaction tx;
     private Transaction refund;
     private boolean isClientStarted = false;
-
+    private final List<TxSig> clientSignatures= new ArrayList<TxSig>();
+    private final List<TxSig> serverSignatures= new ArrayList<TxSig>();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -139,17 +143,19 @@ public class NFCClientService extends HostApduService {
                                                 Log.d(TAG, "got payload1: " + derResponsePayload.length);
                                                 break;
                                             case 1:
-                                                final PaymentRefundSendStep paymentRefundSendStep1 = new PaymentRefundSendStep(walletServiceBinder,
+                                                final PaymentRefundSendStep paymentRefundSendStep = new PaymentRefundSendStep(walletServiceBinder,
                                                         bitcoinURI, timestamp);
-                                                derResponsePayload = paymentRefundSendStep1.process(DERParser.parseDER(requestPayload)).serializeToDER();
-                                                tx = paymentRefundSendStep1.getFullSignedTransaction();
-                                                refund = paymentRefundSendStep1.getHalfSignedRefundTransaction();
+                                                derResponsePayload = paymentRefundSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                                tx = paymentRefundSendStep.getFullSignedTransaction();
+                                                refund = paymentRefundSendStep.getHalfSignedRefundTransaction();
+                                                serverSignatures.addAll(paymentRefundSendStep.getServerSignatures());
+                                                clientSignatures.addAll(paymentRefundSendStep.getClientSignatures());
                                                 Log.d(TAG, "got payload2: " + derResponsePayload.length);
                                                 stepCounter++;
                                                 break;
                                             case 2:
-                                                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, tx, refund);
-                                                derResponsePayload = paymentFinalSignatureSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
+                                                PaymentFinalSignatureOutpointsSendStep paymentFinalSignatureOutpointsSendStep = new PaymentFinalSignatureOutpointsSendStep(walletServiceBinder, bitcoinURI.getAddress(), clientSignatures, serverSignatures, tx, refund);
+                                                derResponsePayload = paymentFinalSignatureOutpointsSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                                 stepCounter++;
                                                 break;
                                             case 3:

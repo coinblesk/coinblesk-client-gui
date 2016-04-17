@@ -30,12 +30,16 @@ public class PaymentAuthorizationReceiveStep implements Step {
     private final static String TAG = PaymentAuthorizationReceiveStep.class.getSimpleName();
 
     final private BitcoinURI bitcoinURI;
+    final private List<TxSig> serverSignatures = new ArrayList<TxSig>();
 
     private ECKey clientPublicKey;
 
-
     public PaymentAuthorizationReceiveStep(BitcoinURI bitcoinURI) {
         this.bitcoinURI = bitcoinURI;
+    }
+
+    public List<TxSig> getServerSignatures() {
+        return serverSignatures;
     }
 
     @Override
@@ -67,6 +71,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
                 final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                 // let server sign first
                 final SignTO serverHalfSignTO = service.sign(refundTO).execute().body();
+                this.serverSignatures.addAll(serverHalfSignTO.serverSignatures());
 
                 List<DERObject> derObjectList = new ArrayList<DERObject>();
                 for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.serverSignatures())) {

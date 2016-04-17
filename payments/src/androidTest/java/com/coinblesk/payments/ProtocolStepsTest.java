@@ -100,7 +100,7 @@ public class ProtocolStepsTest {
 
 
                             PaymentFinalSignatureOutpointsSendStep paymentFinalSignatureOutpointsSendStep = new PaymentFinalSignatureOutpointsSendStep(walletServiceBinder, bitcoinURI.getAddress(), paymentRefundSendStep.getClientSignatures(), paymentRefundSendStep.getServerSignatures(), paymentRefundSendStep.getFullSignedTransaction(), paymentRefundSendStep.getHalfSignedRefundTransaction());
-                            PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(walletServiceBinder.getMultisigClientKey(), paymentRefundSendStep.getServerSignatures(), bitcoinURI.getAddress(), bitcoinURI.getAmount());
+                            PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(walletServiceBinder.getMultisigClientKey(), paymentRefundSendStep.getServerSignatures(), bitcoinURI);
                             output = paymentFinalSignatureOutpointsSendStep.process(output);
                             Log.d("benchmark", "" + (System.currentTimeMillis() - startTime));
                             assertThat(paymentFinalSignatureOutpointsSendStep.getFullSignedRefundTransation(), not(nullValue()));

@@ -11,10 +11,9 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.Pair;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -33,14 +32,12 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
     private final ECKey multisigClientKey;
     private Transaction fullSignedTransaction;
     private final List<TxSig> serverSignatures;
-    private final Address recipientAddress;
-    private final Coin amount;
+    private final BitcoinURI paymentRequest;
 
-    public PaymentFinalSignatureOutpointsReceiveStep(ECKey multisigClientKey, List<TxSig> serverSignatures, Address recipientAddress, Coin amount) {
+    public PaymentFinalSignatureOutpointsReceiveStep(ECKey multisigClientKey, List<TxSig> serverSignatures, BitcoinURI paymentRequest) {
         this.multisigClientKey = multisigClientKey;
         this.serverSignatures = serverSignatures;
-        this.recipientAddress = recipientAddress;
-        this.amount = amount;
+        this.paymentRequest = paymentRequest;
     }
 
     @Override
@@ -74,8 +71,8 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
 
             VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
-                    .p2shAddressTo(recipientAddress.toString())
-                    .amountToSpend(amount.value)
+                    .p2shAddressTo(paymentRequest.getAddress().toString())
+                    .amountToSpend(paymentRequest.getAmount().value)
                     .clientSignatures(clientSignatures)
                     .serverSignatures(serverSignatures)
                     .outpointsCoinPair(outpointCoinPairs)
