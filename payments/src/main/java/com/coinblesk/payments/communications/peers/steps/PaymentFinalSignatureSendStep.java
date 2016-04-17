@@ -93,7 +93,8 @@ public class PaymentFinalSignatureSendStep implements Step {
         derObjectList.add(new DERInteger(new BigInteger(completeSignTO.messageSig().sigS())));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
-        Log.d(TAG, "responding with complete TX:" + payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"payload size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
         return payloadDerSequence;
     }
 

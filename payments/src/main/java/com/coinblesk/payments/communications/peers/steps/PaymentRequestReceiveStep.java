@@ -77,10 +77,12 @@ public class PaymentRequestReceiveStep implements Step {
         try {
             fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
         } catch (CoinbleskException e) {
+            Log.d(TAG,"CoinbleskException:" + e.getMessage());
             Intent instantPaymentFailedIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
             instantPaymentFailedIntent.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
             walletServiceBinder.getLocalBroadcastManager().sendBroadcast(instantPaymentFailedIntent);
         } catch (InsuffientFunds insuffientFunds) {
+            Log.d(TAG,"insufficient funds:" + insuffientFunds.getMessage());
             Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
             walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);
         }
@@ -104,7 +106,8 @@ public class PaymentRequestReceiveStep implements Step {
         derObjectList.add(new DERInteger(new BigInteger(refundTO.messageSig().sigS())));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
-        Log.d(TAG, "responding with eckey and signature total size:" + payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"payload size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
         return payloadDerSequence;
     }
 }

@@ -28,11 +28,12 @@ public class PaymentRequestSendStep implements Step {
         derObjectList.add(new DERInteger(BigInteger.valueOf(bitcoinURI.getAddress().isP2SHAddress()?1:0)));
         derObjectList.add(new DERObject(bitcoinURI.getAddress().getHash160()));
         payload = new DERSequence(derObjectList);
-        Log.d(TAG,"payload size" + payload.serializeToDER().length);
     }
 
     @Override
     public DERObject process(DERObject input) {
+        Log.d(TAG,"payload size:"+payload.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
         return payload;
     }
 }

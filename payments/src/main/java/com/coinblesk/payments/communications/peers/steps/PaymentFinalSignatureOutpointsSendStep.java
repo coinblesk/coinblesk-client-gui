@@ -92,7 +92,6 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
             Log.d(TAG, "verify success");
         }
 
-
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
 
 

@@ -45,7 +45,7 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'ch.papers:objectstorage:1.1.2'
-    compile 'com.coinblesk:coinblesk-shared-resources:1.4.12'
+    compile 'com.coinblesk:coinblesk-shared-resources:1.4.14'
 
     // needed for base64
     testCompile 'commons-codec:commons-codec:1.9'

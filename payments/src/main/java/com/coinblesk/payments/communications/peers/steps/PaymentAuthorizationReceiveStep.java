@@ -8,7 +8,6 @@ import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -75,10 +74,10 @@ public class PaymentAuthorizationReceiveStep implements Step {
                     derObjectList.add(new DERSequence(signatureList));
                 }
 
-                byte[] dersequence = new DERSequence(derObjectList).serializeToDER();
-                Log.d(TAG,"sending response"+dersequence.length);
-                Log.d(TAG,"sending response exp"+ DERParser.extractPayloadEndIndex(dersequence));
-                return new DERSequence(derObjectList);
+                DERObject dersequence = new DERSequence(derObjectList);
+                Log.d(TAG,"payload size:"+dersequence.serializeToDER().length);
+                Log.d(TAG,"time:"+System.currentTimeMillis());
+                return dersequence;
             }
         } catch (IOException e) {
             Log.e(TAG, "Exception in the authorization step: ", e);

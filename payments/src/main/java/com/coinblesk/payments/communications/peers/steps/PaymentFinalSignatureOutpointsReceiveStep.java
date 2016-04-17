@@ -71,6 +71,7 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
             txSig.sigR(((DERInteger) derSequence.getChildren().get(3)).getBigInteger().toString());
             txSig.sigS(((DERInteger) derSequence.getChildren().get(4)).getBigInteger().toString());
 
+
             VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
                     .p2shAddressTo(recipientAddress.toString())
@@ -78,12 +79,14 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
                     .clientSignatures(clientSignatures)
                     .serverSignatures(serverSignatures)
                     .outpointsCoinPair(outpointCoinPairs)
-                    .currentDate(timestamp.longValue());
+                    .currentDate(timestamp.longValue())
+                    .messageSig(txSig);
 
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
-            fullSignedTransaction = new Transaction(Constants.PARAMS, responseCompleteSignTO.transaction());
+            Log.d(TAG, "instant payment was " + responseCompleteSignTO.message());
+            fullSignedTransaction = new Transaction(Constants.PARAMS, responseCompleteSignTO.fullTx());
             return DERObject.NULLOBJECT;
         } catch (IOException e) {
             Log.e(TAG, "Exception in the signature step: ", e);

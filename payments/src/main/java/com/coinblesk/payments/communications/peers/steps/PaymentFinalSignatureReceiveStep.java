@@ -51,6 +51,8 @@ public class PaymentFinalSignatureReceiveStep implements Step {
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
+            Log.d(TAG,"payload size:"+DERObject.NULLOBJECT.serializeToDER().length);
+            Log.d(TAG,"time:"+System.currentTimeMillis());
             return DERObject.NULLOBJECT;
         } catch (IOException e){
             Log.e(TAG, "Exception in the signature step: ", e);

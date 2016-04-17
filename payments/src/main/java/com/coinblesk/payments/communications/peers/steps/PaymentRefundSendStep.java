@@ -3,6 +3,7 @@ package com.coinblesk.payments.communications.peers.steps;
 import android.util.Log;
 
 import com.coinblesk.json.SignTO;
+import com.coinblesk.json.TxSig;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.PaymentProtocol;
 import com.coinblesk.payments.WalletService;
@@ -12,6 +13,7 @@ import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsuffientFunds;
+import com.coinblesk.util.Pair;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
@@ -39,6 +41,22 @@ public class PaymentRefundSendStep implements Step {
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private final long timestamp;
 
+    private final List<Pair<byte[],Long>> outpointPairs = new ArrayList<Pair<byte[], Long>>();
+    private final List<TxSig> clientSignatures = new ArrayList<TxSig>();
+
+    public List<TxSig> getServerSignatures() {
+        return serverSignatures;
+    }
+
+    public List<Pair<byte[], Long>> getOutpointPairs() {
+        return outpointPairs;
+    }
+
+    public List<TxSig> getClientSignatures() {
+        return clientSignatures;
+    }
+
+    private final List<TxSig> serverSignatures = new ArrayList<TxSig>();
     private Transaction fullSignedTransaction;
     private Transaction halfSignedRefundTransaction;
 
@@ -81,6 +99,15 @@ public class PaymentRefundSendStep implements Step {
             Log.d(TAG,"starting verify");
             final TransactionSignature serverSignature = serverTransactionSignatures.get(i);
             final TransactionSignature clientSignature = clientTransactionSignatures.get(i);
+            TxSig clientSignatureTxSig = new TxSig();
+            clientSignatureTxSig.sigR(clientSignature.r.toString());
+            clientSignatureTxSig.sigS(clientSignature.s.toString());
+            TxSig serverSignatureTxSig = new TxSig();
+            serverSignatureTxSig.sigR(serverSignature.r.toString());
+            serverSignatureTxSig.sigS(serverSignature.s.toString());
+            this.clientSignatures.add(clientSignatureTxSig);
+            this.serverSignatures.add(serverSignatureTxSig);
+            this.outpointPairs.add(new Pair<byte[], Long>(fullSignedTransaction.getInput(i).getOutpoint().unsafeBitcoinSerialize(),fullSignedTransaction.getInput(i).getValue().value));
 
             // yes, because order matters...
             List<TransactionSignature> signatures = keys.indexOf(walletServiceBinder.getMultisigClientKey())==0 ? ImmutableList.of(clientSignature,serverSignature) : ImmutableList.of(serverSignature,clientSignature);
@@ -108,7 +135,11 @@ public class PaymentRefundSendStep implements Step {
         derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigS())));
 
         Log.d(TAG,"all good with refund, sending back");
-        return new DERSequence(derObjectList);
+
+        DERObject payloadDerSequence =  new DERSequence(derObjectList);
+        Log.d(TAG,"payload size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
+        return payloadDerSequence;
     }
 
     public Transaction getFullSignedTransaction() {
