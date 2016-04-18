@@ -68,6 +68,8 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
             txSig.sigR(((DERInteger) derSequence.getChildren().get(3)).getBigInteger().toString());
             txSig.sigS(((DERInteger) derSequence.getChildren().get(4)).getBigInteger().toString());
 
+            Log.d(TAG, "serverSig Count:" + serverSignatures.size());
+            Log.d(TAG, "clientSig Count:" + clientSignatures.size());
 
             VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
@@ -86,6 +88,8 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.message());
             fullSignedTransaction = new Transaction(Constants.PARAMS, responseCompleteSignTO.transaction());
+            Log.d(TAG,"payload size:"+DERObject.NULLOBJECT.serializeToDER().length);
+            Log.d(TAG,"time:"+System.currentTimeMillis());
             return DERObject.NULLOBJECT;
         } catch (IOException e) {
             Log.e(TAG, "Exception in the signature step: ", e);

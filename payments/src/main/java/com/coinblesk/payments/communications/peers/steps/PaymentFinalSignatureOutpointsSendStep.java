@@ -109,6 +109,9 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
                 .outpointsCoinPair(outpointCoinPairs)
                 .currentDate(timestamp.longValue());
 
+        Log.d(TAG, "serverSig Count:" + serverSignatures.size());
+        Log.d(TAG, "clientSig Count:" + clientSignatures.size());
+
         if (completeSignTO.messageSig() == null) {
             SerializeUtils.sign(completeSignTO, walletServiceBinder.getMultisigClientKey());
         }
@@ -132,6 +135,8 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
         Log.d(TAG, "responding with complete TX:" + payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"payload size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
         return payloadDerSequence;
     }
 

@@ -49,7 +49,7 @@ public class NFCServer extends AbstractServer {
     private final NfcAdapter nfcAdapter;
 
     private ECKey clientPublicKey;
-    private final List<TxSig> serverSignatures = new ArrayList<TxSig>();
+    private List<TxSig> serverSignatures = new ArrayList<TxSig>();
 
     public NFCServer(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
@@ -108,7 +108,7 @@ public class NFCServer extends AbstractServer {
                                         PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
                                         paymentAuthorizationReceiveOutput.set(paymentAuthorizationReceiveStep.process(paymentRequestOutput));
                                         clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
-                                        serverSignatures.addAll(paymentAuthorizationReceiveStep.getServerSignatures());
+                                        serverSignatures = paymentAuthorizationReceiveStep.getServerSignatures();
                                     } catch (Exception e) {
                                         Log.w(TAG, "Exception at authorization step: ", e);
                                     }
@@ -154,8 +154,8 @@ public class NFCServer extends AbstractServer {
                                         Log.d(TAG, "final request");
                                         final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(
                                                 clientPublicKey, serverSignatures, getPaymentRequestUri());
-                                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                                         sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
+                                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
 
                                     } catch (Exception e) {
                                         Log.w(TAG, "Exception at signature step: ", e);
