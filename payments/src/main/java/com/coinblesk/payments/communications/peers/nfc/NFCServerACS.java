@@ -91,11 +91,12 @@ public class NFCServerACS extends AbstractServer {
                         DERObject paymentFinalSignatureReceiveInput = transceiveDER(transceiver, paymentRefundReceiveStep.process(paymentRefundReceiveInput));
 
                         final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), paymentAuthorizationReceiveStep.getServerSignatures(), getPaymentRequestUri());
-                        DERObject endOutput = transceiveDER(transceiver,paymentFinalSignatureOutpointsReceiveStep.process(paymentFinalSignatureReceiveInput));
-
+                        paymentFinalSignatureOutpointsReceiveStep.process(paymentFinalSignatureReceiveInput);
 
                         getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureOutpointsReceiveStep.getFullSignedTransaction());
                         getPaymentRequestDelegate().onPaymentSuccess();
+
+                        transceiver.write(DERObject.NULLOBJECT.serializeToDER());
                     } catch (Exception e) {
                         Log.e(TAG, "Exception in tagDiscovered: ", e);
                     }
