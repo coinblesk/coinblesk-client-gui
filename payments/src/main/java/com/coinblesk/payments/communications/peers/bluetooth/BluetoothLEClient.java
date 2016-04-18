@@ -11,13 +11,14 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import com.coinblesk.json.TxSig;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractClient;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureSendStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
 import com.coinblesk.payments.models.RefundTransactionWrapper;
@@ -25,6 +26,7 @@ import com.coinblesk.payments.models.RefundTransactionWrapper;
 import org.bitcoinj.core.Transaction;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import ch.papers.objectstorage.UuidObjectStorage;
@@ -50,6 +52,8 @@ public class BluetoothLEClient extends AbstractClient {
     }
 
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+
+
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             bluetoothAdapter.stopLeScan(this);
@@ -60,6 +64,8 @@ public class BluetoothLEClient extends AbstractClient {
                 byte[] derResponsePayload;
                 int byteCounter = 0;
                 int stepCounter = 0;
+                List<TxSig> clientSignatures;
+                List<TxSig> serverSignatures;
 
                 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                 @Override
@@ -133,11 +139,13 @@ public class BluetoothLEClient extends AbstractClient {
                                 derResponsePayload = paymentRefundSendStep.process(requestDER).serializeToDER();
                                 fullsignedTransaction = paymentRefundSendStep.getFullSignedTransaction();
                                 halfsignedRefundTransaction = paymentRefundSendStep.getHalfSignedRefundTransaction();
+                                serverSignatures = paymentRefundSendStep.getServerSignatures();
+                                clientSignatures = paymentRefundSendStep.getClientSignatures();
                                 break;
                             case 2:
-                                final PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), fullsignedTransaction, halfsignedRefundTransaction);
+                                final PaymentFinalSignatureOutpointsSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureOutpointsSendStep(getWalletServiceBinder(), paymentRequestReceiveStep.getBitcoinURI().getAddress(), clientSignatures, serverSignatures, fullsignedTransaction, halfsignedRefundTransaction);
                                 // payment was successful in every way, commit that tx
-                                getWalletServiceBinder().commitTransaction(fullsignedTransaction);
+                                getWalletServiceBinder().commitAndBroadcastTransaction(fullsignedTransaction);
                                 final Transaction fullsignedRefundTransaction = paymentFinalSignatureSendStep.getFullSignedRefundTransation();
                                 UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(fullsignedRefundTransaction), new OnResultListener<RefundTransactionWrapper>() {
                                     @Override

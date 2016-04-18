@@ -33,14 +33,7 @@
     public *** error(...);
 }
 
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int v(...);
-    public static int i(...);
-    public static int w(...);
-    public static int d(...);
-    public static int e(...);
-}
+
 
 -dontwarn org.slf4j.**
 -dontwarn ch.qos.logback.**
@@ -64,6 +57,7 @@
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class com.google.gson.examples.android.model.** { *; }
+
 
 ##---------------End: proguard configuration for Gson  ----------
 
@@ -131,4 +125,5 @@
 -keep class org.spongycastle.jcajce.spec.* {*;}
 
 # keep everything that is serialized
+-keep class com.coinblesk.json.** { *; }
 #-keep class com.coinblesk.payments.models.** { *; }

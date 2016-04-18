@@ -10,7 +10,6 @@ import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
@@ -27,12 +26,10 @@ public class PaymentFinalSignatureReceiveStep implements Step {
 
 
     private final ECKey multisigClientKey;
-    private final Address recipientAddress;
     private Transaction fullSignedTransaction;
 
-    public PaymentFinalSignatureReceiveStep(ECKey multisigClientKey, Address recipientAddress) {
+    public PaymentFinalSignatureReceiveStep(ECKey multisigClientKey) {
         this.multisigClientKey = multisigClientKey;
-        this.recipientAddress = recipientAddress;
     }
 
     @Override
@@ -47,13 +44,15 @@ public class PaymentFinalSignatureReceiveStep implements Step {
 
             VerifyTO completeSignTO = new VerifyTO()
                     .clientPublicKey(multisigClientKey.getPubKey())
-                    .fullSignedTransaction(fullSignedTransaction.unsafeBitcoinSerialize())
+                    .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());
 
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
+            Log.d(TAG,"payload size:"+DERObject.NULLOBJECT.serializeToDER().length);
+            Log.d(TAG,"time:"+System.currentTimeMillis());
             return DERObject.NULLOBJECT;
         } catch (IOException e){
             Log.e(TAG, "Exception in the signature step: ", e);

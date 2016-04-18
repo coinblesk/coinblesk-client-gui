@@ -19,7 +19,7 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 import com.coinblesk.util.Pair;
@@ -90,12 +90,13 @@ public class NFCServerACS extends AbstractServer {
                         final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey());
                         DERObject paymentFinalSignatureReceiveInput = transceiveDER(transceiver, paymentRefundReceiveStep.process(paymentRefundReceiveInput));
 
-                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), getPaymentRequestUri().getAddress());
-                        paymentFinalSignatureReceiveStep.process(paymentFinalSignatureReceiveInput);
+                        final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), paymentAuthorizationReceiveStep.getServerSignatures(), getPaymentRequestUri());
+                        paymentFinalSignatureOutpointsReceiveStep.process(paymentFinalSignatureReceiveInput);
 
-
-                        getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureOutpointsReceiveStep.getFullSignedTransaction());
                         getPaymentRequestDelegate().onPaymentSuccess();
+
+                        transceiver.write(DERObject.NULLOBJECT.serializeToDER());
                     } catch (Exception e) {
                         Log.e(TAG, "Exception in tagDiscovered: ", e);
                     }

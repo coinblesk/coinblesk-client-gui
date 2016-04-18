@@ -1,5 +1,6 @@
 package com.coinblesk.payments.communications.peers.steps;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.coinblesk.json.SignTO;
@@ -9,6 +10,8 @@ import com.coinblesk.payments.communications.messages.DERInteger;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsuffientFunds;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Address;
@@ -70,11 +73,24 @@ public class PaymentRequestReceiveStep implements Step {
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         Log.d(TAG, "sign timestamp:" + timestamp.longValue());
 
-        Transaction fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        Transaction fullSignedTransaction = null;
+        try {
+            fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+        } catch (CoinbleskException e) {
+            Log.d(TAG,"CoinbleskException:" + e.getMessage());
+            Intent instantPaymentFailedIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+            instantPaymentFailedIntent.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
+            walletServiceBinder.getLocalBroadcastManager().sendBroadcast(instantPaymentFailedIntent);
+        } catch (InsuffientFunds insuffientFunds) {
+            Log.d(TAG,"insufficient funds:" + insuffientFunds.getMessage());
+            Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
+            walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);
+        }
 
         if (fullSignedTransaction == null) {
             return null;
         }
+
         SignTO refundTO = new SignTO()
                 .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
@@ -90,7 +106,8 @@ public class PaymentRequestReceiveStep implements Step {
         derObjectList.add(new DERInteger(new BigInteger(refundTO.messageSig().sigS())));
 
         final DERSequence payloadDerSequence = new DERSequence(derObjectList);
-        Log.d(TAG, "responding with eckey and signature total size:" + payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"payload size:"+payloadDerSequence.serializeToDER().length);
+        Log.d(TAG,"time:"+System.currentTimeMillis());
         return payloadDerSequence;
     }
 }

@@ -33,7 +33,7 @@ import org.bitcoinj.core.Transaction;
 public class SendPaymentFragment extends KeyboardFragment {
     private final static String TAG = SendPaymentFragment.class.getSimpleName();
 
-    private final static float THRESHOLD = 500;
+    private final static float THRESHOLD = 10;
 
     public static Fragment newInstance() {
         return new SendPaymentFragment();

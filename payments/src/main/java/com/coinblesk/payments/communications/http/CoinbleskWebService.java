@@ -6,13 +6,11 @@ package com.coinblesk.payments.communications.http;
  * a.decarli@papers.ch
  */
 
+import com.coinblesk.json.ExchangeRateTO;
 import com.coinblesk.json.KeyTO;
-import com.coinblesk.json.PrepareHalfSignTO;
-import com.coinblesk.json.RefundP2shTO;
 import com.coinblesk.json.RefundTO;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
-import com.coinblesk.payments.models.ExchangeTO;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -29,15 +27,8 @@ public interface CoinbleskWebService {
     @POST("payment/key-exchange")
     Call<KeyTO> keyExchange(@Body KeyTO keyTO);
 
-    @POST("payment/prepare")
-    Call<PrepareHalfSignTO> prepareHalfSign(@Body PrepareHalfSignTO prepareSignTO);
-
     @POST("payment/refund")
     Call<RefundTO> refund(@Body RefundTO refundTO);
-
-    @POST("payment/refund-p2sh")
-    Call<RefundP2shTO> refund(@Body RefundP2shTO refundP2shTO);
-
 
     // new endpoints
     @POST("full-payment/sign")
@@ -48,8 +39,9 @@ public interface CoinbleskWebService {
 
     // exchange Rate
     @GET("wallet/exchangeRate/EUR")
-    Call<ExchangeTO> eurToChf();
+    Call<ExchangeRateTO> eurToUsd();
 
-    @GET("wallet/exchangeRate/USD")
-    Call<ExchangeTO> usdToChf();
+    @GET("wallet/exchangeRate/CHF")
+    Call<ExchangeRateTO> chfToUsd();
+
 }

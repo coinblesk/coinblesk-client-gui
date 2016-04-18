@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="1">
+
+        <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/balance_card_view"
+            style="@style/card_view">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <LinearLayout style="@style/testnet">
+
+                    <TextView
+                        android:id="@+id/testnet_textview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_xsmall"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <include layout="@layout/connections" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/balance_switch_image_view"
+                        style="@style/balance_switch_image_view" />
+
+                    <TextView
+                        android:id="@+id/balance_large"
+                        style="@style/card_view_large_text_view" />
+
+                    <TextView
+                        android:id="@+id/balance_small"
+                        style="@style/card_view_small_textview"
+                        android:layout_below="@+id/balance_large" />
+
+                </RelativeLayout>
+
+
+            </RelativeLayout>
+
+        </android.support.v7.widget.CardView>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/walletSyncProgressBar"
+        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_margin="8dp"
+        android:indeterminate="false"
+        android:visibility="gone" />
+</LinearLayout>

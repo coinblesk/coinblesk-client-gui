@@ -11,20 +11,23 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.coinblesk.json.TxSig;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.core.ECKey;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -46,6 +49,7 @@ public class NFCServer extends AbstractServer {
     private final NfcAdapter nfcAdapter;
 
     private ECKey clientPublicKey;
+    private List<TxSig> serverSignatures = new ArrayList<TxSig>();
 
     public NFCServer(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, walletServiceBinder);
@@ -104,6 +108,7 @@ public class NFCServer extends AbstractServer {
                                         PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
                                         paymentAuthorizationReceiveOutput.set(paymentAuthorizationReceiveStep.process(paymentRequestOutput));
                                         clientPublicKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                                        serverSignatures = paymentAuthorizationReceiveStep.getServerSignatures();
                                     } catch (Exception e) {
                                         Log.w(TAG, "Exception at authorization step: ", e);
                                     }
@@ -147,9 +152,11 @@ public class NFCServer extends AbstractServer {
                                 public void run() {
                                     try {
                                         Log.d(TAG, "final request");
-                                        final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(
-                                                clientPublicKey, getPaymentRequestUri().getAddress());
+                                        final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(
+                                                clientPublicKey, serverSignatures, getPaymentRequestUri());
                                         sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
+                                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+
                                     } catch (Exception e) {
                                         Log.w(TAG, "Exception at signature step: ", e);
                                     }

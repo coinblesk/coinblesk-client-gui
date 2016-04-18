@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import com.coinblesk.json.TxSig;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.Utils;
 import com.coinblesk.payments.WalletService;
@@ -25,13 +26,14 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureReceiveStep;
+import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.core.ECKey;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -77,6 +79,7 @@ public class BluetoothLEServer extends AbstractServer {
                 byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
                 ECKey clientKey = null;
                 int stepCounter = 0;
+                List<TxSig> serverSignatures;
             }
 
             private Map<String, PaymentState> connectedDevices = new ConcurrentHashMap<String, PaymentState>();
@@ -143,16 +146,17 @@ public class BluetoothLEServer extends AbstractServer {
                             final PaymentAuthorizationReceiveStep paymentAuthorizationReceiveStep = new PaymentAuthorizationReceiveStep(getPaymentRequestUri());
                             paymentState.derResponsePayload = paymentAuthorizationReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                             paymentState.clientKey = paymentAuthorizationReceiveStep.getClientPublicKey();
+                            paymentState.serverSignatures = paymentAuthorizationReceiveStep.getServerSignatures();
                             break;
                         case 1:
                             final PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(paymentState.clientKey);
                             paymentState.derResponsePayload = paymentRefundReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                             break;
                         case 2:
-                            final PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(paymentState.clientKey, getPaymentRequestUri().getAddress());
+                            final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(paymentState.clientKey, paymentState.serverSignatures, getPaymentRequestUri());
                             paymentState.derResponsePayload = paymentFinalSignatureReceiveStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
 
-                            getWalletServiceBinder().commitTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                            getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                             getPaymentRequestDelegate().onPaymentSuccess();
                             break;
 

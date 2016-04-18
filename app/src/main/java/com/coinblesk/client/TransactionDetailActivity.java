@@ -155,8 +155,12 @@ public class TransactionDetailActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            filter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
-            setTransactionDetails();
+
+            if(walletServiceBinder.isReady()){
+                setTransactionDetails();
+            }
         }
 
         @Override

@@ -16,6 +16,13 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            minifyEnabled false
+            multiDexEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -37,8 +44,8 @@ dependencies {
     compile('org.bitcoinj:bitcoinj-core:0.13.5')
 
     compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'ch.papers:objectstorage:1.1.1'
-    compile 'com.coinblesk:coinblesk-shared-resources:1.3.139'
+    compile 'ch.papers:objectstorage:1.1.2'
+    compile 'com.coinblesk:coinblesk-shared-resources:1.4.14'
 
     // needed for base64
     testCompile 'commons-codec:commons-codec:1.9'
