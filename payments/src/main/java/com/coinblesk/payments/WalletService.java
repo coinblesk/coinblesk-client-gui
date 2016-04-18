@@ -129,7 +129,7 @@ public class WalletService extends Service {
 
         public void commitAndBroadcastTransaction(Transaction tx) {
             kit.wallet().commitTx(tx);
-            kit.peerGroup().broadcastTransaction(tx);
+            kit.peerGroup().broadcastTransaction(tx).broadcast();
         }
 
         public List<TransactionWrapper> getTransactionsByTime() {

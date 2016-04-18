@@ -154,7 +154,9 @@ public class NFCServer extends AbstractServer {
                                         Log.d(TAG, "final request");
                                         final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(
                                                 clientPublicKey, serverSignatures, getPaymentRequestUri());
+                                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
                                         sendFinalSignatureOutput.set(paymentFinalSignatureReceiveStep.process(finalSendInput.get()));
+
                                     } catch (Exception e) {
                                         Log.w(TAG, "Exception at signature step: ", e);
                                     }
