@@ -54,8 +54,8 @@ public class NFCClientService extends HostApduService {
     private Transaction tx;
     private Transaction refund;
     private boolean isClientStarted = false;
-    private final List<TxSig> clientSignatures= new ArrayList<TxSig>();
-    private final List<TxSig> serverSignatures= new ArrayList<TxSig>();
+    private List<TxSig> clientSignatures= new ArrayList<TxSig>();
+    private List<TxSig> serverSignatures= new ArrayList<TxSig>();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -148,8 +148,8 @@ public class NFCClientService extends HostApduService {
                                                 derResponsePayload = paymentRefundSendStep.process(DERParser.parseDER(requestPayload)).serializeToDER();
                                                 tx = paymentRefundSendStep.getFullSignedTransaction();
                                                 refund = paymentRefundSendStep.getHalfSignedRefundTransaction();
-                                                serverSignatures.addAll(paymentRefundSendStep.getServerSignatures());
-                                                clientSignatures.addAll(paymentRefundSendStep.getClientSignatures());
+                                                serverSignatures = paymentRefundSendStep.getServerSignatures();
+                                                clientSignatures = paymentRefundSendStep.getClientSignatures();
                                                 Log.d(TAG, "got payload2: " + derResponsePayload.length);
                                                 stepCounter++;
                                                 break;

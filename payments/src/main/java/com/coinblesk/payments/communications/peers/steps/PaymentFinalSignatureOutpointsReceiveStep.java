@@ -79,6 +79,8 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
                     .currentDate(timestamp.longValue())
                     .messageSig(txSig);
 
+
+
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             VerifyTO responseCompleteSignTO = service.verify(completeSignTO).execute().body();
             Log.d(TAG, "instant payment was " + responseCompleteSignTO.type());
