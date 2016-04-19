@@ -113,6 +113,9 @@ public class SendPaymentFragment extends KeyboardFragment {
             // calculate max amount to spend with a fee estimate.
             Coin fee = estimateFeeToEmptyWallet();
             Coin maxAmount = currentBalance.subtract(fee);
+            if (maxAmount.isNegative()) {
+                maxAmount = Coin.ZERO;
+            }
             setAmountByCoin(maxAmount);
         } else{
             return SendDialogFragment.newInstance(this.getCoin());
