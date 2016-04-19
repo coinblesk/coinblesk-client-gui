@@ -19,6 +19,6 @@ allprojects {
         jcenter()
         mavenLocal()
         mavenCentral()
-        maven {url 'http://tomp2p.net/dev/mvn'}
+        // maven {url 'http://tomp2p.net/dev/mvn'}
     }
 }
