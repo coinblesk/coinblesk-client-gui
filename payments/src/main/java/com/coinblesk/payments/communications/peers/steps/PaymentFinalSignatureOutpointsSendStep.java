@@ -113,7 +113,7 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
         Log.d(TAG, "clientSig Count:" + clientSignatures.size());
 
         if (completeSignTO.messageSig() == null) {
-            SerializeUtils.sign(completeSignTO, walletServiceBinder.getMultisigClientKey());
+            SerializeUtils.signJSON(completeSignTO, walletServiceBinder.getMultisigClientKey());
         }
 
         final List<DERObject> serializedOutpoints = new ArrayList<DERObject>();

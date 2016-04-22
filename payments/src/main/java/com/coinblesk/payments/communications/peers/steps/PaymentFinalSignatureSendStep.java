@@ -82,7 +82,7 @@ public class PaymentFinalSignatureSendStep implements Step {
                 .currentDate(timestamp.longValue());
 
         if (completeSignTO.messageSig() == null) {
-            SerializeUtils.sign(completeSignTO, walletServiceBinder.getMultisigClientKey());
+            SerializeUtils.signJSON(completeSignTO, walletServiceBinder.getMultisigClientKey());
         }
 
 

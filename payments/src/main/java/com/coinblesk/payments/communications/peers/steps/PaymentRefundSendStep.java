@@ -126,7 +126,7 @@ public class PaymentRefundSendStep implements Step {
                 .transaction(halfSignedRefundTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp);
-        SerializeUtils.sign(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
+        SerializeUtils.signJSON(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
 
         final List<DERObject> derObjectList = new ArrayList<DERObject>();
         derObjectList.add(new DERObject(halfSignedRefundTransaction.unsafeBitcoinSerialize()));

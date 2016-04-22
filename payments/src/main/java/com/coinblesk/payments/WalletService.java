@@ -322,7 +322,7 @@ public class WalletService extends Service {
                     wallet().importKey(walletKey.getKey());
 
                 }
-                //walletServiceBinder.lockFundsForInstantPayment();
+
                 kit.wallet().addEventListener(new AbstractWalletEventListener() {
                     @Override
                     public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -376,9 +376,7 @@ public class WalletService extends Service {
                     ECKeyWrapper serverKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class);
                     ECKeyWrapper clientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
                     setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
-
-
-                } catch (UuidObjectStorageException e) {
+                } catch (Exception e) {
                     try {
                         CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                         final ECKey clientMultiSigKey = new ECKey();
@@ -408,7 +406,6 @@ public class WalletService extends Service {
                     refundAddress = kit.wallet().currentReceiveAddress();
                 }
                 sharedPreferences.edit().putString(REFUND_ADDRESS_SETTINGS_PREF_KEY, refundAddress.toString()).commit();
-
                 if (Constants.PARAMS.equals(TestNet3Params.get())) {
                     // these are testnet peers
                     try {

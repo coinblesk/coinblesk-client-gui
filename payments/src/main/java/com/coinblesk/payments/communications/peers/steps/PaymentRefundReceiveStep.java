@@ -53,7 +53,7 @@ public class PaymentRefundReceiveStep implements Step {
                 .messageSig(txSig)
                 .currentDate(timestamp.longValue());
 
-        if (SerializeUtils.verifySig(refundTO,multisigClientKey)) {
+        if (SerializeUtils.verifyJSONSignature(refundTO,multisigClientKey)) {
             try {
                 Log.d(TAG, "verify was successful!");
                 refundTO.messageSig(txSig); //have to reset the txsig because verifySig is nulling it

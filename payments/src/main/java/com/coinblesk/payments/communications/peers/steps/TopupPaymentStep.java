@@ -54,7 +54,7 @@ public class TopupPaymentStep implements Step {
                     .transaction(refundTransaction.unsafeBitcoinSerialize())
                     .messageSig(null)
                     .currentDate(timestamp);
-            SerializeUtils.sign(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
+            SerializeUtils.signJSON(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
 
             final List<DERObject> derObjectList = new ArrayList<DERObject>();
             derObjectList.add(new DERObject(refundTransaction.unsafeBitcoinSerialize()));
