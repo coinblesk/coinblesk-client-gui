@@ -65,7 +65,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());
 
-            if (SerializeUtils.verifyJSONSignature(refundTO,clientPublicKey)) {
+            if (SerializeUtils.verifyJSONSignature(refundTO, clientPublicKey)) {
                 Log.d(TAG,"verify was successful!");
                 refundTO.messageSig(txSig); //have to reset the txsig because verifySig is nulling it
                 final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);

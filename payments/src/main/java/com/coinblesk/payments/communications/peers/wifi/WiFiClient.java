@@ -138,6 +138,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+        
+        Log.d(TAG, "onConnectionInfoAvailable: " + info);
         if (!info.isGroupOwner && info.groupFormed) {
             this.singleThreadExecutor.submit(new Runnable() {
                 @Override
