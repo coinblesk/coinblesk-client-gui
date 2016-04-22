@@ -43,7 +43,7 @@ public class PaymentFinalSignatureReceiveStep implements Step {
             txSig.sigS(((DERInteger) derSequence.getChildren().get(3)).getBigInteger().toString());
 
             VerifyTO completeSignTO = new VerifyTO()
-                    .clientPublicKey(multisigClientKey.getPubKey())
+                    .publicKey(multisigClientKey.getPubKey())
                     .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());

@@ -101,7 +101,7 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
         }
 
         VerifyTO completeSignTO = new VerifyTO()
-                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .p2shAddressTo(recipientAddress.toString())
                 .amountToSpend(fullSignedTransaction.getOutput(0).getValue().value)
                 .clientSignatures(clientSignatures)
@@ -113,7 +113,7 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
         Log.d(TAG, "clientSig Count:" + clientSignatures.size());
 
         if (completeSignTO.messageSig() == null) {
-            SerializeUtils.sign(completeSignTO, walletServiceBinder.getMultisigClientKey());
+            SerializeUtils.signJSON(completeSignTO, walletServiceBinder.getMultisigClientKey());
         }
 
         final List<DERObject> serializedOutpoints = new ArrayList<DERObject>();
