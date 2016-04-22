@@ -19,7 +19,7 @@ import android.widget.Toast;
 import com.coinblesk.client.R;
 import com.coinblesk.client.addresses.AddressList;
 import com.coinblesk.client.addresses.AddressListAdapter;
-import com.coinblesk.client.addresses.AddressWrapper;
+import com.coinblesk.client.addresses.AddressItem;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
@@ -122,7 +122,7 @@ public class SendDialogFragment extends DialogFragment
         addressListDialog.show(getFragmentManager(), "address_list_dialog");
         addressListDialog.setItemClickListener(new AddressListAdapter.AddressItemClickListener() {
             @Override
-            public void onItemClick(AddressWrapper item, int itemPosition) {
+            public void onItemClick(AddressItem item, int itemPosition) {
                 if (item != null) {
                     addressEditText.setText(item.getAddress());
                 }
@@ -130,7 +130,7 @@ public class SendDialogFragment extends DialogFragment
             }
 
             @Override
-            public boolean onItemLongClick(AddressWrapper item, int itemPosition) {
+            public boolean onItemLongClick(AddressItem item, int itemPosition) {
                 // long click is ignored
                 return false;
             }

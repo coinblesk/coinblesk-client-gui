@@ -35,11 +35,6 @@ public class AddressActivity extends AppCompatActivity
     private AddressList addressList;
     private AddressListAdapter addressListAdapter;
 
-    /**
-     * TODO
-     * - allow adding from other coinblesk dialogs.
-     */
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -119,7 +114,7 @@ public class AddressActivity extends AppCompatActivity
         showAddAddressDialog(null, address);
     }
 
-    private void showAddAddressDialog(AddressWrapper address) {
+    private void showAddAddressDialog(AddressItem address) {
         showAddAddressDialog(address.getAddressLabel(), address.getAddress());
     }
 
@@ -133,7 +128,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewOrChangedAddress(AddressWrapper address) {
+    public void onNewOrChangedAddress(AddressItem address) {
         if (address == null) {
             return;
         }
@@ -147,7 +142,7 @@ public class AddressActivity extends AppCompatActivity
             final int numItems = addressListAdapter.getItemCount();
             int existingIndex = -1;
             for (int i = 0; i < numItems; ++i) {
-                AddressWrapper item = addressListAdapter.getItems().get(i);
+                AddressItem item = addressListAdapter.getItems().get(i);
                 if (item.getAddress().equals(address.getAddress())) {
                     existingIndex = i;
                     break;
@@ -171,7 +166,7 @@ public class AddressActivity extends AppCompatActivity
         }
     }
 
-    private void addAddressToList(AddressWrapper address) {
+    private void addAddressToList(AddressItem address) {
         // add new item
         final int last = addressListAdapter.getItemCount();
         addressListAdapter.getItems().add(address);
@@ -179,18 +174,18 @@ public class AddressActivity extends AppCompatActivity
         storeAddress(address);
     }
 
-    private void updateAddressInList(int itemIndex, AddressWrapper newAddress) {
+    private void updateAddressInList(int itemIndex, AddressItem newAddress) {
         // update the existing item.
-        AddressWrapper current = addressListAdapter.getItems().get(itemIndex);
+        AddressItem current = addressListAdapter.getItems().get(itemIndex);
         current.setAddress(newAddress.getAddress().trim());
         current.setAddressLabel(newAddress.getAddressLabel().trim());
         addressListAdapter.notifyItemChanged(itemIndex);
         storeAddress(current);
     }
 
-    private void storeAddress(AddressWrapper address) {
+    private void storeAddress(AddressItem address) {
         try {
-            UuidObjectStorage.getInstance().addEntry(address, AddressWrapper.class);
+            UuidObjectStorage.getInstance().addEntry(address, AddressItem.class);
             UuidObjectStorage.getInstance().commit();
         } catch (Exception e) {
             Toast.makeText(this, R.string.addresses_msg_saved_error, Toast.LENGTH_LONG).show();
@@ -198,7 +193,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onItemLongClick(AddressWrapper item, int itemPosition) {
+    public boolean onItemLongClick(AddressItem item, int itemPosition) {
         if (item != null) {
             if (actionMode != null) {
                 return false; // already open
@@ -213,7 +208,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public void onItemClick(AddressWrapper item, int itemPosition) {
+    public void onItemClick(AddressItem item, int itemPosition) {
         // ignore short clicks on items.
     }
 
@@ -236,7 +231,7 @@ public class AddressActivity extends AppCompatActivity
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Pair<Integer, AddressWrapper> data = getAddressWrapper(mode);
+            Pair<Integer, AddressItem> data = getAddressItem(mode);
             if(data != null) {
                 switch (item.getItemId()) {
                     case R.id.action_copy:
@@ -260,17 +255,17 @@ public class AddressActivity extends AppCompatActivity
             actionMode = null;
         }
 
-        private Pair<Integer, AddressWrapper> getAddressWrapper(ActionMode am) {
+        private Pair<Integer, AddressItem> getAddressItem(ActionMode am) {
             if (am.getTag() != null) {
                 @SuppressWarnings("unchecked")
-                Pair<Integer, AddressWrapper> address = Pair.class.cast(am.getTag());
+                Pair<Integer, AddressItem> address = Pair.class.cast(am.getTag());
                 return address;
             }
             return null;
         }
     };
 
-    private void itemActionCopy(int itemPosition, AddressWrapper item) {
+    private void itemActionCopy(int itemPosition, AddressItem item) {
         Log.d(TAG, "Copy address at position " + itemPosition + ", " + item);
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Address", item.getAddress());
@@ -282,7 +277,7 @@ public class AddressActivity extends AppCompatActivity
                 .show();
     }
 
-    private void itemActionEdit(int itemPosition, AddressWrapper item) {
+    private void itemActionEdit(int itemPosition, AddressItem item) {
         Log.d(TAG, "Edit address at position " + itemPosition + ", " + item);
         showAddAddressDialog(item);
         // the adapter is notified about the change later in onNewOrChangedAddress
@@ -290,12 +285,12 @@ public class AddressActivity extends AppCompatActivity
         finishActionMode();
     }
 
-    private void itemActionDelete(int itemPosition, AddressWrapper item) {
+    private void itemActionDelete(int itemPosition, AddressItem item) {
         Log.d(TAG, "Delete address at position " + itemPosition + ", " + item);
         try {
             UuidObjectStorage
                     .getInstance()
-                    .deleteEntry(item, AddressWrapper.class);
+                    .deleteEntry(item, AddressItem.class);
             UuidObjectStorage.getInstance().commit();
         } catch (UuidObjectStorageException e) {
             Log.w("Delete Failed.", e);

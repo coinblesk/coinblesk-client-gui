@@ -141,8 +141,8 @@ public class EditAddressFragment extends DialogFragment {
             }
 
             // everything OK
-            final AddressWrapper addressWrapper = new AddressWrapper(label, address);
-            listener.onNewOrChangedAddress(addressWrapper);
+            final AddressItem addressItem = new AddressItem(label, address);
+            listener.onNewOrChangedAddress(addressItem);
             dialog.dismiss();
         }
     }
@@ -237,6 +237,6 @@ public class EditAddressFragment extends DialogFragment {
          *       object even if the item is changed and not new.
          * @param address
          */
-        void onNewOrChangedAddress(AddressWrapper address);
+        void onNewOrChangedAddress(AddressItem address);
     }
 }

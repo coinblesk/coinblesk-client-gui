@@ -3,6 +3,7 @@ package com.coinblesk.client.addresses;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -47,9 +48,9 @@ public class AddressList extends DialogFragment {
         Log.d(TAG, "Load addresses from storage.");
         UuidObjectStorage
                 .getInstance()
-                .getEntriesAsList(new OnResultListener<List<AddressWrapper>>() {
+                .getEntriesAsList(new OnResultListener<List<AddressItem>>() {
                     @Override
-                    public void onSuccess(List<AddressWrapper> objects) {
+                    public void onSuccess(List<AddressItem> objects) {
                         if (objects != null && !objects.isEmpty()) {
                             Collections.sort(objects);
                             adapter.getItems().addAll(objects);
@@ -70,7 +71,7 @@ public class AddressList extends DialogFragment {
                                 Toast.LENGTH_LONG)
                                 .show();
                     }
-                }, AddressWrapper.class);
+                }, AddressItem.class);
     }
 
 
@@ -100,6 +101,7 @@ public class AddressList extends DialogFragment {
         recyclerView.setAdapter(adapter);
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle state) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);

@@ -7,13 +7,13 @@ import java.io.Serializable;
 /**
  * Created by Andreas Albrecht on 12.04.16.
  */
-public class AddressWrapper extends AbstractUuidObject
-                            implements Serializable, Comparable<AddressWrapper> {
+public class AddressItem extends AbstractUuidObject
+                            implements Serializable, Comparable<AddressItem> {
 
     private String addressLabel;
     private String address;
 
-    public AddressWrapper(String addressLabel, String address) {
+    public AddressItem(String addressLabel, String address) {
         super();
         this.addressLabel = addressLabel;
         this.address = address;
@@ -39,8 +39,8 @@ public class AddressWrapper extends AbstractUuidObject
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (!(obj instanceof AddressWrapper)) { return false; }
-        AddressWrapper other = (AddressWrapper) obj;
+        if (!(obj instanceof AddressItem)) { return false; }
+        AddressItem other = (AddressItem) obj;
 
         return com.google.common.base.Objects.equal(addressLabel, other.addressLabel) &&
                 com.google.common.base.Objects.equal(address, other.address);
@@ -60,7 +60,7 @@ public class AddressWrapper extends AbstractUuidObject
     }
 
     @Override
-    public int compareTo(AddressWrapper another) {
+    public int compareTo(AddressItem another) {
         int label = addressLabel.compareToIgnoreCase(another.getAddressLabel());
         if (label != 0) { return label; }
         else { return address.compareTo(another.address); }
