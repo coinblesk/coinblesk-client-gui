@@ -96,7 +96,7 @@ public class PaymentRequestReceiveStep implements Step {
                 .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp.longValue());
-        SerializeUtils.sign(refundTO, walletServiceBinder.getMultisigClientKey());
+        SerializeUtils.signJSON(refundTO, walletServiceBinder.getMultisigClientKey());
 
         final List<DERObject> derObjectList = new ArrayList<DERObject>();
         derObjectList.add(new DERObject(walletServiceBinder.getMultisigClientKey().getPubKey()));
