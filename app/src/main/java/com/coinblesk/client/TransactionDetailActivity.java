@@ -1,6 +1,14 @@
 package com.coinblesk.client;
 
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -10,13 +18,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -35,10 +44,15 @@ public class TransactionDetailActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_txdetail);
-
-        final Button copyTxButton = (Button) this.findViewById(R.id.txdetail_copytx_button);
-
-        copyTxButton.setOnClickListener(new View.OnClickListener() {
+        this.findViewById(R.id.txdetail_status_icon).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(walletServiceBinder!=null && walletServiceBinder.isReady()) {
+                    walletServiceBinder.broadcastTransaction(walletServiceBinder.getTransaction(transactionHash).getTransaction());
+                }
+            }
+        });
+        this.findViewById(R.id.txdetail_copytx_button).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
@@ -47,6 +61,14 @@ public class TransactionDetailActivity extends AppCompatActivity {
                         .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
                 .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
                         .setAction("Action", null).show();
+
+            }
+        });
+
+        this.findViewById(R.id.txdetail_opentx_button).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://blockchain.info/tx/"+transactionHash));
+                startActivity(intent);
 
             }
         });

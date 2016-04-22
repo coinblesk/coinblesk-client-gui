@@ -42,38 +42,39 @@ public class TopupPaymentStep implements Step {
     public DERObject process(DERObject input) {
         DERObject output = DERObject.NULLOBJECT;
         try {
-            final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getMultisigReceiveAddress());
-            final Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
-            this.walletServiceBinder.getWallet().signTransaction(sendRequest);
+            if(walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true).size()>0) {
+                final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getMultisigReceiveAddress());
+                final Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+                this.walletServiceBinder.getWallet().signTransaction(sendRequest);
 
-            long timestamp = System.currentTimeMillis();
-            final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), walletServiceBinder.getRefundAddress());
+                long timestamp = System.currentTimeMillis();
+                final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), walletServiceBinder.getRefundAddress());
 
-            SignTO halfSignedRefundTO = new SignTO()
-                    .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
-                    .transaction(refundTransaction.unsafeBitcoinSerialize())
-                    .messageSig(null)
-                    .currentDate(timestamp);
-            SerializeUtils.signJSON(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
+                SignTO halfSignedRefundTO = new SignTO()
+                        .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                        .transaction(refundTransaction.unsafeBitcoinSerialize())
+                        .messageSig(null)
+                        .currentDate(timestamp);
+                SerializeUtils.signJSON(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
 
-            final List<DERObject> derObjectList = new ArrayList<DERObject>();
-            derObjectList.add(new DERObject(refundTransaction.unsafeBitcoinSerialize()));
-            derObjectList.add(new DERInteger(BigInteger.valueOf(timestamp)));
-            derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigR())));
-            derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigS())));
+                final List<DERObject> derObjectList = new ArrayList<DERObject>();
+                derObjectList.add(new DERObject(refundTransaction.unsafeBitcoinSerialize()));
+                derObjectList.add(new DERInteger(BigInteger.valueOf(timestamp)));
+                derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigR())));
+                derObjectList.add(new DERInteger(new BigInteger(halfSignedRefundTO.messageSig().sigS())));
 
-            PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(walletServiceBinder.getMultisigClientKey());
-            PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, sendRequest.tx, refundTransaction);
-            PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(walletServiceBinder.getMultisigClientKey());
+                PaymentRefundReceiveStep paymentRefundReceiveStep = new PaymentRefundReceiveStep(walletServiceBinder.getMultisigClientKey());
+                PaymentFinalSignatureSendStep paymentFinalSignatureSendStep = new PaymentFinalSignatureSendStep(walletServiceBinder, sendRequest.tx, refundTransaction);
+                PaymentFinalSignatureReceiveStep paymentFinalSignatureReceiveStep = new PaymentFinalSignatureReceiveStep(walletServiceBinder.getMultisigClientKey());
 
-            output = paymentRefundReceiveStep.process(new DERSequence(derObjectList));
-            output = paymentFinalSignatureSendStep.process(output);
-            output = paymentFinalSignatureReceiveStep.process(output);
+                output = paymentRefundReceiveStep.process(new DERSequence(derObjectList));
+                output = paymentFinalSignatureSendStep.process(output);
+                output = paymentFinalSignatureReceiveStep.process(output);
 
-            this.walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
-            UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(paymentFinalSignatureSendStep.getFullSignedRefundTransation()), RefundTransactionWrapper.class);
-            UuidObjectStorage.getInstance().commit();
-
+                this.walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+                UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(paymentFinalSignatureSendStep.getFullSignedRefundTransation()), RefundTransactionWrapper.class);
+                UuidObjectStorage.getInstance().commit();
+            }
         } catch (CoinbleskException e) {
             e.printStackTrace();
         } catch (InsuffientFunds insuffientFunds) {

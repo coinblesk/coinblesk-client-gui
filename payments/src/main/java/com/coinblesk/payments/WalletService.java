@@ -41,13 +41,10 @@ import org.bitcoinj.core.Wallet;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
-import org.bitcoinj.store.WalletProtobufSerializer;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.wallet.Protos;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +52,7 @@ import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
@@ -132,6 +130,10 @@ public class WalletService extends Service {
             kit.peerGroup().broadcastTransaction(tx).broadcast();
         }
 
+        public void broadcastTransaction(Transaction tx) {
+            kit.peerGroup().broadcastTransaction(tx).broadcast();
+        }
+
         public List<TransactionWrapper> getTransactionsByTime() {
             final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
             if (kit.wallet() != null) {
@@ -184,10 +186,6 @@ public class WalletService extends Service {
             return multisigClientKey;
         }
 
-        public Script getMultisigAddressScript() {
-            return multisigAddressScript;
-        }
-
         public ECKey getMultisigServerKey() {
             return multisigServerKey;
         }
@@ -226,11 +224,6 @@ public class WalletService extends Service {
                     }
                 }
             }, "WalletService.ExchangeRate").start();
-        }
-
-        public byte[] getSerializedWallet() {
-            Protos.Wallet proto = new WalletProtobufSerializer().walletToProto(WalletService.this.kit.wallet());
-            return proto.toByteArray();
         }
 
         public Wallet getWallet() {
@@ -320,7 +313,6 @@ public class WalletService extends Service {
                         }
                     }
                     wallet().importKey(walletKey.getKey());
-
                 }
 
                 kit.wallet().addEventListener(new AbstractWalletEventListener() {
@@ -394,6 +386,7 @@ public class WalletService extends Service {
                             Log.d(TAG, "error during key setup:" + response.code());
                         }
                     } catch (Exception e2) {
+                        e2.printStackTrace();
                         Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
                     }
                 }
@@ -418,6 +411,7 @@ public class WalletService extends Service {
                         Log.i(TAG, "Exception while adding peers: ", e);
                     }
                 }
+                walletServiceBinder.lockFundsForInstantPayment();
             }
         };
 
@@ -474,10 +468,23 @@ public class WalletService extends Service {
         //clearMultisig();
 
         Log.d(TAG, "wallet started");
-        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
+        //((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
 
 
         return this.walletServiceBinder;
+    }
+
+    private void broadcastAllPendingTxs() {
+        for (Transaction transaction : kit.wallet().getPendingTransactions()){
+            try {
+                Transaction transaction1 = kit.peerGroup().broadcastTransaction(transaction).broadcast().get();
+                Log.d(TAG,"tx:"+transaction1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void clearMultisig() {
