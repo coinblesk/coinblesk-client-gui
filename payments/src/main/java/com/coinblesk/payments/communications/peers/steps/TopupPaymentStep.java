@@ -51,7 +51,7 @@ public class TopupPaymentStep implements Step {
                 final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), walletServiceBinder.getRefundAddress());
 
                 SignTO halfSignedRefundTO = new SignTO()
-                        .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                        .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                         .transaction(refundTransaction.unsafeBitcoinSerialize())
                         .messageSig(null)
                         .currentDate(timestamp);

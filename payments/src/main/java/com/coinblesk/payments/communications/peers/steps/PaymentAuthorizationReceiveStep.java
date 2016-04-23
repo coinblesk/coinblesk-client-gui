@@ -60,7 +60,7 @@ public class PaymentAuthorizationReceiveStep implements Step {
             Log.d(TAG,"timestamp used for signing"+timestamp.longValue());
 
             SignTO refundTO = new SignTO()
-                    .clientPublicKey(clientPublicKey.getPubKey())
+                    .publicKey(clientPublicKey.getPubKey())
                     .transaction(transactionPayload)
                     .messageSig(txSig)
                     .currentDate(timestamp.longValue());

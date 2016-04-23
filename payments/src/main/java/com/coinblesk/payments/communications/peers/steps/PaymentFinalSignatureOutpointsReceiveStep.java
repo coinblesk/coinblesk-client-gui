@@ -72,7 +72,7 @@ public class PaymentFinalSignatureOutpointsReceiveStep implements Step {
             Log.d(TAG, "clientSig Count:" + clientSignatures.size());
 
             VerifyTO completeSignTO = new VerifyTO()
-                    .clientPublicKey(multisigClientKey.getPubKey())
+                    .publicKey(multisigClientKey.getPubKey())
                     .p2shAddressTo(paymentRequest.getAddress().toString())
                     .amountToSpend(paymentRequest.getAmount().value)
                     .clientSignatures(clientSignatures)

@@ -44,7 +44,7 @@ public class FullInstantPaymentStep implements Step {
         output = paymentFinalSignatureSendStep.process(output);
         output = paymentFinalSignatureReceiveStep.process(output);
 
-        this.walletServiceBinder.commitAndBroadcastTransaction(paymentFinalSignatureReceiveStep.getFullSignedTransaction());
+        this.walletServiceBinder.commitAndBroadcastTransaction(paymentRefundSendStep.getFullSignedTransaction());
 
         try {
             UuidObjectStorage.getInstance().addEntry(new RefundTransactionWrapper(paymentFinalSignatureSendStep.getFullSignedRefundTransation()), RefundTransactionWrapper.class);

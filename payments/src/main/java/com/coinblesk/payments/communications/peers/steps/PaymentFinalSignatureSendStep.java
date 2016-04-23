@@ -77,7 +77,7 @@ public class PaymentFinalSignatureSendStep implements Step {
 
         final BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         VerifyTO completeSignTO = new VerifyTO()
-                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                 .currentDate(timestamp.longValue());
 

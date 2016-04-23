@@ -312,6 +312,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
         LocalBroadcastManager.getInstance(this).unregisterReceiver(startClientsBroadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(stopClientsBroadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(startServersBroadcastReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(walletErrorBroadcastReceiver);
         this.stopServers();
 
         unbindService(serviceConnection);

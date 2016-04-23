@@ -92,7 +92,7 @@ public class PaymentRequestReceiveStep implements Step {
         }
 
         SignTO refundTO = new SignTO()
-                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .transaction(fullSignedTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp.longValue());

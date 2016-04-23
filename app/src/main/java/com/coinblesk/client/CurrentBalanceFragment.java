@@ -86,7 +86,9 @@ public class CurrentBalanceFragment extends Fragment {
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            setBalance();
+            if(walletServiceBinder.isReady()) {
+                setBalance();
+            }
         }
     };
 
@@ -131,6 +133,7 @@ public class CurrentBalanceFragment extends Fragment {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             IntentFilter balanceIntentFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
             balanceIntentFilter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            balanceIntentFilter.addAction(Constants.WALLET_READY_ACTION);
             LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
 
             IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);

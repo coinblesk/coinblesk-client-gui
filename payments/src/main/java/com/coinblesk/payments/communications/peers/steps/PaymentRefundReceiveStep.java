@@ -48,7 +48,7 @@ public class PaymentRefundReceiveStep implements Step {
         txSig.sigS(((DERInteger) inputSequence.getChildren().get(3)).getBigInteger().toString());
 
         SignTO refundTO = new SignTO()
-                .clientPublicKey(multisigClientKey.getPubKey())
+                .publicKey(multisigClientKey.getPubKey())
                 .transaction(transactionPayload)
                 .messageSig(txSig)
                 .currentDate(timestamp.longValue());

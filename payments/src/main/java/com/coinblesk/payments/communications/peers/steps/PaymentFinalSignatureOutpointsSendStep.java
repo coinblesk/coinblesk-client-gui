@@ -101,7 +101,7 @@ public class PaymentFinalSignatureOutpointsSendStep implements Step {
         }
 
         VerifyTO completeSignTO = new VerifyTO()
-                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .p2shAddressTo(recipientAddress.toString())
                 .amountToSpend(fullSignedTransaction.getOutput(0).getValue().value)
                 .clientSignatures(clientSignatures)

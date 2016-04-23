@@ -122,7 +122,7 @@ public class PaymentRefundSendStep implements Step {
         halfSignedRefundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(fullSignedTransaction.getOutput(1), walletServiceBinder.getRefundAddress());
 
         SignTO halfSignedRefundTO = new SignTO()
-                .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                 .transaction(halfSignedRefundTransaction.unsafeBitcoinSerialize())
                 .messageSig(null)
                 .currentDate(timestamp);

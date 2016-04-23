@@ -45,6 +45,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,13 +54,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
 import ch.papers.objectstorage.filters.MatchAllFilter;
-import ch.papers.objectstorage.listeners.DummyOnResultListener;
 import ch.papers.payments.R;
 import retrofit2.Response;
 
@@ -331,10 +329,6 @@ public class WalletService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "on bind");
-
-        walletServiceBinder.deleteWalletFile();
-
-        LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
 
         this.kit = new WalletAppKit(Constants.PARAMS, this.getFilesDir(), Constants.WALLET_FILES_PREFIX) {
@@ -356,6 +350,9 @@ public class WalletService extends Service {
                     }
                     wallet().importKey(walletKey.getKey());
                 }
+
+
+                setupMultiSigAddress();
 
                 kit.wallet().addEventListener(new AbstractWalletEventListener() {
                     @Override
@@ -406,7 +403,6 @@ public class WalletService extends Service {
                     }
                 });
 
-                setupMultiSigAddress();
 
                 final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 final String refundAddressString = sharedPreferences.getString(REFUND_ADDRESS_SETTINGS_PREF_KEY, kit.wallet().currentReceiveAddress().toString());
@@ -481,11 +477,8 @@ public class WalletService extends Service {
         kit.setBlockingStartup(false);
         kit.startAsync();
 
-//        kit.wallet().reset();
-        //clearMultisig();
-
         Log.d(TAG, "wallet started");
-        //((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(ch.qos.logback.classic.Level.OFF);
 
 
         return this.walletServiceBinder;
@@ -502,11 +495,5 @@ public class WalletService extends Service {
                 e.printStackTrace();
             }
         }
-    }
-
-    private void clearMultisig() {
-        UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-        UuidObjectStorage.getInstance().deleteEntries(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), DummyOnResultListener.getInstance(), ECKeyWrapper.class);
-        UuidObjectStorage.getInstance().commit(DummyOnResultListener.getInstance());
     }
 }
