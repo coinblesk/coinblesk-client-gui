@@ -2,7 +2,14 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
@@ -16,6 +23,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -24,7 +32,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-import ch.papers.objectstorage.UuidObjectStorage;
+
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
@@ -42,12 +50,11 @@ import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
+
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,6 +62,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+
+import ch.papers.objectstorage.UuidObjectStorage;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 /**
@@ -279,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
         LocalBroadcastManager.getInstance(this).registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(walletErrorBroadcastReceiver, new IntentFilter(Constants.WALLET_ERROR_ACTION));
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
         this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -387,6 +399,23 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
         @Override
         public void onReceive(Context context, Intent intent) {
             stopClients();
+        }
+    };
+
+    private final BroadcastReceiver walletErrorBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String errorMessage = intent.getExtras().getString(Constants.ERROR_MESSAGE_KEY);
+            new AlertDialog.Builder(context)
+                    .setTitle(getString(R.string.wallet_error_title))
+                    .setMessage(errorMessage)
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.this.finish();
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
         }
     };
 

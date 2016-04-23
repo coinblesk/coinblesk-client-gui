@@ -60,6 +60,7 @@ import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
 import ch.papers.objectstorage.filters.MatchAllFilter;
 import ch.papers.objectstorage.listeners.DummyOnResultListener;
+import ch.papers.payments.R;
 import retrofit2.Response;
 
 /**
@@ -131,7 +132,15 @@ public class WalletService extends Service {
         }
 
         public void broadcastTransaction(Transaction tx) {
-            kit.peerGroup().broadcastTransaction(tx).broadcast();
+            try {
+                Transaction transaction =  kit.peerGroup().broadcastTransaction(tx).broadcast().get();
+                Log.d(TAG,"tx:"+transaction);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+
         }
 
         public List<TransactionWrapper> getTransactionsByTime() {
@@ -262,11 +271,42 @@ public class WalletService extends Service {
 
     private final WalletServiceBinder walletServiceBinder = new WalletServiceBinder();
 
-    private void setupMultiSigAddress(ECKey clientKey, ECKey serverKey) {
-        this.multisigServerKey = serverKey;
-        this.multisigClientKey = clientKey;
+    private void setupMultiSigAddress() {
 
-        this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(clientKey, serverKey));
+        try {
+            multisigClientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class).getKey();
+        } catch (Exception e) {
+            multisigClientKey = new ECKey();
+        }
+
+        try {
+            CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+            final KeyTO clientKey = new KeyTO();
+            clientKey.publicKey(multisigClientKey.getPubKey());
+            Response<KeyTO> response = service.keyExchange(clientKey).execute();
+            if (response.isSuccess()) {
+                final KeyTO serverKey = response.body();
+                multisigServerKey = ECKey.fromPublicOnly(serverKey.publicKey());
+                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(multisigClientKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
+                UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(multisigServerKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), ECKeyWrapper.class);
+                UuidObjectStorage.getInstance().commit();
+            } else {
+                Log.d(TAG, "error during key setup:" + response.code());
+            }
+        } catch (Exception e2) {
+            try {
+                multisigServerKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class).getKey();
+            } catch (UuidObjectStorageException e) {
+                final Intent intent = new Intent(Constants.WALLET_ERROR_ACTION);
+                intent.putExtra(Constants.ERROR_MESSAGE_KEY,getString(R.string.multisig_error_message));
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            }
+            Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
+        }
+
+        this.multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, ImmutableList.of(multisigClientKey, multisigServerKey));
+
+        Log.d(TAG,"multisig address:"+multisigAddressScript.getToAddress(Constants.PARAMS));
 
         for (Script watchedScript : kit.wallet().getWatchedScripts()) {
             if (!watchedScript.getToAddress(Constants.PARAMS).equals(multisigAddressScript.getToAddress(Constants.PARAMS))) {
@@ -291,6 +331,8 @@ public class WalletService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "on bind");
+
+        walletServiceBinder.deleteWalletFile();
 
         LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
         Utils.fixECKeyComparator();
@@ -364,32 +406,7 @@ public class WalletService extends Service {
                     }
                 });
 
-                try {
-                    ECKeyWrapper serverKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_SERVER_KEY_NAME), ECKeyWrapper.class);
-                    ECKeyWrapper clientKey = UuidObjectStorage.getInstance().getFirstMatchEntry(new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
-                    setupMultiSigAddress(clientKey.getKey(), serverKey.getKey());
-                } catch (Exception e) {
-                    try {
-                        CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
-                        final ECKey clientMultiSigKey = new ECKey();
-                        final KeyTO clientKey = new KeyTO();
-                        clientKey.publicKey(clientMultiSigKey.getPubKey());
-                        Response<KeyTO> response = service.keyExchange(clientKey).execute();
-                        if (response.isSuccess()) {
-                            final KeyTO serverKey = response.body();
-                            final ECKey serverMultiSigKey = ECKey.fromPublicOnly(serverKey.publicKey());
-                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
-                            UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(serverMultiSigKey.getPubKey(), Constants.MULTISIG_SERVER_KEY_NAME, true), ECKeyWrapper.class);
-                            UuidObjectStorage.getInstance().commit();
-                            setupMultiSigAddress(clientMultiSigKey, serverMultiSigKey);
-                        } else {
-                            Log.d(TAG, "error during key setup:" + response.code());
-                        }
-                    } catch (Exception e2) {
-                        e2.printStackTrace();
-                        Log.d(TAG, "error while setting up multisig address:" + e2.getMessage());
-                    }
-                }
+                setupMultiSigAddress();
 
                 final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 final String refundAddressString = sharedPreferences.getString(REFUND_ADDRESS_SETTINGS_PREF_KEY, kit.wallet().currentReceiveAddress().toString());
@@ -464,7 +481,7 @@ public class WalletService extends Service {
         kit.setBlockingStartup(false);
         kit.startAsync();
 
-        //kit.wallet().reset();
+//        kit.wallet().reset();
         //clearMultisig();
 
         Log.d(TAG, "wallet started");

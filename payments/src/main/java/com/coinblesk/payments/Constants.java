@@ -48,6 +48,7 @@ public class Constants {
     public static final String START_SERVERS_ACTION = "START_SERVERS_ACTION";
     public static final String INSTANT_PAYMENT_SUCCESSFUL_ACTION = "INSTANT_PAYMENT_SUCCESSFUL_ACTION";
     public static final String INSTANT_PAYMENT_FAILED_ACTION = "INSTANT_PAYMENT_FAILED_ACTION";
+    public static final String WALLET_ERROR_ACTION = "WALLET_ERROR_ACTION";
 
     //Crypto constants
     public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";

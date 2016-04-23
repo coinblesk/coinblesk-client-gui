@@ -2,4 +2,5 @@
     <string name="app_name">payments</string>
     <string name="aiddescription">Coinblesk InstantPayment</string>
     <string name="servicedesc">Coinblesk InstantPayment Service</string>
+    <string name="multisig_error_message">Multisig could not be set up! Check your internet connection or try again later!</string>
 </resources>

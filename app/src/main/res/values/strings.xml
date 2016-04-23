@@ -310,4 +310,5 @@
     <string name="addresses_list_empty">The address list is empty.</string>
     <string name="aiddescription">Coinblesk InstantPayment</string>
     <string name="servicedesc">Coinblesk InstantPayment Service</string>
+    <string name="wallet_error_title">Fatal wallet error, need to close!</string>
 </resources>

@@ -3,7 +3,11 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -19,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.Encryption;
@@ -27,7 +32,16 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -72,15 +86,20 @@ public class BackupRestoreDialogFragment extends DialogFragment {
 
     private void initBackupFilesList() {
         File backupDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File[] backupFiles = backupDir.listFiles(new FilenameFilter() {
+
+        final File[] backupFiles = backupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
                 // TODO: implement something nicer than searching by file prefix...
                 return filename.startsWith(AppConstants.BACKUP_FILE_PREFIX);
             }
         });
-        Arrays.sort(backupFiles);
-        ArrayAdapter<File> fileAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, backupFiles);
+
+        final ArrayList<File> fileArrayList = new ArrayList<>();
+        if(backupFiles!=null) {
+            fileArrayList.addAll(Arrays.asList(backupFiles));
+        }
+        ArrayAdapter<File> fileAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, fileArrayList);
         backupFilesList.setAdapter(fileAdapter);
     }
 
