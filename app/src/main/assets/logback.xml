@@ -11,9 +11,10 @@
 
     <!-- Levels: OFF, ERROR, WA RN, INFO, DEBUG, TRACE and ALL.  -->
     <logger name="ch.uzh.csg" level="DEBUG"/>
-    <logger name="org.bitcoinj" level="ERROR"/>
+    <logger name="com.coinblesk" level="DEBUG" />
+    <logger name="org.bitcoinj" level="INFO"/>
 
-    <root level="debug">
+    <root level="DEBUG">
         <appender-ref ref="LOGCAT" />
     </root>
 </configuration>

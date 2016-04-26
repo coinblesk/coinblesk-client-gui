@@ -29,6 +29,7 @@ import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.client.wallet.WalletActivity;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
@@ -186,6 +187,10 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
                         Intent addressesAct = new Intent(getApplicationContext(), AddressActivity.class);
                         startActivity(addressesAct);
                         return true;
+                    case R.id.wallet:
+                        Intent walletAct = new Intent(getApplicationContext(), WalletActivity.class);
+                        startActivity(walletAct);
+                        return true;
                     case R.id.backup:
                         Intent backupAct = new Intent(getApplicationContext(), BackupActivity.class);
                         startActivity(backupAct);
@@ -281,7 +286,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
         LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
-        this.bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        startService(walletServiceIntent);
+        bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         // restart servers if they were running before.
         if (restartServers) {

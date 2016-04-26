@@ -16,7 +16,6 @@ import com.coinblesk.util.InsuffientFunds;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Wallet;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import java.util.List;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
+import org.bitcoinj.wallet.SendRequest;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 16/04/16.
@@ -43,18 +43,18 @@ public class TopupPaymentStep implements Step {
         DERObject output = DERObject.NULLOBJECT;
         try {
             final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getMultisigReceiveAddress());
-            final Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+            final SendRequest sendRequest = SendRequest.forTx(transaction);
             this.walletServiceBinder.getWallet().signTransaction(sendRequest);
 
             long timestamp = System.currentTimeMillis();
             final Transaction refundTransaction = PaymentProtocol.getInstance().generateRefundTransaction(sendRequest.tx.getOutput(0), walletServiceBinder.getRefundAddress());
 
             SignTO halfSignedRefundTO = new SignTO()
-                    .clientPublicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
+                    .publicKey(walletServiceBinder.getMultisigClientKey().getPubKey())
                     .transaction(refundTransaction.unsafeBitcoinSerialize())
                     .messageSig(null)
                     .currentDate(timestamp);
-            SerializeUtils.sign(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
+            SerializeUtils.signJSON(halfSignedRefundTO, walletServiceBinder.getMultisigClientKey());
 
             final List<DERObject> derObjectList = new ArrayList<DERObject>();
             derObjectList.add(new DERObject(refundTransaction.unsafeBitcoinSerialize()));

@@ -6,11 +6,7 @@ package com.coinblesk.payments.communications.http;
  * a.decarli@papers.ch
  */
 
-import com.coinblesk.json.ExchangeRateTO;
-import com.coinblesk.json.KeyTO;
-import com.coinblesk.json.RefundTO;
-import com.coinblesk.json.SignTO;
-import com.coinblesk.json.VerifyTO;
+import com.coinblesk.json.*;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -18,11 +14,6 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 public interface CoinbleskWebService {
-    @GET("admin/info")
-    Call<String> info();
-
-    @GET("admin/remove-burned")
-    Call<String> resetBurned();
 
     @POST("payment/key-exchange")
     Call<KeyTO> keyExchange(@Body KeyTO keyTO);
@@ -36,6 +27,13 @@ public interface CoinbleskWebService {
 
     @POST("full-payment/verify")
     Call<VerifyTO> verify(@Body VerifyTO verifyTO);
+
+    // CLTV
+    @POST("v3/payment/createTimeLockedAddress")
+    Call<TimeLockedAddressTO> createTimeLockedAddress(@Body TimeLockedAddressTO request);
+
+    @POST("v3/payment/signverify")
+    Call<SignTO> signTx(@Body SignTO sign);
 
     // exchange Rate
     @GET("wallet/exchangeRate/EUR")

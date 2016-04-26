@@ -309,4 +309,8 @@
     <string name="addresses_list_empty">The address list is empty.</string>
     <string name="aiddescription">Coinblesk InstantPayment</string>
     <string name="servicedesc">Coinblesk InstantPayment Service</string>
+
+    <!-- wallet activity -->
+    <string name="action_wallet_refund">Collect refund</string>
+    <string name="activity_wallet_title">Wallet</string>
 </resources>

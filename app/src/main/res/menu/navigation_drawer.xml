@@ -8,6 +8,11 @@
             android:title="@string/addresses" />
 
         <item
+            android:id="@+id/wallet"
+            android:checked="false"
+            android:title="Wallet" />
+
+        <item
             android:id="@+id/settings"
             android:checked="false"
             android:title="@string/settings" />

@@ -62,7 +62,7 @@ public class PaymentRefundReceiveStep implements Step {
                 final SignTO serverHalfSignTO = service.sign(refundTO).execute().body();
 
                 List<DERObject> derObjectList = new ArrayList<DERObject>();
-                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.serverSignatures())) {
+                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures())) {
                     List<DERObject> signatureList = ImmutableList.<DERObject>of(new DERInteger(signature.r), new DERInteger(signature.s));
                     derObjectList.add(new DERSequence(signatureList));
                 }

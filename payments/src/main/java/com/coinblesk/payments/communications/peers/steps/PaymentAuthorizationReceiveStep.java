@@ -71,10 +71,10 @@ public class PaymentAuthorizationReceiveStep implements Step {
                 final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
                 // let server sign first
                 final SignTO serverHalfSignTO = service.sign(refundTO).execute().body();
-                this.serverSignatures = serverHalfSignTO.serverSignatures();
+                this.serverSignatures = serverHalfSignTO.signatures();
 
                 List<DERObject> derObjectList = new ArrayList<DERObject>();
-                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.serverSignatures())) {
+                for (TransactionSignature signature : SerializeUtils.deserializeSignatures(serverHalfSignTO.signatures())) {
                     List<DERObject> signatureList = ImmutableList.<DERObject>of(new DERInteger(signature.r),new DERInteger(signature.s));
                     derObjectList.add(new DERSequence(signatureList));
                 }
