@@ -43,6 +43,8 @@ import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
@@ -62,7 +64,10 @@ import java.util.concurrent.CountDownLatch;
  * Created by ckiller
  */
 
-public class MainActivity extends AppCompatActivity implements AuthenticationDialog.AuthenticationDialogListener {
+public class MainActivity extends AppCompatActivity
+                            implements AuthenticationDialog.AuthenticationDialogListener,
+                                        SendDialogFragment.SendDialogListener {
+
     private final static String TAG = MainActivity.class.getName();
     private final static int FINE_LOCATION_PERMISSION_REQUEST = 1;
 
@@ -363,6 +368,13 @@ public class MainActivity extends AppCompatActivity implements AuthenticationDia
             super.onBackPressed();
         }
     }
+
+    @Override
+    public void sendCoins(Address address, Coin amount) {
+        walletServiceBinder.sendCoins(address, amount);
+    }
+
+
 
     /**
      * Communication part starts here

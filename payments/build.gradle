@@ -41,11 +41,11 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.squareup.retrofit2:retrofit:2.0.0-beta4'
     compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta4'
-    compile('org.bitcoinj:bitcoinj-core:0.13.5')
+    compile('org.bitcoinj:bitcoinj-core:0.14-SNAPSHOT')
 
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'ch.papers:objectstorage:1.1.3'
-    compile 'com.coinblesk:coinblesk-shared-resources:1.4.29'
+    compile 'com.coinblesk:coinblesk-shared-resources:1.4.33'
 
     // needed for base64
     testCompile 'commons-codec:commons-codec:1.9'

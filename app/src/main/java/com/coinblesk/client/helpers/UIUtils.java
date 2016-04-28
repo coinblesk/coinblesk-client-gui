@@ -17,6 +17,7 @@ import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.models.TransactionWrapper;
+import com.coinblesk.util.BitcoinUtils;
 import com.google.gson.Gson;
 
 import org.bitcoinj.core.Coin;
@@ -25,12 +26,10 @@ import org.bitcoinj.utils.BtcFormat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by ckiller on 03/03/16.
@@ -451,5 +450,15 @@ public class UIUtils {
         if (depthInBlock == 0)
             return Color.parseColor(AppConstants.COLOR_MATERIAL_LIGHT_YELLOW_900);
         return Color.parseColor(AppConstants.COLOR_WHITE);
+    }
+
+    public static String lockedUntilText(long lockTime) {
+        String lockedUntil;
+        if (BitcoinUtils.isLockTimeByTime(lockTime)) {
+            lockedUntil = DateFormat.getDateTimeInstance().format(new Date(lockTime * 1000L));
+        } else {
+            lockedUntil = String.format("block %d", lockTime);
+        }
+        return lockedUntil;
     }
 }

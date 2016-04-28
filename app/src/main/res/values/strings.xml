@@ -312,5 +312,11 @@
 
     <!-- wallet activity -->
     <string name="action_wallet_refund">Collect refund</string>
+    <string name="action_wallet_create_time_locked_address">Create new address</string>
+    <string name="action_wallet_refresh">Refresh</string>
     <string name="activity_wallet_title">Wallet</string>
+    <string name="time_locked_address_info">Time locked until %1$s</string>
+    <string name="output_list_empty">No unspent outputs.</string>
+    <string name="dialog_refund_too_small_title">Amount too small</string>
+    <string name="dialog_refund_too_small_message">Collecting the refund is not possible because the total amount of unlocked coins is too small.\nUnlocked balance available for refund:\n%1$s\n\nYou may spend the coins immediately using the regular way (multisig payment) or the lock time of the funds has to expire.</string>t
 </resources>

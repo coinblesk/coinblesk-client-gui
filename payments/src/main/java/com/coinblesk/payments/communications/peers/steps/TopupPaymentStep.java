@@ -12,7 +12,7 @@ import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.payments.models.RefundTransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
-import com.coinblesk.util.InsuffientFunds;
+import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Transaction;
@@ -76,7 +76,7 @@ public class TopupPaymentStep implements Step {
 
         } catch (CoinbleskException e) {
             e.printStackTrace();
-        } catch (InsuffientFunds insuffientFunds) {
+        } catch (InsufficientFunds insuffientFunds) {
             Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
             walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);
         } catch (UuidObjectStorageException e) {

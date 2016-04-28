@@ -11,7 +11,7 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
-import com.coinblesk.util.InsuffientFunds;
+import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Address;
@@ -81,7 +81,7 @@ public class PaymentRequestReceiveStep implements Step {
             Intent instantPaymentFailedIntent = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
             instantPaymentFailedIntent.putExtra(Constants.ERROR_MESSAGE_KEY, e.getMessage());
             walletServiceBinder.getLocalBroadcastManager().sendBroadcast(instantPaymentFailedIntent);
-        } catch (InsuffientFunds insuffientFunds) {
+        } catch (InsufficientFunds insuffientFunds) {
             Log.d(TAG,"insufficient funds:" + insuffientFunds.getMessage());
             Intent walletInsufficientBalanceIntent = new Intent(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION);
             walletServiceBinder.getLocalBroadcastManager().sendBroadcast(walletInsufficientBalanceIntent);

@@ -15,9 +15,13 @@ import android.util.Log;
 import android.view.*;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.WalletService;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 
-public class WalletActivity extends AppCompatActivity {
+public class WalletActivity extends AppCompatActivity
+                            implements SendDialogFragment.SendDialogListener {
 
     private static final String TAG = WalletActivity.class.getName();
 
@@ -71,26 +75,15 @@ public class WalletActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_wallet, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        final int id = item.getItemId();
-
-        switch (id) {
-            case R.id.menu_wallet_refund:
-                collectRefund();
-                return true;
+    public void sendCoins(Address address, Coin amount) {
+        // this is called by the send dialog if the user collects the refund
+        // Note: in this case, the amount is just to inform the user - we spend all!
+        //TODO: wait for confirmation/broadcast, inform about payment success?
+        try {
+            walletService.collectRefund(address);
+        } catch (Exception e) {
+            Log.e(TAG, "sendCoins - address=" + address + ", amount= " + amount, e);
         }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void collectRefund() {
-        // TODO: implement collecting refund
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -106,9 +99,13 @@ public class WalletActivity extends AppCompatActivity {
         }
     };
 
+
+    /**
+     * TABS integration
+     */
     private static class WalletSectionsPagerAdapter extends FragmentStatePagerAdapter {
 
-        private final int ITEMS_COUNT = 1;
+        private final int ITEMS_COUNT = 2;
         private final String[] TAB_TITLES = {
                 "Addresses",
                 "Outputs"
@@ -123,6 +120,8 @@ public class WalletActivity extends AppCompatActivity {
             switch(position) {
                 case 0:
                     return WalletAddressList.newInstance();
+                case 1:
+                    return Outputs.newInstance();
             }
             return null;
         }

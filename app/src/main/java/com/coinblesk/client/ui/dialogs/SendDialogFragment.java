@@ -1,7 +1,5 @@
 package com.coinblesk.client.ui.dialogs;
 
-//import android.support.v7.app.AlertDialog;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.*;
@@ -17,9 +15,9 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 import com.coinblesk.client.R;
+import com.coinblesk.client.addresses.AddressItem;
 import com.coinblesk.client.addresses.AddressList;
 import com.coinblesk.client.addresses.AddressListAdapter;
-import com.coinblesk.client.addresses.AddressItem;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
@@ -35,24 +33,25 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 /**
  * Created by ckiller
  */
-
 public class SendDialogFragment extends DialogFragment
                                             implements View.OnClickListener {
 
-    public static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
-
-    public static final String AMOUNT_KEY = "AMOUNT_KEY";
-    public static final String ADDRESS_KEY = "ADDRESS_KEY";
-
     private final static String TAG = SendDialogFragment.class.getName();
+
+    private static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
+
+    private static final String ARGS_KEY_AMOUNT = "ARGS_KEY_AMOUNT";
+    private static final String ARGS_KEY_ADDRESS = "ARGS_KEY_ADDRESS";
 
     private EditText addressEditText;
     private EditText amountEditText;
 
+    private SendDialogListener listener;
+
     public static DialogFragment newInstance(Coin amount) {
         DialogFragment fragment = new SendDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putLong(AMOUNT_KEY, amount.value);
+        arguments.putLong(ARGS_KEY_AMOUNT, amount.value);
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -60,8 +59,8 @@ public class SendDialogFragment extends DialogFragment
     public static DialogFragment newInstance(Address address, Coin amount) {
         DialogFragment fragment = new SendDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putLong(AMOUNT_KEY, amount.value);
-        arguments.putString(ADDRESS_KEY, address.toString());
+        arguments.putLong(ARGS_KEY_AMOUNT, amount.value);
+        arguments.putString(ARGS_KEY_ADDRESS, address.toString());
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -71,18 +70,18 @@ public class SendDialogFragment extends DialogFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
-        this.addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
-        final String addressStr = getArguments().getString(ADDRESS_KEY, "");
+        addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
+        final String addressStr = getArguments().getString(ARGS_KEY_ADDRESS, "");
         try {
-            Address address = new Address(Constants.PARAMS, addressStr);
-            this.addressEditText.setText(address.toString());
+            Address address = Address.fromBase58(Constants.PARAMS, addressStr);
+            addressEditText.setText(address.toString());
         } catch (AddressFormatException e) {
             Log.w(TAG, "Could not parse address: " + addressStr);
         }
 
-        Coin amount = Coin.valueOf(this.getArguments().getLong(AMOUNT_KEY, 0));
-        this.amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-        this.amountEditText.setText(UIUtils.scaleCoinForDialogs(amount, getContext()));
+        final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
+        amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
+        amountEditText.setText(UIUtils.scaleCoinForDialogs(amount, getContext()));
 
         view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
@@ -121,6 +120,7 @@ public class SendDialogFragment extends DialogFragment
         final AddressList addressListDialog = AddressList.newInstance();
         addressListDialog.show(getFragmentManager(), "address_list_dialog");
         addressListDialog.setItemClickListener(new AddressListAdapter.AddressItemClickListener() {
+
             @Override
             public void onItemClick(AddressItem item, int itemPosition) {
                 if (item != null) {
@@ -143,12 +143,13 @@ public class SendDialogFragment extends DialogFragment
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                final String contents = data.getStringExtra(Intents.Scan.RESULT);
+                final String scanContent = data.getStringExtra(Intents.Scan.RESULT);
                 try {
-                    BitcoinURI bitcoinURI = new BitcoinURI(contents);
-                    this.addressEditText.setText(bitcoinURI.getAddress().toString());
+                    BitcoinURI bitcoinURI = new BitcoinURI(scanContent);
+                    addressEditText.setText(bitcoinURI.getAddress().toString());
                 } catch (BitcoinURIParseException e) {
-                    this.addressEditText.setText(contents);
+                    Log.w(TAG, "Could not parse scanned content: '" + scanContent + "'", e);
+                    addressEditText.setText(scanContent);
                 }
             }
         }
@@ -165,9 +166,11 @@ public class SendDialogFragment extends DialogFragment
 
     private void sendCoins() {
         try {
-            Coin amount = Coin.valueOf(getArguments().getLong(AMOUNT_KEY, 0));
-            Address sendTo = new Address(Constants.PARAMS, addressEditText.getText().toString());
-            walletServiceBinder.sendCoins(sendTo, amount);
+            Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
+            Address sendTo = Address.fromBase58(Constants.PARAMS, addressEditText.getText().toString().trim());
+            if (listener != null) {
+                listener.sendCoins(sendTo, amount);
+            }
         } catch (WrongNetworkException e) {
             Toast.makeText(getContext(),
                     getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
@@ -176,21 +179,38 @@ public class SendDialogFragment extends DialogFragment
         } catch (AddressFormatException e) {
             Toast.makeText(getContext(), R.string.send_address_parse_error, Toast.LENGTH_SHORT).show();
         }
+        dismiss();
     }
 
     private WalletService.WalletServiceBinder walletServiceBinder;
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof SendDialogListener) {
+            listener = (SendDialogListener) context;
+        } else {
+            Log.w(TAG, "onAttach - context does not implement SendDialogListener interface: " + context.getClass().getName());
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
-        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(getActivity(), WalletService.class);
+        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        this.getActivity().unbindService(serviceConnection);
+        getActivity().unbindService(serviceConnection);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(walletCoinsSentReceiver);
     }
 
@@ -200,6 +220,7 @@ public class SendDialogFragment extends DialogFragment
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
 
+            // TODO: is this broadcast receiver still required / used?
             IntentFilter filter = new IntentFilter(Constants.WALLET_COINS_SENT_ACTION);
             filter.addAction(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
             filter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
@@ -214,5 +235,13 @@ public class SendDialogFragment extends DialogFragment
 
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
+    public interface SendDialogListener {
+        /**
+         * Called when "send" is clicked.
+         * @param address
+         * @param amount
+         */
+        void sendCoins(Address address, Coin amount);
+    }
 }
 

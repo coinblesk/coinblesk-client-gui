@@ -41,6 +41,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
         copyTxButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                Log.d(TAG, "Transaction: " + transactionHash);
                 ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
                 clipboard.setPrimaryClip(clip);
                 Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()

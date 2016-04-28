@@ -12,7 +12,7 @@ import com.coinblesk.payments.communications.messages.DERObject;
 import com.coinblesk.payments.communications.messages.DERSequence;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
-import com.coinblesk.util.InsuffientFunds;
+import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.Pair;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
@@ -82,7 +82,7 @@ public class PaymentRefundSendStep implements Step {
             this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
         } catch (CoinbleskException e) {
             e.printStackTrace();
-        } catch (InsuffientFunds insuffientFunds) {
+        } catch (InsufficientFunds insuffientFunds) {
             insuffientFunds.printStackTrace();
         }
 

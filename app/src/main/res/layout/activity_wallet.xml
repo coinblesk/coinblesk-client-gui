@@ -10,6 +10,14 @@
             android:id="@+id/toolbar"
             layout="@layout/tool_bar" />
 
+    <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            android:id="@+id/wallet_progressBar"/>
+
     <android.support.design.widget.TabLayout
             android:id="@+id/wallet_tablayout"
             android:layout_width="match_parent"

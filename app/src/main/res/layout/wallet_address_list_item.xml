@@ -2,23 +2,53 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="wrap_content">
+              android:layout_height="wrap_content"
+              android:background="@drawable/address_item_background">
 
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/wallet_address_list_item_address"/>
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/wallet_address_list_item_balance"/>
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/wallet_address_list_item_info"/>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:baselineAligned="false" android:gravity="center_vertical"
+            android:layout_margin="15dp"
+            android:duplicateParentState="true">
+        <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/wallet_address_list_item_icon"
+                android:src="@drawable/ic_lock_outline_24dp"
+                android:tint="@color/address_item_text"
+                android:tintMode="src_in"
+                android:duplicateParentState="true"/>
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:duplicateParentState="true">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/address_item_text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/wallet_address_list_item_address"
+                    android:duplicateParentState="true" />
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/address_item_text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/wallet_address_list_item_balance"
+                    android:duplicateParentState="true" />
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/address_item_text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/wallet_address_list_item_info"
+                    android:duplicateParentState="true" />
+        </LinearLayout>
+    </LinearLayout>
 
     <View
             android:id="@+id/separator"

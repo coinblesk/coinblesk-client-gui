@@ -3,6 +3,16 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.coinblesk.client.wallet.WalletActivity">
 
+    <item android:id="@+id/menu_wallet_refresh"
+          android:title="@string/action_wallet_refresh"
+          android:orderInCategory="100"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/menu_wallet_addresses_create_time_locked_address"
+          android:title="@string/action_wallet_create_time_locked_address"
+          android:orderInCategory="100"
+          app:showAsAction="never" />
+
     <item android:id="@+id/menu_wallet_refund"
           android:title="@string/action_wallet_refund"
           android:orderInCategory="100"
