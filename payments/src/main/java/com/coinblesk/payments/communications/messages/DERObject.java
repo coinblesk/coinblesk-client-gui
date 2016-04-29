@@ -22,19 +22,22 @@ public class DERObject {
         return payload;
     }
 
-    public byte getDERType(){
-        return 4; //we treat this as an octet stream/byte array
+    public byte getDERType() {
+        //we treat this as an octet stream/byte array
+        return 4;
     }
 
-    public byte[] serializeToDER(){
-        if(this.payload.length>128){
+    public byte[] serializeToDER() {
+        if (payload.length > 128) {
             // long form
-            byte[] lengthBytes = Utils.trim(BigInteger.valueOf(this.payload.length).toByteArray());
+            byte[] typeBytes = new byte[] { getDERType() };
+            byte[] lengthBytes = Utils.trim(BigInteger.valueOf(payload.length).toByteArray());
             byte[] lengthByteSize = Utils.trim(BigInteger.valueOf(lengthBytes.length).setBit(7).toByteArray());
-            return Utils.concatBytes(new byte[]{this.getDERType()},lengthByteSize,lengthBytes, this.payload);
+            return Utils.concatBytes(typeBytes, lengthByteSize, lengthBytes, payload);
         } else {
             // short form
-            return Utils.concatBytes(new byte[]{this.getDERType(), (byte) this.payload.length}, this.payload);
+            byte[] header = new byte[] { getDERType(), (byte) payload.length };
+            return Utils.concatBytes(header, payload);
         }
     }
 }

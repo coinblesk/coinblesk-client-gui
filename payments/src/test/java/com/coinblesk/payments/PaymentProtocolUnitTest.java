@@ -1,6 +1,5 @@
 package com.coinblesk.payments;
 
-import com.coinblesk.payments.communications.http.ServerInterface;
 import com.coinblesk.payments.models.ECKeyWrapper;
 import com.coinblesk.payments.models.User;
 import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;

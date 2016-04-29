@@ -40,6 +40,7 @@ import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCClient;
 import com.coinblesk.payments.communications.peers.nfc.NFCServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
+import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity
         switch (networkSettings) {
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
+                // bitcoin2-test.csg.uzh.ch - 192.168.178.20:8080
                 Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
@@ -418,8 +420,8 @@ public class MainActivity extends AppCompatActivity
 
         if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
             clients.add(new NFCClient(this, walletServiceBinder));
-            servers.add(new NFCServerACS(this, walletServiceBinder));
-            servers.add(new NFCServer(this, walletServiceBinder));
+            //servers.add(new NFCServerACS(this, walletServiceBinder));
+            servers.add(new NFCServerCLTV(this, walletServiceBinder));
 
         }
 

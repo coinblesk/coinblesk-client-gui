@@ -23,13 +23,14 @@ public class DERSequence extends DERObject {
         super(payload);
         byte[] restPayload = Arrays.copyOf(getPayload(), getPayload().length);
         while (restPayload.length > 0) {
-            this.children.add(DERParser.parseDER(restPayload));
-            restPayload = Arrays.copyOfRange(restPayload, DERParser.extractPayloadEndIndex(restPayload), restPayload.length);
+            children.add(DERParser.parseDER(restPayload));
+            int start = DERParser.extractPayloadEndIndex(restPayload);
+            restPayload = Arrays.copyOfRange(restPayload, start, restPayload.length);
         }
     }
 
     public List<DERObject> getChildren() {
-        return this.children;
+        return children;
     }
 
     public byte getDERType(){
@@ -38,8 +39,8 @@ public class DERSequence extends DERObject {
 
     public static byte[] listSerialize(List<DERObject> derObjects){
         byte[] payload = new byte[0];
-        for (DERObject derObject:derObjects) {
-            payload = Utils.concatBytes(payload,derObject.serializeToDER());
+        for (DERObject derObject : derObjects) {
+            payload = Utils.concatBytes(payload, derObject.serializeToDER());
         }
         return payload;
     }

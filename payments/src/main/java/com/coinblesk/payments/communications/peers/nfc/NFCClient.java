@@ -19,16 +19,16 @@ public class NFCClient extends AbstractClient {
 
     @Override
     protected void onStart() {
-        Intent intent = new Intent(this.getContext(), NFCClientService.class);
+        Intent intent = new Intent(getContext(), NFCClientServiceCLTV.class);
         intent.putExtra(Constants.CLIENT_STARTED_KEY, true);
-        this.getContext().startService(intent);
+        getContext().startService(intent);
     }
 
     @Override
     protected void onStop() {
-        Intent intent = new Intent(this.getContext(), NFCClientService.class);
+        Intent intent = new Intent(getContext(), NFCClientServiceCLTV.class);
         intent.putExtra(Constants.CLIENT_STARTED_KEY, false);
-        this.getContext().startService(intent);
+        getContext().startService(intent);
     }
 
     @Override

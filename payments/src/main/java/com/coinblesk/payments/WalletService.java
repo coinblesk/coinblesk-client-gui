@@ -50,6 +50,7 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.utils.ContextPropagatingThreadFactory;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.Protos;
@@ -83,8 +84,10 @@ public class WalletService extends Service {
     private double progress = 0.0;
 
     private WalletAppKit kit;
+    private volatile org.bitcoinj.core.Context bitcoinjContext;
     private boolean appKitInitDone = false;
     private ScheduledExecutorService scheduledPeerGroupShutdown;
+    private final ContextPropagatingThreadFactory bitcoinjThreadFactory;
 
     private Wallet wallet;
     private File walletFile;
@@ -114,6 +117,7 @@ public class WalletService extends Service {
     public WalletService() {
         walletServiceBinder = new WalletServiceBinder();
         walletEventListener = new CoinbleskWalletEventListener();
+        bitcoinjThreadFactory = new ContextPropagatingThreadFactory("WalletServiceThreads");
 
         addressHashes = new ConcurrentHashMap<>();
         addresses = new ConcurrentSkipListSet<>(new TimeLockedAddressWrapper.TimeCreatedComparator(true));
@@ -127,7 +131,9 @@ public class WalletService extends Service {
         initLogging();
 
         walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
-        kit = new WalletAppKit(Constants.PARAMS, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
+        bitcoinjContext = new Context(Constants.PARAMS);
+        Context.propagate(bitcoinjContext);
+        kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
             protected void onSetupCompleted() {
                 wallet = kit.wallet();
@@ -293,10 +299,10 @@ public class WalletService extends Service {
     }
 
     private void initLogging() {
-        LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+        LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
         com.coinblesk.payments.Utils.fixECKeyComparator();
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
-                .setLevel(ch.qos.logback.classic.Level.INFO);
+                .setLevel(ch.qos.logback.classic.Level.WARN);
     }
 
     private void initWalletEventListener() {
@@ -627,9 +633,9 @@ public class WalletService extends Service {
     }
 
     private void fetchExchangeRate() {
-        new Thread(new ExchangeRateFetcher(),
-                "WalletService.ExchangeRateFetcher")
-                .start();
+        Thread t = bitcoinjThreadFactory.newThread(new ExchangeRateFetcher());
+        t.setName("WalletService.ExchangeRateFetcher");
+        t.start();
     }
 
     private void setExchangeRate(ExchangeRate exchangeRate) {
@@ -675,6 +681,41 @@ public class WalletService extends Service {
         String addressHashHex = org.bitcoinj.core.Utils.HEX.encode(addressHash);
         TimeLockedAddressWrapper address = addressHashes.get(addressHashHex);
         return address;
+    }
+
+    private Transaction createTransaction(Address addressTo, Coin amount) throws InsufficientFunds, CoinbleskException {
+        Address changeAddress = walletServiceBinder.getCurrentReceiveAddress();
+        List<TransactionOutput> outputs = walletServiceBinder.getUnspentInstantOutputs();
+        Transaction transaction = BitcoinUtils.createTx(
+                Constants.PARAMS,
+                outputs,
+                changeAddress,
+                addressTo,
+                amount.longValue());
+        return transaction;
+    }
+
+    private List<TransactionSignature> signTransaction(Transaction tx) throws CoinbleskException {
+        final List<TransactionInput> inputs = tx.getInputs();
+        final List<TransactionSignature> signatures = new ArrayList<>(inputs.size());
+        for (int i = 0; i < inputs.size(); ++i) {
+            TransactionInput txIn = inputs.get(i);
+            TransactionOutput prevTxOut = txIn.getConnectedOutput();
+            byte[] sentToHash = prevTxOut.getScriptPubKey().getPubKeyHash();
+            TimeLockedAddressWrapper redeemData = findTimeLockedAddressByHash(sentToHash);
+            if (redeemData == null) {
+                throw new CoinbleskException(String.format(
+                        "Could not sign input (index=%d, pubKeyHash=%s)",
+                        i, org.bitcoinj.core.Utils.HEX.encode(sentToHash)));
+            }
+            TimeLockedAddress address = redeemData.getTimeLockedAddress();
+            ECKey signKey = redeemData.getClientKey().getKey();
+            byte[] redeemScript = address.createRedeemScript().getProgram();
+            TransactionSignature signature = tx.calculateSignature(
+                    i, signKey, redeemScript, Transaction.SigHash.ALL, false);
+            signatures.add(signature);
+        }
+        return signatures;
     }
 
     private CoinbleskWebService coinbleskService() {
@@ -805,23 +846,31 @@ public class WalletService extends Service {
             peerGroup.broadcastTransaction(tx).broadcast();
         }
 
+        public Transaction createTransaction(Address addressTo, Coin amount) throws InsufficientFunds, CoinbleskException {
+            return WalletService.this.createTransaction(addressTo, amount);
+        }
+
+        public List<TransactionSignature> signTransaction(Transaction tx) throws CoinbleskException {
+            return WalletService.this.signTransaction(tx);
+        }
+
         public void sendCoins(final Address address, final Coin amount) {
-            new Thread(new Runnable() {
+            Thread t = bitcoinjThreadFactory.newThread(new Runnable() {
                 @Override
                 public void run() {
-
                     try {
                         new CLTVInstantPaymentStep(
                                 walletServiceBinder,
                                 new BitcoinURI(BitcoinURI.convertToBitcoinURI(address, amount, null, null)))
                                 .process(DERObject.NULLOBJECT);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.w(TAG, "Exception in send coins: ", e);
                     }
-
-                    Log.i(TAG, "Send Coins: " + address + ", " + amount);
+                    Log.i(TAG, "Send Coins - address=" + address + ", amount=" + amount);
                 }
-            }, "WalletService.SendCoins").start();
+            });
+            t.setName("WalletService.SendCoins");
+            t.start();
         }
 
         public void collectRefund(final Address sendTo) throws InsufficientFunds, CoinbleskException {
@@ -1059,6 +1108,8 @@ public class WalletService extends Service {
                         + ", conversion: " + conversionRate
                         + ", fiatValue: " + fiatValue);
 
+                // setExchangeRate accesses wallet functions (balance).
+                // Context.propagate(bitcoinjContext);
                 setExchangeRate(exchangeRate);
 
                 storage.deleteEntries(new MatchAllFilter(), ExchangeRateWrapper.class);
