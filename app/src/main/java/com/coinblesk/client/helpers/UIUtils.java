@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
+import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,8 +41,7 @@ public class UIUtils {
 
     private static final String TAG = UIUtils.class.getName();
 
-    public static SpannableString getLargeBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
-
+    public static SpannableString getLargeBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
         // Get all Preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
@@ -55,18 +55,17 @@ public class UIUtils {
 
         switch (isLargeAmount) {
             case AppConstants.BTC_AS_PRIMARY:
-                result = toLargeSpannable(context, scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                result = toLargeSpannable(context, scaleCoin(balanceCoin, coinDenomination), coinDenomination);
                 break;
             case AppConstants.FIAT_AS_PRIMARY:
-                result = toLargeSpannable(context, walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
+                result = toLargeSpannable(context, balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
                 break;
         }
 
         return result;
     }
 
-    public static SpannableString getSmallBalance(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
-
+    public static SpannableString getSmallBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
         String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
@@ -74,10 +73,10 @@ public class UIUtils {
 
         switch (isLargeAmount) {
             case AppConstants.BTC_AS_PRIMARY:
-                result = toSmallSpannable(walletServiceBinder.getBalanceFiat().toPlainString(), walletServiceBinder.getBalanceFiat().getCurrencyCode());
+                result = toSmallSpannable(balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
                 break;
             case AppConstants.FIAT_AS_PRIMARY:
-                result = toSmallSpannable(scaleCoin(walletServiceBinder.getBalance(), coinDenomination), coinDenomination);
+                result = toSmallSpannable(scaleCoin(balanceCoin, coinDenomination), coinDenomination);
                 break;
         }
         return result;

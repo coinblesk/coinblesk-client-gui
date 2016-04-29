@@ -16,7 +16,7 @@ public class LogActionListener implements WifiP2pManager.ActionListener {
 
     @Override
     public void onSuccess() {
-        Log.d(tag,"onSuccess");
+        Log.d(tag, "onSuccess");
     }
 
     @Override
@@ -34,6 +34,6 @@ public class LogActionListener implements WifiP2pManager.ActionListener {
                 break;
         }
 
-        Log.d(tag,"onError:"+errorMessage);
+        Log.d(tag,"onError: " + errorMessage);
     }
 }

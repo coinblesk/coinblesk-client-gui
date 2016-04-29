@@ -86,7 +86,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
                 if (group != null) {
-                    manager.removeGroup(channel, new LogActionListener("removeGroup"));
+                    manager.removeGroup(channel, new LogActionListener("WiFiClient.onStart - removeGroup"));
                 }
             }
         });
@@ -102,19 +102,19 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                 //connect(srcDevice);
             }
         });
-        manager.addServiceRequest(channel, WifiP2pDnsSdServiceRequest.newInstance(), new LogActionListener("addServiceRequest"));
-        manager.discoverServices(channel, new LogActionListener("discoverServices"));
+        manager.addServiceRequest(channel, WifiP2pDnsSdServiceRequest.newInstance(), new LogActionListener("WiFiClient - addServiceRequest"));
+        manager.discoverServices(channel, new LogActionListener("WiFiClient - discoverServices"));
     }
 
     @Override
     public void onStop() {
         try {
 
-            manager.clearServiceRequests(channel, new LogActionListener("clearServiceRequests"));
-            manager.stopPeerDiscovery(channel, new LogActionListener("stopPeerDiscovery"));
-            manager.cancelConnect(channel, new LogActionListener("cancelConnect"));
-            manager.removeGroup(channel, new LogActionListener("removeGroup"));
-            manager.clearLocalServices(channel, new LogActionListener("clearLocalServices"));
+            manager.clearServiceRequests(channel, new LogActionListener("WiFiClient - clearServiceRequests"));
+            manager.stopPeerDiscovery(channel, new LogActionListener("WiFiClient - stopPeerDiscovery"));
+            manager.cancelConnect(channel, new LogActionListener("WiFiClient - cancelConnect"));
+            manager.removeGroup(channel, new LogActionListener("WiFiClient - removeGroup"));
+            manager.clearLocalServices(channel, new LogActionListener("WiFiClient - clearLocalServices"));
 
             singleThreadExecutor.shutdown();
             this.getContext().unregisterReceiver(this.broadcastReceiver);
@@ -128,7 +128,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
-        manager.connect(channel, config, new LogActionListener("connect"));
+        manager.connect(channel, config, new LogActionListener("WiFiClient.connect"));
     }
 
     @Override

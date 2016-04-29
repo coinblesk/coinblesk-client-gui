@@ -141,6 +141,10 @@ public class WalletService extends Service {
                 blockChain = kit.chain();
                 blockStore = kit.store();
 
+                // broadcast current wallet balance (not using serviceBinder!)
+                Coin coinBalance = wallet.getBalance();
+                broadcastBalanceChanged(coinBalance, exchangeRate.coinToFiat(coinBalance));
+
                 //initWalletKey();
                 addPeers();
                 initWalletEventListener();
@@ -150,6 +154,7 @@ public class WalletService extends Service {
 
                 loadRefundAddress();
                 appKitInitDone = true;
+                broadcastBalanceChanged();
             }
         };
 
@@ -640,8 +645,7 @@ public class WalletService extends Service {
 
     private void setExchangeRate(ExchangeRate exchangeRate) {
         this.exchangeRate = exchangeRate;
-        long newBalance = wallet.getBalance().value;
-        broadcastBalanceChanged(newBalance);
+        broadcastBalanceChanged();
         broadcastExchangeRateChanged();
     }
 
@@ -722,24 +726,33 @@ public class WalletService extends Service {
         return Constants.RETROFIT.create(CoinbleskWebService.class);
     }
 
-    private void broadcastBalanceChanged(final long balance) {
+    private void broadcastBalanceChanged() {
+        Coin coinBalance = walletServiceBinder.getBalance();
+        broadcastBalanceChanged(coinBalance);
+    }
+
+    private void broadcastBalanceChanged(Coin coinBalance) {
+        Fiat fiatBalance = exchangeRate.coinToFiat(coinBalance);
+        broadcastBalanceChanged(coinBalance, fiatBalance);
+    }
+
+    private void broadcastBalanceChanged(Coin coinBalance, Fiat fiatBalance) {
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent balanceChanged = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
-        balanceChanged.putExtra("balance", balance);
+        balanceChanged.putExtra("coinBalance", coinBalance);
+        balanceChanged.putExtra("fiatBalance", fiatBalance);
         manager.sendBroadcast(balanceChanged);
     }
 
-    private void broadcastCoinsSent(final long balance) {
+    private void broadcastCoinsSent() {
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent coinsSent = new Intent(Constants.WALLET_COINS_SENT_ACTION);
-        coinsSent.putExtra("balance", balance);
         manager.sendBroadcast(coinsSent);
     }
 
-    private void broadcastCoinsReceived(final long balance) {
+    private void broadcastCoinsReceived() {
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent coinsReceived = new Intent(Constants.WALLET_COINS_RECEIVED_ACTION);
-        coinsReceived.putExtra("balance", balance);
         manager.sendBroadcast(coinsReceived);
     }
 
@@ -843,7 +856,14 @@ public class WalletService extends Service {
 
         public void commitAndBroadcastTransaction(final Transaction tx) {
             wallet.commitTx(tx);
-            peerGroup.broadcastTransaction(tx).broadcast();
+            TransactionBroadcast broadcast = peerGroup.broadcastTransaction(tx);
+            broadcast.setProgressCallback(new TransactionBroadcast.ProgressCallback() {
+                @Override
+                public void onBroadcastProgress(double progress) {
+                    Log.d(TAG, "Transaction broadcast - tx: "+tx.getHashAsString()+", progress: " + progress);
+                }
+            });
+            broadcast.broadcast();
         }
 
         public Transaction createTransaction(Address addressTo, Coin amount) throws InsufficientFunds, CoinbleskException {
@@ -1004,19 +1024,14 @@ public class WalletService extends Service {
                                                           TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet w, Transaction tx, Coin prevBalance, Coin newBalance) {
-            for (TransactionOutput txOut : tx.getOutputs()) {
-                if (txOut.isMine(w) && txOut.isAvailableForSpending()) {
-                    walletServiceBinder.lockFundsForInstantPayment();
-                }
-            }
-            broadcastBalanceChanged(newBalance.value);
-            broadcastCoinsReceived(newBalance.value);
+            broadcastBalanceChanged();
+            broadcastCoinsReceived();
         }
 
         @Override
         public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            broadcastBalanceChanged(newBalance.value);
-            broadcastCoinsSent(newBalance.value);
+            broadcastBalanceChanged();
+            broadcastCoinsSent();
         }
 
         @Override

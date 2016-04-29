@@ -1,16 +1,12 @@
 package com.coinblesk.client;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,19 +14,20 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
-
-import org.bitcoinj.params.TestNet2Params;
-import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.utils.Fiat;
 
 /**
  * Created by ckiller on 10/01/16.
  */
 
 public class CurrentBalanceFragment extends Fragment {
+    private static final String TAG = CurrentBalanceFragment.class.getSimpleName();
+    private WalletService.WalletServiceBinder walletServiceBinder;
 
     public static CurrentBalanceFragment newInstance() {
         CurrentBalanceFragment fragment = new CurrentBalanceFragment();
@@ -46,17 +43,16 @@ public class CurrentBalanceFragment extends Fragment {
         final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
         final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
 
-        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
+        UIUtils.formatConnectionIcon(getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
+        UIUtils.formatConnectionIcon(getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
+        UIUtils.formatConnectionIcon(getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
 
-        if(Constants.PARAMS.equals(TestNet3Params.get()) || Constants.PARAMS.equals(TestNet2Params.get())){
-            final TextView testnet = (TextView) view.findViewById(R.id.testnet_textview);
-            testnet.setText("Connected to:" + Constants.PARAMS.getClass().getSimpleName());
-            testnet.setTextColor(Color.parseColor("#ffff4444"));
-            testnet.setVisibility(View.VISIBLE);
+        if(!Constants.PARAMS.equals(MainNetParams.get())) {
+            final TextView warning = (TextView) view.findViewById(R.id.testnet_textview);
+            warning.setText("Connected to:" + Constants.PARAMS.getClass().getSimpleName());
+            warning.setTextColor(Color.parseColor("#ffff4444"));
+            warning.setVisibility(View.VISIBLE);
         }
-
     }
 
     @Override
@@ -65,28 +61,49 @@ public class CurrentBalanceFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_balance_current, container, false);
         return view;
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    private void setBalance() {
-        final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
+    private void refreshBalance() {
+        Coin coinBalance = walletServiceBinder.getBalance();
+        Fiat fiatBalance = walletServiceBinder.getExchangeRate().coinToFiat(coinBalance);
+        refreshBalance(coinBalance, fiatBalance);
+    }
+    private void refreshBalance(Coin coinBalance, Fiat fiatBalance) {
+        final View root = getView();
+        if (root == null || coinBalance == null || fiatBalance == null) {
+            return;
+        }
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-
-        // New UIUtils methods using Preferences and BtcFormat
-        largeBalance.setText(UIUtils.getLargeBalance(this.getContext(), walletServiceBinder));
-        largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(this.getContext(), largeBalance.getText().length()));
-        smallBalance.setText(UIUtils.getSmallBalance(this.getContext(), walletServiceBinder));
-
+        Log.d(TAG, "refresh balance: coin=" + coinBalance.toFriendlyString() + ", fiat=" + fiatBalance.toFriendlyString());
+        if (largeBalance != null) {
+            largeBalance.setText(UIUtils.getLargeBalance(getContext(), coinBalance, fiatBalance));
+            int len = largeBalance.getText().length();
+            largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(getContext(), len));
+        }
+        final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
+        if (smallBalance != null) {
+            smallBalance.setText(UIUtils.getSmallBalance(getContext(), coinBalance, fiatBalance));
+        }
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            setBalance();
+            Object coinObj = intent.getSerializableExtra("coinBalance");
+            Coin coinBalance = null;
+            if (coinObj != null && coinObj instanceof Coin) {
+                coinBalance = (Coin) coinObj;
+            }
+            Object fiatObj = intent.getSerializableExtra("fiatBalance");
+            Fiat fiatBalance = null;
+            if (fiatObj != null && fiatObj instanceof  Fiat) {
+                fiatBalance = (Fiat) fiatObj;
+            }
+            refreshBalance(coinBalance, fiatBalance);
         }
     };
 
@@ -105,38 +122,38 @@ public class CurrentBalanceFragment extends Fragment {
         }
     };
 
-    private WalletService.WalletServiceBinder walletServiceBinder;
-
     @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
-        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(getActivity(), WalletService.class);
+        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        this.getActivity().unbindService(serviceConnection);
-        LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
-        LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).unregisterReceiver(walletProgressBroadcastReceiver);
+        getActivity().unbindService(serviceConnection);
+        final LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
+        broadcastManager.unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        broadcastManager.unregisterReceiver(walletProgressBroadcastReceiver);
     }
-
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            final LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
             IntentFilter balanceIntentFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
-            balanceIntentFilter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
+            //balanceIntentFilter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
+            //balanceIntentFilter.addAction(Constants.WALLET_READY_ACTION);
+            broadcastManager.registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
 
             IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
-            LocalBroadcastManager.getInstance(CurrentBalanceFragment.this.getActivity()).registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
-            if(walletServiceBinder.isReady()) {
-                setBalance();
+            broadcastManager.registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
+
+            if (walletServiceBinder.isReady()) {
+                refreshBalance();
             }
         }
 
@@ -146,7 +163,4 @@ public class CurrentBalanceFragment extends Fragment {
         }
     };
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
-
 }
-
-
