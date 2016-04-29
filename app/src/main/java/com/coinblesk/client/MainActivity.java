@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
                 // bitcoin2-test.csg.uzh.ch - 192.168.178.20:8080
-                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+                Constants.COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server/";
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity
         objectStorageDir.mkdirs();
         UuidObjectStorage.getInstance().init(objectStorageDir);
 
+        startWalletService();
 
         setContentView(R.layout.activity_main);
         initToolbar();
@@ -146,6 +147,11 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
+    }
+
+    private void startWalletService() {
+        Intent walletServiceIntent = new Intent(this, WalletService.class);
+        startService(walletServiceIntent);
     }
 
     private void initViewPager() {

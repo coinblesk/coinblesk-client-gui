@@ -136,25 +136,29 @@ public class WalletService extends Service {
         kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
             protected void onSetupCompleted() {
-                wallet = kit.wallet();
-                peerGroup = kit.peerGroup();
-                blockChain = kit.chain();
-                blockStore = kit.store();
+                final long startTime = System.currentTimeMillis();
+                try {
+                    wallet = kit.wallet();
+                    peerGroup = kit.peerGroup();
+                    blockChain = kit.chain();
+                    blockStore = kit.store();
 
-                // broadcast current wallet balance (not using serviceBinder!)
-                Coin coinBalance = wallet.getBalance();
-                broadcastBalanceChanged(coinBalance, exchangeRate.coinToFiat(coinBalance));
+                    // broadcast current wallet balance (not using serviceBinder!)
+                    Coin coinBalance = wallet.getBalance();
+                    broadcastBalanceChanged(coinBalance, exchangeRate.coinToFiat(coinBalance));
 
-                //initWalletKey();
-                addPeers();
-                initWalletEventListener();
+                    addPeers();
+                    initWalletEventListener();
 
-                loadKeys(true);
-                initAddresses();
-
-                loadRefundAddress();
-                appKitInitDone = true;
-                broadcastBalanceChanged();
+                    loadKeys(true);
+                    initAddresses();
+                    loadRefundAddress();
+                    appKitInitDone = true;
+                    broadcastBalanceChanged();
+                } finally {
+                    long duration = System.currentTimeMillis() - startTime;
+                    Log.d(TAG, "WalletService - onSetupCompleted finished in "+duration+" ms");
+                }
             }
         };
 
@@ -329,30 +333,6 @@ public class WalletService extends Service {
         }
     }
 
-    private void initWalletKey() {
-        // FIXME: remove or replace?
-        /*
-        if (wallet.getKeychainSize() < 1) {
-            ECKeyWrapper walletKey;
-            try {
-
-                walletKey = storage.getFirstMatchEntry(
-                        new ECKeyWrapperFilter(Constants.WALLET_KEY_NAME), ECKeyWrapper.class);
-            } catch (UuidObjectStorageException e) {
-                walletKey = new ECKeyWrapper(new ECKey().getPrivKeyBytes(), Constants.WALLET_KEY_NAME);
-                try {
-                    storage.addEntry(walletKey, ECKeyWrapper.class);
-                    storage.commit();
-                } catch (UuidObjectStorageException err) {
-                    Log.e(TAG, "couldn't store freshly generated ECKey: ", err);
-                }
-            }
-            wallet.importKey(walletKey.getKey());
-            Log.d(TAG, "Created wallet key: " + walletKey.getName());
-        }
-        */
-    }
-
     private void addPeers() {
         String[] peers = {};
         if (Constants.PARAMS.equals(TestNet3Params.get())) {
@@ -467,14 +447,31 @@ public class WalletService extends Service {
 
         try {
             StringBuilder addressLog = new StringBuilder();
-            Collection<TimeLockedAddressWrapper> storedAddresses = storage.getEntries(TimeLockedAddressWrapper.class).values();
+            List<TimeLockedAddressWrapper> storedAddresses = storage
+                    .getEntriesAsList(TimeLockedAddressWrapper.class);
+            int numAddresses = storedAddresses.size();
+            List<Script> addressScripts = new ArrayList<>(numAddresses);
+            Map<String, TimeLockedAddressWrapper> addressMap = new HashMap<>(numAddresses);
+            // we could add each single address - however, it is very slow (up to 30s)...
+            // As an optimization, we first prepare the lists and then use addAll methods.
+            // this avoids synchronization (locks) for each address
             for (TimeLockedAddressWrapper addressWrapper : storedAddresses) {
-                addAddress(addressWrapper);
+                TimeLockedAddress tla = addressWrapper.getTimeLockedAddress();
+                addressMap.put(
+                        org.bitcoinj.core.Utils.HEX.encode(tla.getAddressHash()),
+                        addressWrapper);
+
+                // addAddress(addressWrapper);
                 addressLog.append("  ")
-                        .append(addressWrapper.getTimeLockedAddress().getAddress(Constants.PARAMS))
+                        .append(tla.getAddress(Constants.PARAMS))
                         .append("\n");
             }
-            Log.d(TAG, "Load addresses:\n" + addressLog.toString());
+            // now add to wallet, address lists and hash index
+            addresses.addAll(storedAddresses);
+            addressHashes.putAll(addressMap);
+            wallet.addWatchedScripts(addressScripts);
+
+            Log.d(TAG, "Load addresses (total "+numAddresses+"):\n" + addressLog.toString());
         } catch (UuidObjectStorageException e) {
             Log.e(TAG, "Could not load addresses (probably no addresses exist yet): ", e);
             addresses.clear();
@@ -483,6 +480,7 @@ public class WalletService extends Service {
     }
 
     private void addAddress(TimeLockedAddressWrapper address) {
+        // Note: do not use in loop, adding to wallet is slow!
         addresses.add(address);
         addressHashes.put(
                 org.bitcoinj.core.Utils.HEX.encode(address.getTimeLockedAddress().getAddressHash()),
@@ -621,20 +619,23 @@ public class WalletService extends Service {
     }
 
     private void initExchangeRate() {
-        exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
+        exchangeRate = new ExchangeRate(Fiat.parseFiat("USD", "440"));
+        loadExchangeRateFromStorage();
+    }
+
+    private void loadExchangeRateFromStorage() {
         storage.getFirstMatchEntry(new MatchAllFilter(), new OnResultListener<ExchangeRateWrapper>() {
-                    @Override
-                    public void onSuccess(ExchangeRateWrapper exr) {
-                        exchangeRate = exr.getExchangeRate();
-                    }
+            @Override
+            public void onSuccess(ExchangeRateWrapper exr) {
+                exchangeRate = exr.getExchangeRate();
+            }
 
-                    @Override
-                    public void onError(String s) {
-                        Log.d(TAG, "Could not retrieve old exchangerate from storage: '" + s + "', staying with preshiped default: " +
-                                exchangeRate.fiat.toString());
-                    }
-                }, ExchangeRateWrapper.class);
-
+            @Override
+            public void onError(String s) {
+                Log.d(TAG, "Could not retrieve old exchangerate from storage: '" + s
+                        + "', staying with preshiped default: " + exchangeRate.fiat);
+            }
+        }, ExchangeRateWrapper.class);
     }
 
     private void fetchExchangeRate() {
