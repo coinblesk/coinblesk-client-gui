@@ -21,7 +21,6 @@ import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 import com.coinblesk.payments.communications.peers.handlers.InstantPaymentClientHandler;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -145,7 +144,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
                 @Override
                 public void run() {
                     try {
-                        final Socket socket = new Socket(info.groupOwnerAddress, Constants.SERVICE_PORT);
+                        final Socket socket = new Socket(info.groupOwnerAddress, Constants.WIFI_SERVICE_PORT);
                         new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {

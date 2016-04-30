@@ -9,10 +9,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.UuidObjectStorageException;
-import ch.papers.objectstorage.filters.MatchAllFilter;
-import ch.papers.objectstorage.listeners.OnResultListener;
+
 import com.coinblesk.bitcoin.AddressCoinSelector;
 import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.json.BaseTO;
@@ -34,12 +31,28 @@ import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
 import com.xeiam.xchange.bitstamp.BitstampExchange;
 import com.xeiam.xchange.currency.CurrencyPair;
 import com.xeiam.xchange.dto.marketdata.Ticker;
-import org.bitcoinj.core.*;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionBroadcast;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -60,18 +73,38 @@ import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.slf4j.LoggerFactory;
-import retrofit2.Response;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
+import ch.papers.objectstorage.UuidObjectStorage;
+import ch.papers.objectstorage.UuidObjectStorageException;
+import ch.papers.objectstorage.filters.MatchAllFilter;
+import ch.papers.objectstorage.listeners.OnResultListener;
+import retrofit2.Response;
+
 /**
  * @author Andreas Albrecht
+ * @author Alessandro De Carli
  */
 public class WalletService extends Service {
     private final static String TAG = WalletService.class.getName();
@@ -308,10 +341,10 @@ public class WalletService extends Service {
     }
 
     private void initLogging() {
-        LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
+        LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
         com.coinblesk.payments.Utils.fixECKeyComparator();
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
-                .setLevel(ch.qos.logback.classic.Level.WARN);
+                .setLevel(ch.qos.logback.classic.Level.INFO);
     }
 
     private void initWalletEventListener() {
@@ -355,12 +388,6 @@ public class WalletService extends Service {
                 Log.i(TAG, "Exception while adding peer with ip: " + ip, e);
             }
         }
-    }
-
-    private void addToWalletWatchedAddresses(final TimeLockedAddressWrapper address) {
-        Script pubKeyScript = address.getTimeLockedAddress().createPubkeyScript();
-        pubKeyScript.setCreationTimeSeconds(address.getTimeCreatedSeconds());
-        wallet.addWatchedScripts(ImmutableList.of(pubKeyScript));
     }
 
     private void loadKeys(boolean keyExchangeIfNotExist) {
@@ -444,39 +471,45 @@ public class WalletService extends Service {
     private void loadAddresses() {
         addresses.clear();
         addressHashes.clear();
-
         try {
-            StringBuilder addressLog = new StringBuilder();
             List<TimeLockedAddressWrapper> storedAddresses = storage
                     .getEntriesAsList(TimeLockedAddressWrapper.class);
-            int numAddresses = storedAddresses.size();
-            List<Script> addressScripts = new ArrayList<>(numAddresses);
-            Map<String, TimeLockedAddressWrapper> addressMap = new HashMap<>(numAddresses);
-            // we could add each single address - however, it is very slow (up to 30s)...
-            // As an optimization, we first prepare the lists and then use addAll methods.
-            // this avoids synchronization (locks) for each address
-            for (TimeLockedAddressWrapper addressWrapper : storedAddresses) {
-                TimeLockedAddress tla = addressWrapper.getTimeLockedAddress();
-                addressMap.put(
-                        org.bitcoinj.core.Utils.HEX.encode(tla.getAddressHash()),
-                        addressWrapper);
-
-                // addAddress(addressWrapper);
-                addressLog.append("  ")
-                        .append(tla.getAddress(Constants.PARAMS))
-                        .append("\n");
-            }
-            // now add to wallet, address lists and hash index
-            addresses.addAll(storedAddresses);
-            addressHashes.putAll(addressMap);
-            wallet.addWatchedScripts(addressScripts);
-
-            Log.d(TAG, "Load addresses (total "+numAddresses+"):\n" + addressLog.toString());
+            addAddresses(storedAddresses);
         } catch (UuidObjectStorageException e) {
             Log.e(TAG, "Could not load addresses (probably no addresses exist yet): ", e);
             addresses.clear();
             addressHashes.clear();
         }
+    }
+
+    private void addAddresses(List<TimeLockedAddressWrapper> addressesToAdd) {
+        StringBuilder addressLog = new StringBuilder();
+        // we could add each single address - however, it is very slow (up to 30s)...
+        // As an optimization, we first prepare the lists and then use addAll methods.
+        // this avoids synchronization (locks) for each address
+        int numAddresses = addressesToAdd.size();
+        List<Script> addressScripts = new ArrayList<>(numAddresses);
+        Map<String, TimeLockedAddressWrapper> addressMap = new HashMap<>(numAddresses);
+        for (TimeLockedAddressWrapper addressWrapper : addressesToAdd) {
+            TimeLockedAddress tla = addressWrapper.getTimeLockedAddress();
+            addressMap.put(
+                    org.bitcoinj.core.Utils.HEX.encode(tla.getAddressHash()),
+                    addressWrapper);
+
+            Script pubKeyScript = tla.createPubkeyScript();
+            // timestamp optimizes wallet replay!
+            pubKeyScript.setCreationTimeSeconds(addressWrapper.getTimeCreatedSeconds());
+            addressScripts.add(pubKeyScript);
+
+            addressLog.append("  ")
+                    .append(tla.getAddress(Constants.PARAMS))
+                    .append("\n");
+        }
+        // now add to wallet, address lists and hash index
+        addresses.addAll(addressesToAdd);
+        addressHashes.putAll(addressMap);
+        wallet.addWatchedScripts(addressScripts);
+        Log.d(TAG, "Added addresses (total "+numAddresses+"):\n" + addressLog.toString());
     }
 
     private void addAddress(TimeLockedAddressWrapper address) {
@@ -485,7 +518,10 @@ public class WalletService extends Service {
         addressHashes.put(
                 org.bitcoinj.core.Utils.HEX.encode(address.getTimeLockedAddress().getAddressHash()),
                 address);
-        addToWalletWatchedAddresses(address);
+        Script pubKeyScript = address.getTimeLockedAddress().createPubkeyScript();
+        pubKeyScript.setCreationTimeSeconds(address.getTimeCreatedSeconds());
+        wallet.addWatchedScripts(ImmutableList.of(pubKeyScript));
+        Log.d(TAG, "Added address:\n" + address.getTimeLockedAddress().toString());
     }
 
     private TimeLockedAddressWrapper createTimeLockedAddress() throws CoinbleskException, IOException {
@@ -738,42 +774,50 @@ public class WalletService extends Service {
     }
 
     private void broadcastBalanceChanged(Coin coinBalance, Fiat fiatBalance) {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent balanceChanged = new Intent(Constants.WALLET_BALANCE_CHANGED_ACTION);
         balanceChanged.putExtra("coinBalance", coinBalance);
         balanceChanged.putExtra("fiatBalance", fiatBalance);
-        manager.sendBroadcast(balanceChanged);
+        getLocalBroadcaster().sendBroadcast(balanceChanged);
     }
 
     private void broadcastCoinsSent() {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent coinsSent = new Intent(Constants.WALLET_COINS_SENT_ACTION);
-        manager.sendBroadcast(coinsSent);
+        getLocalBroadcaster().sendBroadcast(coinsSent);
     }
 
     private void broadcastCoinsReceived() {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent coinsReceived = new Intent(Constants.WALLET_COINS_RECEIVED_ACTION);
-        manager.sendBroadcast(coinsReceived);
+        getLocalBroadcaster().sendBroadcast(coinsReceived);
     }
 
     private void broadcastScriptsChanged() {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent scriptsChanged = new Intent(Constants.WALLET_SCRIPTS_CHANGED_ACTION);
-        manager.sendBroadcast(scriptsChanged);
+        getLocalBroadcaster().sendBroadcast(scriptsChanged);
     }
 
     private void broadcastConfidenceChanged(final String txHash) {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent txChanged = new Intent(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
         txChanged.putExtra("transactionHash", txHash);
-        manager.sendBroadcast(txChanged);
+        getLocalBroadcaster().sendBroadcast(txChanged);
     }
 
     private void broadcastExchangeRateChanged() {
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
-        manager.sendBroadcast(exchangeRateChanged);
+        getLocalBroadcaster().sendBroadcast(exchangeRateChanged);
+    }
+
+    private void broadcastInstantPaymentSuccess() {
+        Intent paymentSuccess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+        getLocalBroadcaster().sendBroadcast(paymentSuccess);
+    }
+
+    private void broadcastInstantPaymentFailure() {
+        Intent paymentFailure = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+        LocalBroadcastManager.getInstance(WalletService.this).sendBroadcast(paymentFailure);
+    }
+
+    private LocalBroadcastManager getLocalBroadcaster() {
+        return LocalBroadcastManager.getInstance(WalletService.this);
     }
 
     public class WalletServiceBinder extends Binder {
@@ -855,16 +899,17 @@ public class WalletService extends Service {
             return transactions;
         }
 
-        public void commitAndBroadcastTransaction(final Transaction tx) {
+        public ListenableFuture<Transaction> commitAndBroadcastTransaction(final Transaction tx) {
             wallet.commitTx(tx);
             TransactionBroadcast broadcast = peerGroup.broadcastTransaction(tx);
             broadcast.setProgressCallback(new TransactionBroadcast.ProgressCallback() {
+                final String txHash = tx.getHashAsString();
                 @Override
                 public void onBroadcastProgress(double progress) {
-                    Log.d(TAG, "Transaction broadcast - tx: "+tx.getHashAsString()+", progress: " + progress);
+                    Log.d(TAG, "Transaction broadcast - tx: "+txHash+", progress: " + progress);
                 }
             });
-            broadcast.broadcast();
+            return broadcast.broadcast();
         }
 
         public Transaction createTransaction(Address addressTo, Coin amount) throws InsufficientFunds, CoinbleskException {
@@ -875,23 +920,37 @@ public class WalletService extends Service {
             return WalletService.this.signTransaction(tx);
         }
 
-        public void sendCoins(final Address address, final Coin amount) {
-            Thread t = bitcoinjThreadFactory.newThread(new Runnable() {
+        public ListenableFuture<Transaction> sendCoins(final Address address, final Coin amount) {
+            ExecutorService executor = Executors.newSingleThreadExecutor(bitcoinjThreadFactory);
+            ListeningExecutorService sendCoinsExecutor = MoreExecutors.listeningDecorator(executor);
+            ListenableFuture<Transaction> txFuture = sendCoinsExecutor.submit(new Callable<Transaction>() {
                 @Override
-                public void run() {
-                    try {
-                        new CLTVInstantPaymentStep(
-                                walletServiceBinder,
-                                new BitcoinURI(BitcoinURI.convertToBitcoinURI(address, amount, null, null)))
-                                .process(DERObject.NULLOBJECT);
-                    } catch (Exception e) {
-                        Log.w(TAG, "Exception in send coins: ", e);
-                    }
-                    Log.i(TAG, "Send Coins - address=" + address + ", amount=" + amount);
+                public Transaction call() throws Exception {
+                    BitcoinURI payment = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address, amount, null, null));
+                    CLTVInstantPaymentStep step = new CLTVInstantPaymentStep(walletServiceBinder, payment);
+                    step.process(DERObject.NULLOBJECT);
+                    Transaction fullySignedTx = step.getTransaction();
+                    commitAndBroadcastTransaction(fullySignedTx);
+                    Log.i(TAG, "Send Coins - address=" + address + ", amount=" + amount
+                            + ", txHash=" + fullySignedTx.getHashAsString());
+                    return fullySignedTx;
                 }
             });
-            t.setName("WalletService.SendCoins");
-            t.start();
+            sendCoinsExecutor.shutdown();
+            Futures.addCallback(txFuture, new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(Transaction result) {
+                    Log.i(TAG, "sendCoins - onSuccess - tx " + result.getHashAsString());
+                    broadcastInstantPaymentSuccess();
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.e(TAG, "sendCoins - onFailure - failed with the following throwable: ", t);
+                    broadcastInstantPaymentFailure();
+                }
+            });
+            return txFuture;
         }
 
         public void collectRefund(final Address sendTo) throws InsufficientFunds, CoinbleskException {

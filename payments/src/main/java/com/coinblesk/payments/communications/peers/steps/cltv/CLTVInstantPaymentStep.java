@@ -12,10 +12,15 @@ public class CLTVInstantPaymentStep extends AbstractStep {
     private static final String TAG = CLTVInstantPaymentStep.class.getName();
 
     private final WalletService.WalletServiceBinder walletServiceBinder;
+    private Transaction transaction;
 
     public CLTVInstantPaymentStep(WalletService.WalletServiceBinder walletServiceBinder, BitcoinURI paymentRequest) {
         super(paymentRequest);
         this.walletServiceBinder = walletServiceBinder;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
     }
 
     @Override
@@ -48,12 +53,8 @@ public class CLTVInstantPaymentStep extends AbstractStep {
                     walletServiceBinder);
             output = finalizeStep.process(output);
 
-            Transaction fullySigned = finalizeStep.getTransaction();
-            walletServiceBinder.commitAndBroadcastTransaction(fullySigned);
-
+            transaction = finalizeStep.getTransaction();
             setSuccess();
-            // TODO: error handling!!!
-
         } catch (Exception e) {
             Log.w(TAG, "Exception: ", e);
             setError();

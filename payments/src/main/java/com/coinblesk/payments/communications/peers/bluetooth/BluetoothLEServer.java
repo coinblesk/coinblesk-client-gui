@@ -167,9 +167,9 @@ public class BluetoothLEServer extends AbstractServer {
         });
 
 
-        final BluetoothGattCharacteristic writeCharacteristic = new BluetoothGattCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
-        final BluetoothGattCharacteristic readCharacteristic = new BluetoothGattCharacteristic(Constants.READ_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
-        final BluetoothGattService bluetoothGattService = new BluetoothGattService(Constants.SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        final BluetoothGattCharacteristic writeCharacteristic = new BluetoothGattCharacteristic(Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        final BluetoothGattCharacteristic readCharacteristic = new BluetoothGattCharacteristic(Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
+        final BluetoothGattService bluetoothGattService = new BluetoothGattService(Constants.BLUETOOTH_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
         bluetoothGattService.addCharacteristic(writeCharacteristic);
         bluetoothGattService.addCharacteristic(readCharacteristic);
 
@@ -178,7 +178,7 @@ public class BluetoothLEServer extends AbstractServer {
         bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                         .setConnectable(true).setTimeout(0)
                         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).build(),
-                new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
+                new AdvertiseData.Builder().setIncludeDeviceName(true).addServiceUuid(ParcelUuid.fromString(Constants.BLUETOOTH_SERVICE_UUID.toString())).build(), new AdvertiseCallback() {
                 });
 
     }

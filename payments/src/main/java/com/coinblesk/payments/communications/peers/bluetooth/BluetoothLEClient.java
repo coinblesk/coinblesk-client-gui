@@ -107,7 +107,7 @@ public class BluetoothLEClient extends AbstractClient {
                     super.onServicesDiscovered(gatt, status);
                     Log.d(TAG, "discovered service:" + status);
 
-                    BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
+                    BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.BLUETOOTH_SERVICE_UUID).getCharacteristic(Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID);
                     gatt.readCharacteristic(readCharacteristic);
                     this.stepCounter = 0;
                 }
@@ -176,7 +176,7 @@ public class BluetoothLEClient extends AbstractClient {
                             getPaymentRequestDelegate().onPaymentSuccess();
                         }
                     } else {
-                        BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
+                        BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.BLUETOOTH_SERVICE_UUID).getCharacteristic(Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID);
                         gatt.readCharacteristic(readCharacteristic);
                     }
                 }
@@ -190,7 +190,7 @@ public class BluetoothLEClient extends AbstractClient {
                     if (byteCounter < derResponsePayload.length) {
                         writeNextFragment(gatt);
                     } else {
-                        BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.READ_CHARACTERISTIC_UUID);
+                        BluetoothGattCharacteristic readCharacteristic = gatt.getService(Constants.BLUETOOTH_SERVICE_UUID).getCharacteristic(Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID);
                         gatt.readCharacteristic(readCharacteristic);
                     }
                 }
@@ -198,7 +198,7 @@ public class BluetoothLEClient extends AbstractClient {
                 private void writeNextFragment(BluetoothGatt gatt) {
                     final byte[] fragment = Arrays.copyOfRange(derResponsePayload, byteCounter, byteCounter + Math.min(derResponsePayload.length, MAX_FRAGMENT_SIZE));
                     Log.d(TAG, "write characteristics:" + fragment.length + "/" + derResponsePayload.length);
-                    BluetoothGattCharacteristic writeCharacteristic = gatt.getService(Constants.SERVICE_UUID).getCharacteristic(Constants.WRITE_CHARACTERISTIC_UUID);
+                    BluetoothGattCharacteristic writeCharacteristic = gatt.getService(Constants.BLUETOOTH_SERVICE_UUID).getCharacteristic(Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID);
                     writeCharacteristic.setValue(fragment);
                     gatt.writeCharacteristic(writeCharacteristic);
                     byteCounter += fragment.length;
@@ -215,7 +215,7 @@ public class BluetoothLEClient extends AbstractClient {
 
     @Override
     protected void onStart() {
-        bluetoothAdapter.startLeScan(new UUID[]{Constants.SERVICE_UUID}, this.leScanCallback);
+        bluetoothAdapter.startLeScan(new UUID[]{Constants.BLUETOOTH_SERVICE_UUID}, this.leScanCallback);
     }
 
     @Override

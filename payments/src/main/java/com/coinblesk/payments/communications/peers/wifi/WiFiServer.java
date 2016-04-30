@@ -124,7 +124,7 @@ public class WiFiServer extends AbstractServer {
             @Override
             public void run() {
                 try {
-                    serverSocket = new ServerSocket(Constants.SERVICE_PORT);
+                    serverSocket = new ServerSocket(Constants.WIFI_SERVICE_PORT);
                     Socket socket;
                     while ((socket = serverSocket.accept()) != null && isRunning()) {
                         Log.d(TAG, "new socket just connected");
