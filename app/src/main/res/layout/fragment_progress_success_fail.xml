@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+    style="@style/dialog_fragment"
+    android:padding="@dimen/card_margin">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/viewProgress"
+        android:layout_margin="@dimen/card_margin">
+
+        <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/fragment_progress_success_fail_progress"
+                android:layout_gravity="center_horizontal"
+                android:indeterminate="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Please wait"
+            android:id="@+id/txtWait"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/card_margin" />
+    </LinearLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/viewSuccess"
+        android:layout_margin="@dimen/card_margin">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iconSuccess" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Action completed"
+            android:id="@+id/txtSuccess"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/card_margin" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/viewFailure"
+        android:layout_margin="@dimen/card_margin">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iconFailure" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Action failed"
+            android:id="@+id/txtFailed"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/card_margin" />
+    </LinearLayout>
+
+</LinearLayout>

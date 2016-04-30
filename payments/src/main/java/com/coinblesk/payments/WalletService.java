@@ -1,3 +1,20 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.payments;
 
 import android.app.Service;
@@ -83,6 +100,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
@@ -953,59 +971,85 @@ public class WalletService extends Service {
             return txFuture;
         }
 
-        public void collectRefund(final Address sendTo) throws InsufficientFunds, CoinbleskException {
+        public ListenableFuture<Transaction> collectRefund(final Address sendTo) {
             /*
-             * Bitcoin nodes consider the median time of the last couple of blocks when comparing the nLockTime (BIP 113).
-             * The median time is behind the current time (unix seconds). As a consequence, a transaction is not relayed
+             * Bitcoin nodes consider the median time of the last couple of blocks when
+             * comparing the nLockTime (BIP 113). The median time is behind the current
+             * time (unix seconds). As a consequence, a transaction is not relayed
              * by the nodes even though the lock time expired, i.e. lockTime < currentTime.
              * The median lags behind ~1h. In other words, a transaction with lock time t should be
-             * broadcasted not earlier than t+1h. Otherwise, the transaction must be rebroadcasted and it takes a long
-             * time for the transaction to be included in a block.
+             * broadcasted not earlier than t+1h. Otherwise, the transaction must be re-broadcasted
+             * and it takes a long time for the transaction to be included in a block.
              * - https://bitcoincore.org/en/releases/0.12.1/
              * - https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
              */
 
-            final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
-            // TODO: change address/spend from does not make sense for spendAllTx.
-            Transaction tx = BitcoinUtils.createSpendAllTx(
-                    Constants.PARAMS,
-                    unlockedTxOut,
-                    walletServiceBinder.getCurrentReceiveAddress(),
-                    sendTo);
+            ExecutorService executor = Executors.newSingleThreadExecutor(bitcoinjThreadFactory);
+            ListeningExecutorService collectRefundExecutor = MoreExecutors.listeningDecorator(executor);
+            ListenableFuture<Transaction> txFuture = collectRefundExecutor.submit(new Callable<Transaction>() {
+                @Override
+                public Transaction call() throws Exception {
+                    final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
+                    // TODO: change address/spend from does not make sense for spendAllTx.
+                    Transaction transaction = BitcoinUtils.createSpendAllTx(
+                            Constants.PARAMS,
+                            unlockedTxOut,
+                            getCurrentReceiveAddress(),
+                            sendTo);
 
-            // since we sign with 1 key (without server key), we need to set
-            // the nLockTime and sequence number flags of CLTV inputs.
-            Map<String, Long> timeLocksOfInputs = createLockTimeForInputsMap(tx.getInputs());
-            BitcoinUtils.setFlagsOfCLTVInputs(
-                    tx,
-                    timeLocksOfInputs,
-                    org.bitcoinj.core.Utils.currentTimeSeconds());
+                    // since we sign with 1 key (without server key), we need to set
+                    // the nLockTime and sequence number flags of CLTV inputs.
+                    Map<String, Long> timeLocksOfInputs = createLockTimeForInputsMap(transaction.getInputs());
+                    BitcoinUtils.setFlagsOfCLTVInputs(
+                            transaction,
+                            timeLocksOfInputs,
+                            org.bitcoinj.core.Utils.currentTimeSeconds());
 
-            /////// TODO: signing code --> duplicate -> refactor !!!
-            final List<TransactionInput> inputs = tx.getInputs();
-            List<TransactionSignature> txSignatures = new ArrayList<>(inputs.size());
-            for (int i = 0; i < inputs.size(); ++i) {
-                TransactionInput txIn = inputs.get(i);
-                TransactionOutput prevTxOut = txIn.getConnectedOutput();
+                    // code is veriy similar to signTransaction, but we use a different scriptSig!
+                    final List<TransactionInput> inputs = transaction.getInputs();
+                    for (int i = 0; i < inputs.size(); ++i) {
+                        TransactionInput txIn = inputs.get(i);
+                        TransactionOutput prevTxOut = txIn.getConnectedOutput();
+                        byte[] sentToHash = prevTxOut.getScriptPubKey().getPubKeyHash();
+                        TimeLockedAddressWrapper redeemData = findTimeLockedAddressByHash(sentToHash);
+                        if (redeemData == null) {
+                            throw new CoinbleskException(String.format(Locale.US,
+                                    "Signing error: did not find redeem script for input: %s, ", txIn));
+                        }
 
-                byte[] sentToHash = prevTxOut.getScriptPubKey().getPubKeyHash();
-                TimeLockedAddressWrapper redeemData = findTimeLockedAddressByHash(sentToHash);
-                if (redeemData == null) {
-                    // TODO: cannot sign without redeem script
+                        ECKey signKey = redeemData.getClientKey().getKey();
+                        TimeLockedAddress tla = redeemData.getTimeLockedAddress();
+                        byte[] redeemScript = tla.createRedeemScript().getProgram();
+                        TransactionSignature signature = transaction.calculateSignature(
+                                i, signKey, redeemScript, Transaction.SigHash.ALL, false);
+
+                        Script scriptSig = tla.createScriptSigAfterLockTime(signature);
+                        txIn.setScriptSig(scriptSig);
+                    }
+
+                    BitcoinUtils.verifyTxFull(transaction);
+                    commitAndBroadcastTransaction(transaction);
+                    Coin amount = transaction.getOutputSum();
+                    Log.i(TAG, "Collect Refund - address=" + sendTo + ", amount=" + amount
+                            + ", txHash=" + transaction.getHashAsString());
+                    return transaction;
                 }
-                ECKey signKey = redeemData.getClientKey().getKey();
-                TimeLockedAddress tla = redeemData.getTimeLockedAddress();
-                byte[] redeemScript = tla.createRedeemScript().getProgram();
-                TransactionSignature signature = tx.calculateSignature(i, signKey, redeemScript, Transaction.SigHash.ALL, false);
-                txSignatures.add(signature);
+            });
+            collectRefundExecutor.shutdown();
+            Futures.addCallback(txFuture, new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(Transaction result) {
+                    Log.i(TAG, "collectRefund - onSuccess - tx " + result.getHashAsString());
+                    broadcastInstantPaymentSuccess();
+                }
 
-                Script scriptSig = tla.createScriptSigAfterLockTime(signature);
-                txIn.setScriptSig(scriptSig);
-            }
-
-            BitcoinUtils.verifyTxFull(tx);
-
-            walletServiceBinder.commitAndBroadcastTransaction(tx);
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.e(TAG, "collectRefund - onFailure - failed with the following throwable: ", t);
+                    broadcastInstantPaymentFailure();
+                }
+            });
+            return txFuture;
         }
 
         public List<TransactionOutput> getUnspentInstantOutputs() {
@@ -1053,6 +1097,7 @@ public class WalletService extends Service {
             wallet.reset();
             // delete chain file - this triggers re-downloading the chain (wallet replay) in the next start
             kit.stopAsync().awaitTerminated(); // TODO: do not use appkit!
+            blockStore = null;
             File blockstore = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
             if (blockstore.delete()) {
                 Log.i(TAG, "Deleted blockchain file: " + blockstore.toString());

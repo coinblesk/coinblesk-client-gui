@@ -241,6 +241,15 @@
         <item name="android:layout_gravity">center</item>
     </style>
 
+    <style name="dialog_fragment">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:minWidth">400dp</item>
+        <item name="android:background">@color/material_grey_800</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
     <style name="address_textview">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>

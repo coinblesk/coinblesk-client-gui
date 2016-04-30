@@ -1,8 +1,31 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.client;
 
 
 import android.Manifest;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
@@ -11,6 +34,7 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -24,9 +48,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-import ch.papers.objectstorage.UuidObjectStorage;
+
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
+import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.wallet.WalletActivity;
@@ -38,20 +63,19 @@ import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
 import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCClient;
-import com.coinblesk.payments.communications.peers.nfc.NFCServer;
-import com.coinblesk.payments.communications.peers.nfc.NFCServerACS;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.SerializeUtils;
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,9 +84,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import ch.papers.objectstorage.UuidObjectStorage;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 
 /**
- * Created by ckiller
+ * @author ckiller
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 
 public class MainActivity extends AppCompatActivity
@@ -379,7 +409,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void sendCoins(Address address, Coin amount) {
-        walletServiceBinder.sendCoins(address, amount);
+        final DialogFragment progress = ProgressSuccessOrFailDialog.newInstance(
+                getString(R.string.fragment_send_dialog_title));
+        progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
+        ListenableFuture<Transaction> txFuture = walletServiceBinder.sendCoins(address, amount);
     }
 
 

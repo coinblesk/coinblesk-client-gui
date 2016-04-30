@@ -1,22 +1,44 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.client.wallet;
 
 
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.*;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.WalletService;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
@@ -78,12 +100,10 @@ public class WalletActivity extends AppCompatActivity
     public void sendCoins(Address address, Coin amount) {
         // this is called by the send dialog if the user collects the refund
         // Note: in this case, the amount is just to inform the user - we spend all!
-        //TODO: wait for confirmation/broadcast, inform about payment success?
-        try {
-            walletService.collectRefund(address);
-        } catch (Exception e) {
-            Log.e(TAG, "sendCoins - address=" + address + ", amount= " + amount, e);
-        }
+        final DialogFragment progress = ProgressSuccessOrFailDialog.newInstance(
+                getString(R.string.fragment_send_dialog_title));
+        progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
+        walletService.collectRefund(address);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
