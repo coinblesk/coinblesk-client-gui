@@ -201,11 +201,24 @@ public class WalletService extends Service {
                     addPeers();
                     initWalletEventListener();
 
-                    loadKeys(true);
+                    /*
+                     * Check if we already have keys.
+                     * - if yes: check whether current address is still locked. if no: create new one.
+                     * - if no: (1) create client key, (2) create new address, (3) store server key
+                     */
+                    boolean keysAlreadyExist = loadKeysIfExist();
+                    if (!keysAlreadyExist) {
+                        keyExchange();
+                        loadKeysIfExist();
+                    }
                     initAddresses();
+
                     loadRefundAddress();
                     appKitInitDone = true;
                     broadcastBalanceChanged();
+                } catch (Exception e) {
+                    // TODO: error handling - wallet cannot be initialized if any exceptions occur here.
+                    Log.e(TAG, "Error during wallet initialization: ", e);
                 } finally {
                     long duration = System.currentTimeMillis() - startTime;
                     Log.d(TAG, "WalletService - onSetupCompleted finished in "+duration+" ms");
@@ -408,10 +421,10 @@ public class WalletService extends Service {
         }
     }
 
-    private void loadKeys(boolean keyExchangeIfNotExist) {
-        boolean keyExchange = false;
+
+    private boolean loadKeysIfExist() {
         try {
-            /* TODO: load 2-of-2 multisig address - and migrate to AddressWrapper */
+            /* TODO: can load 2-of-2 multisig address - and migrate? */
             ECKeyWrapper clientKeyWrapper = storage.getFirstMatchEntry(
                     new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
             ECKeyWrapper serverKeyWrapper = storage.getFirstMatchEntry(
@@ -422,34 +435,34 @@ public class WalletService extends Service {
             multisigServerKeyWrapper = serverKeyWrapper;
             multisigServerKey = serverKeyWrapper.getKey();
             Log.d(TAG, "Loaded client and server key from storage.");
+            return true;
         } catch (UuidObjectStorageException e) {
             // no keys found yet --> do a key exchange.
             Log.d(TAG, "loadKeys - UuidObjectStorageException: " + e.getMessage());
-            keyExchange = true;
         }
-
-        if (keyExchangeIfNotExist && keyExchange) {
-            try {
-                keyExchange();
-                loadKeys(false);
-            } catch (Exception e) {
-                Log.e(TAG, "Exception during key exchange: ", e);
-            }
-        }
+        return false;
     }
 
-    private void keyExchange() throws Exception {
+    private void keyExchange() throws CoinbleskException {
         final CoinbleskWebService service = coinbleskService();
         final ECKey clientECKey = new ECKey();
         final ECKey serverECKey;
 
         final KeyTO requestTO = new KeyTO();
         requestTO.publicKey(clientECKey.getPubKey());
-        Response<KeyTO> response = service.keyExchange(requestTO).execute();
+        Response<KeyTO> response = null;
+        try {
+            response = service.keyExchange(requestTO).execute();
+        } catch (IOException e) {
+            throw new CoinbleskException("Could not connect to server: " + e.getMessage(), e);
+        }
 
-        if (response.isSuccess()) {
+        if (response != null && response.isSuccess()) {
             final KeyTO responseTO = response.body();
             serverECKey = ECKey.fromPublicOnly(responseTO.publicKey());
+            if (!SerializeUtils.verifyJSONSignature(responseTO, serverECKey)) {
+                throw new CoinbleskException("Verification of server response failed.");
+            }
 
             // store everything
             ECKeyWrapper clientKeyWrapper = new ECKeyWrapper(
@@ -459,30 +472,46 @@ public class WalletService extends Service {
                     serverECKey.getPubKey(),
                     Constants.MULTISIG_SERVER_KEY_NAME,
                     true);
-            storage.addEntry(clientKeyWrapper, ECKeyWrapper.class);
-            storage.addEntry(serverKeyWrapper, ECKeyWrapper.class);
-            storage.commit();
+            try {
+                storage.addEntry(clientKeyWrapper, ECKeyWrapper.class);
+                storage.addEntry(serverKeyWrapper, ECKeyWrapper.class);
+                storage.commit();
+            } catch (UuidObjectStorageException e) {
+                throw new CoinbleskException("Could not store keys.", e);
+            }
             Log.i(TAG, "Key exchange with server completed.");
         } else {
-            // TODO: error handling
             Log.e(TAG, "Error during key setup - code: " + response.code());
+            throw new CoinbleskException("Could not execute key-exchange, code: " + response.code());
         }
     }
 
-    private void initAddresses() {
+    private void initAddresses() throws CoinbleskException {
         loadAddresses();
         try {
+            // no address yet or current receive address expires soon.
+            long nowSec = org.bitcoinj.core.Utils.currentTimeSeconds();
+            boolean needToCreateNewAddress = false;
             if (addresses.isEmpty()) {
-                createTimeLockedAddress();
-                loadAddresses();
+                Log.d(TAG, "No address yet, create new.");
+                needToCreateNewAddress = true;
+            } else {
+                long currentExpiresInSec = addresses.last().getTimeLockedAddress().getLockTime() - nowSec;
+                if (currentExpiresInSec < Constants.MIN_LOCKTIME_SPAN_SECONDS) {
+                    Log.d(TAG, "Current address expires soon (in "+currentExpiresInSec+" seconds), create new one.");
+                    needToCreateNewAddress = true;
+                }
             }
-            createTimeLockedAddress(); // FIXME: for testing, a new address is generated every start
-            // TODO: check whether lock time is in the near future --> if true, setupNewAddress
 
-            // TODO: migrage from 2-of-2 multisig.
+            if (needToCreateNewAddress) {
+                createTimeLockedAddress();
+            }
+
+            // TODO: migrage from 2-of-2 multisig?
             // maybeMigrate2of2Multisig(clientKeyWrapper.getKey(), serverKeyWrapper.getKey());
         } catch (Exception e) {
-            Log.e(TAG, "Could not initialize addresses. ", e);
+            Log.w(TAG, "Could not initialize addresses. ", e);
+            throw new CoinbleskException("Could not load addresses.", e);
         }
     }
 
@@ -520,7 +549,7 @@ public class WalletService extends Service {
             addressScripts.add(pubKeyScript);
 
             addressLog.append("  ")
-                    .append(tla.getAddress(Constants.PARAMS))
+                    .append(tla.toString(Constants.PARAMS))
                     .append("\n");
         }
         // now add to wallet, address lists and hash index
@@ -539,7 +568,7 @@ public class WalletService extends Service {
         Script pubKeyScript = address.getTimeLockedAddress().createPubkeyScript();
         pubKeyScript.setCreationTimeSeconds(address.getTimeCreatedSeconds());
         wallet.addWatchedScripts(ImmutableList.of(pubKeyScript));
-        Log.d(TAG, "Added address:\n" + address.getTimeLockedAddress().toString());
+        Log.d(TAG, "Added address:\n" + address.getTimeLockedAddress().toString(Constants.PARAMS));
     }
 
     private TimeLockedAddressWrapper createTimeLockedAddress() throws CoinbleskException, IOException {
@@ -572,7 +601,7 @@ public class WalletService extends Service {
             throw new CoinbleskException("Could not create new address. Type: " + responseTO.type());
         }
 
-        if (!checkTimeLockedAddress(lockedAddress)) {
+        if (!checkTimeLockedAddress(lockedAddress, multisigClientKey.getPubKey())) {
             throw new CoinbleskException("Could not create new address, address check failed.");
         }
 
@@ -592,37 +621,34 @@ public class WalletService extends Service {
         return lockedAddressWrapper;
     }
 
-    private boolean checkTimeLockedAddress(TimeLockedAddress lockedAddress) {
-        if (lockedAddress == null) {
+    private boolean checkTimeLockedAddress(TimeLockedAddress receivedAddress, byte[] expectedClientPubKey) {
+        if (receivedAddress == null) {
             return false;
         }
 
-        final byte[] addressHash = lockedAddress.getAddressHash();
-        if (addressHash == null || addressHash.length <= 0 || !lockedAddress.getAddress(Constants.PARAMS).isP2SHAddress()) {
+        final byte[] addressHash = receivedAddress.getAddressHash();
+        if (addressHash == null || addressHash.length <= 0 || !receivedAddress.getAddress(Constants.PARAMS).isP2SHAddress()) {
             return false;
         }
 
-        final byte[] clientPubKey = lockedAddress.getUserPubKey();
-        if (clientPubKey == null || clientPubKey.length <= 0) {
-            // TODO: check that the key is mine!
+        final byte[] clientPubKey = receivedAddress.getUserPubKey();
+        if (clientPubKey == null || clientPubKey.length <= 0 || !Arrays.equals(expectedClientPubKey, clientPubKey)) {
             return false;
         }
 
-        final byte[] serverPubKey = lockedAddress.getServicePubKey();
-        if (serverPubKey == null || serverPubKey.length <= 0) {
-            // TODO: check that the key is server key
+        final byte[] serverPubKey = receivedAddress.getServicePubKey();
+        if (serverPubKey == null || serverPubKey.length <= 0 || !ECKey.isPubKeyCanonical(serverPubKey)) {
             return false;
         }
 
-        final long lockTime = lockedAddress.getLockTime();
+        final long lockTime = receivedAddress.getLockTime();
         final long now = org.bitcoinj.core.Utils.currentTimeSeconds();
-        if (lockTime <=  now || lockTime >= now + 60*60*24*31) {
+        if (lockTime <=  now || lockTime >= now + Constants.MAX_LOCKTIME_SPAN_SECONDS) {
             return false;
         }
 
         TimeLockedAddress address = new TimeLockedAddress(clientPubKey, serverPubKey, lockTime);
-        final byte[] addressHashCmp = address.getAddressHash();
-        if (!Arrays.equals(addressHash, addressHashCmp)) {
+        if (!address.equals(receivedAddress)) {
             return false;
         }
 
@@ -647,9 +673,10 @@ public class WalletService extends Service {
         /*
          * Migrate 2-of-2 multisig address to AddressWrapper.
          */
-        // TODO: (0) check if already have 2-of-2 multisig address
-        // TODO: (1) migration from multisig to time locked address
-        // TODO: (2) store using AddressWrapper class.
+        // TODO:
+        // (0) check if already have 2-of-2 multisig address
+        // (1) migration from multisig to time locked address
+        // (2) store using AddressWrapper class.
         List<ECKey> keys = ImmutableList.of(clientKey, serverKey);
         Script multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, keys);
         wallet.addWatchedScripts(ImmutableList.of(multisigAddressScript));
@@ -1096,7 +1123,7 @@ public class WalletService extends Service {
             Log.i(TAG, "Wallet reset");
             wallet.reset();
             // delete chain file - this triggers re-downloading the chain (wallet replay) in the next start
-            kit.stopAsync().awaitTerminated(); // TODO: do not use appkit!
+            kit.stopAsync().awaitTerminated();
             blockStore = null;
             File blockstore = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
             if (blockstore.delete()) {

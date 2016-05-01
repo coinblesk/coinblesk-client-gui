@@ -21,6 +21,12 @@ public class Constants {
 
     public final static long UNIX_TIME_MONTH = 60 * 60 * 24 * 30;
     public final static int LOCK_TIME_MONTHS = 3;
+
+    /* do not accept addresses that have lock time higher than (now + timespan) */
+    public final static long MAX_LOCKTIME_SPAN_SECONDS = LOCK_TIME_MONTHS * UNIX_TIME_MONTH + 3600;
+    /* create new address if current expires in less than this timespan */
+    public final static long MIN_LOCKTIME_SPAN_SECONDS = 60 * 60 * 24 * 14;
+
     public final static int LOCK_THRESHOLD = 60 * 4; //https://bitcoin.org/en/developer-reference#block-headers
     public static String WALLET_FILES_PREFIX = "mainnet_wallet_";
     public final static String WALLET_KEY_NAME = "remote_wallet_key";
