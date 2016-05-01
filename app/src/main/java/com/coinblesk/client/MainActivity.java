@@ -19,6 +19,7 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -40,6 +41,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -306,11 +308,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showQrDialog() {
-        String bitcoinUriString = BitcoinURI.convertToBitcoinURI(this.walletServiceBinder.getCurrentReceiveAddress(), null, null, null);
         try {
-            QrDialogFragment.newInstance(new BitcoinURI(bitcoinUriString)).show(this.getSupportFragmentManager(), "qr_dialog_fragment");
-        } catch (BitcoinURIParseException e) {
-            Log.w(TAG, "Could not parse bitcoin URI: " + bitcoinUriString);
+            Address receiveAddress = walletServiceBinder.getCurrentReceiveAddress();
+            String bitcoinUriStr = BitcoinURI.convertToBitcoinURI(receiveAddress, null, null, null);
+            QrDialogFragment
+                    .newInstance(new BitcoinURI(bitcoinUriStr))
+                    .show(getSupportFragmentManager(), "qr_dialog_fragment");
+            Log.d(TAG, "showQrDialog - bitcoinUri" + bitcoinUriStr);
+        } catch (Exception e) {
+            Log.w(TAG, "Error showing QR Code: ", e);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogAccent);
+            Dialog dialog = builder
+                    .setTitle(R.string.qr_code_error_title)
+                    .setMessage(getString(R.string.qr_code_error_message, e.getMessage()))
+                    .setNeutralButton(R.string.ok, null)
+                    .create();
+            dialog.show();
         }
     }
 

@@ -142,6 +142,8 @@
     <string name="qr_code_copy_to_clipboard">Copy to Clipboard</string>
     <string name="qr_code_copied">Successfully copied to your Clipboard.</string>
     <string name="qr_code_close">Close</string>
+    <string name="qr_code_error_title">QR Code Error</string>
+    <string name="qr_code_error_message">Cannot display QR Code:\n%1$s</string>
 
     <!--Authview-->
     <string name="authview_address_title">Your address</string>

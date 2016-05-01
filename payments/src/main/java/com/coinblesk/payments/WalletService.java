@@ -676,7 +676,7 @@ public class WalletService extends Service {
         // TODO:
         // (0) check if already have 2-of-2 multisig address
         // (1) migration from multisig to time locked address
-        // (2) store using AddressWrapper class.
+        // TODO: (2) store using AddressWrapper class.
         List<ECKey> keys = ImmutableList.of(clientKey, serverKey);
         Script multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, keys);
         wallet.addWatchedScripts(ImmutableList.of(multisigAddressScript));
@@ -907,6 +907,9 @@ public class WalletService extends Service {
         }
 
         public Address getMultisigReceiveAddress() {
+            if (addresses.isEmpty()) {
+                throw new IllegalStateException("No address created yet.");
+            }
             return addresses.last().getTimeLockedAddress().getAddress(Constants.PARAMS);
         }
 
