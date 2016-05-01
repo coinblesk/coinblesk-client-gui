@@ -2,12 +2,15 @@ package com.coinblesk.client;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+
+import com.coinblesk.payments.WalletService;
 
 /**
  * Created by ckiller on 17/01/16.
@@ -48,6 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
             pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, final Object newValue) {
+                    stopWalletService();
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder.setTitle(R.string.restart)
                             .setMessage(R.string.pref_network_changed_restart)
@@ -59,10 +63,18 @@ public class SettingsActivity extends AppCompatActivity {
                                     getActivity().finishAffinity();
                                 }
                             })
-                            .create().show();
+                            .setCancelable(false)
+                            .create()
+                            .show();
                     return true;
                 }
             });
         }
+
+        private void stopWalletService() {
+            Intent intent = new Intent(getActivity(), WalletService.class);
+            getActivity().stopService(intent);
+        }
+
     }
 }
