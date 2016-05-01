@@ -11,7 +11,6 @@ public class AppConstants {
     public static final String URL_IFI_WEBSITE = "http://www.ifi.uzh.ch";
     public static final String URL_COINBLESK_TWITTER = "https://twitter.com/coinblesk";
 
-    public static final String CONNECTION_SETTINGS_PREF_KEY = "pref_connection_settings";
     public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
 
     public static final String PRIMARY_BALANCE_PREF_KEY = "pref_balance_list";

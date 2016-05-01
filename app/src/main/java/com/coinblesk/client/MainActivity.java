@@ -102,8 +102,6 @@ public class MainActivity extends AppCompatActivity
     private final static String TAG = MainActivity.class.getName();
     private final static int FINE_LOCATION_PERMISSION_REQUEST = 1;
 
-    private final String NETWORK_SETTINGS_PREF_KEY = "pref_network_list";
-
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        final String networkSettings = sharedPreferences.getString(NETWORK_SETTINGS_PREF_KEY, "main-net");
+        final String networkSettings = sharedPreferences.getString(SettingsActivity.PreferenceKeys.NETWORK_SETTINGS, "test-net-3"); // TODO: mainnet!!
 
         switch (networkSettings) {
             case "test-net-3":
@@ -363,12 +361,11 @@ public class MainActivity extends AppCompatActivity
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             initPeers();
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            String currency = prefs.getString("pref_currency_list", "USD");
+            String currency = prefs.getString(SettingsActivity.PreferenceKeys.FIAT_CURRENCY, "USD");
             walletServiceBinder.setCurrency(currency);
         }
 
@@ -381,18 +378,15 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case FINE_LOCATION_PERMISSION_REQUEST: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "discovery supported");
-                    // BLE and BL will be supported
+                if ((grantResults.length > 0) &&
+                    (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    Log.d(TAG, "discovery supported (BLE and BL will be supported)");
                 } else {
-                    Log.d(TAG, "discovery unsupported");
-                    // BLE and BL will not be supported
+                    Log.d(TAG, "discovery unsupported (BLE and BL will not be supported)");
                 }
             }
         }
@@ -450,12 +444,13 @@ public class MainActivity extends AppCompatActivity
     };
 
     private void initPeers() {
+        // TODO: init peers should probably be called in onStart? (e.g. if connection settings change -> need to reload)
         // TODO: do we need to stop the servers/clients first before we lose the references?
         this.servers.clear();
         this.clients.clear();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        final Set<String> connectionSettings = sharedPreferences.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+        final Set<String> connectionSettings = sharedPreferences.getStringSet(SettingsActivity.PreferenceKeys.CONNECTION_SETTINGS, new HashSet<String>());
 
         if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
             clients.add(new NFCClient(this, walletServiceBinder));

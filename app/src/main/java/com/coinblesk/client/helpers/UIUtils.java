@@ -1,3 +1,20 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.client.helpers;
 
 import android.content.Context;
@@ -15,7 +32,7 @@ import android.widget.ImageView;
 
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
-import com.coinblesk.payments.WalletService;
+import com.coinblesk.client.SettingsActivity;
 import com.coinblesk.payments.models.TransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.google.gson.Gson;
@@ -30,7 +47,11 @@ import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by ckiller on 03/03/16.
@@ -368,9 +389,14 @@ public class UIUtils {
 
     public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> connectionSettings = prefs.getStringSet(AppConstants.CONNECTION_SETTINGS_PREF_KEY, new HashSet<String>());
+        Set<String> connectionSettings = prefs.getStringSet(SettingsActivity.PreferenceKeys.CONNECTION_SETTINGS, new HashSet<String>());
 
-        // Set the Icon Color and Visibility
+        // see: styles.xml -> card_view_connection_icon
+        float alpphaDeactivated = 0.25f;
+        imageView.setAlpha(alpphaDeactivated);
+        imageView.clearColorFilter();
+
+         // Set the Icon Color and Visibility
         if (connectionSettings != null) {
             for (String s : connectionSettings) {
                 switch (s) {
@@ -390,11 +416,8 @@ public class UIUtils {
                         }
                         break;
                 }
-
             }
-
         }
-
     }
 
     private static void makeVisible(Context context, ImageView imageView) {
