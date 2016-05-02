@@ -948,6 +948,7 @@ public class WalletService extends Service {
         }
 
         public ListenableFuture<Transaction> commitAndBroadcastTransaction(final Transaction tx) {
+            Log.d(TAG, "commitAndBroadcastTransaction: " + tx.getHashAsString());
             wallet.commitTx(tx);
             TransactionBroadcast broadcast = peerGroup.broadcastTransaction(tx);
             broadcast.setProgressCallback(new TransactionBroadcast.ProgressCallback() {

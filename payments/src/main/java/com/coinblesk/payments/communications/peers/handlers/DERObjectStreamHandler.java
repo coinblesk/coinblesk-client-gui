@@ -61,4 +61,21 @@ public abstract class DERObjectStreamHandler implements Runnable {
         }
     }
 
+    protected void closeStreams() {
+        if (outputStream != null) {
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                Log.i(TAG, "Exception while closing stream: ", e);
+            }
+        }
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                Log.i(TAG, "Exception while closing stream: ", e);
+            }
+        }
+    }
+
 }

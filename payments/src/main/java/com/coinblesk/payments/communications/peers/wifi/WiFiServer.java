@@ -13,6 +13,7 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
 import com.coinblesk.payments.communications.peers.handlers.InstantPaymentServerHandler;
+import com.coinblesk.payments.communications.peers.handlers.cltv.InstantPaymentServerHandlerCLTV;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,8 +129,11 @@ public class WiFiServer extends AbstractServer {
                     Socket socket;
                     while ((socket = serverSocket.accept()) != null && isRunning()) {
                         Log.d(TAG, "new socket just connected");
+                        // TODO: close socket and streams!
                         final Socket clientSocket = socket;
-                        new Thread(new DHKeyExchangeServerHandler(clientSocket.getInputStream(), clientSocket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
+                        new Thread(new DHKeyExchangeServerHandler(clientSocket.getInputStream(),
+                                                                clientSocket.getOutputStream(),
+                                                                new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
 
@@ -146,7 +150,14 @@ public class WiFiServer extends AbstractServer {
 
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
-                                    new Thread(new InstantPaymentServerHandler(encryptedInputStream, encrytpedOutputStream, getPaymentRequestUri(), getPaymentRequestDelegate(), getWalletServiceBinder()), "WiFiServer.InstantPaymentServerHandler").start();
+                                    new Thread(new InstantPaymentServerHandlerCLTV(
+                                            encryptedInputStream,
+                                            encrytpedOutputStream,
+                                            getPaymentRequestUri(),
+                                            getPaymentRequestDelegate(),
+                                            getWalletServiceBinder()),
+                                            "WiFiServer.InstantPaymentServerHandler")
+                                            .start();
                                 } catch (Exception e) {
                                     Log.e(TAG, "Exception in onSuccess: ", e);
                                 }

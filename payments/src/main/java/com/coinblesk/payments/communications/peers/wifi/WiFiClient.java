@@ -1,3 +1,20 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.payments.communications.peers.wifi;
 
 import android.content.BroadcastReceiver;
@@ -20,9 +37,11 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 import com.coinblesk.payments.communications.peers.handlers.InstantPaymentClientHandler;
+import com.coinblesk.payments.communications.peers.handlers.cltv.InstantPaymentClientHandlerCLTV;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Map;
@@ -38,49 +57,53 @@ import javax.crypto.spec.SecretKeySpec;
 import ch.papers.objectstorage.listeners.OnResultListener;
 
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 public class WiFiClient extends AbstractClient implements WifiP2pManager.ConnectionInfoListener {
-    private final static String TAG = WiFiClient.class.getSimpleName();
+    private final static String TAG = WiFiClient.class.getName();
 
-    private WifiP2pManager manager = null;
-    private WifiP2pManager.Channel channel = null;
+    private WifiP2pManager manager;
+    private WifiP2pManager.Channel channel;
 
-    private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService singleThreadExecutor;
 
-    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            // When discovery finds a device
-            if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-                manager.requestConnectionInfo(channel, WiFiClient.this);
-            } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-                manager.requestConnectionInfo(channel, WiFiClient.this);
-            }
-        }
-    };
 
     public WiFiClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
     }
 
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            // When discovery finds a device
+            switch (action) {
+                case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION: /* fall through */
+                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+                    manager.requestConnectionInfo(channel, WiFiClient.this);
+                    break;
+                default:
+                    Log.d(TAG, "Received action (will not be handled): " + action);
+            }
+        }
+    };
+
     @Override
     public void onStart() {
-        Log.d(TAG, "starting");
+        Log.d(TAG, "onStart");
         singleThreadExecutor = Executors.newSingleThreadExecutor();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-
 
         WifiManager wifiManager = (WifiManager) this.getContext().getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
 
-        manager = (WifiP2pManager) this.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(this.getContext(), this.getContext().getMainLooper(), null);
-        this.getContext().registerReceiver(this.broadcastReceiver, filter);
+        manager = (WifiP2pManager) getContext().getSystemService(Context.WIFI_P2P_SERVICE);
+        channel = manager.initialize(getContext(), getContext().getMainLooper(), null);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        getContext().registerReceiver(broadcastReceiver, filter);
+
         manager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
@@ -108,7 +131,6 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
     @Override
     public void onStop() {
         try {
-
             manager.clearServiceRequests(channel, new LogActionListener("WiFiClient - clearServiceRequests"));
             manager.stopPeerDiscovery(channel, new LogActionListener("WiFiClient - stopPeerDiscovery"));
             manager.cancelConnect(channel, new LogActionListener("WiFiClient - cancelConnect"));
@@ -116,14 +138,19 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
             manager.clearLocalServices(channel, new LogActionListener("WiFiClient - clearLocalServices"));
 
             singleThreadExecutor.shutdown();
-            this.getContext().unregisterReceiver(this.broadcastReceiver);
+            getContext().unregisterReceiver(broadcastReceiver);
+
         } catch (Exception e) {
-            Log.d(TAG, e.getMessage());
+            Log.d(TAG, "Exception in onStop: ", e);
         }
+
+        manager = null;
+        channel = null;
+        singleThreadExecutor = null;
     }
 
     private void connect(WifiP2pDevice device) {
-        Log.d(TAG, "starting connection");
+        Log.d(TAG, "connect WifiP2pDevice: starting connection");
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
@@ -132,7 +159,7 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
     @Override
     public boolean isSupported() {
-        return this.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+        return getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
     }
 
     @Override
@@ -140,45 +167,70 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         
         Log.d(TAG, "onConnectionInfoAvailable: " + info);
         if (!info.isGroupOwner && info.groupFormed) {
-            this.singleThreadExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        final Socket socket = new Socket(info.groupOwnerAddress, Constants.WIFI_SERVICE_PORT);
-                        new DHKeyExchangeClientHandler(socket.getInputStream(), socket.getOutputStream(), new OnResultListener<SecretKeySpec>() {
-                            @Override
-                            public void onSuccess(SecretKeySpec secretKeySpec) {
-                                Log.d(TAG, "exchange successful");
-                                try {
-                                    final byte[] iv = new byte[16];
-                                    Arrays.fill(iv, (byte) 0x00);
-                                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+            singleThreadExecutor.submit(new WifiClientRunnable(info.groupOwnerAddress, Constants.WIFI_SERVICE_PORT));
+        }
+    }
 
-                                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+    private class WifiClientRunnable implements Runnable {
+        private final InetAddress groupOwnerAddress;
+        private final int servicePort;
+        private Socket socket;
 
-                                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
-                                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+        public WifiClientRunnable(InetAddress groupOwnerAddress, int servicePort) {
+            this.groupOwnerAddress = groupOwnerAddress;
+            this.servicePort = servicePort;
+        }
 
-                                    final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
-                                    final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+        @Override
+        public void run() {
+            try {
+                // TODO: close socket and streams!
+                socket = new Socket(groupOwnerAddress, servicePort);
+                DHKeyExchangeClientHandler dhKeyExchange = new DHKeyExchangeClientHandler(
+                        socket.getInputStream(),
+                        socket.getOutputStream(),
+                        new OnKeyExchange());
+                dhKeyExchange.run();
+            } catch (Exception e) {
+                Log.w(TAG, "Exception during connection: ", e);
+            }
+        }
 
-                                    new Thread(new InstantPaymentClientHandler(encryptedInputStream, encrytpedOutputStream, getWalletServiceBinder(), getPaymentRequestDelegate()), "WiFiClient.InstantPaymentClientHandler").start();
-                                } catch (Exception e) {
-                                    Log.w(TAG, "Exception onSuccess: ", e);
-                                }
-                            }
+        private class OnKeyExchange implements OnResultListener<SecretKeySpec> {
+            @Override
+            public void onSuccess(SecretKeySpec secretKeySpec) {
+                Log.d(TAG, "OnKeyExchange: exchange successful");
+                try {
+                    final byte[] iv = new byte[16];
+                    Arrays.fill(iv, (byte) 0x00);
+                    IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
-                            @Override
-                            public void onError(String s) {
-                                Log.d(TAG, "error during key exchange:" + s);
-                            }
-                        }).run();
-                    } catch (Exception e) {
-                        Log.w(TAG, "Exception during connection: ", e);
-                    }
+                    final Cipher writeCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    writeCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                    final Cipher readCipher = Cipher.getInstance(Constants.SYMMETRIC_CIPHER_MODE);
+                    readCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+                    final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
+                    final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+
+                    Thread t = new Thread(
+                            new InstantPaymentClientHandlerCLTV(
+                                    encryptedInputStream,
+                                    encrytpedOutputStream,
+                                    getWalletServiceBinder(),
+                                    getPaymentRequestDelegate()),
+                            "WiFiClient.InstantPaymentClientHandler");
+                    t.start();
+                } catch (Exception e) {
+                    Log.w(TAG, "Exception onSuccess: ", e);
                 }
-            });
+            }
+
+            @Override
+            public void onError(String s) {
+                Log.d(TAG, "OnKeyExchange: error during key exchange:" + s);
+            }
         }
     }
 }
