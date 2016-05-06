@@ -62,8 +62,8 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
-import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEClient;
-import com.coinblesk.payments.communications.peers.bluetooth.BluetoothLEServer;
+import com.coinblesk.payments.communications.peers.bluetooth.cltv.BluetoothLEClient;
+import com.coinblesk.payments.communications.peers.bluetooth.cltv.BluetoothLEServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCClient;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity
                 break;
             default:
                 Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
-                Constants.COINBLESK_SERVER_BASE_URL = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+                Constants.COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server-main/";
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))

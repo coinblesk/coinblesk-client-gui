@@ -66,7 +66,7 @@ public class Constants {
 
     // coinblesk server communication
     //public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.176:8080/";
-    public static String COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    public static String COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server/";
     public static Retrofit RETROFIT = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
