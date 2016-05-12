@@ -171,6 +171,7 @@ public class SendDialogFragment extends DialogFragment
             if (listener != null) {
                 listener.sendCoins(sendTo, amount);
             }
+            dismiss();
         } catch (WrongNetworkException e) {
             Toast.makeText(getContext(),
                     getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
@@ -179,7 +180,6 @@ public class SendDialogFragment extends DialogFragment
         } catch (AddressFormatException e) {
             Toast.makeText(getContext(), R.string.send_address_parse_error, Toast.LENGTH_SHORT).show();
         }
-        dismiss();
     }
 
     private WalletService.WalletServiceBinder walletServiceBinder;
