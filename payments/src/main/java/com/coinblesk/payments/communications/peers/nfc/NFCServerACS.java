@@ -109,7 +109,7 @@ public class NFCServerACS extends AbstractServer {
                 }
 
                 @Override
-                public void nfcTagLost() {
+                public void tagLost() {
                     Log.d(TAG, "tag lost");
                 }
             });
@@ -239,7 +239,7 @@ public class NFCServerACS extends AbstractServer {
                         callback.tagFailed();
                     }
                 } else if (currState == Reader.CARD_ABSENT) {
-                    callback.nfcTagLost();
+                    callback.tagLost();
                 }
             }
         });

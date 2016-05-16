@@ -65,6 +65,7 @@ import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.bluetooth.cltv.BluetoothLEClient;
 import com.coinblesk.payments.communications.peers.bluetooth.cltv.BluetoothLEServer;
 import com.coinblesk.payments.communications.peers.nfc.NFCClient;
+import com.coinblesk.payments.communications.peers.nfc.NFCServerACSCLTV;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
@@ -467,7 +468,7 @@ public class MainActivity extends AppCompatActivity
 
         if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
             clients.add(new NFCClient(this, walletServiceBinder));
-            //servers.add(new NFCServerACS(this, walletServiceBinder));
+            servers.add(new NFCServerACSCLTV(this, walletServiceBinder));
             servers.add(new NFCServerCLTV(this, walletServiceBinder));
 
         }
