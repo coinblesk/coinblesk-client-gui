@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.coinblesk.client.R;
 import com.coinblesk.client.helpers.UIUtils;
@@ -32,6 +33,8 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
     private final List<TimeLockedAddressWrapper> addresses;
     private Map<Address, Coin> balanceByAddress;
+
+    private ItemClickListener listener;
 
     public WalletAddressListAdapter() {
         this(null);
@@ -59,7 +62,7 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
         final Address address = item.getTimeLockedAddress().getAddress(Constants.PARAMS);
         final long lockTime = item.getTimeLockedAddress().getLockTime();
         final long currentTime = Utils.currentTimeSeconds();
-        final Context context = holder.addressView.getContext();
+        final Context context = holder.root.getContext();
 
         holder.address.setText(address.toBase58());
 
@@ -81,7 +84,7 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
                 : context.getDrawable(R.drawable.ic_lock_open_24dp);
         holder.icon.setImageDrawable(icon);
 
-        holder.addressView.setEnabled(balance.isGreaterThan(Coin.ZERO));
+        holder.root.setEnabled(balance.isGreaterThan(Coin.ZERO));
     }
 
     @Override
@@ -97,8 +100,12 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
         this.balanceByAddress = balanceByAddress;
     }
 
+    public void setItemClickListener(ItemClickListener listener) {
+        this.listener = listener;
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        final View addressView;
+        final View root;
         final TextView address;
         final TextView addressBalance;
         final TextView addressInfo;
@@ -106,13 +113,14 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
         ViewHolder(View view) {
             super(view);
-            addressView = view;
-            address = (TextView) addressView.findViewById(R.id.wallet_address_list_item_address);
-            addressBalance = (TextView) addressView.findViewById(R.id.wallet_address_list_item_balance);
-            addressInfo = (TextView) addressView.findViewById(R.id.wallet_address_list_item_info);
-            icon = (ImageView) addressView.findViewById(R.id.wallet_address_list_item_icon);
+            root = view;
+            address = (TextView) root.findViewById(R.id.wallet_address_list_item_address);
+            addressBalance = (TextView) root.findViewById(R.id.wallet_address_list_item_balance);
+            addressInfo = (TextView) root.findViewById(R.id.wallet_address_list_item_info);
+            icon = (ImageView) root.findViewById(R.id.wallet_address_list_item_icon);
 
-            addressView.setOnClickListener(this);
+            root.setOnClickListener(this);
+            ((ViewGroup) address.getParent()).setOnClickListener(this);
             address.setOnClickListener(this);
             addressBalance.setOnClickListener(this);
             addressInfo.setOnClickListener(this);
@@ -124,6 +132,16 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
             Log.d(TAG, "onClick - Address=" + address.getText().toString()
                     + ", Balance=" + addressBalance.getText().toString()
                     + ", Info=" + addressInfo.getText().toString());
+
+            if (listener != null) {
+                int pos = getAdapterPosition();
+                TimeLockedAddressWrapper item = getItems().get(pos);
+                listener.onItemClick(item, pos);
+            }
         }
+    }
+
+    public interface ItemClickListener {
+        void onItemClick(TimeLockedAddressWrapper item, int position);
     }
 }

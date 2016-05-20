@@ -70,4 +70,20 @@
     </string-array>
 
 
+    <!-- Locktime periods -->
+    <string-array name="pref_wallet_locktime_periods_entries">
+        <item>1 Month</item>
+        <item>3 Months</item>
+        <item>6 Months</item>
+        <item>12 Months</item>
+    </string-array>
+    <string-array name="pref_wallet_locktime_periods_values">
+        <!-- Values: in months -->
+        <item>1</item>
+        <item>3</item>
+        <item>6</item>
+        <item>12</item>
+    </string-array>
+
+
 </resources>

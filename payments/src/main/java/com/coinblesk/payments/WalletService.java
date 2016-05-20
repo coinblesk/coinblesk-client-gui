@@ -58,7 +58,6 @@ import com.xeiam.xchange.currency.CurrencyPair;
 import com.xeiam.xchange.dto.marketdata.Ticker;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
@@ -96,6 +95,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -126,8 +126,6 @@ import retrofit2.Response;
  */
 public class WalletService extends Service {
     private final static String TAG = WalletService.class.getName();
-
-    private final static String REFUND_ADDRESS_SETTINGS_PREF_KEY = "pref_refund_address_settings";
 
     private String fiatCurrency = "USD";
     private ExchangeRate exchangeRate;
@@ -213,7 +211,6 @@ public class WalletService extends Service {
                     }
                     initAddresses();
 
-                    loadRefundAddress();
                     appKitInitDone = true;
                     broadcastBalanceChanged();
                 } catch (Exception e) {
@@ -576,12 +573,15 @@ public class WalletService extends Service {
             throw new IllegalStateException("No client or server multisig key, key-exchange should be done first.");
         }
 
-        Log.d(TAG, "Request new address from server.");
         CoinbleskWebService service = coinbleskService();
         final TimeLockedAddressTO request = new TimeLockedAddressTO();
         request.currentDate(System.currentTimeMillis());
         request.publicKey(multisigClientKey.getPubKey());
+        request.lockTime(calculateNextLockTime());
         SerializeUtils.signJSON(request, multisigClientKey);
+
+        Log.d(TAG, "Request new address from server: lockTime=" +
+                org.bitcoinj.core.Utils.dateTimeFormat(request.lockTime()*1000L));
         Response<TimeLockedAddressTO> response = service
                 .createTimeLockedAddress(request)
                 .execute();
@@ -596,7 +596,7 @@ public class WalletService extends Service {
             throw new CoinbleskException("Could not create new address (server response empty)");
         }
 
-        final ECKey serverPublicKey = ECKey.fromPublicOnly(lockedAddress.getServicePubKey());
+        final ECKey serverPublicKey = ECKey.fromPublicOnly(lockedAddress.getServerPubKey());
         if (!checkResponse(responseTO, serverPublicKey)) {
             throw new CoinbleskException("Could not create new address. Type: " + responseTO.type());
         }
@@ -621,6 +621,15 @@ public class WalletService extends Service {
         return lockedAddressWrapper;
     }
 
+    private long calculateNextLockTime() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        int lockTimeMonths = Integer.parseInt(preferences.getString("pref_wallet_locktime_period", "3"));
+        Calendar lockTimeCalendar = Calendar.getInstance();
+        lockTimeCalendar.add(Calendar.MONTH, lockTimeMonths);
+        long lockTime = lockTimeCalendar.getTimeInMillis()/1000L;
+        return lockTime;
+    }
+
     private boolean checkTimeLockedAddress(TimeLockedAddress receivedAddress, byte[] expectedClientPubKey) {
         if (receivedAddress == null) {
             return false;
@@ -631,12 +640,12 @@ public class WalletService extends Service {
             return false;
         }
 
-        final byte[] clientPubKey = receivedAddress.getUserPubKey();
+        final byte[] clientPubKey = receivedAddress.getClientPubKey();
         if (clientPubKey == null || clientPubKey.length <= 0 || !Arrays.equals(expectedClientPubKey, clientPubKey)) {
             return false;
         }
 
-        final byte[] serverPubKey = receivedAddress.getServicePubKey();
+        final byte[] serverPubKey = receivedAddress.getServerPubKey();
         if (serverPubKey == null || serverPubKey.length <= 0 || !ECKey.isPubKeyCanonical(serverPubKey)) {
             return false;
         }
@@ -680,23 +689,6 @@ public class WalletService extends Service {
         List<ECKey> keys = ImmutableList.of(clientKey, serverKey);
         Script multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, keys);
         wallet.addWatchedScripts(ImmutableList.of(multisigAddressScript));
-    }
-
-    private void loadRefundAddress() {
-        final SharedPreferences sharedPreferences = PreferenceManager
-                .getDefaultSharedPreferences(getApplicationContext());
-        final String refundAddressString = sharedPreferences.getString(
-                REFUND_ADDRESS_SETTINGS_PREF_KEY,
-                wallet.currentReceiveAddress().toString());
-        try {
-            refundAddress = Address.fromBase58(Constants.PARAMS, refundAddressString);
-        } catch (AddressFormatException e) {
-            refundAddress = wallet.currentReceiveAddress();
-        }
-        sharedPreferences
-                .edit()
-                .putString(REFUND_ADDRESS_SETTINGS_PREF_KEY, refundAddress.toString())
-                .commit();
     }
 
     private void initExchangeRate() {

@@ -287,10 +287,11 @@
     <string name="fragment_receive_title">Receive payment</string>
     <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
-    <string name="pref_refund_address_settings_summary">Set you refund transaction address. This is where your money
-        will be sent in case of server default.
-    </string>
-    <string name="pref_refund_address_settings_title">Refund Address</string>
+
+    <string name="pref_wallet_settings_title">Wallet Settings</string>
+    <string name="pref_wallet_locktime_period_title">Locktime Period</string>
+    <string name="pref_wallet_locktime_period_summary">Time span after which funds can be redeemed.</string>
+    <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
 
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>
@@ -315,10 +316,14 @@
     <!-- wallet activity -->
     <string name="action_wallet_refund">Collect refund</string>
     <string name="action_wallet_create_time_locked_address">Create new address</string>
+    <string name="wallet_create_address_success_title">New address</string>
+    <string name="wallet_create_address_success_message">New address created:\n%1$s\nTime lock: %2$s</string>
+    <string name="wallet_create_address_failed_title">Create address failed</string>
+    <string name="wallet_create_address_failed_message">Could not create new address:\n%1$s</string>
     <string name="action_wallet_refresh">Refresh</string>
     <string name="activity_wallet_title">Wallet</string>
     <string name="time_locked_address_info">Time locked until %1$s</string>
     <string name="output_list_empty">No unspent outputs.</string>
     <string name="dialog_refund_too_small_title">Amount too small</string>
-    <string name="dialog_refund_too_small_message">Collecting the refund is not possible because the total amount of unlocked coins is too small.\nUnlocked balance available for refund:\n%1$s\n\nYou may spend the coins immediately using the regular way (multisig payment) or the lock time of the funds has to expire.</string>t
+    <string name="dialog_refund_too_small_message">Collecting the refund is not possible because the total amount of unlocked coins is too small.\n\nUnlocked balance available for refund:\n%1$s\n\nYou may spend the coins immediately using the regular way (multisig payment) or the lock time of the funds has to expire.</string>
 </resources>

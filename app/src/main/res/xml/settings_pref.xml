@@ -47,10 +47,22 @@
             android:key="pref_connection_settings"
             android:summary="@string/pref_connection_settings_summary"
             android:title="@string/pref_connection_settings_title" />
-        <EditTextPreference
-            android:key="pref_refund_address_settings"
-            android:summary="@string/pref_refund_address_settings_summary"
-            android:title="@string/pref_refund_address_settings_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_wallet_settings"
+        android:title="@string/pref_wallet_settings_title">
+
+        <ListPreference
+            android:key="pref_wallet_locktime_period"
+            android:title="@string/pref_wallet_locktime_period_title"
+            android:summary="@string/pref_wallet_locktime_period_summary"
+            android:dialogTitle="@string/pref_wallet_locktime_period_title"
+            android:entries="@array/pref_wallet_locktime_periods_entries"
+            android:entryValues="@array/pref_wallet_locktime_periods_values"
+            android:defaultValue="@string/pref_wallet_locktime_period_default" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
