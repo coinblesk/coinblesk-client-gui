@@ -7,7 +7,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -19,6 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
 import com.coinblesk.payments.Constants;
@@ -53,9 +54,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Log.d(TAG, "onCreate");
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getContext());
-        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
-        isBitcoinLargeAmount = isLargeAmount.equals("Bitcoin");
+        isBitcoinLargeAmount = SharedPrefUtils.getPrimaryBalance(getContext()).equals("Bitcoin");
     }
 
     @Override
@@ -340,14 +339,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final Coin coin = this.getCoin();
         final Fiat fiat = this.getFiat();
 
-        if (this.isBitcoinLargeAmount) {
-            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, UIUtils.getCoinDenomination(this.getContext())));
-            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), this.exchangeRate.fiat.getCurrencyCode()));
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(getContext());
+        if (isBitcoinLargeAmount) {
+            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), amountString, coinDenomination));
+            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), exchangeRate.fiat.getCurrencyCode()));
         } else {
-            largeTextView.setText(UIUtils.toLargeSpannable(this.getContext(), this.amountString, this.exchangeRate.fiat.getCurrencyCode()));
-            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin,
-                    UIUtils.getCoinDenomination(this.getContext())),
-                    UIUtils.getCoinDenomination(this.getContext())));
+            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), amountString, exchangeRate.fiat.getCurrencyCode()));
+            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin, coinDenomination), coinDenomination));
         }
     }
 
@@ -402,12 +400,12 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     public void onCoinDigit(int digit) {
-        final String coinDenom = UIUtils.getCoinDenomination(this.getContext());
+        final String coinDenom = SharedPrefUtils.getBitcoinScalePrefix(getContext());
         final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
-        final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
-        final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
+        final int fractionalLength = UIUtils.getFractionalLengthFromString(amountString);
+        final int integerLength = UIUtils.getIntegerLengthFromString(amountString);
 
-        final boolean isDecimal = UIUtils.isDecimal(this.amountString);
+        final boolean isDecimal = UIUtils.isDecimal(amountString);
 
         if (isDecimal) {
             if (fractionalLength < decimalThreshold) {
@@ -464,7 +462,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     public void onCustom(int customKey) {
-        if (UIUtils.isCustomButtonEmpty(this.getContext(), Integer.toString(customKey))) {
+        if (SharedPrefUtils.isCustomButtonEmpty(getContext(), Integer.toString(customKey))) {
             CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
             cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
                 @Override
@@ -532,7 +530,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initCustomButtons(String customKey) {
-        if (UIUtils.isCustomButtonEmpty(this.getContext(), customKey) == false) {
+        if (!SharedPrefUtils.isCustomButtonEmpty(getContext(), customKey)) {
             this.initCustomButton(customKey);
         }
     }

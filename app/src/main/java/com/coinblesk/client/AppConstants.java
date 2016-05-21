@@ -11,16 +11,13 @@ public class AppConstants {
     public static final String URL_IFI_WEBSITE = "http://www.ifi.uzh.ch";
     public static final String URL_COINBLESK_TWITTER = "https://twitter.com/coinblesk";
 
-    public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
-
-    public static final String PRIMARY_BALANCE_PREF_KEY = "pref_balance_list";
     public static final String FIAT_AS_PRIMARY = "Fiat Currency";
     public static final String BTC_AS_PRIMARY = "Bitcoin";
 
-    public static final String BITCOIN_REPRESENTATION_PREF_KEY = "pref_bitcoin_rep_list";
     public static final String COIN = "BTC";
     public static final String MILLICOIN = "mBTC";
     public static final String MICROCOIN = "μBTC";
+
     public static final int MAXIMUM_COIN_AMOUNT_LENGTH = 7;
     public static final int MAXIMUM_FIAT_AMOUNT_LENGTH = 6;
     public static final int FIAT_DECIMAL_THRESHOLD = 2;

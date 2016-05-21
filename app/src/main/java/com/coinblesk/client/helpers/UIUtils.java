@@ -18,10 +18,8 @@
 package com.coinblesk.client.helpers;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -32,7 +30,6 @@ import android.widget.ImageView;
 
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
-import com.coinblesk.client.SettingsActivity;
 import com.coinblesk.payments.models.TransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.google.gson.Gson;
@@ -64,9 +61,9 @@ public class UIUtils {
 
     public static SpannableString getLargeBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
         // Get all Preferences
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, "Bitcoin");
+
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
+        String isLargeAmount = SharedPrefUtils.getPrimaryBalance(context);
 
         // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
         // TODO -> Does this make sense? What it a user changes his primary currency?
@@ -87,9 +84,8 @@ public class UIUtils {
     }
 
     public static SpannableString getSmallBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String coinDenomination = prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
-        String isLargeAmount = prefs.getString(AppConstants.PRIMARY_BALANCE_PREF_KEY, null);
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
+        String isLargeAmount = SharedPrefUtils.getPrimaryBalance(context);
         SpannableString result = new SpannableString("");
 
         switch (isLargeAmount) {
@@ -124,7 +120,7 @@ public class UIUtils {
 
     public static SpannableString scaleCoinForDialogs(Coin coin, Context context) {
         String result = "";
-        String coinDenomination = UIUtils.getCoinDenomination(context);
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
         switch (coinDenomination) {
             case AppConstants.COIN:
@@ -149,7 +145,8 @@ public class UIUtils {
         BigDecimal bdAmount = new BigDecimal(amount);
 
         BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
-        switch (getCoinDenomination(context)) {
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
+        switch (coinDenomination) {
             case AppConstants.MILLICOIN:
                 multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
                 break;
@@ -166,7 +163,8 @@ public class UIUtils {
         // transform a given coin value to the "amount string".
         BigDecimal coinAmount = new BigDecimal(coin.getValue());
         BigDecimal div;
-        switch (getCoinDenomination(context)) {
+        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
+        switch (coinDenomination) {
             case AppConstants.MILLICOIN:
                 div = new BigDecimal(Coin.MILLICOIN.getValue());
                 break;
@@ -184,12 +182,6 @@ public class UIUtils {
         df.setDecimalFormatSymbols(decFormat);
         String amount = df.format(coinAmount.divide(div));
         return amount;
-    }
-
-
-    public static String getCoinDenomination(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(AppConstants.BITCOIN_REPRESENTATION_PREF_KEY, null);
     }
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
@@ -356,21 +348,9 @@ public class UIUtils {
         return true;
     }
 
-    public static boolean isCustomButtonEmpty(Context context, String customKey) {
-        SharedPreferences prefs = context.getSharedPreferences(AppConstants.MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
-        String json = prefs.getString(customKey, null);
-        if (json == null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public static List<String> getCustomButton(Context context, String customKey) {
-        SharedPreferences prefs = context.getSharedPreferences(AppConstants.MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
-
-        if (UIUtils.isCustomButtonEmpty(context, customKey) == false) {
-            String json = prefs.getString(customKey, null);
+        if (!SharedPrefUtils.isCustomButtonEmpty(context, customKey)) {
+            String json = SharedPrefUtils.getCustomButton(context, customKey);
             Gson gson = new Gson();
             String[] contentArray = gson.fromJson(json, String[].class);
             List<String> contentList;
@@ -383,14 +363,11 @@ public class UIUtils {
         }
 
         return null;
-
     }
 
 
     public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> connectionSettings = prefs.getStringSet(SettingsActivity.PreferenceKeys.CONNECTION_SETTINGS, new HashSet<String>());
-
+        Set<String> connectionSettings = SharedPrefUtils.getConnectionSettings(context);
         // see: styles.xml -> card_view_connection_icon
         float alpphaDeactivated = 0.25f;
         imageView.setAlpha(alpphaDeactivated);

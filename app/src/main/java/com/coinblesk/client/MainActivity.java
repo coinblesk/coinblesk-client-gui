@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
@@ -53,6 +52,7 @@ import android.widget.Toast;
 
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
+import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
@@ -125,9 +125,7 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        final String networkSettings = sharedPreferences.getString(SettingsActivity.PreferenceKeys.NETWORK_SETTINGS, "test-net-3"); // TODO: mainnet!!
-
+        final String networkSettings = SharedPrefUtils.getNetwork(this);
         switch (networkSettings) {
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
@@ -378,8 +376,7 @@ public class MainActivity extends AppCompatActivity
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             initPeers();
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            String currency = prefs.getString(SettingsActivity.PreferenceKeys.FIAT_CURRENCY, "USD");
+            String currency = SharedPrefUtils.getCurrency(MainActivity.this);
             walletServiceBinder.setCurrency(currency);
         }
 
@@ -463,8 +460,7 @@ public class MainActivity extends AppCompatActivity
         this.servers.clear();
         this.clients.clear();
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        final Set<String> connectionSettings = sharedPreferences.getStringSet(SettingsActivity.PreferenceKeys.CONNECTION_SETTINGS, new HashSet<String>());
+        final Set<String> connectionSettings = SharedPrefUtils.getConnectionSettings(this);
 
         if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
             clients.add(new NFCClient(this, walletServiceBinder));

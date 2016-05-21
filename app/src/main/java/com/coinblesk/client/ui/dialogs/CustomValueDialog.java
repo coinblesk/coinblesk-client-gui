@@ -2,12 +2,12 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
@@ -19,7 +19,6 @@ import java.util.List;
 public class CustomValueDialog extends Dialog implements View.OnClickListener {
 
     private final static String TAG = CustomValueDialog.class.getName();
-    public static final String MERCHANT_CUSTOM_BUTTONS_PREF_KEY = "MERCHANT_CUSTOM_BUTTONS";
 
     private EditText descriptionEditText;
     private EditText priceEditText;
@@ -61,15 +60,13 @@ public class CustomValueDialog extends Dialog implements View.OnClickListener {
     }
 
     private void saveInput() {
-        SharedPreferences prefs = getContext().getSharedPreferences(MERCHANT_CUSTOM_BUTTONS_PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        List<String> customButton = Arrays.asList(descriptionEditText.getText().toString(),
+
+        List<String> customButton = Arrays.asList(
+                descriptionEditText.getText().toString(),
                 priceEditText.getText().toString());
         Gson gson = new Gson();
         String jsonCustomButton = gson.toJson(customButton);
-        editor.putString(customizeButton, jsonCustomButton);
-        editor.commit();
-
+        SharedPrefUtils.putCustomButton(getContext(), customizeButton, jsonCustomButton);
         if(customValueListener!=null){
             customValueListener.onSharedPrefsUpdated(customizeButton);
         }

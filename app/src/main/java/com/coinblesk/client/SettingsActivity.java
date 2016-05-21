@@ -27,6 +27,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
+import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.coinblesk.payments.WalletService;
 
 /**
@@ -35,13 +36,6 @@ import com.coinblesk.payments.WalletService;
  */
 
 public class SettingsActivity extends AppCompatActivity {
-
-    public static class PreferenceKeys {
-        public static final String CONNECTION_SETTINGS = "pref_connection_settings";
-        public static final String NETWORK_SETTINGS = "pref_network_list";
-        public static final String FIAT_CURRENCY = "pref_currency_list";
-    }
-
     private static final String TAG = SettingsActivity.class.getName();
 
     @Override
@@ -72,7 +66,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void initRestartAfterNetworkChange() {
-            Preference pref = findPreference(PreferenceKeys.NETWORK_SETTINGS);
+            Preference pref = findPreference(SharedPrefUtils.PreferenceKeys.NETWORK_SETTINGS);
             pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, final Object newValue) {
