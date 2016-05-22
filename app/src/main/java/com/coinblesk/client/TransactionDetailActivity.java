@@ -1,6 +1,23 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.coinblesk.client;
 
 import android.content.*;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -13,6 +30,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.coinblesk.client.helpers.UIUtils;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
@@ -27,6 +46,8 @@ import java.util.List;
 
 public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
+    private final static String BLOCKTRAIL_URL_MAINNET = "https://www.blocktrail.com/BTC/tx/";
+    private final static String BLOCKTRAIL_URL_TESTNET = "https://www.blocktrail.com/tBTC/tx/";
 
     public static final String EXTRA_NAME = "transaction-hash";
     private String transactionHash;
@@ -36,19 +57,43 @@ public class TransactionDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_txdetail);
 
-        final Button copyTxButton = (Button) this.findViewById(R.id.txdetail_copytx_button);
-
-        copyTxButton.setOnClickListener(new View.OnClickListener() {
+        this.findViewById(R.id.txdetail_status_icon).setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                // TODO: this should be in a menu because otherwise, this functionality is completely hidden...
+                if(walletServiceBinder != null && walletServiceBinder.isReady()) {
+                    Transaction tx = walletServiceBinder.getTransaction(transactionHash).getTransaction();
+                    walletServiceBinder.broadcastTransaction(tx);
+                }
+            }
+        });
+
+        this.findViewById(R.id.txdetail_copytx_button).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
                 Log.d(TAG, "Transaction: " + transactionHash);
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
                 clipboard.setPrimaryClip(clip);
                 Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
                         .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
-                .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
+                        .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
                         .setAction("Action", null).show();
 
+            }
+        });
+
+        this.findViewById(R.id.txdetail_opentx_button).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                String blockchainExplorerUrl = null;
+                if (SharedPrefUtils.isNetworkTestnet(TransactionDetailActivity.this)) {
+                    blockchainExplorerUrl = BLOCKTRAIL_URL_TESTNET;
+                } else if (SharedPrefUtils.isNetworkMainnet(TransactionDetailActivity.this)) {
+                    blockchainExplorerUrl = BLOCKTRAIL_URL_MAINNET;
+                }
+
+                Uri txUri = Uri.parse(blockchainExplorerUrl + transactionHash);
+                Intent intent = new Intent(Intent.ACTION_VIEW, txUri);
+                startActivity(intent);
             }
         });
 

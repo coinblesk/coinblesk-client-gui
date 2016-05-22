@@ -73,6 +73,14 @@ public final class SharedPrefUtils {
         return string(context, PreferenceKeys.NETWORK_SETTINGS, DEFAULT_NETWORK);
     }
 
+    public static boolean isNetworkTestnet(Context context) {
+        return getNetwork(context).equals("test-net-3");
+    }
+
+    public static boolean isNetworkMainnet(Context context) {
+        return getNetwork(context).equals("main-net");
+    }
+
     public static String getCurrency(Context context) {
         return string(context, PreferenceKeys.FIAT_CURRENCY, DEFAULT_CURRENCY);
     }
