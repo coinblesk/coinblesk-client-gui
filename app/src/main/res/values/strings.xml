@@ -1,3 +1,19 @@
+<!--
+  ~ Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~
+  ~  http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
 <resources>
     <string name="app_name">coinblesk</string>
 
@@ -326,4 +342,12 @@
     <string name="output_list_empty">No unspent outputs.</string>
     <string name="dialog_refund_too_small_title">Amount too small</string>
     <string name="dialog_refund_too_small_message">Collecting the refund is not possible because the total amount of unlocked coins is too small.\n\nUnlocked balance available for refund:\n%1$s\n\nYou may spend the coins immediately using the regular way (multisig payment) or the lock time of the funds has to expire.</string>
+
+    <string name="collect_refund_option_dialog_title">Collect refund</string>
+    <string name="collect_refund_send_title">Send to address</string>
+    <string name="collect_refund_send_description">Select custom Bitcoin address</string>
+    <string name="collect_refund_topup_title">Top up wallet</string>
+    <string name="collect_refund_topup_description">Send to the current receive address of this wallet</string>
+
+
 </resources>

@@ -100,10 +100,14 @@ public class WalletActivity extends AppCompatActivity
     public void sendCoins(Address address, Coin amount) {
         // this is called by the send dialog if the user collects the refund
         // Note: in this case, the amount is just to inform the user - we spend all!
+        collectRefund(address);
+    }
+
+    public void collectRefund(Address toAddress) {
         final DialogFragment progress = ProgressSuccessOrFailDialog.newInstance(
                 getString(R.string.fragment_send_dialog_title));
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
-        walletService.collectRefund(address);
+        walletService.collectRefund(toAddress);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

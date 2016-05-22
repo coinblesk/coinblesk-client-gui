@@ -591,6 +591,10 @@ public class WalletService extends Service {
         }
 
         final TimeLockedAddressTO responseTO = response.body();
+        if (!responseTO.isSuccess()) {
+            throw new CoinbleskException("Could not create new address: Error: " + responseTO.type().toString());
+        }
+
         final TimeLockedAddress lockedAddress = responseTO.timeLockedAddress();
         if (lockedAddress == null) {
             throw new CoinbleskException("Could not create new address (server response empty)");

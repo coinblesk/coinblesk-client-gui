@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.coinblesk.client.wallet;
 
 import android.content.*;
@@ -33,7 +49,9 @@ import java.util.Map;
 /**
  * @author Andreas Albrecht
  */
-public class WalletAddressList extends Fragment implements WalletAddressListAdapter.ItemClickListener {
+public class WalletAddressList extends Fragment
+                            implements WalletAddressListAdapter.ItemClickListener,
+                            CollectRefundOptionsDialog.CollectRefundOptionsListener {
 
     private static final String TAG = WalletAddressList.class.getName();
 
@@ -149,14 +167,28 @@ public class WalletAddressList extends Fragment implements WalletAddressListAdap
         final Coin refundBalance = walletService.getBalanceUnlocked();
         Log.d(TAG, "Collect refund - available amount (unlocked): " + refundBalance.getValue());
         if (refundBalance.isPositive()) {
-            DialogFragment sendDialog = SendDialogFragment.newInstance(refundBalance);
-            sendDialog.show(getFragmentManager(), "collect_refund_send_dialog");
+            showCollectRefundOptionsDialog(refundBalance);
         } else {
-            showDialogAmountTooSmall(refundBalance);
+            showAmountTooSmallDialog(refundBalance);
         }
     }
 
-    private void showDialogAmountTooSmall(Coin amount) {
+    private void showCollectRefundOptionsDialog(Coin amount) {
+        // there are two options for the user:
+        // (1) user pays to current receive address of this wallet, i.e. in order to lock the funds again.
+        // (2) user pays to custom address (external wallet)
+        DialogFragment optionsDialog = CollectRefundOptionsDialog.newInstance(amount);
+        optionsDialog.setTargetFragment(this, 0);
+        optionsDialog.show(getFragmentManager(), "collect_refund_options_dialog");
+    }
+
+    private void showSendDialog(Coin amount) {
+        DialogFragment sendDialog = SendDialogFragment.newInstance(amount);
+        sendDialog.show(getFragmentManager(), "collect_refund_send_dialog");
+        // Note: the callback is WalletActivity#sendCoins
+    }
+
+    private void showAmountTooSmallDialog(Coin amount) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
         AlertDialog dialog = builder
                 .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -210,6 +242,19 @@ public class WalletAddressList extends Fragment implements WalletAddressListAdap
         if (progressBar != null) {
             progressBar.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onTopUpOptionSelected() {
+        final Coin refundBalance = walletService.getBalanceUnlocked();
+        Address currentReceiveAddress = walletService.getCurrentReceiveAddress();
+        ((WalletActivity) getActivity()).collectRefund(currentReceiveAddress);
+    }
+
+    @Override
+    public void onSendOptionSelected() {
+        final Coin refundBalance = walletService.getBalanceUnlocked();
+        showSendDialog(refundBalance);
     }
 
     private class CreateAddressTask extends AsyncTask<Void, Void, TimeLockedAddressWrapper> {
