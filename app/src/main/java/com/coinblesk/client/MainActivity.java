@@ -23,11 +23,13 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -52,13 +54,16 @@ import android.widget.Toast;
 
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.authview.AuthenticationDialog;
+import com.coinblesk.client.helpers.AppUtils;
 import com.coinblesk.client.helpers.SharedPrefUtils;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.wallet.WalletActivity;
+import com.coinblesk.json.VersionTO;
 import com.coinblesk.payments.Constants;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
@@ -69,6 +74,7 @@ import com.coinblesk.payments.communications.peers.nfc.NFCServerACSCLTV;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
+import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -82,12 +88,12 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import ch.papers.objectstorage.UuidObjectStorage;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -176,6 +182,14 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
+
+        checkVersionCompatibility();
+    }
+
+    private void checkVersionCompatibility() {
+        // message is only displayed if request succeeds and answer from server is negative in order
+        // to avoid annoying message dialogs. (the client or the server may just be temporary offline).
+        new VersionCheckTask().execute();
     }
 
     private void startWalletService() {
@@ -594,6 +608,67 @@ public class MainActivity extends AppCompatActivity
         stopServers();
         restartServers = false;
         authViewDialog = null;
+    }
+
+    private class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
+
+        private Exception exception;
+
+        protected VersionTO doInBackground(Void... params) {
+            try {
+                CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+
+                VersionTO requestTO = new VersionTO();
+                requestTO.version(AppUtils.getAppVersion());
+                Response<VersionTO> response = service.version(requestTO).execute();
+                if (!response.isSuccess()) {
+                    throw new CoinbleskException(
+                            "Version compatibility check: request failed with code: "
+                            + response.code());
+                }
+
+                VersionTO responseTO = response.body();
+                if (!responseTO.isSuccess()) {
+                    throw new CoinbleskException(
+                            "Version compatibility check: server responded with error: "
+                            + responseTO.type().toString());
+                }
+
+                return responseTO;
+            } catch (Exception e) {
+                Log.e(TAG, "Could not do version check: ", e);
+                this.exception = e;
+            }
+            return null;
+        }
+
+        protected void onPostExecute(VersionTO responseTO) {
+            if (responseTO == null) {
+                return;
+            }
+
+            Log.d(TAG, String.format(
+                    "Version compatibility check: clientVersion=%s, isSupported=%s",
+                    AppUtils.getAppVersion(), responseTO.isSupported()));
+            if (!responseTO.isSupported()) {
+                showIncompatibleVersionDialog();
+            }
+        }
+
+        private void showIncompatibleVersionDialog() {
+            String clientVersion = AppUtils.getAppVersion();
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogAccent)
+                    .setTitle(R.string.version_compatibility_dialog_title)
+                    .setMessage(getString(R.string.version_compatibility_dialog_message, clientVersion))
+                    .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            Dialog dialog = builder.create();
+            dialog.show();
+        }
     }
 }
 

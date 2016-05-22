@@ -349,5 +349,6 @@
     <string name="collect_refund_topup_title">Top up wallet</string>
     <string name="collect_refund_topup_description">Send to the current receive address of this wallet</string>
 
-
+    <string name="version_compatibility_dialog_title">Version incompatible</string>
+    <string name="version_compatibility_dialog_message">This client is not compatible with the current server. Please upgrade the client.\n\nClient version: %1$s</string>
 </resources>
