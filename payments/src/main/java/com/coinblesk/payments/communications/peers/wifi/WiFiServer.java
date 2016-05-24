@@ -12,7 +12,6 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
-import com.coinblesk.payments.communications.peers.handlers.cltv.InstantPaymentServerHandlerCLTV;
 
 import java.io.IOException;
 import java.io.InputStream;

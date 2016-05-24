@@ -1,4 +1,4 @@
-package com.coinblesk.payments.communications.peers.steps.cltv;
+package com.coinblesk.payments.communications.steps.cltv;
 
 import android.util.Log;
 import com.coinblesk.json.SignTO;
@@ -6,7 +6,7 @@ import com.coinblesk.json.TxSig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.peers.steps.AbstractStep;
+import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERSequence;

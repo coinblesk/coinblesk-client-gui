@@ -1,4 +1,4 @@
-package com.coinblesk.payments.communications.peers.steps;
+package com.coinblesk.payments.communications.steps;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 16/04/16.

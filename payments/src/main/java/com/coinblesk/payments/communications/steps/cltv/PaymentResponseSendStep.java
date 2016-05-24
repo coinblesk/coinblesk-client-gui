@@ -1,4 +1,4 @@
-package com.coinblesk.payments.communications.peers.steps.cltv;
+package com.coinblesk.payments.communications.steps.cltv;
 
 import android.content.Intent;
 import android.util.Log;
@@ -6,7 +6,7 @@ import com.coinblesk.json.SignTO;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.peers.steps.AbstractStep;
+import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;

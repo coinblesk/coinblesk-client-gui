@@ -34,10 +34,10 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractClient;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentFinalizeStep;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentRequestReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentResponseSendStep;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentServerSignatureReceiveStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;

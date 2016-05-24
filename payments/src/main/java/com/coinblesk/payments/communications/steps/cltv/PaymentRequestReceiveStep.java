@@ -1,11 +1,11 @@
-package com.coinblesk.payments.communications.peers.steps.cltv;
+package com.coinblesk.payments.communications.steps.cltv;
 
 import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
-import com.coinblesk.payments.communications.peers.steps.AbstractStep;
+import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadParser;
 
 import org.bitcoinj.core.Address;

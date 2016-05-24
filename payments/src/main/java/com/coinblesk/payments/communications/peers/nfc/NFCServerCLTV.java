@@ -16,8 +16,8 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentResponseReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.cltv.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentRequestSendStep;
 
 import java.io.IOException;
 import java.util.Arrays;

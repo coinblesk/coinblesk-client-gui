@@ -18,9 +18,9 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsSendStep;
+import com.coinblesk.payments.communications.steps.PaymentRefundSendStep;
+import com.coinblesk.payments.communications.steps.PaymentRequestReceiveStep;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;

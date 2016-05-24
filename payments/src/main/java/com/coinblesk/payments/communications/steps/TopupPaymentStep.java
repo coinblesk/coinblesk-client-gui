@@ -1,4 +1,4 @@
-package com.coinblesk.payments.communications.peers.steps;
+package com.coinblesk.payments.communications.steps;
 
 import android.content.Intent;
 

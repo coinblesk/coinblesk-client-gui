@@ -12,13 +12,13 @@ import android.test.suitebuilder.annotation.SmallTest;
 import android.util.Log;
 
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsSendStep;
+import com.coinblesk.payments.communications.steps.PaymentRefundReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRefundSendStep;
+import com.coinblesk.payments.communications.steps.PaymentRequestReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;

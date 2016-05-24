@@ -14,9 +14,9 @@
  * the License.
  */
 
-package com.coinblesk.client;
+package com.coinblesk.client.ui;
 
-interface OnKeyboardListener {
+public interface OnKeyboardListener {
     void onDigit(int digit);
     void onDot();
     void onEnter();

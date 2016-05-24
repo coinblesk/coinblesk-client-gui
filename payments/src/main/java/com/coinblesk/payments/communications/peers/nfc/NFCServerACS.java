@@ -18,10 +18,10 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
-import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRefundReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRequestSendStep;
 import com.coinblesk.util.Pair;
 
 import java.io.IOException;

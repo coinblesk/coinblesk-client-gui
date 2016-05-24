@@ -37,7 +37,7 @@ import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.peers.steps.cltv.CLTVInstantPaymentStep;
+import com.coinblesk.payments.communications.steps.cltv.CLTVInstantPaymentStep;
 import com.coinblesk.client.models.ECKeyWrapper;
 import com.coinblesk.client.models.ExchangeRateWrapper;
 import com.coinblesk.client.models.TimeLockedAddressWrapper;

@@ -4,10 +4,10 @@ import android.util.Log;
 
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
-import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRefundReceiveStep;
-import com.coinblesk.payments.communications.peers.steps.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.PaymentAuthorizationReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRefundReceiveStep;
+import com.coinblesk.payments.communications.steps.PaymentRequestSendStep;
 
 import org.bitcoinj.uri.BitcoinURI;
 

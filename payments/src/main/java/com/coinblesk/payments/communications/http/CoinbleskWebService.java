@@ -28,9 +28,6 @@ public interface CoinbleskWebService {
     @POST("payment/key-exchange")
     Call<KeyTO> keyExchange(@Body KeyTO keyTO);
 
-    @POST("payment/refund")
-    Call<RefundTO> refund(@Body RefundTO refundTO);
-
     // new endpoints
     @POST("full-payment/sign")
     Call<SignTO> sign(@Body SignTO signTO);

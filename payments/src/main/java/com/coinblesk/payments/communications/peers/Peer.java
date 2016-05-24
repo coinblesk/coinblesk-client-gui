@@ -6,7 +6,7 @@ package com.coinblesk.payments.communications.peers;
  * a.decarli@papers.ch
  */
 public interface Peer {
-    public void start();
-    public void stop();
-    public boolean isSupported();
+    void start();
+    void stop();
+    boolean isSupported();
 }

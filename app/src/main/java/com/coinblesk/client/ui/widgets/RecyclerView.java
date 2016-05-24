@@ -67,6 +67,14 @@ public class RecyclerView extends android.support.v7.widget.RecyclerView {
         updateEmptyView();
     }
 
+    private void updateEmptyView() {
+        if (emptyView != null && getAdapter() != null) {
+            boolean isEmpty = getAdapter().getItemCount() == 0;
+            emptyView.setVisibility(isEmpty ? VISIBLE : GONE);
+            setVisibility(isEmpty ? GONE : VISIBLE);
+        }
+    }
+
     private class EmptyViewObserver extends AdapterDataObserver {
         @Override
         public void onChanged() {
@@ -84,14 +92,6 @@ public class RecyclerView extends android.support.v7.widget.RecyclerView {
         public void onItemRangeRemoved(int positionStart, int itemCount) {
             super.onItemRangeRemoved(positionStart, itemCount);
             updateEmptyView();
-        }
-    }
-
-    private void updateEmptyView() {
-        if (emptyView != null && getAdapter() != null) {
-            boolean isEmpty = getAdapter().getItemCount() == 0;
-            emptyView.setVisibility(isEmpty ? VISIBLE : GONE);
-            setVisibility(isEmpty ? GONE : VISIBLE);
         }
     }
 }
