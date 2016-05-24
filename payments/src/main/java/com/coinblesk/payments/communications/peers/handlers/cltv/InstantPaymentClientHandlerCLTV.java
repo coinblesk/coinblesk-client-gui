@@ -20,7 +20,7 @@ package com.coinblesk.payments.communications.peers.handlers.cltv;
 import android.util.Log;
 
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.handlers.DERObjectStreamHandler;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentFinalizeStep;

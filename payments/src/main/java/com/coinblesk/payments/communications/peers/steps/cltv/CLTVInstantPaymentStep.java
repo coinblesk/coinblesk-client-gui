@@ -2,7 +2,7 @@ package com.coinblesk.payments.communications.peers.steps.cltv;
 
 import android.util.Log;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.steps.AbstractStep;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;

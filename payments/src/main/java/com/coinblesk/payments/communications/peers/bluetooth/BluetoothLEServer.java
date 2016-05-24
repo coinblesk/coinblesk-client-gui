@@ -18,12 +18,12 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.TxSig;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
@@ -136,7 +136,7 @@ public class BluetoothLEServer extends AbstractServer {
             public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
                 Log.d(TAG, device.getAddress() + " requested characteristic write with " + value.length + " payload");
                 PaymentState paymentState = this.connectedDevices.get(device.getAddress());
-                paymentState.derRequestPayload = Utils.concatBytes(paymentState.derRequestPayload, value);
+                paymentState.derRequestPayload = ClientUtils.concatBytes(paymentState.derRequestPayload, value);
                 int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
                 if (paymentState.derRequestPayload.length >= responseLength) {
                     final byte[] requestPayload = paymentState.derRequestPayload;

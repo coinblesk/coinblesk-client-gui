@@ -12,13 +12,13 @@ import android.util.Log;
 
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.steps.FullInstantPaymentStep;
 import com.coinblesk.payments.communications.peers.steps.TopupPaymentStep;
-import com.coinblesk.payments.models.ECKeyWrapper;
-import com.coinblesk.payments.models.ExchangeRateWrapper;
-import com.coinblesk.payments.models.TransactionWrapper;
-import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
+import com.coinblesk.client.models.ECKeyWrapper;
+import com.coinblesk.client.models.ExchangeRateWrapper;
+import com.coinblesk.client.models.TransactionWrapper;
+import com.coinblesk.client.models.filter.ECKeyWrapperFilter;
 import com.coinblesk.util.BitcoinUtils;
 import com.google.common.collect.ImmutableList;
 import com.xeiam.xchange.Exchange;

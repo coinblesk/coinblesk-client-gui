@@ -2,8 +2,8 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.der.DERObject;
 
 import java.io.InputStream;
 import java.io.OutputStream;

@@ -5,7 +5,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-    <com.coinblesk.client.ui.widget.RecyclerView
+    <com.coinblesk.client.ui.widgets.RecyclerView
             android:id="@+id/address_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

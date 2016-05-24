@@ -9,14 +9,13 @@ import android.nfc.cardemulation.HostApduService;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentRequestReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentResponseSendStep;
@@ -124,7 +123,7 @@ public class NFCClientServiceCLTV extends HostApduService {
             }
 
             /* HANDLE REQUEST (not keepalive) */
-            derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
+            derRequestPayload = ClientUtils.concatBytes(derRequestPayload, payload);
             final int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
             Log.d(TAG, "processCommandApdu -  requestPayload - expected length=" + responseLength
                      + ", actual length=" + derRequestPayload.length);

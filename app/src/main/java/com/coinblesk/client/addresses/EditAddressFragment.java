@@ -19,7 +19,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 import com.coinblesk.client.R;
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.WrongNetworkException;

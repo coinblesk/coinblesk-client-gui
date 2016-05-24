@@ -19,7 +19,7 @@ import android.widget.Toast;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
 import com.coinblesk.client.R;
-import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 import org.bitcoinj.uri.BitcoinURI;

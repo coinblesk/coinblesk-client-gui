@@ -27,7 +27,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.coinblesk.client.R;
-import com.coinblesk.client.helpers.UIUtils;
+import com.coinblesk.client.utils.UIUtils;
 
 import org.bitcoinj.core.Coin;
 

@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.coinblesk.client.R;
-import com.coinblesk.client.helpers.SharedPrefUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.google.gson.Gson;
 
 import java.util.Arrays;

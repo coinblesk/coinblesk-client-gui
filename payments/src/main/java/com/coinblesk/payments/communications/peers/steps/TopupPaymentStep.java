@@ -3,13 +3,13 @@ package com.coinblesk.payments.communications.peers.steps;
 import android.content.Intent;
 
 import com.coinblesk.json.SignTO;
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.PaymentProtocol;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERInteger;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERSequence;
-import com.coinblesk.payments.models.RefundTransactionWrapper;
+import com.coinblesk.der.DERInteger;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERSequence;
+import com.coinblesk.client.models.RefundTransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;

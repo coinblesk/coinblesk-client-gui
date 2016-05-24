@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,9 +35,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.coinblesk.client.R;
-import com.coinblesk.client.helpers.QREncoder;
-import com.coinblesk.client.helpers.UIUtils;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.utils.QREncoder;
+import com.coinblesk.client.utils.UIUtils;
+import com.coinblesk.client.utils.ClientUtils;
 import com.google.zxing.WriterException;
 
 import org.bitcoinj.uri.BitcoinURI;
@@ -57,7 +56,7 @@ public class QrDialogFragment extends DialogFragment {
     private BitcoinURI bitcoinURI;
 
     public static DialogFragment newInstance(BitcoinURI bitcoinURI){
-        String payload = Utils.bitcoinUriToString(bitcoinURI);
+        String payload = ClientUtils.bitcoinUriToString(bitcoinURI);
         final DialogFragment dialogFragment = new QrDialogFragment();
         final Bundle arguments = new Bundle();
         arguments.putString(BITCOIN_URI_KEY, payload);
@@ -80,7 +79,7 @@ public class QrDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.fragment_qr_dialog, container);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 
-        final String uri = Utils.bitcoinUriToString(bitcoinURI);
+        final String uri = ClientUtils.bitcoinUriToString(bitcoinURI);
 
         final TextView addressTextView = (TextView) view.findViewById(R.id.address_textview);
         if (addressTextView != null && bitcoinURI.getAddress() != null) {

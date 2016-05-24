@@ -15,7 +15,7 @@ import android.widget.Toast;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.listeners.OnResultListener;
 import com.coinblesk.client.R;
-import com.coinblesk.client.ui.widget.RecyclerView;
+import com.coinblesk.client.ui.widgets.RecyclerView;
 
 import java.util.Collections;
 import java.util.List;

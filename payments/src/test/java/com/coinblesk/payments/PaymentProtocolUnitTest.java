@@ -1,8 +1,8 @@
 package com.coinblesk.payments;
 
-import com.coinblesk.payments.models.ECKeyWrapper;
-import com.coinblesk.payments.models.User;
-import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
+import com.coinblesk.client.models.ECKeyWrapper;
+import com.coinblesk.client.models.User;
+import com.coinblesk.client.models.filters.ECKeyWrapperFilter;
 
 import junit.framework.Assert;
 

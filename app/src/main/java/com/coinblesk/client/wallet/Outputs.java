@@ -29,7 +29,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.coinblesk.client.R;
-import com.coinblesk.client.ui.widget.RecyclerView;
+import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.payments.WalletService;
 
 /**

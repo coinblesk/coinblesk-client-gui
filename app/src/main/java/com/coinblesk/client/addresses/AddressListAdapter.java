@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.coinblesk.client.R;
-import com.coinblesk.client.ui.widget.RecyclerView;
+import com.coinblesk.client.ui.widgets.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;

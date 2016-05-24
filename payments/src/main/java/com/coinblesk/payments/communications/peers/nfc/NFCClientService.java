@@ -12,12 +12,12 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.TxSig;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
@@ -112,7 +112,7 @@ public class NFCClientService extends HostApduService {
                 } else {
                     final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
                     if (!Arrays.equals(payload, KEEPALIVE)) {
-                        derRequestPayload = Utils.concatBytes(derRequestPayload, payload);
+                        derRequestPayload = ClientUtils.concatBytes(derRequestPayload, payload);
                         int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
                         Log.d(TAG, "expecting response length:" + responseLength + ", actual response length:" + derRequestPayload.length);
 

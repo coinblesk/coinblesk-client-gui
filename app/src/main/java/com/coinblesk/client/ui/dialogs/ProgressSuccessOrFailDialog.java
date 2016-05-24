@@ -15,7 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.coinblesk.client.R;
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 
 
 /**

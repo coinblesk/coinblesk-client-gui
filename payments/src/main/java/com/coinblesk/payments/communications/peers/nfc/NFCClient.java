@@ -3,7 +3,7 @@ package com.coinblesk.payments.communications.peers.nfc;
 import android.app.Activity;
 import android.content.Intent;
 
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 

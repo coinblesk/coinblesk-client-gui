@@ -1,5 +1,9 @@
 package com.coinblesk.payments.communications.messages;
 
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
+import com.coinblesk.der.DERSequence;
+
 import org.bitcoinj.core.ECKey;
 import org.junit.Assert;
 import org.junit.Test;

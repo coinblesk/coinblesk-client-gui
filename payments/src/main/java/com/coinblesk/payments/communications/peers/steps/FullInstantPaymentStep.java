@@ -1,8 +1,8 @@
 package com.coinblesk.payments.communications.peers.steps;
 
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.models.RefundTransactionWrapper;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.client.models.RefundTransactionWrapper;
 
 import org.bitcoinj.uri.BitcoinURI;
 

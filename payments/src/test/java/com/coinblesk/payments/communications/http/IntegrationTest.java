@@ -1,8 +1,8 @@
 package com.coinblesk.payments.communications.http;
 
 import com.coinblesk.json.KeyTO;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.models.ECKeyWrapper;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.models.ECKeyWrapper;
 import com.coinblesk.util.SerializeUtils;
 
 import junit.framework.Assert;

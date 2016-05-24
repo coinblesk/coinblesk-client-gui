@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.coinblesk.client.ui.widget.AspectRatioView
+    <com.coinblesk.client.ui.widgets.AspectRatioView
         android:id="@+id/social_about_tos"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,6 +32,6 @@
                 android:textAppearance="@style/TextAppearance.Body2" />
 
         </LinearLayout>
-    </com.coinblesk.client.ui.widget.AspectRatioView>
+    </com.coinblesk.client.ui.widgets.AspectRatioView>
 
 </LinearLayout>

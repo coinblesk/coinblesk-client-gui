@@ -1,9 +1,9 @@
 package com.coinblesk.payments.communications.peers.steps.cltv;
 
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.steps.AbstractStep;
-import com.coinblesk.payments.models.TimeLockedAddressWrapper;
+import com.coinblesk.client.models.TimeLockedAddressWrapper;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.crypto.TransactionSignature;

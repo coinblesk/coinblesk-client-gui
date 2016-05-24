@@ -4,7 +4,7 @@ package com.coinblesk.payments;
 import com.coinblesk.json.KeyTO;
 import com.google.gson.Gson;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.models.User;
+import com.coinblesk.client.models.User;
 
 import junit.framework.Assert;
 

@@ -28,11 +28,11 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentRequestReceiveStep;
@@ -148,7 +148,7 @@ public class BluetoothLEClient extends AbstractClient {
             Log.d(TAG, String.format("%s - onCharacteristicRead - status=%d, length=%d bytes",
                     gatt.getDevice().getAddress(), status, characteristic.getValue().length));
 
-            derRequestPayload = Utils.concatBytes(derRequestPayload, characteristic.getValue());
+            derRequestPayload = ClientUtils.concatBytes(derRequestPayload, characteristic.getValue());
             int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
 
             if (derRequestPayload.length >= responseLength && derRequestPayload.length != 2) {

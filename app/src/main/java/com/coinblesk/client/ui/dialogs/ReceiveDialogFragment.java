@@ -13,8 +13,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.coinblesk.client.R;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
+
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -29,7 +30,7 @@ public class ReceiveDialogFragment extends DialogFragment {
     public static DialogFragment newInstance(BitcoinURI bitcoinURI) {
         DialogFragment fragment = new ReceiveDialogFragment();
         Bundle arguments = new Bundle();
-        arguments.putString(BITCOIN_URI_KEY, Utils.bitcoinUriToString(bitcoinURI));
+        arguments.putString(BITCOIN_URI_KEY, ClientUtils.bitcoinUriToString(bitcoinURI));
         fragment.setArguments(arguments);
         return fragment;
     }

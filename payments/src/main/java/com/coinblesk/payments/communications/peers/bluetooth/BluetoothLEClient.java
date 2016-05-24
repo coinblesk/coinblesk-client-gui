@@ -11,17 +11,17 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.TxSig;
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRefundSendStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentRequestReceiveStep;
-import com.coinblesk.payments.models.RefundTransactionWrapper;
+import com.coinblesk.client.models.RefundTransactionWrapper;
 
 import org.bitcoinj.core.Transaction;
 
@@ -119,7 +119,7 @@ public class BluetoothLEClient extends AbstractClient {
                     Log.d(TAG, gatt.getDevice().getAddress() + " read characteristic:" + status);
                     Log.d(TAG, "read receiving bytes: " + characteristic.getValue().length);
 
-                    this.derRequestPayload = Utils.concatBytes(derRequestPayload, characteristic.getValue());
+                    this.derRequestPayload = ClientUtils.concatBytes(derRequestPayload, characteristic.getValue());
                     int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
 
                     if (derRequestPayload.length >= responseLength && derRequestPayload.length != 2) {

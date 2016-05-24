@@ -8,11 +8,10 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.util.Log;
 
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeServerHandler;
-import com.coinblesk.payments.communications.peers.handlers.InstantPaymentServerHandler;
 import com.coinblesk.payments.communications.peers.handlers.cltv.InstantPaymentServerHandlerCLTV;
 
 import java.io.IOException;

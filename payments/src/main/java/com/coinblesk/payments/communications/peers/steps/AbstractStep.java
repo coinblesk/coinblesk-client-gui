@@ -1,6 +1,6 @@
 package com.coinblesk.payments.communications.peers.steps;
 
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import org.bitcoinj.uri.BitcoinURI;
 
 /**

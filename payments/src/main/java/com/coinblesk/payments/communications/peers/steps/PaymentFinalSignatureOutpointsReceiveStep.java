@@ -4,11 +4,11 @@ import android.util.Log;
 
 import com.coinblesk.json.TxSig;
 import com.coinblesk.json.VerifyTO;
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.communications.messages.DERInteger;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERSequence;
+import com.coinblesk.der.DERInteger;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERSequence;
 import com.coinblesk.util.Pair;
 
 import org.bitcoinj.core.ECKey;

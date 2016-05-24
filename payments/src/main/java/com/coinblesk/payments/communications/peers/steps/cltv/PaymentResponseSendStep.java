@@ -3,15 +3,11 @@ package com.coinblesk.payments.communications.peers.steps.cltv;
 import android.content.Intent;
 import android.util.Log;
 import com.coinblesk.json.SignTO;
-import com.coinblesk.json.TxSig;
-import com.coinblesk.payments.Constants;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERSequence;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.steps.AbstractStep;
-import com.coinblesk.payments.communications.utils.DERPayloadBuilder;
-import com.coinblesk.payments.communications.utils.DERPayloadParser;
+import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.SerializeUtils;
@@ -21,10 +17,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
-import org.bitcoinj.uri.BitcoinURIParseException;
-import retrofit2.Response;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

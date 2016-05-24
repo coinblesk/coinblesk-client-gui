@@ -1,5 +1,6 @@
 package com.coinblesk.payments;
 
+import com.coinblesk.client.config.Constants;
 import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.Address;

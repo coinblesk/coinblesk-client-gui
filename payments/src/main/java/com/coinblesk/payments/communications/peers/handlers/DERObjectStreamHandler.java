@@ -2,10 +2,10 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ public abstract class DERObjectStreamHandler implements Runnable {
 
             while (totalBytesRead < endIndex && (bytesReadCounter = inputStream.read(buffer)) > 0) {
                 Log.d(TAG,"next der object");
-                requestPayload = Utils.concatBytes(requestPayload,Arrays.copyOfRange(buffer,0,bytesReadCounter));
+                requestPayload = ClientUtils.concatBytes(requestPayload,Arrays.copyOfRange(buffer,0,bytesReadCounter));
                 totalBytesRead+=bytesReadCounter;
             }
             Log.d(TAG,"reading bytes:"+requestPayload.length);

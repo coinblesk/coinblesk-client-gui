@@ -29,18 +29,20 @@ import android.util.Log;
 
 import com.coinblesk.bitcoin.AddressCoinSelector;
 import com.coinblesk.bitcoin.TimeLockedAddress;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.BaseTO;
 import com.coinblesk.json.ExchangeRateTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.payments.communications.messages.DERObject;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.peers.steps.cltv.CLTVInstantPaymentStep;
-import com.coinblesk.payments.models.ECKeyWrapper;
-import com.coinblesk.payments.models.ExchangeRateWrapper;
-import com.coinblesk.payments.models.TimeLockedAddressWrapper;
-import com.coinblesk.payments.models.TransactionWrapper;
-import com.coinblesk.payments.models.filters.ECKeyWrapperFilter;
+import com.coinblesk.client.models.ECKeyWrapper;
+import com.coinblesk.client.models.ExchangeRateWrapper;
+import com.coinblesk.client.models.TimeLockedAddressWrapper;
+import com.coinblesk.client.models.TransactionWrapper;
+import com.coinblesk.client.models.filters.ECKeyWrapperFilter;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
@@ -370,7 +372,7 @@ public class WalletService extends Service {
 
     private void initLogging() {
         LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-        com.coinblesk.payments.Utils.fixECKeyComparator();
+        ClientUtils.fixECKeyComparator();
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
                 .setLevel(ch.qos.logback.classic.Level.INFO);
     }

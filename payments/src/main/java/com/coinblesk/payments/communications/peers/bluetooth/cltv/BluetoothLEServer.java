@@ -35,11 +35,11 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import com.coinblesk.payments.Constants;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentRequestSendStep;
 import com.coinblesk.payments.communications.peers.steps.cltv.PaymentResponseReceiveStep;
@@ -212,7 +212,7 @@ public class BluetoothLEServer extends AbstractServer {
             Log.d(TAG, String.format("%s - onCharacteristicWriteRequest (length=%d bytes)",
                     device.getAddress(), value.length));
             PaymentState paymentState = connectedDevices.get(device.getAddress());
-            paymentState.derRequestPayload = Utils.concatBytes(paymentState.derRequestPayload, value);
+            paymentState.derRequestPayload = ClientUtils.concatBytes(paymentState.derRequestPayload, value);
             int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
 
             if (paymentState.derRequestPayload.length >= responseLength) {

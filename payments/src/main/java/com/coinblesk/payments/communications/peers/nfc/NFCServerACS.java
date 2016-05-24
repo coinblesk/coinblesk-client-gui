@@ -13,10 +13,10 @@ import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
-import com.coinblesk.payments.Utils;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERParser;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.peers.steps.PaymentFinalSignatureOutpointsReceiveStep;
@@ -152,7 +152,7 @@ public class NFCServerACS extends AbstractServer {
                 needsSelectAidApdu = false;
             }
 
-            fragment = Utils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
+            fragment = ClientUtils.concatBytes(fragment, Arrays.copyOfRange(derPayload, fragmentByte, Math.min(derPayload.length, fragmentByte + 53)));
 
 
             Log.d(TAG, "about to send fragment size:" + fragment.length);
@@ -170,7 +170,7 @@ public class NFCServerACS extends AbstractServer {
         Log.d(TAG, "actual response lenght:" + derResponse.length);
 
         while (derResponse.length < responseLength) {
-            derResponse = Utils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
+            derResponse = ClientUtils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
             Log.d(TAG, "had to ask for next bytes:" + derResponse.length);
         }
         Log.d(TAG, "end transceive");

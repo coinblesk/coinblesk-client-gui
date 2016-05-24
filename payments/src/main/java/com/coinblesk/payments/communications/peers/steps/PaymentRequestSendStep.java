@@ -2,9 +2,9 @@ package com.coinblesk.payments.communications.peers.steps;
 
 import android.util.Log;
 
-import com.coinblesk.payments.communications.messages.DERInteger;
-import com.coinblesk.payments.communications.messages.DERObject;
-import com.coinblesk.payments.communications.messages.DERSequence;
+import com.coinblesk.der.DERInteger;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.der.DERSequence;
 
 import org.bitcoinj.uri.BitcoinURI;
 
