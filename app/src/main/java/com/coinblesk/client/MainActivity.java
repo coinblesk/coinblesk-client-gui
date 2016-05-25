@@ -33,6 +33,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -79,6 +80,8 @@ import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.SerializeUtils;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
@@ -90,6 +93,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -431,10 +435,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void sendCoins(Address address, Coin amount) {
-        final DialogFragment progress = ProgressSuccessOrFailDialog.newInstance(
-                getString(R.string.fragment_send_dialog_title));
+        final ProgressSuccessOrFailDialog progress = (ProgressSuccessOrFailDialog)
+                ProgressSuccessOrFailDialog.newInstance(getString(R.string.fragment_send_dialog_title));
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
         ListenableFuture<Transaction> txFuture = walletServiceBinder.sendCoins(address, amount);
+
+        Futures.addCallback(txFuture,
+                new ProgressSuccessOrFailDialog.SuccessFailureFutureCallback(progress));
     }
 
 

@@ -116,36 +116,8 @@ public class WalletActivity extends AppCompatActivity
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
         ListenableFuture<Transaction> txFuture = walletService.collectRefund(toAddress);
 
-        Futures.addCallback(txFuture, new FutureCallback<Transaction>() {
-            private final WeakReference<ProgressSuccessOrFailDialog> dialogReference =
-                    new WeakReference<>(progress);
-
-            @Override
-            public void onSuccess(@Nullable Transaction result) {
-                final ProgressSuccessOrFailDialog dialog = dialogReference.get();
-                if (dialog != null) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dialog.setSuccess();
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onFailure(final Throwable t) {
-                final ProgressSuccessOrFailDialog dialog = dialogReference.get();
-                if (dialog != null) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dialog.setFailure("Error: " + t.getMessage());
-                        }
-                    });
-                }
-            }
-        });
+        Futures.addCallback(txFuture,
+                new ProgressSuccessOrFailDialog.SuccessFailureFutureCallback(progress));
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
