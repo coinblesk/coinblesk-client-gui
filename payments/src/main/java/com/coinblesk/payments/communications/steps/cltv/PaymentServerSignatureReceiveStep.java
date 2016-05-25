@@ -59,9 +59,7 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
         Type responseType = Type.get(parser.getInt());
         if (responseType.isError()) {
             Log.w(TAG, "Server responded with an error: " + responseType);
-            throw new PaymentException(
-                    PaymentError.SERVER_ERROR,
-                    "The server responded with an error (code: " + responseType.toString() +")");
+            throw new PaymentException(PaymentError.SERVER_ERROR, "Code: " + responseType.toString());
         }
 
         List<TxSig> serializedServerSigs = parser.getTxSigList();

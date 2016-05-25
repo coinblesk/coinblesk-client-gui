@@ -87,16 +87,14 @@ public class PaymentResponseReceiveStep extends AbstractStep {
 
         // TODO: IF payment was successful but tag is lost now --> payment went through even tough tag is lost exception is thrown (but client will not get Tx/signatures from server).
         if (!serverResponse.isSuccess()) {
-            throw new PaymentException(
-                    PaymentError.SERVER_ERROR,
-                    "The server responded with an error (HTTP code: " + serverResponse.code() + ")");
+            throw new PaymentException(PaymentError.SERVER_ERROR,
+                    "HTTP code: " + serverResponse.code());
         }
 
         serverSignTO = serverResponse.body();
         if (!serverSignTO.isSuccess()) {
-            throw new PaymentException(
-                    PaymentError.SERVER_ERROR,
-                    "The server responded with an error (code: " + serverSignTO.type().toString() +")");
+            throw new PaymentException(PaymentError.SERVER_ERROR,
+                    "Code: " + serverSignTO.type().toString());
         }
 
         return serverSignTO;
