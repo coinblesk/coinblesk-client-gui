@@ -25,7 +25,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -38,9 +37,17 @@ import com.coinblesk.client.R;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.payments.WalletService;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+
+import java.lang.ref.WeakReference;
+
+import javax.annotation.Nullable;
 
 public class WalletActivity extends AppCompatActivity
                             implements SendDialogFragment.SendDialogListener {
@@ -104,10 +111,41 @@ public class WalletActivity extends AppCompatActivity
     }
 
     public void collectRefund(Address toAddress) {
-        final DialogFragment progress = ProgressSuccessOrFailDialog.newInstance(
-                getString(R.string.fragment_send_dialog_title));
+        final ProgressSuccessOrFailDialog progress = (ProgressSuccessOrFailDialog)
+                ProgressSuccessOrFailDialog.newInstance(getString(R.string.fragment_send_dialog_title));
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
-        walletService.collectRefund(toAddress);
+        ListenableFuture<Transaction> txFuture = walletService.collectRefund(toAddress);
+
+        Futures.addCallback(txFuture, new FutureCallback<Transaction>() {
+            private final WeakReference<ProgressSuccessOrFailDialog> dialogReference =
+                    new WeakReference<>(progress);
+
+            @Override
+            public void onSuccess(@Nullable Transaction result) {
+                final ProgressSuccessOrFailDialog dialog = dialogReference.get();
+                if (dialog != null) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.setSuccess();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(final Throwable t) {
+                final ProgressSuccessOrFailDialog dialog = dialogReference.get();
+                if (dialog != null) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.setFailure("Error: " + t.getMessage());
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

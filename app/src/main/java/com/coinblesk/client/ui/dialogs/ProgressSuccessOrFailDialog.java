@@ -1,21 +1,32 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.coinblesk.client.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.coinblesk.client.R;
-import com.coinblesk.client.config.Constants;
 
 
 /**
@@ -25,6 +36,7 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
     private final static String TAG = ProgressSuccessOrFailDialog.class.getName();
     private static final String ARG_STATE = "state";
     private static final String ARG_TITLE = "title";
+    private static final String ARG_MESSAGE = "message";
 
     private enum State {
         PROGRESS,
@@ -34,7 +46,8 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
 
     private State currentState;
     private String title;
-    private View viewProgress, viewSuccess, viewFailure;
+    private View viewProgress, viewSuccess, viewFailure, viewMessage;
+    private TextView txtMessage;
 
     public static DialogFragment newInstance(String dialogTitle) {
         DialogFragment fragment = new ProgressSuccessOrFailDialog();
@@ -52,20 +65,14 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        IntentFilter paymentBroadcastFilter = new IntentFilter();
-        paymentBroadcastFilter.addAction(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
-        paymentBroadcastFilter.addAction(Constants.INSTANT_PAYMENT_FAILED_ACTION);
-        LocalBroadcastManager
-                .getInstance(getContext())
-                .registerReceiver(paymentBroadcastReceiver, paymentBroadcastFilter);
+        // do not create new instance on rotation
+        // this way we can update the view from an async task / future (otherwise, we the reference is lost)
+        setRetainInstance(true);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        LocalBroadcastManager
-                .getInstance(getContext())
-                .unregisterReceiver(paymentBroadcastReceiver);
     }
 
     @Override
@@ -73,6 +80,21 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
         super.onSaveInstanceState(state);
         state.putSerializable(ARG_STATE, currentState);
         state.putString(ARG_TITLE, title);
+        if (txtMessage != null) {
+            state.putString(ARG_MESSAGE, txtMessage.getText().toString());
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        // on rotation, do not dismiss the dialog (iff instance is retained)
+        // may be a bug, see:
+        // - https://code.google.com/p/android/issues/detail?id=17423
+        // - https://stackoverflow.com/questions/13934951
+        if (getDialog() != null && getRetainInstance()) {
+            getDialog().setDismissMessage(null);
+        }
+        super.onDestroyView();
     }
 
     @Override
@@ -82,10 +104,17 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
         viewProgress = view.findViewById(R.id.viewProgress);
         viewSuccess = view.findViewById(R.id.viewSuccess);
         viewFailure = view.findViewById(R.id.viewFailure);
+        viewMessage = view.findViewById(R.id.viewMessage);
+        txtMessage = (TextView) view.findViewById(R.id.txtMessage);
 
-        if (getArguments() != null) {
+        if (savedInstanceState != null) {
+            setState( (State) savedInstanceState.getSerializable(ARG_STATE) );
+            title = savedInstanceState.getString(ARG_TITLE);
+            setMessage(savedInstanceState.getString(ARG_MESSAGE, ""));
+        } else if (getArguments() != null) {
             setState( (State) getArguments().getSerializable(ARG_STATE) );
             title = getArguments().getString(ARG_TITLE);
+            setMessage(getArguments().getString(ARG_MESSAGE, ""));
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
@@ -104,14 +133,11 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
                 viewProgress.setVisibility(View.GONE);
                 viewSuccess.setVisibility(View.VISIBLE);
                 viewFailure.setVisibility(View.GONE);
-                dismiss();
-                // TODO: instead of dismiss, we can show a success message/icon.
                 break;
             case FAILURE:
                 viewProgress.setVisibility(View.GONE);
                 viewSuccess.setVisibility(View.GONE);
                 viewFailure.setVisibility(View.VISIBLE);
-                // TODO: show failure message/icon
                 break;
             case PROGRESS: /* fall through */
             default:
@@ -122,20 +148,29 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
         Log.d(TAG, "currentState: " + currentState);
     }
 
-    private final BroadcastReceiver paymentBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION:
-                    setState(State.SUCCESS);
-                    break;
-                case Constants.INSTANT_PAYMENT_FAILED_ACTION:
-                    setState(State.FAILURE);
-                    break;
-                default:
-                    Log.w(TAG, "Received broadcast but do not know what to do... Check IntentFilter");
-            }
+    public void setSuccess() {
+        setState(State.SUCCESS);
+        setMessage(null);
+    }
+
+    public void setFailure(String message) {
+        setState(State.FAILURE);
+        setMessage(message);
+    }
+
+    public void setProgress() {
+        setState(State.PROGRESS);
+        setMessage(null);
+    }
+
+    private void setMessage(String message) {
+        if (message == null) {
+            message = "";
         }
-    };
+        if (txtMessage != null) {
+            txtMessage.setText(message);
+            viewMessage.setVisibility(message.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+    }
 
 }

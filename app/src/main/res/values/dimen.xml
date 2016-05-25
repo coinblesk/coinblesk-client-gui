@@ -91,5 +91,6 @@
 
     <item name="about_aspect_ratio" type="dimen" format="float">1.618</item>
 
+    <dimen name="icon_medium_size">48dp</dimen>
 
 </resources>

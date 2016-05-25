@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-    style="@style/dialog_fragment"
-    android:padding="@dimen/card_margin">
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/dialog_fragment"
+                android:padding="@dimen/card_margin">
 
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:id="@+id/viewProgress"
-        android:layout_margin="@dimen/card_margin">
+        android:layout_margin="@dimen/card_margin"
+        android:layout_gravity="left">
 
         <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="@dimen/icon_medium_size"
+                android:layout_height="@dimen/icon_medium_size"
                 android:id="@+id/fragment_progress_success_fail_progress"
                 android:layout_gravity="center_horizontal"
                 android:indeterminate="true"/>
@@ -32,17 +32,19 @@
     </LinearLayout>
 
     <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
             android:id="@+id/viewSuccess"
-        android:layout_margin="@dimen/card_margin">
+            android:layout_margin="@dimen/card_margin">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iconSuccess" />
+            android:layout_width="@dimen/icon_medium_size"
+            android:layout_height="@dimen/icon_medium_size"
+            android:id="@+id/iconSuccess"
+            android:src="@drawable/ic_check_circle_black_24dp"
+            android:tint="#ffffff" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -54,18 +56,21 @@
             android:layout_marginLeft="@dimen/card_margin" />
     </LinearLayout>
 
+
     <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
         android:id="@+id/viewFailure"
         android:layout_margin="@dimen/card_margin">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iconFailure" />
+            android:layout_width="@dimen/icon_medium_size"
+            android:layout_height="@dimen/icon_medium_size"
+            android:id="@+id/iconFailure"
+            android:src="@drawable/ic_error_black_24dp"
+            android:tint="#ffffff" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -75,6 +80,24 @@
             android:id="@+id/txtFailed"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="@dimen/card_margin" />
+
     </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:id="@+id/viewMessage"
+        android:layout_margin="@dimen/card_margin">
+        <TextView
+            android:id="@+id/txtMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="message"
+            android:inputType="text|textMultiLine" />
+    </LinearLayout>
+
 
 </LinearLayout>
