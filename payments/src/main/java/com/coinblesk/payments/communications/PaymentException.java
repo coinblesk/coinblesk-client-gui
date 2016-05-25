@@ -15,16 +15,19 @@
  *
  */
 
-package com.coinblesk.payments.communications.steps;
-
-import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.PaymentException;
+package com.coinblesk.payments.communications;
 
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 28/02/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Andreas Albrecht
  */
-public interface Step {
-    DERObject process(DERObject input) throws PaymentException;
+public class PaymentException extends Exception {
+
+    public PaymentException(String message) {
+        super(message);
+    }
+
+    public PaymentException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

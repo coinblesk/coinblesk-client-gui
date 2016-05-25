@@ -1,9 +1,28 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.payments.communications.steps.cltv;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.steps.AbstractStep;
@@ -30,55 +49,60 @@ public class PaymentResponseReceiveStep extends AbstractStep {
     }
 
     @Override
-    public DERObject process(DERObject input) {
-        try {
-            final DERSequence inputSequence = (DERSequence) input;
-            final DERPayloadParser parser = new DERPayloadParser(inputSequence);
-            final int protocolVersion = parser.getInt(); // TODO: check it
-            isProtocolVersionSupported(protocolVersion);
+    @NonNull
+    public DERObject process(@NonNull DERObject input) throws PaymentException {
 
-            SignTO signTO = extractSignTO(parser);
-            ECKey clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
+        final DERSequence inputSequence = (DERSequence) input;
+        final DERPayloadParser parser = new DERPayloadParser(inputSequence);
 
-            Log.d(TAG, String.format("Got signTO: pubKey of message: %s, address(hex): %s, timestamp of signing: %s",
-                    clientPublicKey.getPublicKeyAsHex(), getBitcoinURI().getAddress(), signTO.currentDate()));
+        SignTO signTO = extractSignTO(parser);
+        ECKey clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
 
-            if (!SerializeUtils.verifyJSONSignature(signTO, clientPublicKey)) {
-                // TODO: error!
-                setError();
-            }
+        Log.d(TAG, String.format("Got signTO: pubKey of message: %s, address(hex): %s, timestamp of signing: %s",
+                clientPublicKey.getPublicKeyAsHex(), getBitcoinURI().getAddress(), signTO.currentDate()));
 
-            Log.d(TAG, "signTO - verify successful");
-            final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
-            final Response<SignTO> serverResponse = service.signTx(signTO).execute();
-            // TODO: IF payment was successful but tag is lost now --> payment went through even tough tag is lost exception is thrown (but client will not get Tx/signatures from server).
-            if (!serverResponse.isSuccess()) {
-                // TODO: error
-                setError();
-            }
-
-            final SignTO serverSignTO = serverResponse.body();
-            if (!serverSignTO.isSuccess()) {
-                // TODO: error
-                setError();
-            }
-
-            DERPayloadBuilder builder = new DERPayloadBuilder()
-                    .add(getProtocolVersion());
-            appendSignTO(builder, serverSignTO);
-            DERObject response = builder.getAsDERSequence();
-            setSuccess();
-            return response;
-
-        } catch (IOException e) {
-            Log.e(TAG, "Exception in the authorization step: ", e);
+        if (!SerializeUtils.verifyJSONSignature(signTO, clientPublicKey)) {
+            throw new PaymentException(ResultCode.SIGNATURE_ERROR.toString());
         }
-        return DERObject.NULLOBJECT;
+        Log.d(TAG, "signTO - verify successful");
+
+        final SignTO serverSignTO = serverSignVerify(signTO);
+        DERPayloadBuilder builder = new DERPayloadBuilder();
+        appendSignTO(builder, serverSignTO);
+        DERObject response = builder.getAsDERSequence();
+        return response;
+    }
+
+    @NonNull
+    private SignTO serverSignVerify(SignTO signTO) throws PaymentException {
+        final Response<SignTO> serverResponse;
+        SignTO serverSignTO;
+        try {
+            final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+            serverResponse = service.signVerify(signTO).execute();
+        } catch (IOException e) {
+            throw new PaymentException(ResultCode.SERVER_ERROR.toString() + "/" + e.getMessage(), e);
+        }
+
+        // TODO: IF payment was successful but tag is lost now --> payment went through even tough tag is lost exception is thrown (but client will not get Tx/signatures from server).
+        if (!serverResponse.isSuccess()) {
+            throw new PaymentException(
+                    ResultCode.SERVER_ERROR.toString() + "/" + serverResponse.code());
+        }
+
+        serverSignTO = serverResponse.body();
+        if (!serverSignTO.isSuccess()) {
+            throw new PaymentException(
+                    ResultCode.SERVER_ERROR.toString() + "/" + serverSignTO.type().toString());
+        }
+
+        return serverSignTO;
     }
 
     private void appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
-        builder.add(signTO.type().nr())
-                .add(signTO.signatures());
+        builder
+            .add(signTO.type().nr())
+            .add(signTO.signatures());
     }
 
     private SignTO extractSignTO(DERPayloadParser parser) {

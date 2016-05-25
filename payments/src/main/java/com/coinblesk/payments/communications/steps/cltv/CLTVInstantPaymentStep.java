@@ -1,9 +1,30 @@
+/*
+ * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
+
 package com.coinblesk.payments.communications.steps.cltv;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
+import static com.google.common.base.Preconditions.checkState;
+
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -24,25 +45,28 @@ public class CLTVInstantPaymentStep extends AbstractStep {
     }
 
     @Override
-    public DERObject process(DERObject input) {
+    @Nullable
+    public DERObject process(@Nullable DERObject input) throws PaymentException {
         try {
+            checkState(walletServiceBinder != null, "WalletService not provided.");
+            checkState(getBitcoinURI() != null, "Payment request (bitcoinURI) not provided.");
+
             /* Payment Request */
-            DERObject output = DERObject.NULLOBJECT;
             PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI());
-            output = sendRequest.process(output);
+            DERObject requestOutput = sendRequest.process(null);
             PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep();
-            output = receiveRequest.process(output);
+            receiveRequest.process(requestOutput);
 
             /* Payment Response */
-            PaymentResponseSendStep sendResponse = new PaymentResponseSendStep(receiveRequest.getBitcoinURI(), walletServiceBinder);
-            output = sendResponse.process(output);
+            PaymentResponseSendStep sendResponse = new PaymentResponseSendStep(
+                    receiveRequest.getBitcoinURI(), walletServiceBinder);
+            DERObject responseOutput = sendResponse.process(null);
             PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveStep(getBitcoinURI());
-            output = receiveResponse.process(output);
+            DERObject serverOutput = receiveResponse.process(responseOutput);
 
             /* Server Signatures */
-            // PaymentServerSignatureSendStep sendSignatures = new PaymentServerSignatureSendStep();
             PaymentServerSignatureReceiveStep receiveSignatures = new PaymentServerSignatureReceiveStep();
-            output = receiveSignatures.process(output);
+            receiveSignatures.process(serverOutput);
 
             /* Payment Finalize */
             PaymentFinalizeStep finalizeStep = new PaymentFinalizeStep(
@@ -51,13 +75,16 @@ public class CLTVInstantPaymentStep extends AbstractStep {
                     sendResponse.getClientTransactionSignatures(),
                     receiveSignatures.getServerTransactionSignatures(),
                     walletServiceBinder);
-            output = finalizeStep.process(output);
+            finalizeStep.process(null);
 
             transaction = finalizeStep.getTransaction();
-            setSuccess();
+
+
+        } catch (PaymentException pex) {
+            throw pex;
         } catch (Exception e) {
             Log.w(TAG, "Exception: ", e);
-            setError();
+            throw new PaymentException("Payment could not be completed: " + e.getMessage(), e);
         }
         return null;
     }

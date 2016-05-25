@@ -1,6 +1,9 @@
 package com.coinblesk.payments.communications.steps;
 
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.PaymentException;
+
 import org.bitcoinj.uri.BitcoinURI;
 
 /**
@@ -15,9 +18,12 @@ public abstract class AbstractStep implements Step {
         PROTOCOL_VERSION_NOT_SUPPORTED(-1),
         PARSE_ERROR(-2),
         INSUFFICIENT_FUNDS(-3),
-        TRANSACTION_ERROR(-4);
+        TRANSACTION_ERROR(-4),
+        SIGNATURE_ERROR(-5),
+        SERVER_ERROR(-6);
 
         private final int code;
+
         ResultCode(int code) {
             this.code = code;
         }
@@ -31,7 +37,6 @@ public abstract class AbstractStep implements Step {
         }
     }
 
-    private ResultCode resultCode;
     private BitcoinURI bitcoinURI;
 
     protected AbstractStep() {
@@ -40,7 +45,6 @@ public abstract class AbstractStep implements Step {
 
     protected AbstractStep(BitcoinURI bitcoinURI) {
         this.bitcoinURI = bitcoinURI;
-        setSuccess();
     }
 
     public BitcoinURI getBitcoinURI() {
@@ -51,32 +55,20 @@ public abstract class AbstractStep implements Step {
         this.bitcoinURI = bitcoinURI;
     }
 
+    @Override
+    public abstract DERObject process(DERObject input) throws PaymentException;
+
     protected boolean isProtocolVersionSupported(int otherVersion) {
         // could add other supported versions here, e.g. with switch fall through
         switch (otherVersion) {
-            case Constants.PROTOCOL_VERSION:
+            case Constants.CLIENT_COMMUNICATION_PROTOCOL_VERSION:
                 return true;
         }
         return false;
     }
 
     protected int getProtocolVersion() {
-        return Constants.PROTOCOL_VERSION;
+        return Constants.CLIENT_COMMUNICATION_PROTOCOL_VERSION;
     }
 
-    protected void setSuccess() {
-        setResultCode(ResultCode.SUCCESS);
-    }
-
-    protected void setError() {
-        setResultCode(ResultCode.ERROR);
-    }
-
-    protected void setResultCode(ResultCode resultCode) {
-        this.resultCode = resultCode;
-    }
-
-    public ResultCode getResultCode() {
-        return resultCode;
-    }
 }

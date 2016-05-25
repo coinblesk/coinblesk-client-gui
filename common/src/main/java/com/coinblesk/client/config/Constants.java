@@ -97,5 +97,6 @@ public final class Constants {
 
     public static final int WIFI_SERVICE_PORT = 60030;
 
-    public static final int PROTOCOL_VERSION = 3;
+    // version of the communication protocol for client to client communication.
+    public static final int CLIENT_COMMUNICATION_PROTOCOL_VERSION = 3;
 }
