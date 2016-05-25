@@ -20,7 +20,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.View;
@@ -28,9 +27,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.coinblesk.client.R;
-import com.google.common.util.concurrent.FutureCallback;
-
-import java.lang.ref.WeakReference;
 
 
 /**
@@ -174,42 +170,6 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
         if (txtMessage != null) {
             txtMessage.setText(message);
             viewMessage.setVisibility(message.isEmpty() ? View.GONE : View.VISIBLE);
-        }
-    }
-
-
-    public static class SuccessFailureFutureCallback implements FutureCallback<Object> {
-
-        private final WeakReference<ProgressSuccessOrFailDialog> dialogReference;
-
-        public SuccessFailureFutureCallback(ProgressSuccessOrFailDialog dialog)  {
-            dialogReference = new WeakReference<>(dialog);
-        }
-
-        @Override
-        public void onSuccess(@Nullable Object  result) {
-            final ProgressSuccessOrFailDialog dialog = dialogReference.get();
-            if (dialog != null) {
-                dialog.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dialog.setSuccess();
-                    }
-                });
-            }
-        }
-
-        @Override
-        public void onFailure(final Throwable t) {
-            final ProgressSuccessOrFailDialog dialog = dialogReference.get();
-            if (dialog != null) {
-                dialog.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dialog.setFailure("Error: " + t.getMessage());
-                    }
-                });
-            }
         }
     }
 }

@@ -58,6 +58,7 @@ import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.ui.authview.AuthenticationDialog;
 import com.coinblesk.client.backup.BackupActivity;
 import com.coinblesk.client.utils.AppUtils;
+import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.settings.SettingsActivity;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
@@ -440,8 +441,7 @@ public class MainActivity extends AppCompatActivity
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
         ListenableFuture<Transaction> txFuture = walletServiceBinder.sendCoins(address, amount);
 
-        Futures.addCallback(txFuture,
-                new ProgressSuccessOrFailDialog.SuccessFailureFutureCallback(progress));
+        Futures.addCallback(txFuture, new PaymentFutureCallback(progress));
     }
 
 

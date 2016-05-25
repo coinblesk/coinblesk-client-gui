@@ -352,4 +352,15 @@
 
     <string name="version_compatibility_dialog_title">Version incompatible</string>
     <string name="version_compatibility_dialog_message">This client is not compatible with the current server. Please upgrade the client.\n\nClient version: %1$s</string>
+
+    <string name="payment_error_message_error">An unexpected error occurred.</string>
+    <string name="payment_error_message_protocol_version_not_supported">The communication protocols are not compatible.</string>
+    <string name="payment_error_message_wrong_bitcoin_network">Wrong Bitcoin network (mainnet/testnet not compatible).</string>
+    <string name="payment_error_message_invalid_payment_request">The payment request is not valid.</string>
+    <string name="payment_error_message_parse_error">Parsing failed.</string>
+    <string name="payment_error_message_insufficient_funds">Insufficient funds.</string>
+    <string name="payment_error_message_transaction_error">The transaction could not be created or is not valid.</string>
+    <string name="payment_error_message_message_signature_error">Could not verify the signature of the message.</string>
+    <string name="payment_error_message_server_error">The Coinblesk server responded with an error.</string>
+
 </resources>

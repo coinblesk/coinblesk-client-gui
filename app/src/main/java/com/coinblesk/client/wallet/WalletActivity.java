@@ -36,6 +36,7 @@ import android.util.Log;
 import com.coinblesk.client.R;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.payments.WalletService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -116,8 +117,7 @@ public class WalletActivity extends AppCompatActivity
         progress.show(getSupportFragmentManager(), "progress_success_or_fail_dialog");
         ListenableFuture<Transaction> txFuture = walletService.collectRefund(toAddress);
 
-        Futures.addCallback(txFuture,
-                new ProgressSuccessOrFailDialog.SuccessFailureFutureCallback(progress));
+        Futures.addCallback(txFuture, new PaymentFutureCallback(progress));
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
