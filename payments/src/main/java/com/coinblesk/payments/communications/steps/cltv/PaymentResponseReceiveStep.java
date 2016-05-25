@@ -22,6 +22,7 @@ import android.util.Log;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.der.DERObject;
@@ -62,7 +63,7 @@ public class PaymentResponseReceiveStep extends AbstractStep {
                 clientPublicKey.getPublicKeyAsHex(), getBitcoinURI().getAddress(), signTO.currentDate()));
 
         if (!SerializeUtils.verifyJSONSignature(signTO, clientPublicKey)) {
-            throw new PaymentException(ResultCode.SIGNATURE_ERROR.toString());
+            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
         }
         Log.d(TAG, "signTO - verify successful");
 
@@ -81,19 +82,21 @@ public class PaymentResponseReceiveStep extends AbstractStep {
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             serverResponse = service.signVerify(signTO).execute();
         } catch (IOException e) {
-            throw new PaymentException(ResultCode.SERVER_ERROR.toString() + "/" + e.getMessage(), e);
+            throw new PaymentException(PaymentError.SERVER_ERROR, e.getMessage());
         }
 
         // TODO: IF payment was successful but tag is lost now --> payment went through even tough tag is lost exception is thrown (but client will not get Tx/signatures from server).
         if (!serverResponse.isSuccess()) {
             throw new PaymentException(
-                    ResultCode.SERVER_ERROR.toString() + "/" + serverResponse.code());
+                    PaymentError.SERVER_ERROR,
+                    "The server responded with an error (HTTP code: " + serverResponse.code() + ")");
         }
 
         serverSignTO = serverResponse.body();
         if (!serverSignTO.isSuccess()) {
             throw new PaymentException(
-                    ResultCode.SERVER_ERROR.toString() + "/" + serverSignTO.type().toString());
+                    PaymentError.SERVER_ERROR,
+                    "The server responded with an error (code: " + serverSignTO.type().toString() +")");
         }
 
         return serverSignTO;

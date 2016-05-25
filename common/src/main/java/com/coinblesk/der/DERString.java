@@ -16,29 +16,30 @@
 
 package com.coinblesk.der;
 
+import com.google.common.base.Charsets;
+
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 01/03/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 public class DERString extends DERObject {
     private final String string;
 
     public DERString(String string) {
-        super(string.getBytes());
+        super(string.getBytes(Charsets.UTF_8));
         this.string = string;
     }
 
     public DERString(byte[] payload) {
         super(payload);
-        this.string=new String(this.getPayload());
+        this.string = new String(getPayload(), Charsets.UTF_8);
     }
 
     public String getString() {
         return this.string;
     }
 
-    public byte getDERType(){
-        return 12; //we treat this as an octet stream/byte array
+    public byte getDERType() {
+        return 12; // we treat this as an octet stream/byte array
     }
 }

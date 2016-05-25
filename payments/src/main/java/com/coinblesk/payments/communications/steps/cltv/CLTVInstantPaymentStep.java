@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import static com.google.common.base.Preconditions.checkState;
@@ -84,7 +85,7 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             throw pex;
         } catch (Exception e) {
             Log.w(TAG, "Exception: ", e);
-            throw new PaymentException("Payment could not be completed: " + e.getMessage(), e);
+            throw new PaymentException(PaymentError.ERROR, e);
         }
         return null;
     }

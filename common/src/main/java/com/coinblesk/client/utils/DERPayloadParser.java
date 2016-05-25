@@ -19,6 +19,7 @@ package com.coinblesk.client.utils;
 import com.coinblesk.der.DERInteger;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.der.DERString;
 import com.coinblesk.json.TxSig;
 
 import org.bitcoinj.core.Coin;
@@ -62,6 +63,10 @@ public class DERPayloadParser {
 
     private DERSequence getDERSequence(int index) {
         return (DERSequence) getDERObject(index);
+    }
+
+    private DERString getDERString(int index) {
+        return (DERString) getDERObject(index);
     }
 
     public int getInt() {
@@ -117,6 +122,14 @@ public class DERPayloadParser {
         long value = getLong(index);
         Coin amount = Coin.valueOf(value);
         return amount;
+    }
+
+    public String getString() {
+        return getString(currentIndex++);
+    }
+
+    private String getString(int index) {
+        return getDERString(index).getString();
     }
 
     public TxSig getTxSig() {

@@ -22,6 +22,7 @@ import android.support.annotation.Nullable;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
@@ -79,9 +80,9 @@ public class PaymentResponseSendStep extends AbstractStep {
             transaction = walletService.createTransaction(addressTo, amount);
             clientTransactionSignatures = walletService.signTransaction(transaction);
         } catch (CoinbleskException e) {
-            throw new PaymentException(ResultCode.TRANSACTION_ERROR.toString(), e);
+            throw new PaymentException(PaymentError.TRANSACTION_ERROR, e);
         } catch (InsufficientFunds e) {
-            throw new PaymentException(ResultCode.INSUFFICIENT_FUNDS.toString(), e);
+            throw new PaymentException(PaymentError.INSUFFICIENT_FUNDS, e);
         }
     }
 

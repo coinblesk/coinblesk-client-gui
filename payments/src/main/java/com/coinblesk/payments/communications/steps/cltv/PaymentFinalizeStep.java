@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.models.TimeLockedAddressWrapper;
@@ -75,7 +76,7 @@ public class PaymentFinalizeStep extends AbstractStep {
         int numClientSigs = clientTxSignatures.size();
         int numServerSigs = serverTxSignatures.size();
         if (numClientSigs != numServerSigs) {
-            throw new PaymentException(ResultCode.TRANSACTION_ERROR.toString());
+            throw new PaymentException(PaymentError.TRANSACTION_ERROR);
         }
 
         for (int i = 0; i < numClientSigs; ++i) {

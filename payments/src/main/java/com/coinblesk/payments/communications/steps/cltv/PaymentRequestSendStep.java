@@ -20,6 +20,7 @@ package com.coinblesk.payments.communications.steps.cltv;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
@@ -46,9 +47,8 @@ public class PaymentRequestSendStep extends AbstractStep {
 
         DERPayloadBuilder builder = new DERPayloadBuilder()
                 .add(getProtocolVersion())
-                .add(getBitcoinURI().getAmount())
-                .add(getBitcoinURI().getAddress().isP2SHAddress())
-                .add(getBitcoinURI().getAddress().getHash160());
+                .add(getBitcoinURI().getAddress().toBase58())
+                .add(getBitcoinURI().getAmount());
 
         DERObject payload = builder.getAsDERSequence();
         Log.d(TAG, String.format(

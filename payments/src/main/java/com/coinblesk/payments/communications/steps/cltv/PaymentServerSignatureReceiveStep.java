@@ -22,14 +22,14 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.json.Type;
-import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.util.SerializeUtils;
-import org.bitcoinj.core.NetworkParameters;
+
 import org.bitcoinj.crypto.TransactionSignature;
 
 import java.util.List;
@@ -60,7 +60,8 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
         if (responseType.isError()) {
             Log.w(TAG, "Server responded with an error: " + responseType);
             throw new PaymentException(
-                    ResultCode.SERVER_ERROR.toString() + "/" + responseType.toString());
+                    PaymentError.SERVER_ERROR,
+                    "The server responded with an error (code: " + responseType.toString() +")");
         }
 
         List<TxSig> serializedServerSigs = parser.getTxSigList();

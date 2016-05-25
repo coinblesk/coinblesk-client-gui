@@ -979,7 +979,7 @@ public class WalletService extends Service {
                 public Transaction call() throws Exception {
                     BitcoinURI payment = new BitcoinURI(BitcoinURI.convertToBitcoinURI(address, amount, null, null));
                     CLTVInstantPaymentStep step = new CLTVInstantPaymentStep(walletServiceBinder, payment);
-                    step.process(DERObject.NULLOBJECT);
+                    step.process(null);
                     Transaction fullySignedTx = step.getTransaction();
                     commitAndBroadcastTransaction(fullySignedTx);
                     Log.i(TAG, "Send Coins - address=" + address + ", amount=" + amount

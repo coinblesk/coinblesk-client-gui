@@ -17,17 +17,40 @@
 
 package com.coinblesk.payments.communications;
 
+
 /**
  * @author Andreas Albrecht
  */
 public class PaymentException extends Exception {
 
-    public PaymentException(String message) {
-        super(message);
+    private PaymentError errorCode;
+
+    public PaymentException(PaymentError errorCode) {
+        this(errorCode, errorCode.toString());
     }
 
-    public PaymentException(String message, Throwable cause) {
+    public PaymentException(PaymentError errorCode, String message) {
+        this(message);
+        this.errorCode = errorCode;
+    }
+
+    public PaymentException(PaymentError errorCode, Throwable cause) {
+        this(errorCode.toString(), cause);
+        this.errorCode = errorCode;
+    }
+
+    private PaymentException(String message) {
+        super(message);
+        errorCode = PaymentError.ERROR;
+    }
+
+    private PaymentException(String message, Throwable cause) {
         super(message, cause);
+        errorCode = PaymentError.ERROR;
+    }
+
+    public PaymentError getErrorCode() {
+        return errorCode;
     }
 
 }

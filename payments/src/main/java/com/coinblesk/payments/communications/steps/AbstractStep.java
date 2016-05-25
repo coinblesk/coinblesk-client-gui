@@ -11,32 +11,6 @@ import org.bitcoinj.uri.BitcoinURI;
  */
 public abstract class AbstractStep implements Step {
 
-    public enum ResultCode {
-        // positive: success, negative: error
-        SUCCESS(1),
-        ERROR(0),
-        PROTOCOL_VERSION_NOT_SUPPORTED(-1),
-        PARSE_ERROR(-2),
-        INSUFFICIENT_FUNDS(-3),
-        TRANSACTION_ERROR(-4),
-        SIGNATURE_ERROR(-5),
-        SERVER_ERROR(-6);
-
-        private final int code;
-
-        ResultCode(int code) {
-            this.code = code;
-        }
-
-        public boolean isSuccess() {
-            return (code > 0);
-        }
-
-        public boolean isError() {
-            return !isSuccess();
-        }
-    }
-
     private BitcoinURI bitcoinURI;
 
     protected AbstractStep() {

@@ -24,14 +24,16 @@ import android.util.Log;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadParser;
-import com.google.common.base.Preconditions;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -60,37 +62,39 @@ public class PaymentRequestReceiveStep extends AbstractStep {
 
         /* protocol version */
         protocolVersion = parser.getInt();
-        Log.d(TAG, "Received protocol version: " + protocolVersion);
+        Log.d(TAG, "Received protocol version: " + protocolVersion
+                + ", my protocol version: " + getProtocolVersion());
         if (!isProtocolVersionSupported(protocolVersion)) {
             Log.w(TAG, String.format(
                     "Protocol version not supported. ours: %d - theirs: %d",
                     getProtocolVersion(), protocolVersion));
-            throw new PaymentException(ResultCode.PROTOCOL_VERSION_NOT_SUPPORTED.toString());
+            throw new PaymentException(PaymentError.PROTOCOL_VERSION_NOT_SUPPORTED);
+        }
+
+        /* payment address */
+        try {
+            String addressBase58 = parser.getString();
+            addressTo = Address.fromBase58(Constants.PARAMS, addressBase58);
+            Log.d(TAG, "Received address: " + addressTo);
+        } catch (WrongNetworkException e) {
+            throw new PaymentException(PaymentError.WRONG_BITCOIN_NETWORK);
+        } catch (AddressFormatException e) {
+            throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);
         }
 
         /* payment amount */
         amount = parser.getCoin();
         Log.d(TAG, "Received amount: " + amount);
         if (amount.isNegative()) {
-            throw new PaymentException("Received negative amount: " + amount.toFriendlyString());
+            throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);
         }
-
-        /* payment address */
-        boolean isP2SH = parser.getBoolean();
-        byte[] addressPayload = parser.getBytes();
-        if (isP2SH) {
-            addressTo = Address.fromP2SHHash(params, addressPayload);
-        } else {
-            addressTo = new Address(params, addressPayload);
-        }
-        Log.d(TAG, "Received address: " + addressTo);
 
         /* output: payment request as bitcoin URI */
         try {
             String bitcoinURIStr = BitcoinURI.convertToBitcoinURI(addressTo, amount, "", "");
             setBitcoinURI(new BitcoinURI(bitcoinURIStr));
         } catch (BitcoinURIParseException e) {
-            throw new PaymentException("Could not parse payment request.", e);
+            throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST, e);
         }
 
         Log.i(TAG, "Received payment request: " + getBitcoinURI());

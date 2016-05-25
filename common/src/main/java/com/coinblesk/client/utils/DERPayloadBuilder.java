@@ -19,6 +19,7 @@ package com.coinblesk.client.utils;
 import com.coinblesk.der.DERInteger;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.der.DERString;
 import com.coinblesk.json.TxSig;
 
 import org.bitcoinj.core.Coin;
@@ -46,6 +47,11 @@ public class DERPayloadBuilder {
         return new DERSequence(derObjectList);
     }
 
+    public DERPayloadBuilder add(DERObject derObject) {
+        derObjectList.add(derObject);
+        return this;
+    }
+
     public DERPayloadBuilder add(int value) {
         add(BigInteger.valueOf(value));
         return this;
@@ -57,7 +63,7 @@ public class DERPayloadBuilder {
     }
 
     public DERPayloadBuilder add(BigInteger bigInt) {
-        derObjectList.add(new DERInteger(bigInt));
+        add(new DERInteger(bigInt));
         return this;
     }
 
@@ -67,7 +73,7 @@ public class DERPayloadBuilder {
     }
 
     public DERPayloadBuilder add(byte[] data) {
-        derObjectList.add(new DERObject(data));
+        add(new DERObject(data));
         return this;
     }
 
@@ -76,8 +82,8 @@ public class DERPayloadBuilder {
         return this;
     }
 
-    public DERPayloadBuilder add(DERSequence sequence) {
-        derObjectList.add(sequence);
+    public DERPayloadBuilder add(String string) {
+        add(new DERString(string));
         return this;
     }
 
