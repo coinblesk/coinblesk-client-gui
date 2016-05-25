@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.addresses.AddressItem;
 import com.coinblesk.client.addresses.AddressList;
@@ -37,8 +39,6 @@ public class SendDialogFragment extends DialogFragment
                                             implements View.OnClickListener {
 
     private final static String TAG = SendDialogFragment.class.getName();
-
-    private static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
 
     private static final String ARGS_KEY_AMOUNT = "ARGS_KEY_AMOUNT";
     private static final String ARGS_KEY_ADDRESS = "ARGS_KEY_ADDRESS";
@@ -141,7 +141,7 @@ public class SendDialogFragment extends DialogFragment
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == AppConstants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 final String scanContent = data.getStringExtra(Intents.Scan.RESULT);
                 try {

@@ -43,6 +43,8 @@ public class AppConstants {
     public static final String BT_ACTIVATED = "bt-checked";
     public static final String WIFIDIRECT_ACTIVATED = "wifi-checked";
 
+    public static final int QR_ACTIVITY_RESULT_REQUEST_CODE = 0x0000c0de; // bottom 16 bits
+
     // Icon Visibility if a connection Icon is active.
     public static final Float ICON_VISIBLE = new Float(0.8);
 

@@ -40,9 +40,8 @@ import com.coinblesk.client.config.Constants;
 import org.bitcoinj.core.Coin;
 
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 public class SendPaymentFragment extends KeyboardFragment {
     private final static String TAG = SendPaymentFragment.class.getSimpleName();
@@ -60,7 +59,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         assert view != null;
 
         final ProgressDialog dialog = new ProgressDialog(this.getContext());
-        dialog.setMessage(this.getString(R.string.fragment_send_dialog_scanning));
+        dialog.setMessage(getString(R.string.fragment_send_dialog_scanning));
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
@@ -71,7 +70,9 @@ public class SendPaymentFragment extends KeyboardFragment {
             @Override
             public void onDismiss(DialogInterface dialog) {
                 getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-                LocalBroadcastManager.getInstance(getContext()).sendBroadcast(new Intent(Constants.STOP_CLIENTS_ACTION));
+                LocalBroadcastManager
+                        .getInstance(getContext())
+                        .sendBroadcast(new Intent(Constants.STOP_CLIENTS_ACTION));
             }
         });
 
@@ -93,14 +94,18 @@ public class SendPaymentFragment extends KeyboardFragment {
                                 IntentFilter instantPaymentFinishedIntentFilter = new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION);
                                 instantPaymentFinishedIntentFilter.addAction(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
 
-                                LocalBroadcastManager.getInstance(getContext()).registerReceiver(new BroadcastReceiver() {
-                                    @Override
-                                    public void onReceive(Context context, Intent intent) {
-                                        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
-                                        dialog.dismiss();
-                                    }
-                                }, instantPaymentFinishedIntentFilter);
-                                LocalBroadcastManager.getInstance(getContext()).sendBroadcast(new Intent(Constants.START_CLIENTS_ACTION));
+                                LocalBroadcastManager
+                                        .getInstance(getContext())
+                                        .registerReceiver(new BroadcastReceiver() {
+                                            @Override
+                                            public void onReceive(Context context, Intent intent) {
+                                                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(this);
+                                                dialog.dismiss();
+                                            }
+                                         }, instantPaymentFinishedIntentFilter);
+                                LocalBroadcastManager
+                                        .getInstance(getContext())
+                                        .sendBroadcast(new Intent(Constants.START_CLIENTS_ACTION));
                             }
                         }
                         break;
@@ -131,7 +136,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                 maxAmount = Coin.ZERO;
             }
             setAmountByCoin(maxAmount);
-        } else{
+        } else {
             return SendDialogFragment.newInstance(this.getCoin());
         }
         return null;

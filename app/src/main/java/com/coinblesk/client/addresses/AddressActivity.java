@@ -18,6 +18,8 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
+
+import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
@@ -30,7 +32,6 @@ public class AddressActivity extends AppCompatActivity
                                        AddressListAdapter.AddressItemClickListener {
 
     private final static String TAG = AddressActivity.class.getName();
-    private static final int REQUEST_CODE = 0x0000c0de; // Only use bottom 16 bits
 
     private AddressList addressList;
     private AddressListAdapter addressListAdapter;
@@ -91,7 +92,7 @@ public class AddressActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == AppConstants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 final String contents = data.getStringExtra(Intents.Scan.RESULT);
                 try {
