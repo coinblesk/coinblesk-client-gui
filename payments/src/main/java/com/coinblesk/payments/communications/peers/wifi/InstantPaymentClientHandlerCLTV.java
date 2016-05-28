@@ -24,7 +24,7 @@ import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
 import com.coinblesk.payments.communications.peers.handlers.DERObjectStreamHandler;
 import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
-import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendFullTxStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
 
 import org.bitcoinj.core.Transaction;
@@ -71,7 +71,7 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
             }
 
             /* 3. SEND PAYMENT RESPONSE */
-            PaymentResponseSendStep paymentResponseSend = new PaymentResponseSendStep(paymentRequestURI, walletServiceBinder);
+            PaymentResponseSendFullTxStep paymentResponseSend = new PaymentResponseSendFullTxStep(paymentRequestURI, walletServiceBinder);
             DERObject paymentResponse = paymentResponseSend.process(DERObject.NULLOBJECT);
             writeDERObject(paymentResponse);
 

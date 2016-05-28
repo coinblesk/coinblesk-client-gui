@@ -23,7 +23,6 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.models.TimeLockedAddressWrapper;
 import static com.google.common.base.Preconditions.checkState;
 

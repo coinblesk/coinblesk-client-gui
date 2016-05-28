@@ -26,7 +26,6 @@ import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.util.SerializeUtils;
 

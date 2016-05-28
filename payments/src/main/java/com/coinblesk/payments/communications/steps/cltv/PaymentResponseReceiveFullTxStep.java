@@ -26,7 +26,6 @@ import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERSequence;
@@ -42,10 +41,10 @@ import java.util.List;
  * @author Alessandro De Carli
  * @author Andreas Albrecht
  */
-public class PaymentResponseReceiveStep extends AbstractStep {
-    private final static String TAG = PaymentResponseReceiveStep.class.getName();
+public class PaymentResponseReceiveFullTxStep extends AbstractStep {
+    private final static String TAG = PaymentResponseReceiveFullTxStep.class.getName();
 
-    public PaymentResponseReceiveStep(BitcoinURI bitcoinURI) {
+    public PaymentResponseReceiveFullTxStep(BitcoinURI bitcoinURI) {
         super(bitcoinURI);
     }
 

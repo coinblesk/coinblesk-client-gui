@@ -22,7 +22,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.coinblesk.der.DERObject;
-import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import static com.google.common.base.Preconditions.checkState;
 

@@ -24,7 +24,6 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.payments.communications.steps.AbstractStep;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
@@ -44,14 +43,14 @@ import java.util.List;
  * @author Alessandro De Carli
  * @author Andreas Albrecht
  */
-public class PaymentResponseSendStep extends AbstractStep {
-    private final static String TAG = PaymentResponseSendStep.class.getName();
+public class PaymentResponseSendFullTxStep extends AbstractStep {
+    private final static String TAG = PaymentResponseSendFullTxStep.class.getName();
 
     private final WalletService.WalletServiceBinder walletService;
     private Transaction transaction;
     private List<TransactionSignature> clientTransactionSignatures;
 
-    public PaymentResponseSendStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
+    public PaymentResponseSendFullTxStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
         super(bitcoinURI);
         this.walletService = walletService;
     }
