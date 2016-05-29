@@ -53,14 +53,22 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         final NetworkParameters params = Constants.PARAMS;
         // input:
         final int protocolVersion;
+        final String addressBase58;
         final Address addressTo;
         final Coin amount;
 
-        final DERSequence derSequence = (DERSequence) input;
-        final DERPayloadParser parser = new DERPayloadParser(derSequence);
+        /* deserialize payment request */
+        try {
+            DERSequence derSequence = (DERSequence) input;
+            DERPayloadParser parser = new DERPayloadParser(derSequence);
+            protocolVersion = parser.getInt();
+            addressBase58 = parser.getString();
+            amount = parser.getCoin();
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
 
         /* protocol version */
-        protocolVersion = parser.getInt();
         Log.d(TAG, "Received protocol version: " + protocolVersion
                 + ", my protocol version: " + getProtocolVersion());
         if (!isProtocolVersionSupported(protocolVersion)) {
@@ -72,7 +80,6 @@ public class PaymentRequestReceiveStep extends AbstractStep {
 
         /* payment address */
         try {
-            String addressBase58 = parser.getString();
             addressTo = Address.fromBase58(Constants.PARAMS, addressBase58);
             Log.d(TAG, "Received address: " + addressTo);
         } catch (WrongNetworkException e) {
@@ -82,7 +89,6 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         }
 
         /* payment amount */
-        amount = parser.getCoin();
         Log.d(TAG, "Received amount: " + amount);
         if (amount.isNegative()) {
             throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);

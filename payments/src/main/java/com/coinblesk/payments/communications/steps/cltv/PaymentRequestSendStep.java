@@ -23,6 +23,9 @@ import android.util.Log;
 
 import com.coinblesk.der.DERObject;
 import com.coinblesk.client.utils.DERPayloadBuilder;
+import com.coinblesk.payments.communications.PaymentError;
+import com.coinblesk.payments.communications.PaymentException;
+
 import static com.google.common.base.Preconditions.checkState;
 
 import org.bitcoinj.uri.BitcoinURI;
@@ -40,19 +43,23 @@ public class PaymentRequestSendStep extends AbstractStep {
 
     @Override
     @NonNull
-    public DERObject process(@Nullable DERObject input) {
+    public DERObject process(@Nullable DERObject input) throws PaymentException {
         checkState(getBitcoinURI() != null && getBitcoinURI().getAddress() != null,
                 "No Bitcoin request URI provided.");
 
-        DERPayloadBuilder builder = new DERPayloadBuilder()
-                .add(getProtocolVersion())
-                .add(getBitcoinURI().getAddress().toBase58())
-                .add(getBitcoinURI().getAmount());
+        try {
+            DERPayloadBuilder builder = new DERPayloadBuilder()
+                    .add(getProtocolVersion())
+                    .add(getBitcoinURI().getAddress().toBase58())
+                    .add(getBitcoinURI().getAmount());
 
-        DERObject payload = builder.getAsDERSequence();
-        Log.d(TAG, String.format(
-                "Payment request - sending payment request: %s, (length=%d bytes)",
-                getBitcoinURI(), payload.serializeToDER().length));
-        return payload;
+            DERObject payload = builder.getAsDERSequence();
+            Log.d(TAG, String.format(
+                    "Payment request - sending payment request: %s, (length=%d bytes)",
+                    getBitcoinURI(), payload.serializeToDER().length));
+            return payload;
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
     }
 }

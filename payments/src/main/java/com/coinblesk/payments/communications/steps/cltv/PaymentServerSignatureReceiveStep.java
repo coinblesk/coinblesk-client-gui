@@ -52,18 +52,23 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
     @Override
     @Nullable
     public DERObject process(@NonNull DERObject input) throws PaymentException {
-        final DERSequence derSequence = (DERSequence) input;
-        final DERPayloadParser parser = new DERPayloadParser(derSequence);
+        final Type responseType;
+        final List<TxSig> serializedServerSigs;
+        try {
+            DERSequence derSequence = (DERSequence) input;
+            DERPayloadParser parser = new DERPayloadParser(derSequence);
+            responseType = Type.get(parser.getInt());
+            serializedServerSigs = parser.getTxSigList();
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
 
-        Type responseType = Type.get(parser.getInt());
         if (responseType.isError()) {
             Log.w(TAG, "Server responded with an error: " + responseType);
             throw new PaymentException(PaymentError.SERVER_ERROR, "Code: " + responseType.toString());
         }
 
-        List<TxSig> serializedServerSigs = parser.getTxSigList();
         serverTransactionSignatures = SerializeUtils.deserializeSignatures(serializedServerSigs);
-
         return null;
     }
 }

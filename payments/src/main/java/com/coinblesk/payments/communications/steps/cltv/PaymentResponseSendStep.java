@@ -19,16 +19,16 @@ package com.coinblesk.payments.communications.steps.cltv;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.coinblesk.client.utils.DERPayloadBuilder;
+import com.coinblesk.der.DERObject;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.SerializeUtils;
-import static com.google.common.base.Preconditions.*;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -38,6 +38,9 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author Alessandro De Carli
@@ -85,13 +88,19 @@ public class PaymentResponseSendStep extends AbstractStep {
         }
     }
 
-    private DERObject createDERResponse() {
+    private DERObject createDERResponse() throws PaymentException {
         checkNotNull(walletService.getMultisigClientKey(), "Client key does not exist");
+
         final ECKey clientKey = walletService.getMultisigClientKey();
         final SignTO signTO = createSignTO(transaction, clientTransactionSignatures, clientKey);
-        DERPayloadBuilder builder = new DERPayloadBuilder();
-        appendSignTO(builder, signTO);
-        return builder.getAsDERSequence();
+
+        try {
+            DERPayloadBuilder builder = new DERPayloadBuilder();
+            appendSignTO(builder, signTO);
+            return builder.getAsDERSequence();
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
     }
 
     protected SignTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {

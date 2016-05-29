@@ -55,8 +55,8 @@ public final class AppUtils {
                 return R.string.payment_error_message_wrong_bitcoin_network;
             case INVALID_PAYMENT_REQUEST:
                 return R.string.payment_error_message_invalid_payment_request;
-            case PARSE_ERROR:
-                return R.string.payment_error_message_parse_error;
+            case DER_SERIALIZE_ERROR:
+                return R.string.payment_error_message_der_serialize_error;
             case INSUFFICIENT_FUNDS:
                 return R.string.payment_error_message_insufficient_funds;
             case TRANSACTION_ERROR:

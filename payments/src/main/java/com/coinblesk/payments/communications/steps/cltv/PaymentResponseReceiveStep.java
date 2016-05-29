@@ -31,6 +31,8 @@ import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERSequence;
 import com.coinblesk.util.SerializeUtils;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.uri.BitcoinURI;
 import retrofit2.Response;
 
@@ -51,12 +53,16 @@ public class PaymentResponseReceiveStep extends AbstractStep {
     @Override
     @NonNull
     public DERObject process(@NonNull DERObject input) throws PaymentException {
-
-        final DERSequence inputSequence = (DERSequence) input;
-        final DERPayloadParser parser = new DERPayloadParser(inputSequence);
-
-        SignTO signTO = extractSignTO(parser);
-        ECKey clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
+        final SignTO signTO;
+        final ECKey clientPublicKey;
+        try {
+            DERSequence inputSequence = (DERSequence) input;
+            DERPayloadParser parser = new DERPayloadParser(inputSequence);
+            signTO = extractSignTO(parser);
+            clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
 
         Log.d(TAG, String.format("Got signTO: pubKey of message: %s, address(hex): %s, timestamp of signing: %s",
                 clientPublicKey.getPublicKeyAsHex(), getBitcoinURI().getAddress(), signTO.currentDate()));
@@ -67,10 +73,15 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         Log.d(TAG, "signTO - verify successful");
 
         final SignTO serverSignTO = serverSignVerify(signTO);
-        DERPayloadBuilder builder = new DERPayloadBuilder();
-        appendSignTO(builder, serverSignTO);
-        DERObject response = builder.getAsDERSequence();
-        return response;
+
+        try {
+            DERPayloadBuilder builder = new DERPayloadBuilder();
+            appendSignTO(builder, serverSignTO);
+            DERObject response = builder.getAsDERSequence();
+            return response;
+        } catch (Exception e) {
+            throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
+        }
     }
 
     @NonNull
@@ -91,6 +102,11 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         }
 
         serverSignTO = serverResponse.body();
+        if (!SerializeUtils.verifyJSONSignature(serverSignTO,
+                                ECKey.fromPublicOnly(serverSignTO.publicKey()))) {
+            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+        }
+
         if (!serverSignTO.isSuccess()) {
             throw new PaymentException(PaymentError.SERVER_ERROR,
                     "Code: " + serverSignTO.type().toString());
@@ -111,6 +127,15 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         byte[] serializedTx = parser.getBytes();
         List<TxSig> signatures = parser.getTxSigList();
         TxSig messageSig = parser.getTxSig();
+
+        // TODO: check that (1) payment is sent to my address and (2) amount is correct.
+        // maybe do it after receiving request from server.
+        // Transaction tx;
+        // TransactioOutput = txOut;
+        // if (txOut.getValue() != getBitcoinURI().getAmount().longValue() || !txOut.get...equals(getBitcoinURI().getAddress()) {
+        //      fail!
+        // }
+
 
         SignTO signTO = new SignTO()
                 .currentDate(currentDate)
