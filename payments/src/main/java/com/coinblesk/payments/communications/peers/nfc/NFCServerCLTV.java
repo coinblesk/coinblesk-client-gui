@@ -12,12 +12,12 @@ import android.provider.Settings;
 import android.util.Log;
 
 import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.peers.AbstractServer;
-import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveCompactStep;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -202,12 +202,12 @@ public class NFCServerCLTV extends AbstractServer {
         @Override
         public void run() {
             try {
-                Log.d(TAG, "PaymentResponseReceiveStep - payment details send, sign tx");
-                PaymentResponseReceiveStep responseReceive = new PaymentResponseReceiveStep(getPaymentRequestUri());
+                Log.d(TAG, "PaymentResponseReceiveCompactStep - payment details send, sign tx");
+                PaymentResponseReceiveCompactStep responseReceive = new PaymentResponseReceiveCompactStep(getPaymentRequestUri());
                 DERObject result = responseReceive.process(input);
                 output.set(result);
             } catch (Exception e) {
-                Log.w(TAG, "Exception at PaymentResponseReceiveStep: ", e);
+                Log.w(TAG, "Exception at PaymentResponseReceiveCompactStep: ", e);
             }
         }
     }

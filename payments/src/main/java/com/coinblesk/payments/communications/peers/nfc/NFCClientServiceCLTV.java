@@ -11,15 +11,18 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
-import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendCompactStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
+
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
@@ -230,31 +233,23 @@ public class NFCClientServiceCLTV extends HostApduService {
         Log.d(TAG, "Payment completed: " + duration + "ms");
     }
 
-    private void handlePaymentRequestReceive(byte[] requestPayload) {
+    private void handlePaymentRequestReceive(byte[] requestPayload) throws PaymentException {
         PaymentRequestReceiveStep request = new PaymentRequestReceiveStep();
         DERObject input = DERParser.parseDER(requestPayload);
         request.process(input);
-        if (request.getResultCode().isError()) {
-            // TODO: error!
-            return;
-        }
         bitcoinURI = request.getBitcoinURI();
 
-        PaymentResponseSendStep response = new PaymentResponseSendStep(bitcoinURI, walletServiceBinder);
+        PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
         DERObject result = response.process(DERObject.NULLOBJECT);
-        if (response.getResultCode().isError()) {
-            // TODO: error!
-            return;
-        }
         derResponsePayload = result.serializeToDER();
         transaction = response.getTransaction();
         clientTxSignatures = response.getClientTransactionSignatures();
     }
 
-    private void handlePaymentFinalize(byte[] payload) {
+    private void handlePaymentFinalize(byte[] payload) throws PaymentException {
         PaymentServerSignatureReceiveStep step = new PaymentServerSignatureReceiveStep();
         DERObject input = DERParser.parseDER(payload);
-        DERObject result = step.process(input);
+        step.process(input);
 
         serverTxSignatures = step.getServerTransactionSignatures();
         PaymentFinalizeStep finalizeStep = new PaymentFinalizeStep(
@@ -265,7 +260,7 @@ public class NFCClientServiceCLTV extends HostApduService {
                 walletServiceBinder);
         finalizeStep.process(null);
         transaction = finalizeStep.getTransaction();
-        derResponsePayload = result.serializeToDER();
+        derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
