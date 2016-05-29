@@ -43,14 +43,14 @@ import java.util.List;
  * @author Alessandro De Carli
  * @author Andreas Albrecht
  */
-public class PaymentResponseSendFullTxStep extends AbstractStep {
-    private final static String TAG = PaymentResponseSendFullTxStep.class.getName();
+public class PaymentResponseSendStep extends AbstractStep {
+    private final static String TAG = PaymentResponseSendStep.class.getName();
 
     private final WalletService.WalletServiceBinder walletService;
     private Transaction transaction;
     private List<TransactionSignature> clientTransactionSignatures;
 
-    public PaymentResponseSendFullTxStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
+    public PaymentResponseSendStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
         super(bitcoinURI);
         this.walletService = walletService;
     }
@@ -94,7 +94,7 @@ public class PaymentResponseSendFullTxStep extends AbstractStep {
         return builder.getAsDERSequence();
     }
 
-    private SignTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
+    protected SignTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
         SignTO signTO = new SignTO()
                 .currentDate(System.currentTimeMillis())
                 .publicKey(clientKey.getPubKey())
@@ -104,7 +104,7 @@ public class PaymentResponseSendFullTxStep extends AbstractStep {
         return signTO;
     }
 
-    private DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
+    protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
         builder.add(signTO.currentDate())
                 .add(signTO.publicKey())
                 .add(signTO.transaction())

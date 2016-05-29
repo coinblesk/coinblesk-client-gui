@@ -41,10 +41,10 @@ import java.util.List;
  * @author Alessandro De Carli
  * @author Andreas Albrecht
  */
-public class PaymentResponseReceiveFullTxStep extends AbstractStep {
-    private final static String TAG = PaymentResponseReceiveFullTxStep.class.getName();
+public class PaymentResponseReceiveStep extends AbstractStep {
+    private final static String TAG = PaymentResponseReceiveStep.class.getName();
 
-    public PaymentResponseReceiveFullTxStep(BitcoinURI bitcoinURI) {
+    public PaymentResponseReceiveStep(BitcoinURI bitcoinURI) {
         super(bitcoinURI);
     }
 
@@ -105,7 +105,7 @@ public class PaymentResponseReceiveFullTxStep extends AbstractStep {
             .add(signTO.signatures());
     }
 
-    private SignTO extractSignTO(DERPayloadParser parser) {
+    protected SignTO extractSignTO(DERPayloadParser parser) {
         long currentDate = parser.getLong();
         byte[] publicKey = parser.getBytes();
         byte[] serializedTx = parser.getBytes();
