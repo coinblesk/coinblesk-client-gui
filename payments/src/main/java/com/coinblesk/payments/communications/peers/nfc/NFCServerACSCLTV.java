@@ -36,6 +36,7 @@ import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestSendStep;
+import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveCompactStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveStep;
 import com.coinblesk.util.Pair;
 
@@ -306,7 +307,7 @@ public class NFCServerACSCLTV extends AbstractServer {
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 DERObject paymentResponse = transceiveDER(transceiver, paymentRequest, true);
 
-                PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveStep(getPaymentRequestUri());
+                PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveCompactStep(getPaymentRequestUri());
                 DERObject serverSignatures = receiveResponse.process(paymentResponse);
                 transceiveDER(transceiver, serverSignatures);
 
