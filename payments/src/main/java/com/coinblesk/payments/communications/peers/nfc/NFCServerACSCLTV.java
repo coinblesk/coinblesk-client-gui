@@ -307,7 +307,8 @@ public class NFCServerACSCLTV extends AbstractServer {
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 DERObject paymentResponse = transceiveDER(transceiver, paymentRequest, true);
 
-                PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveCompactStep(getPaymentRequestUri());
+                PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveCompactStep(
+                        getPaymentRequestUri(), getWalletServiceBinder());
                 DERObject serverSignatures = receiveResponse.process(paymentResponse);
                 transceiveDER(transceiver, serverSignatures);
 

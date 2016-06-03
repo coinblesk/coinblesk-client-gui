@@ -22,7 +22,7 @@ import android.support.annotation.Nullable;
 
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.json.SignTO;
+import com.coinblesk.json.SignVerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
@@ -92,7 +92,7 @@ public class PaymentResponseSendStep extends AbstractStep {
         checkNotNull(walletService.getMultisigClientKey(), "Client key does not exist");
 
         final ECKey clientKey = walletService.getMultisigClientKey();
-        final SignTO signTO = createSignTO(transaction, clientTransactionSignatures, clientKey);
+        final SignVerifyTO signTO = createSignTO(transaction, clientTransactionSignatures, clientKey);
 
         try {
             DERPayloadBuilder builder = new DERPayloadBuilder();
@@ -103,8 +103,8 @@ public class PaymentResponseSendStep extends AbstractStep {
         }
     }
 
-    protected SignTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
-        SignTO signTO = new SignTO()
+    protected SignVerifyTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
+        SignVerifyTO signTO = new SignVerifyTO()
                 .currentDate(System.currentTimeMillis())
                 .publicKey(clientKey.getPubKey())
                 .transaction(transaction.unsafeBitcoinSerialize())
@@ -113,7 +113,7 @@ public class PaymentResponseSendStep extends AbstractStep {
         return signTO;
     }
 
-    protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
+    protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignVerifyTO signTO) {
         builder.add(signTO.currentDate())
                 .add(signTO.publicKey())
                 .add(signTO.transaction())

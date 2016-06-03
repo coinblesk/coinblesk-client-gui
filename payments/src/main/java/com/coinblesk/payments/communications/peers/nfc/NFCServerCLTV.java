@@ -203,7 +203,8 @@ public class NFCServerCLTV extends AbstractServer {
         public void run() {
             try {
                 Log.d(TAG, "PaymentResponseReceiveCompactStep - payment details send, sign tx");
-                PaymentResponseReceiveCompactStep responseReceive = new PaymentResponseReceiveCompactStep(getPaymentRequestUri());
+                PaymentResponseReceiveCompactStep responseReceive = new PaymentResponseReceiveCompactStep(
+                        getPaymentRequestUri(), getWalletServiceBinder());
                 DERObject result = responseReceive.process(input);
                 output.set(result);
             } catch (Exception e) {

@@ -18,7 +18,7 @@
 package com.coinblesk.payments.communications.steps.cltv;
 
 import com.coinblesk.client.utils.DERPayloadBuilder;
-import com.coinblesk.json.SignTO;
+import com.coinblesk.json.SignVerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.util.SerializeUtils;
 
@@ -39,10 +39,9 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
     }
 
     @Override
-    protected SignTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
+    protected SignVerifyTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
 
-        SignTO signTO = new SignTO()
-                .currentDate(System.currentTimeMillis())
+        SignVerifyTO signTO = new SignVerifyTO()
                 .publicKey(clientKey.getPubKey())
                 .signatures(SerializeUtils.serializeSignatures(txSignatures));
 
@@ -54,7 +53,7 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
             //smallTx.addOutput(txOut);
             signTO.transaction(smallTx.unsafeBitcoinSerialize());
 
-            signTO.p2shAddressTo(getBitcoinURI().getAddress().toBase58());
+            signTO.addressTo(getBitcoinURI().getAddress().toBase58());
             signTO.amountToSpend(getBitcoinURI().getAmount().longValue());
             signTO.amountChange(transaction.getOutput(1).getValue().longValue());
             /*
@@ -73,7 +72,7 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
     }
 
     @Override
-    protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
+    protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignVerifyTO signTO) {
         /*
         DERPayloadBuilder txInputs = new DERPayloadBuilder();
         for (byte[] txIn : signTO.transactionInputs()) {
@@ -81,11 +80,9 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
         }
         */
 
-        builder.add(signTO.currentDate())
-                .add(signTO.publicKey())
+        builder.add(signTO.publicKey())
                 .add(signTO.transaction())
                 .add(signTO.amountChange())
-                //.add(txInputs.getAsDERSequence())
                 .add(signTO.signatures())
                 .add(signTO.messageSig());
         return builder;

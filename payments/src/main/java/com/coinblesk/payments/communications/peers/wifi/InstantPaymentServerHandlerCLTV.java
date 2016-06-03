@@ -61,7 +61,8 @@ public class InstantPaymentServerHandlerCLTV extends DERObjectStreamHandler {
             writeDERObject(paymentRequest);
 
             DERObject paymentResponse = readDERObject();
-            PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(paymentRequestURI);
+            PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(
+                    paymentRequestURI, walletServiceBinder);
             DERObject serverSignatures = paymentResponseReceive.process(paymentResponse);
             writeDERObject(serverSignatures);
 

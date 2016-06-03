@@ -40,7 +40,7 @@ public interface CoinbleskWebService {
     Call<TimeLockedAddressTO> createTimeLockedAddress(@Body TimeLockedAddressTO request);
 
     @POST("v1/payment/signverify")
-    Call<SignTO> signVerify(@Body SignTO signVerify);
+    Call<SignVerifyTO> signVerify(@Body SignVerifyTO signVerify);
 
     // exchange Rate
     @GET("wallet/exchangeRate/EUR")

@@ -19,9 +19,10 @@ package com.coinblesk.payments.communications.steps.cltv;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
-import com.coinblesk.json.SignTO;
+import com.coinblesk.json.SignVerifyTO;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
@@ -31,12 +32,11 @@ import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERSequence;
 import com.coinblesk.util.SerializeUtils;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.uri.BitcoinURI;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,20 +45,24 @@ import java.util.List;
  */
 public class PaymentResponseReceiveStep extends AbstractStep {
     private final static String TAG = PaymentResponseReceiveStep.class.getName();
+    private final WalletService.WalletServiceBinder walletService;
 
-    public PaymentResponseReceiveStep(BitcoinURI bitcoinURI) {
+    public PaymentResponseReceiveStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
         super(bitcoinURI);
+        this.walletService = walletService;
     }
 
     @Override
     @NonNull
     public DERObject process(@NonNull DERObject input) throws PaymentException {
-        final SignTO signTO;
+        final SignVerifyTO signTO;
         final ECKey clientPublicKey;
+        final ECKey myClientKey = walletService.getMultisigClientKey();
         try {
             DERSequence inputSequence = (DERSequence) input;
             DERPayloadParser parser = new DERPayloadParser(inputSequence);
             signTO = extractSignTO(parser);
+            signSignTO(signTO, myClientKey);
             clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
@@ -67,12 +71,15 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         Log.d(TAG, String.format("Got signTO: pubKey of message: %s, address(hex): %s, timestamp of signing: %s",
                 clientPublicKey.getPublicKeyAsHex(), getBitcoinURI().getAddress(), signTO.currentDate()));
 
+        /*
+        // TODO: this verify fails because of payeeSig.
         if (!SerializeUtils.verifyJSONSignature(signTO, clientPublicKey)) {
             throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
         }
         Log.d(TAG, "signTO - verify successful");
+        */
 
-        final SignTO serverSignTO = serverSignVerify(signTO);
+        final SignVerifyTO serverSignTO = serverSignVerify(signTO);
 
         try {
             DERPayloadBuilder builder = new DERPayloadBuilder();
@@ -84,10 +91,16 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         }
     }
 
+    private void signSignTO(SignVerifyTO signTO, ECKey clientKey) {
+        signTO.payeePublicKey(clientKey.getPubKey());
+        TxSig payeeSig = SerializeUtils.signJSONRaw(signTO, clientKey);
+        signTO.payeeMessageSig(payeeSig);
+    }
+
     @NonNull
-    private SignTO serverSignVerify(SignTO signTO) throws PaymentException {
-        final Response<SignTO> serverResponse;
-        SignTO serverSignTO;
+    private SignVerifyTO serverSignVerify(SignVerifyTO signTO) throws PaymentException {
+        final Response<SignVerifyTO> serverResponse;
+        SignVerifyTO serverSignTO;
         try {
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             serverResponse = service.signVerify(signTO).execute();
@@ -102,6 +115,20 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         }
 
         serverSignTO = serverResponse.body();
+
+        // verify my signature (payee sig)
+        TxSig payeeSig = serverSignTO.payeeMessageSig();
+        serverSignTO.payeeMessageSig(null);
+        ECKey payeeServerPubKey = ECKey.fromPublicOnly(serverSignTO.payeePublicKey());
+        if (!Arrays.equals(
+                    walletService.getMultisigServerKey().getPubKey(),
+                    payeeServerPubKey.getPubKey())
+                || !SerializeUtils.verifyJSONSignatureRaw(serverSignTO, payeeSig, payeeServerPubKey)) {
+            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+        }
+        serverSignTO.payeePublicKey(null);
+
+        // verify payer signature
         if (!SerializeUtils.verifyJSONSignature(serverSignTO,
                                 ECKey.fromPublicOnly(serverSignTO.publicKey()))) {
             throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
@@ -115,13 +142,13 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         return serverSignTO;
     }
 
-    private void appendSignTO(DERPayloadBuilder builder, SignTO signTO) {
+    private void appendSignTO(DERPayloadBuilder builder, SignVerifyTO signTO) {
         builder
             .add(signTO.type().nr())
             .add(signTO.signatures());
     }
 
-    protected SignTO extractSignTO(DERPayloadParser parser) {
+    protected SignVerifyTO extractSignTO(DERPayloadParser parser) {
         long currentDate = parser.getLong();
         byte[] publicKey = parser.getBytes();
         byte[] serializedTx = parser.getBytes();
@@ -137,7 +164,7 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         // }
 
 
-        SignTO signTO = new SignTO()
+        SignVerifyTO signTO = new SignVerifyTO()
                 .currentDate(currentDate)
                 .publicKey(publicKey)
                 .transaction(serializedTx)

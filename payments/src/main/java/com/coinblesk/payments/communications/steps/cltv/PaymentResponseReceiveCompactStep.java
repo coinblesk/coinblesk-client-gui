@@ -18,8 +18,9 @@
 package com.coinblesk.payments.communications.steps.cltv;
 
 import com.coinblesk.client.utils.DERPayloadParser;
-import com.coinblesk.json.SignTO;
+import com.coinblesk.json.SignVerifyTO;
 import com.coinblesk.json.TxSig;
+import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -31,13 +32,12 @@ import java.util.List;
 public class PaymentResponseReceiveCompactStep extends PaymentResponseReceiveStep {
     private final static String TAG = PaymentResponseReceiveCompactStep.class.getName();
 
-    public PaymentResponseReceiveCompactStep(BitcoinURI bitcoinURI) {
-        super(bitcoinURI);
+    public PaymentResponseReceiveCompactStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
+        super(bitcoinURI, walletService);
     }
 
     @Override
-    protected SignTO extractSignTO(DERPayloadParser parser) {
-        long currentDate = parser.getLong();
+    protected SignVerifyTO extractSignTO(DERPayloadParser parser) {
         byte[] publicKey = parser.getBytes();
         byte[] serializedTx = parser.getBytes();
         long amountChange = parser.getLong();
@@ -53,14 +53,12 @@ public class PaymentResponseReceiveCompactStep extends PaymentResponseReceiveSte
         List<TxSig> signatures = parser.getTxSigList();
         TxSig messageSig = parser.getTxSig();
 
-        SignTO signTO = new SignTO()
-                .currentDate(currentDate)
+        SignVerifyTO signTO = new SignVerifyTO()
                 .publicKey(publicKey)
                 .transaction(serializedTx)
-                .p2shAddressTo(getBitcoinURI().getAddress().toBase58())
+                .addressTo(getBitcoinURI().getAddress().toBase58())
                 .amountToSpend(getBitcoinURI().getAmount().longValue())
                 .amountChange(amountChange)
-                //.transactionInputs(transactionInputs)
                 .signatures(signatures)
                 .messageSig(messageSig);
         return signTO;
