@@ -37,15 +37,19 @@ import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestSendStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseReceiveStep;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -58,6 +62,7 @@ public class BluetoothLEServer extends AbstractServer {
 
     private final BluetoothAdapter bluetoothAdapter;
     private BluetoothGattServer bluetoothGattServer;
+    private List<AdvertiseCallback> bluetoothLeAdvertiseCallbacks;
     private final Map<String, PaymentState> connectedDevices;
 
     public BluetoothLEServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
@@ -100,7 +105,42 @@ public class BluetoothLEServer extends AbstractServer {
         bluetoothGattService.addCharacteristic(writeCharacteristic);
         bluetoothGattService.addCharacteristic(readCharacteristic);
 
+        final UUID pubKeyUuid = UUID.nameUUIDFromBytes(getWalletServiceBinder().getMultisigClientKey().getPubKey());
+        final BluetoothGattService bluetoothPubKeyGattService = new BluetoothGattService(
+                pubKeyUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        bluetoothPubKeyGattService.addCharacteristic(writeCharacteristic);
+        bluetoothPubKeyGattService.addCharacteristic(readCharacteristic);
+
+        //bluetoothGattService.addService(bluetoothPubKeyGattService);
+
         bluetoothGattServer.addService(bluetoothGattService);
+        bluetoothGattServer.addService(bluetoothPubKeyGattService);
+        Log.d(TAG, "Bluetooth LE Default Service UUID: " + Constants.BLUETOOTH_SERVICE_UUID.toString());
+        Log.d(TAG, "Bluetooth LE PubKey Service UUID: " + pubKeyUuid.toString());
+        startAdvertisingService(Constants.BLUETOOTH_SERVICE_UUID);
+        startAdvertisingService(pubKeyUuid);
+    }
+
+    private void startAdvertisingService(final UUID uuid) {
+        if (bluetoothLeAdvertiseCallbacks == null) {
+            bluetoothLeAdvertiseCallbacks = new ArrayList<>();
+        }
+
+        AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                Log.d(TAG, "BLE advertising - uuid: " + uuid.toString()
+                        + " - onStartSuccess - settings: " + settingsInEffect.toString());
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                Log.w(TAG, "BLE advertising - uuid: " + uuid.toString()
+                        + " - onStartFailure - errorCode=" + errorCode);
+            }
+        };
+        bluetoothLeAdvertiseCallbacks.add(advertiseCallback);
+
         bluetoothAdapter.getBluetoothLeAdvertiser().startAdvertising(
                 new AdvertiseSettings.Builder()
                         .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -110,9 +150,9 @@ public class BluetoothLEServer extends AbstractServer {
                         .build(),
                 new AdvertiseData.Builder()
                         .setIncludeDeviceName(true)
-                        .addServiceUuid(ParcelUuid.fromString(Constants.BLUETOOTH_SERVICE_UUID.toString()))
+                        .addServiceUuid(new ParcelUuid(uuid))
                         .build(),
-                new AdvertiseCallback() {}
+                advertiseCallback
         );
     }
 
@@ -123,6 +163,16 @@ public class BluetoothLEServer extends AbstractServer {
             bluetoothGattServer.close();
             bluetoothGattServer = null;
         }
+
+        if (bluetoothLeAdvertiseCallbacks != null) {
+            if (bluetoothAdapter != null) {
+                for (AdvertiseCallback callback : bluetoothLeAdvertiseCallbacks) {
+                    bluetoothAdapter.getBluetoothLeAdvertiser().stopAdvertising(callback);
+                }
+            }
+            bluetoothLeAdvertiseCallbacks.clear();
+        }
+
         connectedDevices.clear();
     }
 
@@ -176,8 +226,13 @@ public class BluetoothLEServer extends AbstractServer {
             connectedDevices.put(device.getAddress(), paymentState);
 
             PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(getPaymentRequestUri());
-            DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
-            paymentState.derResponsePayload = paymentRequest.serializeToDER();
+            try {
+                DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
+                paymentState.derResponsePayload = paymentRequest.serializeToDER();
+            } catch (PaymentException e) {
+                // TODO handle!
+                Log.e(TAG, "Exception: ", e);
+            }
         }
 
         @Override
@@ -208,29 +263,35 @@ public class BluetoothLEServer extends AbstractServer {
                                                             boolean responseNeeded,
                                                             int offset,
                                                             byte[] value) {
+            try {
 
-            Log.d(TAG, String.format("%s - onCharacteristicWriteRequest (length=%d bytes)",
-                    device.getAddress(), value.length));
-            PaymentState paymentState = connectedDevices.get(device.getAddress());
-            paymentState.derRequestPayload = ClientUtils.concatBytes(paymentState.derRequestPayload, value);
-            int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
+                Log.d(TAG, String.format("%s - onCharacteristicWriteRequest (length=%d bytes)",
+                        device.getAddress(), value.length));
+                PaymentState paymentState = connectedDevices.get(device.getAddress());
+                paymentState.derRequestPayload = ClientUtils.concatBytes(paymentState.derRequestPayload, value);
+                int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
 
-            if (paymentState.derRequestPayload.length >= responseLength) {
-                final byte[] requestPayload = paymentState.derRequestPayload;
-                paymentState.derRequestPayload = new byte[0];
-                switch (paymentState.stepCounter++) {
-                    case 0:
-                        Log.d(TAG, device.getAddress() + " - process payment response.");
-                        DERObject paymentResponse = DERParser.parseDER(requestPayload);
-                        PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(getPaymentRequestUri());
-                        DERObject serverSignatures = paymentResponseReceive.process(paymentResponse);
-                        paymentState.derResponsePayload = serverSignatures.serializeToDER();
-                        break;
-                    case 1:
-                        Log.d(TAG, device.getAddress() + " - payment finished.");
-                        getPaymentRequestDelegate().onPaymentSuccess();
-                        break;
+                if (paymentState.derRequestPayload.length >= responseLength) {
+                    final byte[] requestPayload = paymentState.derRequestPayload;
+                    paymentState.derRequestPayload = new byte[0];
+                    switch (paymentState.stepCounter++) {
+                        case 0:
+                            Log.d(TAG, device.getAddress() + " - process payment response.");
+                            DERObject paymentResponse = DERParser.parseDER(requestPayload);
+                            PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(
+                                    getPaymentRequestUri(), getWalletServiceBinder());
+                            DERObject serverSignatures = paymentResponseReceive.process(paymentResponse);
+                            paymentState.derResponsePayload = serverSignatures.serializeToDER();
+                            break;
+                        case 1:
+                            Log.d(TAG, device.getAddress() + " - payment finished.");
+                            getPaymentRequestDelegate().onPaymentSuccess();
+                            break;
+                    }
                 }
+            } catch (PaymentException e) {
+                // TODO: handle exception
+                Log.w(TAG, "Exception: ", e);
             }
         }
     }

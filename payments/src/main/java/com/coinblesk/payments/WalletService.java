@@ -36,7 +36,6 @@ import com.coinblesk.json.ExchangeRateTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.steps.cltv.CLTVInstantPaymentStep;
 import com.coinblesk.client.models.ECKeyWrapper;
 import com.coinblesk.client.models.ExchangeRateWrapper;
@@ -178,9 +177,9 @@ public class WalletService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        initExchangeRate();
         initLogging();
-
+        initExchangeRate();
+        
         walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
         bitcoinjContext = new Context(Constants.PARAMS);
         Context.propagate(bitcoinjContext);
@@ -214,6 +213,7 @@ public class WalletService extends Service {
                     initAddresses();
 
                     appKitInitDone = true;
+                    broadcastWalletServiceInitDone();
                     broadcastBalanceChanged();
                 } catch (Exception e) {
                     // TODO: error handling - wallet cannot be initialized if any exceptions occur here.
@@ -371,10 +371,10 @@ public class WalletService extends Service {
     }
 
     private void initLogging() {
-        LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+        LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
         ClientUtils.fixECKeyComparator();
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
-                .setLevel(ch.qos.logback.classic.Level.INFO);
+                .setLevel(ch.qos.logback.classic.Level.WARN);
     }
 
     private void initWalletEventListener() {
@@ -804,6 +804,11 @@ public class WalletService extends Service {
 
     private CoinbleskWebService coinbleskService() {
         return Constants.RETROFIT.create(CoinbleskWebService.class);
+    }
+
+    private void broadcastWalletServiceInitDone() {
+        Intent initDone = new Intent(Constants.WALLET_INIT_DONE_ACTION);
+        getLocalBroadcaster().sendBroadcast(initDone);
     }
 
     private void broadcastBalanceChanged() {

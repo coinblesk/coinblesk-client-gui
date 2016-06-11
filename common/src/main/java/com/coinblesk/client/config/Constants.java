@@ -55,6 +55,7 @@ public final class Constants {
 
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
+    public final static String WALLET_INIT_DONE_ACTION = "WALLET_INIT_DONE_ACTION";
     public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
     public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";
     public final static String WALLET_TRANSACTIONS_CHANGED_ACTION = "WALLET_TRANSACTIONS_CHANGED_ACTION";
@@ -81,8 +82,7 @@ public final class Constants {
     public final static int SYMMETRIC_KEY_SIZE = 128 / 8;
 
     // coinblesk server communication
-    //public static final String COINBLESK_SERVER_BASE_URL = "http://192.168.1.176:8080/";
-    public static String COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server/";
+    public static String COINBLESK_SERVER_BASE_URL = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
     public static Retrofit RETROFIT = new Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
             .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)

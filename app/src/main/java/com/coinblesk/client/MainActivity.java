@@ -33,11 +33,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -55,18 +53,20 @@ import android.widget.Toast;
 
 import com.coinblesk.client.about.AboutActivity;
 import com.coinblesk.client.addresses.AddressActivity;
-import com.coinblesk.client.ui.authview.AuthenticationDialog;
 import com.coinblesk.client.backup.BackupActivity;
-import com.coinblesk.client.utils.AppUtils;
-import com.coinblesk.client.utils.PaymentFutureCallback;
-import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.settings.SettingsActivity;
+import com.coinblesk.client.ui.authview.AuthenticationDialog;
 import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.client.utils.AppUtils;
+import com.coinblesk.client.utils.PaymentFutureCallback;
+import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
+import com.coinblesk.client.utils.upgrade.UpgradeUtils;
 import com.coinblesk.client.wallet.WalletActivity;
 import com.coinblesk.json.VersionTO;
-import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
@@ -81,7 +81,6 @@ import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.SerializeUtils;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -94,7 +93,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -143,8 +141,8 @@ public class MainActivity extends AppCompatActivity
         switch (networkSettings) {
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
-                // bitcoin2-test.csg.uzh.ch - 192.168.178.20:8080
-                Constants.COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server/";
+                // bitcoin2-test.csg.uzh.ch
+                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
@@ -153,7 +151,7 @@ public class MainActivity extends AppCompatActivity
                 break;
             default:
                 Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
-                Constants.COINBLESK_SERVER_BASE_URL = "http://192.168.178.20:8080/coinblesk-server-main/";
+                Constants.COINBLESK_SERVER_BASE_URL = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
                 Constants.RETROFIT = new Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
@@ -165,6 +163,9 @@ public class MainActivity extends AppCompatActivity
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();
         UuidObjectStorage.getInstance().init(objectStorageDir);
+
+        UpgradeUtils upgradeUtils = new UpgradeUtils(UuidObjectStorage.getInstance());
+        upgradeUtils.checkUpgrade(this);
 
         startWalletService();
 
@@ -356,9 +357,11 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
         Log.d(TAG, "onStart");
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
-        LocalBroadcastManager.getInstance(this).registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
-        LocalBroadcastManager.getInstance(this).registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
+        broadcastManager.registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
+        broadcastManager.registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
+        broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
+        broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
         startService(walletServiceIntent);
@@ -378,9 +381,11 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
         Log.d(TAG, "onStop");
 
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(startClientsBroadcastReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(stopClientsBroadcastReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(startServersBroadcastReceiver);
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
+        broadcastManager.unregisterReceiver(startClientsBroadcastReceiver);
+        broadcastManager.unregisterReceiver(stopClientsBroadcastReceiver);
+        broadcastManager.unregisterReceiver(startServersBroadcastReceiver);
+        broadcastManager.unregisterReceiver(walletServiceInitDone);
         this.stopServers();
 
         unbindService(serviceConnection);
@@ -449,6 +454,19 @@ public class MainActivity extends AppCompatActivity
     /**
      * Communication part starts here
      */
+
+    private final BroadcastReceiver walletServiceInitDone = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
+                new Multisig2of2ToCltvForwardTask(
+                        walletServiceBinder,
+                        walletServiceBinder.getMultisigClientKey(),
+                        walletServiceBinder.getMultisigServerKey())
+                    .execute();
+            }
+        }
+    };
 
     private final BroadcastReceiver startClientsBroadcastReceiver = new BroadcastReceiver() {
         @Override

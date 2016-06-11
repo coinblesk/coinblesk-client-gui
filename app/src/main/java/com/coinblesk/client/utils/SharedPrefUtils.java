@@ -40,6 +40,7 @@ public final class SharedPrefUtils {
         public static final String PRIMARY_BALANCE = "pref_balance_list";
         public static final String CUSTOM_BUTTONS = "pref_custom_buttons";
         public static final String BITCOIN_SCALE_PREFIX = "pref_bitcoin_rep_list";
+        public static final String MULTISIG_2of2_TO_CLTV_FORWARDING = "pref_multisig_2of2_to_cltv";
     }
 
     // TODO: default is mainnet
@@ -67,6 +68,17 @@ public final class SharedPrefUtils {
 
     private static Set<String> stringSet(Context context, String key, Set<String> defaultValues) {
         return preferences(context).getStringSet(key, defaultValues);
+    }
+
+    private static boolean getBoolean(Context context, String key) {
+        return preferences(context).getBoolean(key, false);
+    }
+
+    private static void setBoolean(Context context, String key, boolean value) {
+        SharedPreferences prefs = preferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(key, value);
+        editor.commit();
     }
 
     public static String getNetwork(Context context) {
@@ -111,10 +123,18 @@ public final class SharedPrefUtils {
         SharedPreferences prefs = preferences(context, PreferenceKeys.CUSTOM_BUTTONS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(buttonKey, content);
-        editor.apply();
+        editor.commit();
     }
 
     public static boolean isCustomButtonEmpty(Context context, String buttonKey) {
         return getCustomButton(context, buttonKey) == null;
+    }
+
+    public static void enableMultisig2of2ToCltvForwarder(Context context) {
+        setBoolean(context, PreferenceKeys.MULTISIG_2of2_TO_CLTV_FORWARDING, true);
+    }
+
+    public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
+        return getBoolean(context, PreferenceKeys.MULTISIG_2of2_TO_CLTV_FORWARDING);
     }
 }

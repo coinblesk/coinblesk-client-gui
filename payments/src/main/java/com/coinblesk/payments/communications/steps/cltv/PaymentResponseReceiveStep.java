@@ -46,6 +46,7 @@ import java.util.List;
 public class PaymentResponseReceiveStep extends AbstractStep {
     private final static String TAG = PaymentResponseReceiveStep.class.getName();
     private final WalletService.WalletServiceBinder walletService;
+    private boolean verifyPayeeSig = true;
 
     public PaymentResponseReceiveStep(BitcoinURI bitcoinURI, WalletService.WalletServiceBinder walletService) {
         super(bitcoinURI);
@@ -120,13 +121,17 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         TxSig payeeSig = serverSignTO.payeeMessageSig();
         serverSignTO.payeeMessageSig(null);
         ECKey payeeServerPubKey = ECKey.fromPublicOnly(serverSignTO.payeePublicKey());
-        if (!Arrays.equals(
-                    walletService.getMultisigServerKey().getPubKey(),
-                    payeeServerPubKey.getPubKey())
-                || !SerializeUtils.verifyJSONSignatureRaw(serverSignTO, payeeSig, payeeServerPubKey)) {
-            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+        if (verifyPayeeSig) {
+            if (!Arrays.equals(
+                    walletService.getMultisigServerKey().getPubKey(), payeeServerPubKey.getPubKey())) {
+                throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+            }
+            if (!SerializeUtils.verifyJSONSignatureRaw(serverSignTO, payeeSig, payeeServerPubKey)) {
+                throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+            }
         }
         serverSignTO.payeePublicKey(null);
+
 
         // verify payer signature
         if (!SerializeUtils.verifyJSONSignature(serverSignTO,
@@ -171,5 +176,9 @@ public class PaymentResponseReceiveStep extends AbstractStep {
                 .signatures(signatures)
                 .messageSig(messageSig);
         return signTO;
+    }
+
+    public void verifyPayeeSig(boolean verifyPayeeSig) {
+        this.verifyPayeeSig = verifyPayeeSig;
     }
 }

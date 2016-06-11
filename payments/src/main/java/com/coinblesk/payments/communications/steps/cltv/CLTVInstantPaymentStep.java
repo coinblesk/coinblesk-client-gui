@@ -19,15 +19,16 @@ package com.coinblesk.payments.communications.steps.cltv;
 
 import android.support.annotation.Nullable;
 import android.util.Log;
-import com.coinblesk.payments.WalletService;
+
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.payments.communications.steps.AbstractStep;
-import static com.google.common.base.Preconditions.checkState;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
+
+import static com.google.common.base.Preconditions.checkState;
 
 
 public class CLTVInstantPaymentStep extends AbstractStep {
@@ -62,7 +63,13 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             PaymentResponseSendStep sendResponse = new PaymentResponseSendStep(
                     receiveRequest.getBitcoinURI(), walletServiceBinder);
             DERObject responseOutput = sendResponse.process(null);
-            PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveStep(getBitcoinURI());
+
+            Log.i(TAG, "PaymentResponseSend: " + responseOutput.serializeToDER().length);
+            Log.i(TAG, "Transaction size: " + sendResponse.getTransaction().unsafeBitcoinSerialize().length);
+
+            PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveStep(
+                    getBitcoinURI(), walletServiceBinder);
+            receiveResponse.verifyPayeeSig(false); // since not user-to-user payment
             DERObject serverOutput = receiveResponse.process(responseOutput);
 
             /* Server Signatures */

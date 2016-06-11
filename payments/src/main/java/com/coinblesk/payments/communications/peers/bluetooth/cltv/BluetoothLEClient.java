@@ -30,9 +30,10 @@ import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
+import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
@@ -145,67 +146,72 @@ public class BluetoothLEClient extends AbstractClient {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            Log.d(TAG, String.format("%s - onCharacteristicRead - status=%d, length=%d bytes",
-                    gatt.getDevice().getAddress(), status, characteristic.getValue().length));
+            try {
+                Log.d(TAG, String.format("%s - onCharacteristicRead - status=%d, length=%d bytes",
+                        gatt.getDevice().getAddress(), status, characteristic.getValue().length));
 
-            derRequestPayload = ClientUtils.concatBytes(derRequestPayload, characteristic.getValue());
-            int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
+                derRequestPayload = ClientUtils.concatBytes(derRequestPayload, characteristic.getValue());
+                int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
 
-            if (derRequestPayload.length >= responseLength && derRequestPayload.length != 2) {
-                derResponsePayload = new byte[0];
-                switch (stepCounter++) {
-                    case 0:
-                        DERObject paymentRequest = DERParser.parseDER(derRequestPayload);
+                if (derRequestPayload.length >= responseLength && derRequestPayload.length != 2) {
+                    derResponsePayload = new byte[0];
+                    switch (stepCounter++) {
+                        case 0:
+                            DERObject paymentRequest = DERParser.parseDER(derRequestPayload);
                         /* 1. RECEIVE PAYMENT REQUEST */
-                        paymentRequestReceive = new PaymentRequestReceiveStep();
-                        paymentRequestReceive.process(paymentRequest);
+                            paymentRequestReceive = new PaymentRequestReceiveStep();
+                            paymentRequestReceive.process(paymentRequest);
 
                         /* 2. AUTHORIZE REQUEST (by user) */
-                        BitcoinURI paymentRequestURI = paymentRequestReceive.getBitcoinURI();
-                        Log.d(TAG, "got request, authorizing user: " + paymentRequestURI);
-                        boolean isAuthorized = getPaymentRequestDelegate().isPaymentRequestAuthorized(paymentRequestURI);
-                        if (!isAuthorized) {
-                            Log.d(TAG, "Payment not authorized.");
-                            // TODO: we should notify server about this?
-                            getPaymentRequestDelegate().onPaymentError("unauthorized");
-                            return;
-                        }
+                            BitcoinURI paymentRequestURI = paymentRequestReceive.getBitcoinURI();
+                            Log.d(TAG, "got request, authorizing user: " + paymentRequestURI);
+                            boolean isAuthorized = getPaymentRequestDelegate().isPaymentRequestAuthorized(paymentRequestURI);
+                            if (!isAuthorized) {
+                                Log.d(TAG, "Payment not authorized.");
+                                // TODO: we should notify server about this?
+                                getPaymentRequestDelegate().onPaymentError("unauthorized");
+                                return;
+                            }
 
                         /* 3. SEND PAYMENT RESPONSE */
-                        paymentResponseSend = new PaymentResponseSendStep(paymentRequestURI, getWalletServiceBinder());
-                        DERObject paymentResponse = paymentResponseSend.process(DERObject.NULLOBJECT);
-                        derResponsePayload = paymentResponse.serializeToDER();
+                            paymentResponseSend = new PaymentResponseSendStep(paymentRequestURI, getWalletServiceBinder());
+                            DERObject paymentResponse = paymentResponseSend.process(DERObject.NULLOBJECT);
+                            derResponsePayload = paymentResponse.serializeToDER();
 
-                        break;
-                    case 1:
+                            break;
+                        case 1:
                         /* 4. RECEIVE SIGANTURES */
-                        DERObject serverSignatures = DERParser.parseDER(derRequestPayload);
-                        paymentServerSignatures = new PaymentServerSignatureReceiveStep();
-                        paymentServerSignatures.process(serverSignatures);
+                            DERObject serverSignatures = DERParser.parseDER(derRequestPayload);
+                            paymentServerSignatures = new PaymentServerSignatureReceiveStep();
+                            paymentServerSignatures.process(serverSignatures);
 
                         /* 5. FINALIZE PAYMENT (TX) */
-                        PaymentFinalizeStep finalizeStep = new PaymentFinalizeStep(
-                                paymentRequestReceive.getBitcoinURI(),
-                                paymentResponseSend.getTransaction(),
-                                paymentResponseSend.getClientTransactionSignatures(),
-                                paymentServerSignatures.getServerTransactionSignatures(),
-                                getWalletServiceBinder());
-                        finalizeStep.process(DERObject.NULLOBJECT);
+                            PaymentFinalizeStep finalizeStep = new PaymentFinalizeStep(
+                                    paymentRequestReceive.getBitcoinURI(),
+                                    paymentResponseSend.getTransaction(),
+                                    paymentResponseSend.getClientTransactionSignatures(),
+                                    paymentServerSignatures.getServerTransactionSignatures(),
+                                    getWalletServiceBinder());
+                            finalizeStep.process(DERObject.NULLOBJECT);
 
-                        Transaction transaction = finalizeStep.getTransaction();
-                        getWalletServiceBinder().commitAndBroadcastTransaction(transaction);
+                            Transaction transaction = finalizeStep.getTransaction();
+                            getWalletServiceBinder().commitAndBroadcastTransaction(transaction);
 
-                        isPaymentDone = true;
-                        derResponsePayload = DERObject.NULLOBJECT.serializeToDER(); // final ack.
-                        break;
+                            isPaymentDone = true;
+                            derResponsePayload = DERObject.NULLOBJECT.serializeToDER(); // final ack.
+                            break;
+                    }
+
+                    derRequestPayload = new byte[0];
+                    byteCounter = 0;
+                    writeNextFragment(gatt);
+
+                } else {
+                    doReadCharacteristic(gatt);
                 }
-
-                derRequestPayload = new byte[0];
-                byteCounter = 0;
-                writeNextFragment(gatt);
-
-            } else {
-                doReadCharacteristic(gatt);
+            } catch (PaymentException e) {
+                // TODO: handle exception
+                Log.w(TAG, "Exception: ", e);
             }
         }
 

@@ -61,7 +61,7 @@ public final class PaymentFutureCallback implements FutureCallback<Object> {
                     if (t instanceof PaymentException) {
                         PaymentException pex = (PaymentException) t;
                         message = AppUtils.getPaymentErrorMessage(dialog.getContext(), pex.getErrorCode());
-                        if (!pex.getMessage().isEmpty()) {
+                        if (pex.getMessage() != null && !pex.getMessage().isEmpty()) {
                             message += " (" + pex.getMessage() + ")";
                         }
                     } else {
