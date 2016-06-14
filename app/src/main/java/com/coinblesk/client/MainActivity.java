@@ -459,7 +459,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
-                new Multisig2of2ToCltvForwardTask(
+                new Multisig2of2ToCltvForwardTask(MainActivity.this,
                         walletServiceBinder,
                         walletServiceBinder.getMultisigClientKey(),
                         walletServiceBinder.getMultisigServerKey())

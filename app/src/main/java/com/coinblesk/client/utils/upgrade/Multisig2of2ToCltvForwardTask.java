@@ -1,14 +1,20 @@
 package com.coinblesk.client.utils.upgrade;
 
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
+import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.BitcoinUtils;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsufficientFunds;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
@@ -21,6 +27,8 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,81 +38,133 @@ import retrofit2.Response;
 /**
  * @author  Andreas Albrecht
  */
-public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Void> {
+public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transaction> {
     private static final String TAG = Multisig2of2ToCltvForwardTask.class.getName();
 
     private WalletService.WalletServiceBinder walletService;
     private ECKey clientKey, serverKey;
 
-    public Multisig2of2ToCltvForwardTask(WalletService.WalletServiceBinder walletServiceBinder,
+    private Exception thrownException;
+    private final WeakReference<Activity> weakActivity;
+
+    public Multisig2of2ToCltvForwardTask(Activity activity,
+                                         WalletService.WalletServiceBinder walletServiceBinder,
                                          ECKey multisigClientKey, ECKey multisigServerKey) {
+        this.weakActivity = new WeakReference<>(activity);
         this.walletService = walletServiceBinder;
         this.clientKey = multisigClientKey;
         this.serverKey = multisigServerKey;
+        this.thrownException = null;
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
-        forwardFromMultisig2of2();
+    protected Transaction doInBackground(Void... params) {
+        try {
+            return forwardFromMultisig2of2();
+        } catch (Exception e) {
+            Log.w(TAG, "Exception while forwarding funds from 2-of-2 multisig to cltv: ", e);
+            thrownException = e;
+        }
         return null;
     }
 
-    private void forwardFromMultisig2of2() {
-        try {
-            List<TransactionOutput> outputs = getMultisig2of2Outputs();
-            if (outputs.isEmpty()) {
-                Log.d(TAG, "No outputs found for 2-of-2 multisig address: "
-                        + getMultisig2of2Address().toBase58());
-                return;
-            }
-
-            Address addressTo = walletService.getCurrentReceiveAddress();
-            final Transaction transaction = BitcoinUtils.createSpendAllTx(
-                    Constants.PARAMS,
-                    outputs,
-                    addressTo,
-                    addressTo);
-
-            // let server sign first
-            SignTO transactionTO = new SignTO();
-            transactionTO.currentDate(System.currentTimeMillis());
-            transactionTO.publicKey(clientKey.getPubKey());
-            transactionTO.transaction(transaction.unsafeBitcoinSerialize());
-            SerializeUtils.signJSON(transactionTO, clientKey);
-
-
-            Response<SignTO> signTOResponse = getCoinbleskService().sign(transactionTO).execute();
-            SignTO signedTO = signTOResponse.body();
-
-            //This is needed because otherwise we mix up signature order
-            List<ECKey> keys = getSortedKeys();
-
-            Script redeemScript = createRedeemScript();
-
-            List<TransactionSignature> clientTxSignatures = BitcoinUtils.partiallySign(
-                    transaction,
-                    redeemScript,
-                    clientKey);
-            List<TransactionSignature> serverTxSignatures = SerializeUtils.deserializeSignatures(signedTO.signatures());
-
-            for (int i = 0; i < clientTxSignatures.size(); i++) {
-                TransactionSignature serverSignature = serverTxSignatures.get(i);
-                TransactionSignature clientSignature = clientTxSignatures.get(i);
-                Script scriptSig = createScriptSig(clientSignature, serverSignature);
-                transaction.getInput(i).setScriptSig(scriptSig);
-                transaction.getInput(i).verify();
-            }
-
-            VerifyTO verifyRequestTO = new VerifyTO()
-                    .currentDate(System.currentTimeMillis())
-                    .publicKey(clientKey.getPubKey())
-                    .transaction(transaction.unsafeBitcoinSerialize());
-            SerializeUtils.signJSON(verifyRequestTO, clientKey);
-
-            walletService.broadcastTransaction(transaction);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not forward 2of2 multisig funds to cltv: " + e.getMessage(), e);
+    @Override
+    protected void onPostExecute (Transaction transaction) {
+        // runs on UI thread
+        final Activity activity = weakActivity.get();
+        if (activity == null || activity.isDestroyed()) {
+            // may happen if user goes back before task completed.
+            return;
         }
+
+        if (thrownException != null) {
+            // case: error
+            String errorMsg = thrownException.getMessage();
+            if (errorMsg == null) errorMsg = "unknown";
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.AlertDialogAccent);
+            builder.setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setTitle(R.string.upgrade_multisig_2of2_to_cltv_forward_title)
+                    .setMessage(activity.getString(R.string.upgrade_multisig_2of2_to_cltv_forward_error_message, errorMsg))
+                    .create()
+                    .show();
+        } else if (transaction != null) {
+            // case: OK
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.AlertDialogAccent);
+            builder.setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setTitle(R.string.upgrade_multisig_2of2_to_cltv_forward_title)
+                    .setMessage(R.string.upgrade_multisig_2of2_to_cltv_forward_message)
+                    .create()
+                    .show();
+        } else {
+            // no exception but also no transaction (i.e. currently no outputs)
+        }
+    }
+
+    private Transaction forwardFromMultisig2of2() throws InsufficientFunds, CoinbleskException, IOException {
+        List<TransactionOutput> outputs = getMultisig2of2Outputs();
+        if (outputs.isEmpty()) {
+            Log.d(TAG, "No outputs found for 2-of-2 multisig address: "
+                    + getMultisig2of2Address().toBase58());
+            return null;
+        }
+
+        Address addressTo = walletService.getCurrentReceiveAddress();
+        final Transaction transaction = BitcoinUtils.createSpendAllTx(
+                Constants.PARAMS,
+                outputs,
+                addressTo,
+                addressTo);
+
+        // let server sign first
+        SignTO transactionTO = new SignTO();
+        transactionTO.currentDate(System.currentTimeMillis());
+        transactionTO.publicKey(clientKey.getPubKey());
+        transactionTO.transaction(transaction.unsafeBitcoinSerialize());
+        SerializeUtils.signJSON(transactionTO, clientKey);
+
+
+        Response<SignTO> signTOResponse = getCoinbleskService().sign(transactionTO).execute();
+        SignTO signedTO = signTOResponse.body();
+
+        //This is needed because otherwise we mix up signature order
+        List<ECKey> keys = getSortedKeys();
+
+        Script redeemScript = createRedeemScript();
+
+        List<TransactionSignature> clientTxSignatures = BitcoinUtils.partiallySign(
+                transaction,
+                redeemScript,
+                clientKey);
+        List<TransactionSignature> serverTxSignatures = SerializeUtils.deserializeSignatures(signedTO.signatures());
+
+        for (int i = 0; i < clientTxSignatures.size(); i++) {
+            TransactionSignature serverSignature = serverTxSignatures.get(i);
+            TransactionSignature clientSignature = clientTxSignatures.get(i);
+            Script scriptSig = createScriptSig(clientSignature, serverSignature);
+            transaction.getInput(i).setScriptSig(scriptSig);
+            transaction.getInput(i).verify();
+        }
+
+        VerifyTO verifyRequestTO = new VerifyTO()
+                .currentDate(System.currentTimeMillis())
+                .publicKey(clientKey.getPubKey())
+                .transaction(transaction.unsafeBitcoinSerialize());
+        SerializeUtils.signJSON(verifyRequestTO, clientKey);
+
+        walletService.broadcastTransaction(transaction);
+
+        return transaction;
     }
 
     private Coin calculateBalance(List<TransactionOutput> outputs) {
@@ -166,7 +226,5 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Void> {
         Collections.sort(keys, ECKey.PUBKEY_COMPARATOR);
         return keys;
     }
-
-
 
 }

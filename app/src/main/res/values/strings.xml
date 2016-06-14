@@ -363,4 +363,8 @@
     <string name="payment_error_message_message_signature_error">Could not verify the signature of the message.</string>
     <string name="payment_error_message_server_error">The Coinblesk server responded with an error.</string>
 
+    <string name="upgrade_multisig_2of2_to_cltv_forward_title">Multisig funds migration</string>
+    <string name="upgrade_multisig_2of2_to_cltv_forward_message">Your multisig funds were forwarded to a new address of your Coinblesk wallet due to an upgrade of the wallet.</string>
+    <string name="upgrade_multisig_2of2_to_cltv_forward_error_message">Your multisig funds could not be forwarded to a new address of your Coinblesk wallet. This is required due to an upgrade of the wallet software.\n\nError message: %1$s</string>
+
 </resources>
