@@ -3,6 +3,11 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/additional_services"
+            android:checked="false"
+            android:title="@string/additional_services" />
+
+        <item
             android:id="@+id/addresses"
             android:checked="false"
             android:title="@string/addresses" />

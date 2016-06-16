@@ -7,29 +7,29 @@
         android:title="@string/pref_general_settings_category_title">
 
         <ListPreference
+            android:key="@string/pref_balance_list"
             android:defaultValue="@string/pref_balance_default_value"
             android:dialogTitle="@string/pref_balance_dialog_title"
             android:entries="@array/pref_balance_values"
             android:entryValues="@array/pref_balance_values"
-            android:key="pref_balance_list"
             android:summary="@string/pref_balance_description"
             android:title="@string/pref_balance_title" />
 
         <ListPreference
+            android:key="@string/pref_currency_list"
             android:defaultValue="@string/pref_currency_default_value"
             android:dialogTitle="@string/pref_currency_dialog_title"
             android:entries="@array/pref_currency_entries"
             android:entryValues="@array/pref_currency_values"
-            android:key="pref_currency_list"
             android:summary="@string/pref_currency_description"
             android:title="@string/pref_currency_title" />
 
         <ListPreference
+            android:key="@string/pref_bitcoin_rep_list"
             android:defaultValue="@string/pref_bitcoin_rep_default_value"
             android:dialogTitle="@string/pref_bitcoin_rep_dialog_title"
             android:entries="@array/pref_bitcoin_rep_entries"
             android:entryValues="@array/pref_bitcoin_rep_values"
-            android:key="pref_bitcoin_rep_list"
             android:summary="@string/pref_bitcoin_rep_description"
             android:title="@string/pref_bitcoin_rep_title" />
 
@@ -40,11 +40,11 @@
         android:title="@string/pref_payment_settings_category_title">
 
         <MultiSelectListPreference
+            android:key="@string/pref_connection_settings"
             android:defaultValue="@array/pref_connection_default"
             android:dialogTitle="@string/pref_connection_settings_title"
             android:entries="@array/pref_connection_entries"
             android:entryValues="@array/pref_connection_values"
-            android:key="pref_connection_settings"
             android:summary="@string/pref_connection_settings_summary"
             android:title="@string/pref_connection_settings_title" />
 
@@ -55,7 +55,7 @@
         android:title="@string/pref_wallet_settings_title">
 
         <ListPreference
-            android:key="pref_wallet_locktime_period"
+            android:key="@+id/pref_wallet_locktime_period"
             android:title="@string/pref_wallet_locktime_period_title"
             android:summary="@string/pref_wallet_locktime_period_summary"
             android:dialogTitle="@string/pref_wallet_locktime_period_title"
@@ -70,11 +70,11 @@
         android:title="@string/pref_advanced_settings_category_title">
 
         <ListPreference
+            android:key="@string/pref_network_list"
             android:defaultValue="@string/pref_network_default_value"
             android:dialogTitle="@string/pref_network_dialog_title"
             android:entries="@array/pref_network_entries"
             android:entryValues="@array/pref_network_values"
-            android:key="pref_network_list"
             android:summary="@string/pref_network_description"
             android:title="@string/pref_network_dialog_title" />
 

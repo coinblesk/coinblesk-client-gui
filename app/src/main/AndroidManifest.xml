@@ -74,6 +74,14 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.coinblesk.client.MainActivity"/>
         </activity>
+        <activity
+            android:name=".additionalservices.AdditionalServicesActivity"
+            android:label="@string/additional_services"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.coinblesk.client.MainActivity"/>
+        </activity>
 
         <activity
                 android:name=".wallet.WalletActivity"

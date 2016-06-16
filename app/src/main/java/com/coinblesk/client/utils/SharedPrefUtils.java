@@ -16,43 +16,27 @@
 
 package com.coinblesk.client.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.ListPreference;
 import android.preference.PreferenceManager;
 
+import com.coinblesk.client.R;
+
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 
 /**
  * @author Andreas Albrecht
+ * @author Thomas Bocek
  */
 public final class SharedPrefUtils {
 
-    /**
-     * see: main/res/xml/settings_pref.xml
-     */
-    public final static class PreferenceKeys {
-        public static final String CONNECTION_SETTINGS = "pref_connection_settings";
-        public static final String NETWORK_SETTINGS = "pref_network_list";
-        public static final String FIAT_CURRENCY = "pref_currency_list";
-        public static final String LOCKTIME_PERIOD = "pref_wallet_locktime_period";
-        public static final String PRIMARY_BALANCE = "pref_balance_list";
-        public static final String CUSTOM_BUTTONS = "pref_custom_buttons";
-        public static final String BITCOIN_SCALE_PREFIX = "pref_bitcoin_rep_list";
-        public static final String MULTISIG_2of2_TO_CLTV_FORWARDING = "pref_multisig_2of2_to_cltv";
-    }
-
-    // TODO: default is mainnet
-    private static final String DEFAULT_NETWORK = "test-net-3";
-    private static final String DEFAULT_CURRENCY = "USD";
-    private static final String DEFAULT_LOCKTIME_PERIOD = "3"; // months
-    private static final Set<String> DEFAULT_CONNECTION_SETTINGS = new HashSet<>();
-    private static final String DEFAULT_PRIMARY_BALANCE = "Bitcoin";
-
-    private SharedPrefUtils() {
-        // prevent instances
-    }
+    // prevent instances
+    private SharedPrefUtils() {}
 
     private static SharedPreferences preferences(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context);
@@ -82,7 +66,8 @@ public final class SharedPrefUtils {
     }
 
     public static String getNetwork(Context context) {
-        return string(context, PreferenceKeys.NETWORK_SETTINGS, DEFAULT_NETWORK);
+        return string(context, context.getResources().getString(R.string.pref_network_list),
+                context.getResources().getString(R.string.pref_network_default_value));
     }
 
     public static boolean isNetworkTestnet(Context context) {
@@ -94,33 +79,37 @@ public final class SharedPrefUtils {
     }
 
     public static String getCurrency(Context context) {
-        return string(context, PreferenceKeys.FIAT_CURRENCY, DEFAULT_CURRENCY);
+        return string(context, context.getResources().getString(R.string.pref_currency_list),
+                context.getResources().getString(R.string.pref_currency_default_value));
     }
 
     public static Set<String> getConnectionSettings(Context context) {
-        return stringSet(context, PreferenceKeys.CONNECTION_SETTINGS, DEFAULT_CONNECTION_SETTINGS);
+        String [] connections = context.getResources().getStringArray(R.array.pref_connection_default);
+        return stringSet(context, context.getResources().getString(R.string.pref_connection_settings),  new HashSet<String>(Arrays.asList(connections)));
     }
 
     public static String getPrimaryBalance(Context context) {
-        return string(context, PreferenceKeys.PRIMARY_BALANCE, DEFAULT_PRIMARY_BALANCE);
+        return string(context, context.getResources().getString(R.string.pref_balance_list),
+                context.getResources().getString(R.string.pref_balance_default_value));
     }
 
     public static String getBitcoinScalePrefix(Context context) {
-        return string(context, PreferenceKeys.BITCOIN_SCALE_PREFIX, null);
+        return string(context, context.getResources().getString(R.string.pref_bitcoin_rep_list), null);
     }
 
     public static int getLockTimePeriodMonths(Context context) {
-        String months = string(context, PreferenceKeys.LOCKTIME_PERIOD, DEFAULT_LOCKTIME_PERIOD);
+        String months = string(context, context.getResources().getString(R.string.pref_wallet_locktime_period),
+                context.getResources().getString(R.string.pref_wallet_locktime_period_default));
         return Integer.valueOf(months);
     }
 
     public static String getCustomButton(Context context, String buttonKey) {
-        SharedPreferences prefs = preferences(context, PreferenceKeys.CUSTOM_BUTTONS, Context.MODE_PRIVATE);
+        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.pref_custom_buttons), Context.MODE_PRIVATE);
         return prefs.getString(buttonKey, null);
     }
 
     public static void putCustomButton(Context context, String buttonKey, String content) {
-        SharedPreferences prefs = preferences(context, PreferenceKeys.CUSTOM_BUTTONS, Context.MODE_PRIVATE);
+        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.pref_custom_buttons), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(buttonKey, content);
         editor.commit();
@@ -131,10 +120,10 @@ public final class SharedPrefUtils {
     }
 
     public static void enableMultisig2of2ToCltvForwarder(Context context) {
-        setBoolean(context, PreferenceKeys.MULTISIG_2of2_TO_CLTV_FORWARDING, true);
+        setBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), true);
     }
 
     public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
-        return getBoolean(context, PreferenceKeys.MULTISIG_2of2_TO_CLTV_FORWARDING);
+        return getBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv));
     }
 }

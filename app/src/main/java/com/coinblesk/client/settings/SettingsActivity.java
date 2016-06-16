@@ -66,7 +66,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void initRestartAfterNetworkChange() {
-            Preference pref = findPreference(SharedPrefUtils.PreferenceKeys.NETWORK_SETTINGS);
+            String key = getResources().getString(R.string.pref_network_list);
+            Preference pref = findPreference(key);
             pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, final Object newValue) {

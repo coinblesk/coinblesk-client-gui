@@ -178,6 +178,7 @@
     <string name="pref_balance_title">Primary Balance</string>
     <string name="pref_balance_description">Change your balance representation.</string>
     <string name="pref_balance_dialog_title">Change primary balance.</string>
+    <string name="pref_balance_list">pref_balance_list</string>
 
 
     <!--Currency List Dialog-->
@@ -185,12 +186,14 @@
     <string name="pref_currency_description">Change your Currency.</string>
     <string name="pref_currency_dialog_title">Change your Currency.</string>
     <string name="pref_currency_default_value">EUR</string>
+    <string name="pref_currency_list">pref_currency_list</string>
 
     <!--Bitcoin Representation List Dialog-->
     <string name="pref_bitcoin_rep_title">Bitcoin representation</string>
     <string name="pref_bitcoin_rep_dialog_title">Change the Bitcoin representation.</string>
     <string name="pref_bitcoin_rep_description">Change the Bitcoin representation for coinblesk.</string>
     <string name="pref_bitcoin_rep_default_value">BTC</string>
+    <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
 
 
     <!--Transaction History List Dialog-->
@@ -206,6 +209,7 @@
     <string name="pref_connection_settings_summary">Define contactless payment protocols.</string>
     <string name="pref_connection_nfc_summary">Use NFC for Contactless Payment</string>
     <string name="pref_connection_nfc_title">Activate NFC</string>
+    <string name="pref_connection_settings">pref_connection_settings</string>
 
 
     <!--Transaction Fee-->
@@ -300,6 +304,7 @@
     <string name="pref_network_dialog_title">Bitcoin Network</string>
     <string name="pref_network_description">Select the bitcoin network</string>
     <string name="pref_network_default_value">main-net</string>
+    <string name="pref_network_list">pref_network_list</string>
     <string name="fragment_receive_title">Receive payment</string>
     <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
@@ -308,6 +313,7 @@
     <string name="pref_wallet_locktime_period_title">Locktime Period</string>
     <string name="pref_wallet_locktime_period_summary">Time span after which funds can be redeemed.</string>
     <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
+    <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
 
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>
@@ -367,4 +373,9 @@
     <string name="upgrade_multisig_2of2_to_cltv_forward_message">Your multisig funds were forwarded to a new address of your Coinblesk wallet due to an upgrade of the wallet.</string>
     <string name="upgrade_multisig_2of2_to_cltv_forward_error_message">Your multisig funds could not be forwarded to a new address of your Coinblesk wallet. This is required due to an upgrade of the wallet software.\n\nError message: %1$s</string>
 
+    <string name="pref_custom_buttons">pref_custom_buttons</string>
+    <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
+    <string name="additional_services">Additional Services</string>
+    <string name="additional_services_username">Username</string>
+    <string name="additional_services_password">Password</string>
 </resources>

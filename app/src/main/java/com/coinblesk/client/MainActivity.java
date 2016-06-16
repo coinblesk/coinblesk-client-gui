@@ -52,6 +52,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.coinblesk.client.about.AboutActivity;
+import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
 import com.coinblesk.client.config.Constants;
@@ -137,6 +138,8 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        PreferenceManager.setDefaultValues(this, R.xml.settings_pref, false);
+
         final String networkSettings = SharedPrefUtils.getNetwork(this);
         switch (networkSettings) {
             case "test-net-3":
@@ -173,7 +176,7 @@ public class MainActivity extends AppCompatActivity
         initToolbar();
         initNavigationView();
         initViewPager();
-        PreferenceManager.setDefaultValues(this, R.xml.settings_pref, false);
+
 
 
         final Intent intent = getIntent();
@@ -251,6 +254,10 @@ public class MainActivity extends AppCompatActivity
                     case R.id.addresses:
                         Intent addressesAct = new Intent(getApplicationContext(), AddressActivity.class);
                         startActivity(addressesAct);
+                        return true;
+                    case R.id.additional_services:
+                        Intent additionalServicesAct = new Intent(getApplicationContext(), AdditionalServicesActivity.class);
+                        startActivity(additionalServicesAct);
                         return true;
                     case R.id.wallet:
                         Intent walletAct = new Intent(getApplicationContext(), WalletActivity.class);
