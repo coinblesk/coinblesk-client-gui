@@ -18,6 +18,7 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -121,6 +122,12 @@ public class ProgressSuccessOrFailDialog extends DialogFragment {
         Dialog dialog = builder
                 .setTitle(title)
                 .setCancelable(true)
+                .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
                 .setView(view)
                 .create();
         return dialog;
