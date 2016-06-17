@@ -23,11 +23,14 @@ import android.util.Log;
 
 import com.coinblesk.der.DERObject;
 import com.coinblesk.client.utils.DERPayloadBuilder;
+import com.coinblesk.json.PaymentRequestTO;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
+import com.coinblesk.util.SerializeUtils;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.uri.BitcoinURI;
 
 /**
@@ -36,9 +39,11 @@ import org.bitcoinj.uri.BitcoinURI;
  */
 public class PaymentRequestSendStep extends AbstractStep {
     private final static String TAG = PaymentRequestSendStep.class.getName();
+    private final ECKey signKey;
 
-    public PaymentRequestSendStep(BitcoinURI requestURI) {
+    public PaymentRequestSendStep(BitcoinURI requestURI, ECKey signKey) {
         super(requestURI);
+        this.signKey = signKey;
     }
 
     @Override
@@ -48,12 +53,7 @@ public class PaymentRequestSendStep extends AbstractStep {
                 "No Bitcoin request URI provided.");
 
         try {
-            DERPayloadBuilder builder = new DERPayloadBuilder()
-                    .add(getProtocolVersion())
-                    .add(getBitcoinURI().getAddress().toBase58())
-                    .add(getBitcoinURI().getAmount());
-
-            DERObject payload = builder.getAsDERSequence();
+            DERObject payload = createPaymentRequest();
             Log.d(TAG, String.format(
                     "Payment request - sending payment request: %s, (length=%d bytes)",
                     getBitcoinURI(), payload.serializeToDER().length));
@@ -61,5 +61,22 @@ public class PaymentRequestSendStep extends AbstractStep {
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
         }
+    }
+
+    private DERObject createPaymentRequest() {
+        PaymentRequestTO request = new PaymentRequestTO()
+                .publicKey(signKey.getPubKey())
+                .version(getProtocolVersion())
+                .address(getBitcoinURI().getAddress().toBase58())
+                .amount(getBitcoinURI().getAmount().longValue());
+        SerializeUtils.signJSON(request, signKey);
+
+        DERPayloadBuilder builder = new DERPayloadBuilder()
+                .add(request.publicKey())
+                .add(request.version())
+                .add(request.address())
+                .add(request.amount())
+                .add(request.messageSig());
+        return builder.getAsDERSequence();
     }
 }

@@ -225,7 +225,8 @@ public class BluetoothLEServer extends AbstractServer {
             PaymentState paymentState = new PaymentState();
             connectedDevices.put(device.getAddress(), paymentState);
 
-            PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(getPaymentRequestUri());
+            PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
+                    getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
             try {
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 paymentState.derResponsePayload = paymentRequest.serializeToDER();

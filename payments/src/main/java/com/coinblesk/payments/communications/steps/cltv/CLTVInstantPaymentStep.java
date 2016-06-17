@@ -54,7 +54,7 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             checkState(getBitcoinURI() != null, "Payment request (bitcoinURI) not provided.");
 
             /* Payment Request */
-            PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI());
+            PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI(), walletServiceBinder.getMultisigClientKey());
             DERObject requestOutput = sendRequest.process(null);
             PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep();
             receiveRequest.process(requestOutput);

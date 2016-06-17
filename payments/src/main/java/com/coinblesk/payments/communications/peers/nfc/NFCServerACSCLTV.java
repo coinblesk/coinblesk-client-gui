@@ -303,7 +303,8 @@ public class NFCServerACSCLTV extends AbstractServer {
                 if (getPaymentRequestUri() == null) {
                     return;
                 }
-                PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(getPaymentRequestUri());
+                PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
+                        getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 DERObject paymentResponse = transceiveDER(transceiver, paymentRequest, true);
 

@@ -55,7 +55,7 @@ public class InstantPaymentServerHandlerCLTV extends DERObjectStreamHandler {
         final long startTime = System.currentTimeMillis();
         try {
 
-            final PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(paymentRequestURI);
+            final PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(paymentRequestURI, walletServiceBinder.getMultisigClientKey());
             DERObject input = readDERObject(); // from kick off
             DERObject paymentRequest = paymentRequestSend.process(input);
             writeDERObject(paymentRequest);

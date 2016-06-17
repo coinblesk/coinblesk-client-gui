@@ -22,15 +22,18 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.json.PaymentRequestTO;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.client.utils.DERPayloadParser;
+import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
@@ -51,36 +54,40 @@ public class PaymentRequestReceiveStep extends AbstractStep {
     @Nullable
     public DERObject process(@NonNull DERObject input) throws PaymentException {
         final NetworkParameters params = Constants.PARAMS;
-        // input:
-        final int protocolVersion;
-        final String addressBase58;
-        final Address addressTo;
-        final Coin amount;
 
         /* deserialize payment request */
+        PaymentRequestTO request = null;
         try {
             DERSequence derSequence = (DERSequence) input;
             DERPayloadParser parser = new DERPayloadParser(derSequence);
-            protocolVersion = parser.getInt();
-            addressBase58 = parser.getString();
-            amount = parser.getCoin();
+            request = new PaymentRequestTO()
+                    .publicKey(parser.getBytes())
+                    .version(parser.getInt())
+                    .address(parser.getString())
+                    .amount(parser.getLong())
+                    .messageSig(parser.getTxSig());
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
         }
 
+        /* message sig */
+        final ECKey payeeKey = ECKey.fromPublicOnly(request.publicKey());
+        if (!SerializeUtils.verifyJSONSignature(request, payeeKey)) {
+            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+        }
+
         /* protocol version */
-        Log.d(TAG, "Received protocol version: " + protocolVersion
-                + ", my protocol version: " + getProtocolVersion());
-        if (!isProtocolVersionSupported(protocolVersion)) {
+        if (!isProtocolVersionSupported(request.version())) {
             Log.w(TAG, String.format(
                     "Protocol version not supported. ours: %d - theirs: %d",
-                    getProtocolVersion(), protocolVersion));
+                    getProtocolVersion(), request.version()));
             throw new PaymentException(PaymentError.PROTOCOL_VERSION_NOT_SUPPORTED);
         }
 
         /* payment address */
+        final Address addressTo;
         try {
-            addressTo = Address.fromBase58(Constants.PARAMS, addressBase58);
+            addressTo = Address.fromBase58(params, request.address());
             Log.d(TAG, "Received address: " + addressTo);
         } catch (WrongNetworkException e) {
             throw new PaymentException(PaymentError.WRONG_BITCOIN_NETWORK);
@@ -89,8 +96,9 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         }
 
         /* payment amount */
+        final Coin amount = Coin.valueOf(request.amount());
         Log.d(TAG, "Received amount: " + amount);
-        if (amount.isNegative()) {
+        if (amount.isNegative() || amount.isLessThan(Constants.MIN_PAYMENT_REQUEST_AMOUNT)) {
             throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);
         }
 

@@ -18,7 +18,9 @@ package com.coinblesk.client.config;
 
 import com.coinblesk.util.SerializeUtils;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.TestNet3Params;
 
 import java.util.UUID;
@@ -34,6 +36,8 @@ public final class Constants {
     }
 
     public static NetworkParameters PARAMS = TestNet3Params.get();
+
+    public static final Coin MIN_PAYMENT_REQUEST_AMOUNT = Transaction.MIN_NONDUST_OUTPUT;
 
     public final static long UNIX_TIME_MONTH = 60 * 60 * 24 * 30;
     public final static int LOCK_TIME_MONTHS = 3;

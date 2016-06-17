@@ -145,7 +145,8 @@ public class NFCServerCLTV extends AbstractServer {
                 final AtomicReference<DERObject> paymentAck = new AtomicReference<>();
                 Thread authorization = null;
 
-                PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(getPaymentRequestUri());
+                PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(
+                        getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
                 DERObject derPaymentRequest = paymentRequestSendStep.process(DERObject.NULLOBJECT);
                 outputPaymentRequestSend.set(derPaymentRequest);
                 Log.d(TAG, "transceive outputPaymentRequestSend");
