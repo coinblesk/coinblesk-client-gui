@@ -17,10 +17,16 @@
 package com.coinblesk.client.backup;
 
 
+import android.Manifest;
 import android.app.AlertDialog;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +35,10 @@ import android.util.Log;
 import android.view.View;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.utils.AppUtils;
 import com.coinblesk.payments.WalletService;
+
+import java.util.Arrays;
 
 /**
  * @author Andreas Albrecht
@@ -37,6 +46,11 @@ import com.coinblesk.payments.WalletService;
 public class BackupActivity extends AppCompatActivity {
 
     private final static String TAG = BackupActivity.class.getName();
+    private final static String[] BACKUP_RESTORE_PERMISSIONS = new String[] {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    private final static int BACKUP_PERMISSIONS_REQUEST_CODE = 89; // arbitrary integer.
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,58 +61,96 @@ public class BackupActivity extends AppCompatActivity {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
 
         findViewById(R.id.backup_backup_touch).setOnClickListener(new BackupClickListener());
         findViewById(R.id.backup_restore_touch).setOnClickListener(new RestoreClickListener());
         findViewById(R.id.backup_refresh_touch).setOnClickListener(new RefreshClickListener());
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+        Intent intent = new Intent(this, WalletService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        checkAndRequestPermissions();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop");
+        unbindService(serviceConnection);
+    }
 
     private class BackupClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Backup.");
-            FragmentManager fm = getSupportFragmentManager();
-            DialogFragment backupDialog = BackupDialogFragment.newInstance();
-            backupDialog.show(fm, "fragment_backup_dialog");
+            if (AppUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
+                showBackupDialog();
+            } else {
+                showPermissionRationale();
+            }
         }
+    }
+
+    private void showBackupDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment backupDialog = BackupDialogFragment.newInstance();
+        backupDialog.show(fm, "fragment_backup_dialog");
     }
 
     private class RestoreClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Restore.");
-            FragmentManager fm = getSupportFragmentManager();
-            DialogFragment restoreDialog = BackupRestoreDialogFragment.newInstance();
-            restoreDialog.show(fm, "fragment_backup_restore_dialog");
+            if (AppUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
+                showRestoreDialog();
+            } else {
+                showPermissionRationale();
+            }
         }
+    }
+
+    private void showRestoreDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment restoreDialog = BackupRestoreDialogFragment.newInstance();
+        restoreDialog.show(fm, "fragment_backup_restore_dialog");
     }
 
     private class RefreshClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Refresh.");
-            AlertDialog.Builder builder = new AlertDialog.Builder(BackupActivity.this)
-                    .setTitle(R.string.backup_refresh_dialog_title)
-                    .setMessage(R.string.backup_refresh_dialog_message)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            walletServiceBinder.prepareWalletReset();
-                            dialog.dismiss();
-                            // close app such that wallet service is "restarted".
-                            finishAffinity();
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.cancel();
-                        }
-                    });
-            AlertDialog dialog = builder.create();
-            dialog.show();
+            showRefreshDialog();
         }
+    }
+
+    private void showRefreshDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(BackupActivity.this)
+                .setTitle(R.string.backup_refresh_dialog_title)
+                .setMessage(R.string.backup_refresh_dialog_message)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        walletServiceBinder.prepareWalletReset();
+                        dialog.dismiss();
+                        // close app such that wallet service is "restarted".
+                        finishAffinity();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private WalletService.WalletServiceBinder walletServiceBinder;
@@ -115,19 +167,46 @@ public class BackupActivity extends AppCompatActivity {
         }
     };
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-        Intent intent = new Intent(this, WalletService.class);
-        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    private void checkAndRequestPermissions() {
+        if (!AppUtils.hasPermissions(this, BACKUP_RESTORE_PERMISSIONS)) {
+                Log.d(TAG, "Request backup permissions: " + Arrays.toString(BACKUP_RESTORE_PERMISSIONS));
+                ActivityCompat.requestPermissions(this, BACKUP_RESTORE_PERMISSIONS, BACKUP_PERMISSIONS_REQUEST_CODE);
+        } else {
+            Log.d(TAG, "Backup permissions already granted: " + Arrays.toString(BACKUP_RESTORE_PERMISSIONS));
+        }
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop");
-        this.unbindService(serviceConnection);
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case BACKUP_PERMISSIONS_REQUEST_CODE:
+                if (AppUtils.allPermissionsGranted(grantResults)) {
+                    Log.d(TAG, "Permissions granted: " + Arrays.toString(permissions));
+                } else {
+                    Log.d(TAG, "Permissions denied: " + Arrays.toString(permissions) + ", " + Arrays.toString(grantResults));
+                    if (AppUtils.shouldShowPermissionRationale(this, permissions)) {
+                        showPermissionRationale();
+                    }
+                };
+                break;
+            default:
+                Log.w(TAG, "onRequestPermissionsResult: Received unknown requestCode. Missing case?");
+        }
+    }
+
+    private void showPermissionRationale() {
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.AlertDialogAccent)
+                .setTitle(R.string.backup_storage_permissions_title)
+                .setMessage(R.string.backup_storage_permissions_rationale)
+                .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setCancelable(true)
+                .create();
+        dialog.show();
     }
 
 }
