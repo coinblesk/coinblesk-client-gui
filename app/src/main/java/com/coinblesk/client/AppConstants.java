@@ -54,4 +54,6 @@ public class AppConstants {
 
     public static final String BACKUP_FILE_PREFIX = "coinblesk_wallet_backup";
 
+    public static final String FILE_PROVIDER_AUTHORITY = "com.coinblesk.fileprovider";
+
 }

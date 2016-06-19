@@ -26,6 +26,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.FileProvider;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
@@ -66,6 +67,7 @@ import static android.view.View.VISIBLE;
 public class BackupDialogFragment extends DialogFragment {
 
     private final static String TAG = BackupDialogFragment.class.getName();
+    private final static String ARGS_BACKUP_FILE = "backup_file";
 
     private WalletService.WalletServiceBinder walletServiceBinder;
 
@@ -257,21 +259,21 @@ public class BackupDialogFragment extends DialogFragment {
         public static SendMailDialogFragment newInstance(String backupFile) {
             SendMailDialogFragment frag = new SendMailDialogFragment();
             Bundle args = new Bundle();
-            args.putString("backup_file", backupFile);
+            args.putString(ARGS_BACKUP_FILE, backupFile);
             frag.setArguments(args);
             return frag;
         }
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final String backupFile = getArguments().getString("backup_file");
+            final String backupFile = getArguments().getString(ARGS_BACKUP_FILE);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                     .setTitle(R.string.fragment_backup_success_title)
                     .setMessage(Html.fromHtml(String.format(getString(R.string.fragment_backup_success_message), backupFile)))
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Log.d(TAG, "User wants backup as mail attachment");
-                            sendMailWithBackup(backupFile);
+                            sendMailWithBackup(new File(backupFile));
                             dialog.dismiss();
                         }
                     })
@@ -286,13 +288,17 @@ public class BackupDialogFragment extends DialogFragment {
 
         }
 
-        private void sendMailWithBackup(String backupFile) {
+        private void sendMailWithBackup(File backupFile) {
+            Uri backupFileUri = FileProvider.getUriForFile(
+                    getContext(), AppConstants.FILE_PROVIDER_AUTHORITY, backupFile);
+
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            // The intent does not have a URI, so declare the "text/html". With text/plain, many messengers etc. appear.
+            // The "mail intent" does not have a type, so declare the "text/html".
+            // With text/plain, many messengers etc. appear.
             emailIntent.setType("text/html");
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.backup_mail_subject));
             emailIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.backup_mail_message));
-            emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+backupFile));
+            emailIntent.putExtra(Intent.EXTRA_STREAM, backupFileUri);
             startActivity(Intent.createChooser(emailIntent , getString(R.string.backup_mail_chooser)));
         }
     }
