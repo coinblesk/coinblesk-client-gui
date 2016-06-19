@@ -60,6 +60,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -205,8 +206,12 @@ public class BackupRestoreDialogFragment extends DialogFragment {
             Log.d(TAG, "Start extracting backup.");
             int i = 0;
             while ((ze = zis.getNextEntry()) != null) {
-                extractFromZipAndSaveToFile(zis, ze);
-                ++i;
+                if (!shouldIgnoreZipEntry(ze)) {
+                    extractFromZipAndSaveToFile(zis, ze);
+                    ++i;
+                } else {
+                    Log.d(TAG, "Ignore entry: " + ze.getName());
+                }
             }
             Log.i(TAG, "Extracted "+i+" elements from backup.");
 
@@ -219,6 +224,16 @@ public class BackupRestoreDialogFragment extends DialogFragment {
                 }
             }
         }
+    }
+
+    private boolean shouldIgnoreZipEntry(ZipEntry ze) {
+        String name = ze.getName();
+        for (Pattern pattern : BackupActivity.BACKUP_FILE_EXCLUDE_FILTER) {
+            if (pattern.matcher(name).matches()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

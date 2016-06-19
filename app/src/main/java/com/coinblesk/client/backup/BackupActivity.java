@@ -39,6 +39,7 @@ import com.coinblesk.client.utils.AppUtils;
 import com.coinblesk.payments.WalletService;
 
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 /**
  * @author Andreas Albrecht
@@ -51,6 +52,10 @@ public class BackupActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
     private final static int BACKUP_PERMISSIONS_REQUEST_CODE = 89; // arbitrary integer.
+    public final static Pattern[] BACKUP_FILE_EXCLUDE_FILTER = new Pattern[] {
+            Pattern.compile(".+\\.spvchain"), /* Spvchain  - new instance is created during restore */
+            Pattern.compile("instant-run/.*") /* Files of the Android instant-run feature... */
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
