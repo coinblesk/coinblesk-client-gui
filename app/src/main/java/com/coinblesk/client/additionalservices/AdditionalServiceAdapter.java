@@ -31,11 +31,10 @@ public class AdditionalServiceAdapter extends ArrayAdapter<String> {
             case 0:
                 if (convertView == null) {
                     convertView = LayoutInflater.from(getContext()).inflate(R.layout.additional_services_item, parent, false);
-                    TextView firstLine = (TextView) convertView.findViewById(R.id.firstLine);
-                    firstLine.setText("Login");
-                    TextView secondLine = (TextView) convertView.findViewById(R.id.secondLine);
-                    secondLine.setText("blah blah blah");
-
+                    //TextView firstLine = (TextView) convertView.findViewById(R.id.firstLine);
+                    //firstLine.setText("Login");
+                    //TextView secondLine = (TextView) convertView.findViewById(R.id.secondLine);
+                    //secondLine.setText("blah blah blah");
                     CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.checkBox);
                     checkBox.setChecked(true);
 

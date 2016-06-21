@@ -22,8 +22,9 @@
         android:layout_toRightOf="@id/checkBox"
         android:ellipsize="marquee"
         android:singleLine="true"
-        android:text="Description"
-        android:textSize="12sp" />
+        android:text="@string/additional_services_description"
+        android:textSize="12sp"
+        android:paddingLeft="15dp"/>
 
     <TextView
         android:id="@+id/firstLine"
@@ -35,7 +36,8 @@
         android:layout_alignWithParentIfMissing="true"
         android:layout_toRightOf="@id/checkBox"
         android:gravity="center_vertical"
-        android:text="Example application"
-        android:textSize="18sp" />
+        android:text="@string/additional_services_titel"
+        android:textSize="18sp"
+        android:paddingLeft="15dp"/>
 
 </RelativeLayout>
