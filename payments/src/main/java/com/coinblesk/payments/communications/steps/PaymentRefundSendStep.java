@@ -79,7 +79,7 @@ public class PaymentRefundSendStep implements Step {
         }
 
         try {
-            this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getMultisigReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
+            this.fullSignedTransaction = BitcoinUtils.createTx(Constants.PARAMS, walletServiceBinder.getUnspentInstantOutputs(), walletServiceBinder.getCurrentReceiveAddress(), this.bitcoinURI.getAddress(), this.bitcoinURI.getAmount().longValue());
         } catch (CoinbleskException e) {
             e.printStackTrace();
         } catch (InsufficientFunds insuffientFunds) {

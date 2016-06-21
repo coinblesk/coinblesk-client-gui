@@ -927,11 +927,6 @@ public class WalletService extends Service {
         }
 
         public Address getCurrentReceiveAddress() {
-            // TODO: fix? still needed?
-            return getMultisigReceiveAddress();
-        }
-
-        public Address getMultisigReceiveAddress() {
             if (addresses.isEmpty()) {
                 throw new IllegalStateException("No address created yet.");
             }
