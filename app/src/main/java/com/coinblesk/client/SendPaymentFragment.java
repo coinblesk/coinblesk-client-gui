@@ -34,9 +34,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.coinblesk.client.utils.UIUtils;
-import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.ui.dialogs.SendDialogFragment;
+import com.coinblesk.client.utils.UIUtils;
+
 import org.bitcoinj.core.Coin;
 
 /**
@@ -120,34 +121,20 @@ public class SendPaymentFragment extends KeyboardFragment {
 
     @Override
     protected DialogFragment getDialogFragment() {
-        Coin currentBalance = getWalletServiceBinder().getBalance();
-        boolean notEnoughMoney = currentBalance.isLessThan(getCoin());
+        // calculate max amount to spend minus some fee estimate.
+        Coin maxSpendableAmount = getWalletServiceBinder().getMaxSpendableAmount();
+        boolean notEnoughMoney = maxSpendableAmount.isLessThan(getCoin());
         if (notEnoughMoney) {
             Snackbar.make(
                     getActivity().findViewById(android.R.id.content),
                     UIUtils.toFriendlySnackbarString(getContext(), getString(R.string.insufficient_funds)),
                     Snackbar.LENGTH_LONG)
                     .show();
-
-            // calculate max amount to spend with a fee estimate.
-            Coin fee = estimateFeeToEmptyWallet();
-            Coin maxAmount = currentBalance.subtract(fee);
-            if (maxAmount.isNegative()) {
-                maxAmount = Coin.ZERO;
-            }
-            setAmountByCoin(maxAmount);
+            setAmountByCoin(maxSpendableAmount);
         } else {
-            return SendDialogFragment.newInstance(this.getCoin());
+            return SendDialogFragment.newInstance(getCoin());
         }
         return null;
-    }
-
-    private Coin estimateFeeToEmptyWallet() {
-        // TODO: move this calculation to bitcoin utils respectively use the calculation of the newest version of lib.
-        int txInputs = getWalletServiceBinder().getUnspentInstantOutputs().size();
-        final int len = 10 + (260 * txInputs) + 66;
-        final int fee = (int) (len * 10.562);
-        return Coin.valueOf(fee);
     }
 
     @Override

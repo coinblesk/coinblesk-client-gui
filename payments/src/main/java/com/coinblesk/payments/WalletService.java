@@ -891,6 +891,28 @@ public class WalletService extends Service {
             return balance;
         }
 
+        /* given the wallet balance, calculates the max spendable amount (i.e. balance minus fee estimate) */
+        public Coin getMaxSpendableAmount() {
+            Coin maxSpendableAmount;
+            try {
+                Transaction dummyTx = BitcoinUtils.createSpendAllTx(
+                        Constants.PARAMS,
+                        getUnspentInstantOutputs(),
+                        getCurrentReceiveAddress(),
+                        getCurrentReceiveAddress());
+                maxSpendableAmount = dummyTx.getOutputSum();
+            } catch (CoinbleskException | InsufficientFunds e) {
+                // ignore since not interested in Tx anyways.
+                maxSpendableAmount = getBalance();
+            }
+
+            if (maxSpendableAmount.isNegative()) {
+                maxSpendableAmount = Coin.ZERO;
+            }
+
+            return maxSpendableAmount;
+        }
+
         public ExchangeRate getExchangeRate() {
             return exchangeRate;
         }

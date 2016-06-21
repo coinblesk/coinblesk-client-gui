@@ -18,7 +18,8 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.*;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -34,10 +35,11 @@ import com.coinblesk.client.R;
 import com.coinblesk.client.addresses.AddressItem;
 import com.coinblesk.client.addresses.AddressList;
 import com.coinblesk.client.addresses.AddressListAdapter;
-import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
