@@ -20,7 +20,10 @@ package com.coinblesk.client.utils;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
@@ -458,5 +461,20 @@ public class UIUtils {
             lockedUntil = String.format("block %d", lockTime);
         }
         return lockedUntil;
+    }
+
+    public static Drawable tintIconAccent(Drawable drawable, Context context) {
+        int tint = context.getResources().getColor(R.color.colorAccent);
+        return tintIcon(drawable, tint);
+    }
+
+    public static Drawable tintIconWhite(Drawable drawable, Context context) {
+        return tintIcon(drawable, Color.WHITE);
+    }
+
+    public static Drawable tintIcon(Drawable drawable, @ColorInt int tint) {
+        drawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTint(drawable, tint);
+        return drawable;
     }
 }

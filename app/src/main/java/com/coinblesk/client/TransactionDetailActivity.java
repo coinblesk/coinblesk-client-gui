@@ -26,6 +26,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -35,6 +37,10 @@ import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.client.models.TransactionWrapper;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -42,13 +48,17 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 
 public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
+    public static final String ARGS_TRANSACTION_HASH = "transaction_hash";
+
     private final static String BLOCKTRAIL_URL_MAINNET = "https://www.blocktrail.com/BTC/tx/";
     private final static String BLOCKTRAIL_URL_TESTNET = "https://www.blocktrail.com/tBTC/tx/";
 
-    public static final String EXTRA_NAME = "transaction-hash";
+    private WalletService.WalletServiceBinder walletServiceBinder;
     private String transactionHash;
 
     @Override
@@ -56,48 +66,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_txdetail);
 
-        this.findViewById(R.id.txdetail_status_icon).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO: this should be in a menu because otherwise, this functionality is completely hidden...
-                if(walletServiceBinder != null && walletServiceBinder.isReady()) {
-                    Transaction tx = walletServiceBinder.getTransaction(transactionHash).getTransaction();
-                    walletServiceBinder.broadcastTransaction(tx);
-                }
-            }
-        });
-
-        this.findViewById(R.id.txdetail_copytx_button).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG, "Transaction: " + transactionHash);
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
-                clipboard.setPrimaryClip(clip);
-                Snackbar.make(v, UIUtils.toFriendlySnackbarString(getApplicationContext(),getResources()
-                        .getString(R.string.snackbar_address_copied)), Snackbar.LENGTH_LONG)
-                        .setActionTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent))
-                        .setAction("Action", null).show();
-
-            }
-        });
-
-        this.findViewById(R.id.txdetail_opentx_button).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                String blockchainExplorerUrl = null;
-                if (SharedPrefUtils.isNetworkTestnet(TransactionDetailActivity.this)) {
-                    blockchainExplorerUrl = BLOCKTRAIL_URL_TESTNET;
-                } else if (SharedPrefUtils.isNetworkMainnet(TransactionDetailActivity.this)) {
-                    blockchainExplorerUrl = BLOCKTRAIL_URL_MAINNET;
-                }
-
-                Uri txUri = Uri.parse(blockchainExplorerUrl + transactionHash);
-                Intent intent = new Intent(Intent.ACTION_VIEW, txUri);
-                startActivity(intent);
-            }
-        });
-
         Intent intent = getIntent();
-        this.transactionHash = intent.getStringExtra(EXTRA_NAME);
+        this.transactionHash = intent.getStringExtra(ARGS_TRANSACTION_HASH);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.detail_transaction_toolbar);
         setSupportActionBar(toolbar);
@@ -108,6 +78,93 @@ public class TransactionDetailActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, WalletService.class);
+        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        this.unbindService(serviceConnection);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.tx_detail_menu, menu);
+        MenuItem openItem = menu.findItem(R.id.action_tx_open_web);
+        openItem.setIcon(UIUtils.tintIconWhite(openItem.getIcon(), this));
+        
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_tx_copy:
+                copyTx();
+                return true;
+            case R.id.action_tx_open_web:
+                openTx();
+                return true;
+            case R.id.action_tx_broadcast:
+                broadcastTx();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void copyTx() {
+        Log.d(TAG, "Copy Transaction Hash: " + transactionHash);
+        Log.d(TAG, "Transaction Details:\n" + walletServiceBinder.getTransaction(transactionHash).toString());
+
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("Your TX", transactionHash);
+        clipboard.setPrimaryClip(clip);
+
+        View root = findViewById(android.R.id.content);
+        Snackbar.make(root,
+                    UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
+                    Snackbar.LENGTH_LONG)
+                .setActionTextColor(ContextCompat.getColor(this, R.color.colorAccent))
+                .setAction("Action", null)
+                .show();
+    }
+
+    private void openTx() {
+        String blockchainExplorerUrl = null;
+        if (SharedPrefUtils.isNetworkTestnet(TransactionDetailActivity.this)) {
+            blockchainExplorerUrl = BLOCKTRAIL_URL_TESTNET;
+        } else if (SharedPrefUtils.isNetworkMainnet(TransactionDetailActivity.this)) {
+            blockchainExplorerUrl = BLOCKTRAIL_URL_MAINNET;
+        }
+
+        Uri txUri = Uri.parse(blockchainExplorerUrl + transactionHash);
+        Intent intent = new Intent(Intent.ACTION_VIEW, txUri);
+        startActivity(intent);
+    }
+
+    private void broadcastTx() {
+        if (walletServiceBinder != null && walletServiceBinder.isReady()) {
+            Transaction tx = walletServiceBinder.getTransaction(transactionHash).getTransaction();
+            ListenableFuture<Transaction> future = walletServiceBinder.broadcastTransaction(tx);
+            Futures.addCallback(future, new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(@Nullable Transaction result) {
+                    Log.d(TAG, "Broadcast Tx Success: " + result.getHashAsString());
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.d(TAG, "Broadcast Tx Failed: " + t.getMessage());
+                }
+            });
+        }
+    }
 
     private void setTransactionDetails() {
         final TransactionWrapper txWrapper = walletServiceBinder.getTransaction(transactionHash);
@@ -116,7 +173,10 @@ public class TransactionDetailActivity extends AppCompatActivity {
 
             // No one liner because of color filter, sorry
             final ImageView statusIcon = (ImageView) this.findViewById(R.id.txdetail_status_icon);
-            statusIcon.setImageResource(transaction.getConfidence().getDepthInBlocks() > 0 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp : R.drawable.ic_clock_white_18dp);
+            statusIcon.setImageResource(
+                    (transaction.getConfidence().getDepthInBlocks() > 0)
+                            ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
+                            : R.drawable.ic_clock_white_18dp);
             statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
 
             ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
@@ -177,22 +237,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
             setTransactionDetails();
         }
     };
-
-    private WalletService.WalletServiceBinder walletServiceBinder;
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, WalletService.class);
-        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
-        this.unbindService(serviceConnection);
-    }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 

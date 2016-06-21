@@ -321,6 +321,8 @@
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
+    <string name="action_open">Open</string>
+    <string name="action_broadcast">Broadcast</string>
 
     <string name="tx_copy">Copy TX</string>
     <string name="tx_open">Open TX</string>
