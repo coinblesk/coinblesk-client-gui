@@ -423,7 +423,6 @@ public class WalletService extends Service {
 
     private boolean loadKeysIfExist() {
         try {
-            /* TODO: can load 2-of-2 multisig address - and migrate? */
             ECKeyWrapper clientKeyWrapper = storage.getFirstMatchEntry(
                     new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
             ECKeyWrapper serverKeyWrapper = storage.getFirstMatchEntry(
@@ -505,9 +504,6 @@ public class WalletService extends Service {
             if (needToCreateNewAddress) {
                 createTimeLockedAddress();
             }
-
-            // TODO: migrage from 2-of-2 multisig?
-            // maybeMigrate2of2Multisig(clientKeyWrapper.getKey(), serverKeyWrapper.getKey());
         } catch (Exception e) {
             Log.w(TAG, "Could not initialize addresses. ", e);
             throw new CoinbleskException("Could not load addresses.", e);
@@ -682,19 +678,6 @@ public class WalletService extends Service {
             return false;
         }
         return true;
-    }
-
-    private void maybeMigrate2of2Multisig(ECKey clientKey, ECKey serverKey) {
-        /*
-         * Migrate 2-of-2 multisig address to AddressWrapper.
-         */
-        // TODO:
-        // (0) check if already have 2-of-2 multisig address
-        // (1) migration from multisig to time locked address
-        // TODO: (2) store using AddressWrapper class.
-        List<ECKey> keys = ImmutableList.of(clientKey, serverKey);
-        Script multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, keys);
-        wallet.addWatchedScripts(ImmutableList.of(multisigAddressScript));
     }
 
     private void initExchangeRate() {
@@ -1046,7 +1029,6 @@ public class WalletService extends Service {
                 @Override
                 public Transaction call() throws Exception {
                     final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
-                    // TODO: change address/spend from does not make sense for spendAllTx.
                     Transaction transaction = BitcoinUtils.createSpendAllTx(
                             Constants.PARAMS,
                             unlockedTxOut,

@@ -69,10 +69,8 @@ public class UIUtils {
 
         // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
         // TODO -> Does this make sense? What it a user changes his primary currency?
-//        String fiatCurrency = prefs.getString(FIAT_CURRENCY_PREF_KEY, null);
 
         SpannableString result = new SpannableString("");
-
         switch (isLargeAmount) {
             case AppConstants.BTC_AS_PRIMARY:
                 result = toLargeSpannable(context, scaleCoin(balanceCoin, coinDenomination), coinDenomination);

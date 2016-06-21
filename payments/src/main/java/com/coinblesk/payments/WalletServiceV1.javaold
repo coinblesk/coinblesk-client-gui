@@ -306,7 +306,7 @@ public class WalletService extends Service {
 
             @Override
             protected void onSetupCompleted() {
-                // TODO: fix this
+
                 /*
                 if (wallet().getKeychainSize() < 1) {
                     ECKeyWrapper walletKey;
