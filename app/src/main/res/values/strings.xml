@@ -383,6 +383,10 @@
     <string name="pref_custom_buttons">pref_custom_buttons</string>
     <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
     <string name="additional_services">Additional Services</string>
-    <string name="additional_services_username">Username</string>
+    <string name="additional_services_email">Email</string>
     <string name="additional_services_password">Password</string>
+    <string name="signup">Sign Up</string>
+    <string name="edit_login">Login</string>
+    <string name="additional_services_description">Additional services are not required for the core operations</string>
+    <string name="additional_services_titel">Login for additional services</string>
 </resources>

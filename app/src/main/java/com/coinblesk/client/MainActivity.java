@@ -654,7 +654,7 @@ public class MainActivity extends AppCompatActivity
                 CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
 
                 VersionTO requestTO = new VersionTO();
-                requestTO.version(AppUtils.getAppVersion());
+                requestTO.clientVersion(AppUtils.getAppVersion());
                 Response<VersionTO> response = service.version(requestTO).execute();
                 if (!response.isSuccess()) {
                     throw new CoinbleskException(
