@@ -61,6 +61,12 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private WalletService.WalletServiceBinder walletServiceBinder;
     private String transactionHash;
 
+    public static void openTransaction(Context context, String transactionHash) {
+        Intent intent = new Intent(context, TransactionDetailActivity.class);
+        intent.putExtra(TransactionDetailActivity.ARGS_TRANSACTION_HASH, transactionHash);
+        context.startActivity(intent);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +118,9 @@ public class TransactionDetailActivity extends AppCompatActivity {
                 return true;
             case R.id.action_tx_broadcast:
                 broadcastTx();
+                return true;
+            case android.R.id.home:
+                onBackPressed();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -166,7 +175,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void setTransactionDetails() {
+    private void updateTransactionDetails() {
         final TransactionWrapper txWrapper = walletServiceBinder.getTransaction(transactionHash);
         final Transaction transaction = txWrapper.getTransaction();
         try {
@@ -192,7 +201,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
                 this.findViewById(R.id.txfee).setVisibility(View.GONE);
             }
 
-            String addressSentTo = getSentToAddress(txWrapper);
+            String addressSentTo = sentToAddressOfTx(txWrapper);
             if (addressSentTo != null) {
                 ((TextView) this.findViewById(R.id.txdetail_address_to_content)).setText(addressSentTo);
             } else {
@@ -200,11 +209,11 @@ public class TransactionDetailActivity extends AppCompatActivity {
             }
 
         } catch (Exception e) {
-            Log.w(TAG, "setTransactionDetails exception: ", e);
+            Log.w(TAG, "updateTransactionDetails exception: ", e);
         }
     }
 
-    private String getSentToAddress(TransactionWrapper txWrapper) {
+    private String sentToAddressOfTx(TransactionWrapper txWrapper) {
         if (txWrapper.getAmount().isPositive()) {
             // incoming
             return null;
@@ -234,7 +243,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            setTransactionDetails();
+            updateTransactionDetails();
         }
     };
 
@@ -248,7 +257,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
             LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
 
             if(walletServiceBinder.isReady()){
-                setTransactionDetails();
+                updateTransactionDetails();
             }
         }
 

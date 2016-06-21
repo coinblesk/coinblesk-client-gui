@@ -958,6 +958,7 @@ public class WalletService extends Service {
 
         public TransactionWrapper getTransaction(final String transactionHash) {
             Transaction tx = wallet.getTransaction(Sha256Hash.wrap(transactionHash));
+            tx.setExchangeRate(getExchangeRate());
             return new TransactionWrapper(tx, wallet);
         }
 
