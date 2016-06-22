@@ -369,6 +369,7 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
         broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
         broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
+        broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
         startService(walletServiceIntent);
@@ -472,6 +473,30 @@ public class MainActivity extends AppCompatActivity
                         walletServiceBinder.getMultisigServerKey())
                     .execute();
             }
+        }
+    };
+
+    private final BroadcastReceiver walletServiceError = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(Constants.ERROR_MESSAGE_KEY);
+            if (message == null || message.isEmpty()) {
+                message = "Unknown wallet error";
+            }
+            Log.e(TAG, "Wallet Error: " + message);
+
+            Dialog dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogAccent)
+                    .setTitle(R.string.wallet_error_title)
+                    .setMessage(getString(R.string.wallet_error_message, message))
+                    .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setCancelable(true)
+                    .create();
+            dialog.show();
         }
     };
 

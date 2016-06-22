@@ -201,9 +201,9 @@ public class WalletService extends Service {
                     initWalletEventListener();
 
                     /*
-                     * Check if we already have keys.
+                     * Check that we already have keys.
                      * - if yes: check whether current address is still locked. if no: create new one.
-                     * - if no: (1) create client key, (2) create new address, (3) store server key
+                     * - if no: (1) create client key, (2) execute key-exchange and store server key (3) init address
                      */
                     boolean keysAlreadyExist = loadKeysIfExist();
                     if (!keysAlreadyExist) {
@@ -216,8 +216,9 @@ public class WalletService extends Service {
                     broadcastWalletServiceInitDone();
                     broadcastBalanceChanged();
                 } catch (Exception e) {
-                    // TODO: error handling - wallet cannot be initialized if any exceptions occur here.
-                    Log.e(TAG, "Error during wallet initialization: ", e);
+                    String errorMessage = "Error during wallet initialization: " + e.getMessage();
+                    Log.e(TAG, errorMessage, e);
+                    broadcastWalletError(errorMessage);
                 } finally {
                     long duration = System.currentTimeMillis() - startTime;
                     Log.d(TAG, "WalletService - onSetupCompleted finished in "+duration+" ms");
@@ -487,16 +488,16 @@ public class WalletService extends Service {
     private void initAddresses() throws CoinbleskException {
         loadAddresses();
         try {
-            // no address yet or current receive address expires soon.
-            long nowSec = org.bitcoinj.core.Utils.currentTimeSeconds();
+            // new address: no address yet or current receive address expires soon.
             boolean needToCreateNewAddress = false;
             if (addresses.isEmpty()) {
-                Log.d(TAG, "No address yet, create new.");
+                Log.d(TAG, "No address yet. Create new address.");
                 needToCreateNewAddress = true;
             } else {
+                long nowSec = org.bitcoinj.core.Utils.currentTimeSeconds();
                 long currentExpiresInSec = addresses.last().getTimeLockedAddress().getLockTime() - nowSec;
                 if (currentExpiresInSec < Constants.MIN_LOCKTIME_SPAN_SECONDS) {
-                    Log.d(TAG, "Current address expires soon (in "+currentExpiresInSec+" seconds), create new one.");
+                    Log.d(TAG, "Current address expires soon (in "+currentExpiresInSec+" seconds). Create new address.");
                     needToCreateNewAddress = true;
                 }
             }
@@ -506,7 +507,7 @@ public class WalletService extends Service {
             }
         } catch (Exception e) {
             Log.w(TAG, "Could not initialize addresses. ", e);
-            throw new CoinbleskException("Could not load addresses.", e);
+            throw new CoinbleskException("Could not initialize addresses: " + e.getMessage(), e);
         }
     }
 
@@ -792,6 +793,12 @@ public class WalletService extends Service {
     private void broadcastWalletServiceInitDone() {
         Intent initDone = new Intent(Constants.WALLET_INIT_DONE_ACTION);
         getLocalBroadcaster().sendBroadcast(initDone);
+    }
+
+    private void broadcastWalletError(String errorMessage) {
+        Intent error = new Intent(Constants.WALLET_ERROR_ACTION);
+        error.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
+        getLocalBroadcaster().sendBroadcast(error);
     }
 
     private void broadcastBalanceChanged() {
