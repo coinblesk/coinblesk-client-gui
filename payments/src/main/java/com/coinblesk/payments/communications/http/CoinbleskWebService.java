@@ -18,8 +18,11 @@ package com.coinblesk.payments.communications.http;
 
 import com.coinblesk.json.*;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
@@ -51,4 +54,18 @@ public interface CoinbleskWebService {
 
     @POST("v1/version")
     Call<VersionTO> version(@Body VersionTO request);
+
+    // login and user related
+    @POST("login")
+    @FormUrlEncoded
+    Call<ResponseBody> login(@Field("username")String username, @Field("password") String password);
+
+    @POST("/v1/user/create")
+    Call<UserAccountStatusTO> signUp(@Body UserAccountTO request);
+
+    @POST("/v1/user/auth/get")
+    Call<UserAccountTO> getAccount();
+
+    @POST("/v1/user/auth/transfer-p2sh")
+    Call<UserAccountStatusTO> transferToP2SH(@Body BaseTO request);
 }

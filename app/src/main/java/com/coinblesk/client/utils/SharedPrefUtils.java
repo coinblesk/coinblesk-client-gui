@@ -126,4 +126,15 @@ public final class SharedPrefUtils {
     public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
         return getBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv));
     }
+
+    public static void setJSessionID(Context context, String jsessionID) {
+        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.jsessionid), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(context.getResources().getString(R.string.jsessionid), jsessionID);
+        editor.commit();
+    }
+
+    public static String getJSessionID(Context context) {
+        return string(context, context.getResources().getString(R.string.jsessionid), "");
+    }
 }
