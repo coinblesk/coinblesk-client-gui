@@ -1,25 +1,31 @@
 package com.coinblesk.client.additionalservices;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.json.BaseTO;
 import com.coinblesk.json.UserAccountStatusTO;
 import com.coinblesk.json.UserAccountTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.util.Pair;
 
 import java.io.IOException;
 
@@ -39,15 +45,19 @@ import retrofit2.Retrofit;
 public class AdditionalServicesUsernameDialog extends DialogFragment {
 
     private static final String TAG = AdditionalServicesUsernameDialog.class.getName();
-    /*@Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.additional_services_username_password, container);
-        //mEditText = (EditText) view.findViewById(R.id.txt_your_name);
-        //getDialog().setTitle("Hello");
 
-        return view;
-    }*/
+    private Runnable runner;
+    public void setCloseRunner(Runnable runner) {
+        this.runner = runner;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if(runner != null) {
+            runner.run();
+        }
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -66,42 +76,98 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(AdditionalServicesUsernameDialog.this.getActivity());
-                        Call<ResponseBody> response = coinbleskService.login(usernameText.getText().toString(), passwordText.getText().toString());
-                        try {
-                            Response<ResponseBody> res = response.execute();
-                            String rawCookie = res.headers().get("Set-Cookie");
-                            String cookie = AdditionalServiceUtils.parseCookie(rawCookie);
-                            SharedPrefUtils.setJSessionID(AdditionalServicesUsernameDialog.this.getActivity(), cookie);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        new LoginTask(getActivity()).execute(new Pair<String, String>(
+                                usernameText.getText().toString(), passwordText.getText().toString()));
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .setNeutralButton(R.string.signup, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(AdditionalServicesUsernameDialog.this.getActivity());
-                        UserAccountTO to = new UserAccountTO()
-                                .email(usernameText.getText().toString())
-                                .password(passwordText.getText().toString());
-                        Call<UserAccountStatusTO> result = coinbleskService.signUp(to);
-                        try {
-                            Response<UserAccountStatusTO> res =result.execute();
-                            if(res.body().isSuccess()) {
-                                Toast.makeText(AdditionalServicesUsernameDialog.this.getActivity(), "Confirmation email sent", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(AdditionalServicesUsernameDialog.this.getActivity(), "Error:" +res.body().message(), Toast.LENGTH_LONG).show();
-                            }
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        new SignupTask(getActivity()).execute(new Pair<String, String>(
+                                usernameText.getText().toString(), passwordText.getText().toString()));
                     }
                 })
                 .create();
     }
 
+    private class SignupTask extends AsyncTask<Pair<String,String>, Void, Boolean> {
 
+        final private Activity activity;
+        private SignupTask(Activity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        protected Boolean doInBackground(Pair<String,String>... pairs) {
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(activity);
+            for(Pair<String,String> pair:pairs) {
+                UserAccountTO to = new UserAccountTO()
+                        .email(pair.element0())
+                        .password(pair.element1());
+                Call<UserAccountStatusTO> result = coinbleskService.signUp(to);
+                try {
+                    Response<UserAccountStatusTO> res =result.execute();
+                    if(res.body().isSuccess()) {
+                        toast("Confirmation email sent");
+                    } else {
+                        toast("Error:" +res.body().message());
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+
+        private void toast(final String text)  {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    private class LoginTask extends AsyncTask<Pair<String,String>, Void, Boolean> {
+
+        final private Activity activity;
+        private LoginTask(Activity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        protected Boolean doInBackground(Pair<String,String>... pairs) {
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(activity);
+            for(Pair<String,String> pair:pairs) {
+                Call<ResponseBody> response = coinbleskService.login(pair.element0(), pair.element1());
+                try {
+                    Response<ResponseBody> res = response.execute();
+                    if(res.isSuccessful()) {
+                        String rawCookie = res.headers().get("Set-Cookie");
+                        String cookie = AdditionalServiceUtils.parseCookie(rawCookie);
+                        SharedPrefUtils.setJSessionID(activity, cookie);
+                        toast( "Logged in successfully");
+                    } else {
+                        toast( "Password/username incorrect");
+                    }
+                } catch (IOException e) {
+                    toast( "Username/password incorrect");
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+
+        private void toast(final String text)  {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
 }
