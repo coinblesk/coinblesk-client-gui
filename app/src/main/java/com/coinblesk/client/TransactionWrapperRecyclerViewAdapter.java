@@ -86,9 +86,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
             public void onClick(View v) {
                 String hash =  transaction.getTransaction().getHashAsString();
                 Context context = v.getContext();
-                Intent intent = new Intent(context, TransactionDetailActivity.class);
-                intent.putExtra(TransactionDetailActivity.ARGS_TRANSACTION_HASH, hash);
-                context.startActivity(intent);
+                TransactionDetailActivity.openTransaction(context, hash);
             }
         });
 

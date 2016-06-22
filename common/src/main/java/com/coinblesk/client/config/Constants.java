@@ -64,6 +64,7 @@ public final class Constants {
 
     // communication via broadcast receiver, these are the actions
     public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
+    public final static String WALLET_ERROR_ACTION = "WALLET_ERROR_ACTION";
     public final static String WALLET_INIT_DONE_ACTION = "WALLET_INIT_DONE_ACTION";
     public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
     public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";

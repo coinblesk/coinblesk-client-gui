@@ -45,8 +45,7 @@
             </intent-filter>
         </activity>
         <activity
-                android:name=".TransactionDetailActivity"
-                android:parentActivityName=".MainActivity">
+                android:name=".TransactionDetailActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.coinblesk.client.MainActivity"/>

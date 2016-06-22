@@ -342,6 +342,8 @@
     <string name="servicedesc">Coinblesk InstantPayment Service</string>
 
     <!-- wallet activity -->
+    <string name="wallet_error_title">Wallet Error</string>
+    <string name="wallet_error_message">There was an error in the wallet:\n\n%1$s</string>
     <string name="action_wallet_refund">Collect refund</string>
     <string name="action_wallet_create_time_locked_address">Create new address</string>
     <string name="wallet_create_address_success_title">New address</string>

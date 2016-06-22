@@ -201,9 +201,9 @@ public class WalletService extends Service {
                     initWalletEventListener();
 
                     /*
-                     * Check if we already have keys.
+                     * Check that we already have keys.
                      * - if yes: check whether current address is still locked. if no: create new one.
-                     * - if no: (1) create client key, (2) create new address, (3) store server key
+                     * - if no: (1) create client key, (2) execute key-exchange and store server key (3) init address
                      */
                     boolean keysAlreadyExist = loadKeysIfExist();
                     if (!keysAlreadyExist) {
@@ -216,8 +216,9 @@ public class WalletService extends Service {
                     broadcastWalletServiceInitDone();
                     broadcastBalanceChanged();
                 } catch (Exception e) {
-                    // TODO: error handling - wallet cannot be initialized if any exceptions occur here.
-                    Log.e(TAG, "Error during wallet initialization: ", e);
+                    String errorMessage = "Error during wallet initialization: " + e.getMessage();
+                    Log.e(TAG, errorMessage, e);
+                    broadcastWalletError(errorMessage);
                 } finally {
                     long duration = System.currentTimeMillis() - startTime;
                     Log.d(TAG, "WalletService - onSetupCompleted finished in "+duration+" ms");
@@ -423,7 +424,6 @@ public class WalletService extends Service {
 
     private boolean loadKeysIfExist() {
         try {
-            /* TODO: can load 2-of-2 multisig address - and migrate? */
             ECKeyWrapper clientKeyWrapper = storage.getFirstMatchEntry(
                     new ECKeyWrapperFilter(Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);
             ECKeyWrapper serverKeyWrapper = storage.getFirstMatchEntry(
@@ -488,16 +488,16 @@ public class WalletService extends Service {
     private void initAddresses() throws CoinbleskException {
         loadAddresses();
         try {
-            // no address yet or current receive address expires soon.
-            long nowSec = org.bitcoinj.core.Utils.currentTimeSeconds();
+            // new address: no address yet or current receive address expires soon.
             boolean needToCreateNewAddress = false;
             if (addresses.isEmpty()) {
-                Log.d(TAG, "No address yet, create new.");
+                Log.d(TAG, "No address yet. Create new address.");
                 needToCreateNewAddress = true;
             } else {
+                long nowSec = org.bitcoinj.core.Utils.currentTimeSeconds();
                 long currentExpiresInSec = addresses.last().getTimeLockedAddress().getLockTime() - nowSec;
                 if (currentExpiresInSec < Constants.MIN_LOCKTIME_SPAN_SECONDS) {
-                    Log.d(TAG, "Current address expires soon (in "+currentExpiresInSec+" seconds), create new one.");
+                    Log.d(TAG, "Current address expires soon (in "+currentExpiresInSec+" seconds). Create new address.");
                     needToCreateNewAddress = true;
                 }
             }
@@ -505,12 +505,9 @@ public class WalletService extends Service {
             if (needToCreateNewAddress) {
                 createTimeLockedAddress();
             }
-
-            // TODO: migrage from 2-of-2 multisig?
-            // maybeMigrate2of2Multisig(clientKeyWrapper.getKey(), serverKeyWrapper.getKey());
         } catch (Exception e) {
             Log.w(TAG, "Could not initialize addresses. ", e);
-            throw new CoinbleskException("Could not load addresses.", e);
+            throw new CoinbleskException("Could not initialize addresses: " + e.getMessage(), e);
         }
     }
 
@@ -684,19 +681,6 @@ public class WalletService extends Service {
         return true;
     }
 
-    private void maybeMigrate2of2Multisig(ECKey clientKey, ECKey serverKey) {
-        /*
-         * Migrate 2-of-2 multisig address to AddressWrapper.
-         */
-        // TODO:
-        // (0) check if already have 2-of-2 multisig address
-        // (1) migration from multisig to time locked address
-        // TODO: (2) store using AddressWrapper class.
-        List<ECKey> keys = ImmutableList.of(clientKey, serverKey);
-        Script multisigAddressScript = BitcoinUtils.createP2SHOutputScript(2, keys);
-        wallet.addWatchedScripts(ImmutableList.of(multisigAddressScript));
-    }
-
     private void initExchangeRate() {
         exchangeRate = new ExchangeRate(Fiat.parseFiat("USD", "440"));
         loadExchangeRateFromStorage();
@@ -809,6 +793,12 @@ public class WalletService extends Service {
     private void broadcastWalletServiceInitDone() {
         Intent initDone = new Intent(Constants.WALLET_INIT_DONE_ACTION);
         getLocalBroadcaster().sendBroadcast(initDone);
+    }
+
+    private void broadcastWalletError(String errorMessage) {
+        Intent error = new Intent(Constants.WALLET_ERROR_ACTION);
+        error.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
+        getLocalBroadcaster().sendBroadcast(error);
     }
 
     private void broadcastBalanceChanged() {
@@ -927,11 +917,6 @@ public class WalletService extends Service {
         }
 
         public Address getCurrentReceiveAddress() {
-            // TODO: fix? still needed?
-            return getMultisigReceiveAddress();
-        }
-
-        public Address getMultisigReceiveAddress() {
             if (addresses.isEmpty()) {
                 throw new IllegalStateException("No address created yet.");
             }
@@ -958,6 +943,7 @@ public class WalletService extends Service {
 
         public TransactionWrapper getTransaction(final String transactionHash) {
             Transaction tx = wallet.getTransaction(Sha256Hash.wrap(transactionHash));
+            tx.setExchangeRate(getExchangeRate());
             return new TransactionWrapper(tx, wallet);
         }
 
@@ -1050,7 +1036,6 @@ public class WalletService extends Service {
                 @Override
                 public Transaction call() throws Exception {
                     final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
-                    // TODO: change address/spend from does not make sense for spendAllTx.
                     Transaction transaction = BitcoinUtils.createSpendAllTx(
                             Constants.PARAMS,
                             unlockedTxOut,

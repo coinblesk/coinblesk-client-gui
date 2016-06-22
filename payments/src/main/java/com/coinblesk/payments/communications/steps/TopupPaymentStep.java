@@ -42,7 +42,7 @@ public class TopupPaymentStep implements Step {
     public DERObject process(DERObject input) {
         DERObject output = DERObject.NULLOBJECT;
         try {
-            final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getMultisigReceiveAddress());
+            final Transaction transaction = BitcoinUtils.createSpendAllTx(Constants.PARAMS, walletServiceBinder.getWallet().calculateAllSpendCandidates(false, true), walletServiceBinder.getCurrentReceiveAddress(), walletServiceBinder.getCurrentReceiveAddress());
             final SendRequest sendRequest = SendRequest.forTx(transaction);
             this.walletServiceBinder.getWallet().signTransaction(sendRequest);
 

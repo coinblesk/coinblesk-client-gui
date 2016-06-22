@@ -76,6 +76,7 @@ public class BluetoothLEServer extends AbstractServer {
         // see http://stackoverflow.com/questions/26482611/chipsets-devices-supporting-android-5-ble-peripheral-mode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) &&
+                    bluetoothAdapter != null &&
                     bluetoothAdapter.isMultipleAdvertisementSupported() &&
                     bluetoothAdapter.isOffloadedFilteringSupported() &&
                     bluetoothAdapter.isOffloadedScanBatchingSupported();
