@@ -93,7 +93,7 @@ public class NFCServerACS extends AbstractServer {
                         final PaymentFinalSignatureOutpointsReceiveStep paymentFinalSignatureOutpointsReceiveStep = new PaymentFinalSignatureOutpointsReceiveStep(paymentAuthorizationReceiveStep.getClientPublicKey(), paymentAuthorizationReceiveStep.getServerSignatures(), getPaymentRequestUri());
                         paymentFinalSignatureOutpointsReceiveStep.process(paymentFinalSignatureReceiveInput);
 
-                        getWalletServiceBinder().commitAndBroadcastTransaction(paymentFinalSignatureOutpointsReceiveStep.getFullSignedTransaction());
+                        getWalletServiceBinder().maybeCommitAndBroadcastTransaction(paymentFinalSignatureOutpointsReceiveStep.getFullSignedTransaction());
                         getPaymentRequestDelegate().onPaymentSuccess();
 
                         transceiver.write(DERObject.NULLOBJECT.serializeToDER());

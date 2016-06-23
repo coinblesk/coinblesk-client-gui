@@ -95,7 +95,7 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
             Transaction transaction = finalizeStep.getTransaction();
 
-            walletServiceBinder.commitAndBroadcastTransaction(transaction);
+            walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
 
             Log.d(TAG, "payment successful!");
             paymentRequestDelegate.onPaymentSuccess();

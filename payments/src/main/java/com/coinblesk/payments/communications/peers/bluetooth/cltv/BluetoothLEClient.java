@@ -195,7 +195,7 @@ public class BluetoothLEClient extends AbstractClient {
                             finalizeStep.process(DERObject.NULLOBJECT);
 
                             Transaction transaction = finalizeStep.getTransaction();
-                            getWalletServiceBinder().commitAndBroadcastTransaction(transaction);
+                            getWalletServiceBinder().maybeCommitAndBroadcastTransaction(transaction);
 
                             isPaymentDone = true;
                             derResponsePayload = DERObject.NULLOBJECT.serializeToDER(); // final ack.

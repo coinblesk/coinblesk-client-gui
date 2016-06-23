@@ -177,6 +177,7 @@ public class WalletService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
+        ClientUtils.fixECKeyComparator();
         initLogging();
         initExchangeRate();
         
@@ -372,10 +373,9 @@ public class WalletService extends Service {
     }
 
     private void initLogging() {
-        LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
-        ClientUtils.fixECKeyComparator();
+        LogManager.getLogManager().getLogger("").setLevel(Constants.JAVA_LOGGER_LEVEL);
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
-                .setLevel(ch.qos.logback.classic.Level.WARN);
+                .setLevel(Constants.LOGBACK_LOGGER_LEVEL);
     }
 
     private void initWalletEventListener() {
@@ -964,6 +964,14 @@ public class WalletService extends Service {
             return broadcastTransaction(tx);
         }
 
+        public ListenableFuture<Transaction> maybeCommitAndBroadcastTransaction(final Transaction tx) {
+            Log.d(TAG, "maybeCommitAndBroadcastTransaction: " + tx.getHashAsString());
+            if (!wallet.maybeCommitTx(tx)) {
+                Log.d(TAG, "Tx was already committed to wallet (probably received over network)");
+            };
+            return broadcastTransaction(tx);
+        }
+
         public ListenableFuture<Transaction> broadcastTransaction(final Transaction tx) {
             TransactionBroadcast broadcast = peerGroup.broadcastTransaction(tx);
             broadcast.setProgressCallback(new TransactionBroadcast.ProgressCallback() {
@@ -973,7 +981,7 @@ public class WalletService extends Service {
                     Log.d(TAG, "Transaction broadcast - tx: "+txHash+", progress: " + progress);
                 }
             });
-            return broadcast.broadcast();
+            return broadcast.future();
         }
 
         public Transaction createTransaction(Address addressTo, Coin amount) throws InsufficientFunds, CoinbleskException {
