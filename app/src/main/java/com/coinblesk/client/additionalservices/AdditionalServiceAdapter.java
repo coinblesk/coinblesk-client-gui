@@ -23,6 +23,7 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import retrofit2.Call;
 import retrofit2.Response;
@@ -40,9 +41,14 @@ public class AdditionalServiceAdapter extends ArrayAdapter<String> {
     public AdditionalServiceAdapter(Activity activity, WalletService.WalletServiceBinder walletServiceBinder) {
         super(activity, 0);
         add("Login"); //dummy entry to get the size right
+        add("Transfer"); //dummy entry to get the size right
         this.walletServiceBinder = walletServiceBinder;
         this.activity = activity;
     }
+
+    private CheckBox checkBox;
+    private UserAccountTO userAccountTO;
+    private TextView balance;
 
     @Override
     public View getView(int position, View convertView, final ViewGroup parent) {
@@ -54,15 +60,15 @@ public class AdditionalServiceAdapter extends ArrayAdapter<String> {
                     //firstLine.setText("Login");
                     //TextView secondLine = (TextView) convertView.findViewById(R.id.secondLine);
                     //secondLine.setText("blah blah blah");
-                    final CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.checkBox);
+                    checkBox = (CheckBox) convertView.findViewById(R.id.checkBox);
                     checkBox.setChecked(false);
                     checkBox.setEnabled(true);
-                    new GetAccountTask(activity).execute(checkBox);
-
+                    updateState();
+                    new GetAccountTask().execute();
                     convertView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showAddAddressDialog(checkBox);
+                            showAddAddressDialog();
                         }
                     });
 
@@ -72,12 +78,12 @@ public class AdditionalServiceAdapter extends ArrayAdapter<String> {
             case 1:
                 if (convertView == null) {
                     convertView = LayoutInflater.from(getContext()).inflate(R.layout.additional_services_item2, parent, false);
-                    final TextView balance = (TextView) convertView.findViewById(R.id.additional_services_balance);
-
+                    balance = (TextView) convertView.findViewById(R.id.additional_services_balance);
+                    updateState();
                     convertView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            new TransferP2SHTask(activity).execute(balance);
+                            new TransferP2SHTask().execute();
                         }
                     });
 
@@ -88,110 +94,86 @@ public class AdditionalServiceAdapter extends ArrayAdapter<String> {
         }
     }
 
-
-
-    private void showAddAddressDialog(final CheckBox checkBox) {
+    private void showAddAddressDialog() {
         AdditionalServicesUsernameDialog frag = new AdditionalServicesUsernameDialog();
         frag.setCloseRunner(new Runnable(){
             @Override
             public void run() {
-                new GetAccountTask(activity).execute(checkBox);
+                new GetAccountTask().execute();
             }
         });
         frag.show(((Activity) getContext()).getFragmentManager(), TAG);
 
     }
 
-    private class TransferP2SHTask extends AsyncTask<TextView, Void, Boolean> {
-
-        final private Activity activity;
-        private TransferP2SHTask(Activity activity) {
-            this.activity = activity;
-        }
+    private class TransferP2SHTask extends AsyncTask<Void, Void, Boolean> {
 
         @Override
-        protected Boolean doInBackground(TextView... textViews) {
-            CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService(activity);
+        protected Boolean doInBackground(Void... params) {
+            CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService();
             BaseTO b = new BaseTO();
             b.publicKey(walletServiceBinder.getMultisigClientKey().getPubKey());
-            Call<UserAccountStatusTO> res = coinbleskWebService.transferToP2SH(b);
-            for(TextView textView:textViews) {
+            Call<UserAccountTO> res = coinbleskWebService.transferToP2SH(b);
+
                 try {
-                    UserAccountStatusTO to = res.execute().body();
+                    UserAccountTO to = res.execute().body();
                     if (to.isSuccess()) {
-                        updateBalance(textView, activity, "Balance tranfered");
+                        userAccountTO = to;
                     } else {
-                        updateBalance(textView, activity, "Balance not transfered");
+                        userAccountTO = null;
                     }
                 } catch (IOException e) {
-                    updateBalance(textView, activity, "Balance not transfered");
+                    userAccountTO = null;
                 }
-            }
+                updateState();
+
             return true;
         }
+    }
 
-        private void updateBalance(final TextView balance, final Context context, final String text)  {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
-                    CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService(context);
-                    Call<UserAccountTO> res = coinbleskWebService.getAccount();
-                    try {
-                        UserAccountTO to = res.execute().body();
-                        balance.setText(Long.toString(to.balance()));
-                    } catch (IOException e) {
-                        balance.setText(e.getMessage());
-                    }
+    private void updateState() {
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                if(userAccountTO != null && checkBox != null) {
+                    checkBox.setEnabled(true);
+                    checkBox.setEnabled(userAccountTO.isSuccess());
+                } else if (checkBox != null){
+                    checkBox.setEnabled(false);
+                    checkBox.setChecked(false);
                 }
-            });
-        }
+
+                if(userAccountTO != null && balance != null) {
+                    balance.setText(Long.toString(userAccountTO.balance()));
+                } else if (balance != null){
+                    balance.setText("no balance");
+                }
+            }
+        });
     }
 
 
 
-    private class GetAccountTask extends AsyncTask<CheckBox, Void, Boolean> {
-
-        final private Activity activity;
-        private GetAccountTask(Activity activity) {
-            this.activity = activity;
-        }
-
+    private class GetAccountTask extends AsyncTask<Void, Void, Boolean> {
         @Override
-        protected Boolean doInBackground(CheckBox... checkBoxs) {
-            for(CheckBox checkBox:checkBoxs) {
-                enable(checkBox, true, null);
+        protected Boolean doInBackground(Void... params) {
 
-                CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService(activity);
+
+                CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService();
                 Call<UserAccountTO> res = coinbleskWebService.getAccount();
                 try {
-
                     Response<UserAccountTO> resp = res.execute();
                     if(resp.isSuccessful()) {
                         UserAccountTO to = resp.body();
-                        enable(checkBox, null, to.isSuccess());
+                        userAccountTO = to;
                     } else {
-                        enable(checkBox, null, false);
+                        userAccountTO = null;
                     }
-
                 } catch (IOException e) {
-                    enable(checkBox, null, false);
+                    userAccountTO = null;
                 }
-            }
-            return true;
-        }
+                updateState();
 
-        private void enable(final CheckBox checkBox, final Boolean enable, final Boolean checked) {
-            activity.runOnUiThread(new Runnable() {
-                public void run() {
-                    if(enable != null) {
-                        checkBox.setEnabled(enable);
-                    }
-                    if(checked != null) {
-                        checkBox.setChecked(checked);
-                    }
-                }
-            });
+            return true;
         }
     }
 }

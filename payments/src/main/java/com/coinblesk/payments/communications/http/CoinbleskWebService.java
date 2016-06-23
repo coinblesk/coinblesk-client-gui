@@ -60,12 +60,12 @@ public interface CoinbleskWebService {
     @FormUrlEncoded
     Call<ResponseBody> login(@Field("username")String username, @Field("password") String password);
 
-    @POST("/v1/user/create")
+    @POST("v1/user/create")
     Call<UserAccountStatusTO> signUp(@Body UserAccountTO request);
 
-    @POST("/v1/user/auth/get")
+    @GET("v1/user/auth/get")
     Call<UserAccountTO> getAccount();
 
-    @POST("/v1/user/auth/transfer-p2sh")
-    Call<UserAccountStatusTO> transferToP2SH(@Body BaseTO request);
+    @GET("v1/user/auth/transfer-p2sh")
+    Call<UserAccountTO> transferToP2SH(@Body BaseTO request);
 }

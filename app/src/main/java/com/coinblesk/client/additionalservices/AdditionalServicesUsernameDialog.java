@@ -26,6 +26,7 @@ import com.coinblesk.json.UserAccountStatusTO;
 import com.coinblesk.json.UserAccountTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.Pair;
+import com.coinblesk.util.SerializeUtils;
 
 import java.io.IOException;
 
@@ -38,6 +39,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by draft on 16.06.16.
@@ -100,7 +102,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
 
         @Override
         protected Boolean doInBackground(Pair<String,String>... pairs) {
-            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(activity);
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
             for(Pair<String,String> pair:pairs) {
                 UserAccountTO to = new UserAccountTO()
                         .email(pair.element0())
@@ -140,7 +142,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
 
         @Override
         protected Boolean doInBackground(Pair<String,String>... pairs) {
-            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService(activity);
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
             for(Pair<String,String> pair:pairs) {
                 Call<ResponseBody> response = coinbleskService.login(pair.element0(), pair.element1());
                 try {
@@ -149,6 +151,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                         String rawCookie = res.headers().get("Set-Cookie");
                         String cookie = AdditionalServiceUtils.parseCookie(rawCookie);
                         SharedPrefUtils.setJSessionID(activity, cookie);
+                        Constants.RETROFIT_SESSION = new Retrofit.Builder()
+                                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                                .client(AdditionalServiceUtils.jsessionClient(activity))
+                                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
                         toast( "Logged in successfully");
                     } else {
                         toast( "Password/username incorrect");

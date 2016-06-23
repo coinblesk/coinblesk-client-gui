@@ -52,6 +52,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.coinblesk.client.about.AboutActivity;
+import com.coinblesk.client.additionalservices.AdditionalServiceUtils;
 import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
@@ -154,10 +155,14 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
 
-        Constants.RETROFIT_BUILDER = new Retrofit.Builder()
+        Constants.RETROFIT = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL);
-        Constants.RETROFIT = Constants.RETROFIT_BUILDER.build();
+                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+
+        Constants.RETROFIT_SESSION = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                .client(AdditionalServiceUtils.jsessionClient(this))
+                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();

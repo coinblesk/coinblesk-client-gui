@@ -91,15 +91,16 @@ public final class Constants {
     public final static String SYMMETRIC_CIPHER_MODE = "AES/CFB8/NoPadding";
     public final static int SYMMETRIC_KEY_SIZE = 128 / 8;
 
-    //"";
+
     //public final static String COINBLESK_SERVER_BASE_URL_PROD="https://bitcoin.csg.uzh.ch/coinblesk-server/";
     public final static String COINBLESK_SERVER_BASE_URL_PROD="http://192.168.1.210:8080/coinblesk-server/";
-    public final static String COINBLESK_SERVER_BASE_URL_TEST="http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    public final static String COINBLESK_SERVER_BASE_URL_TEST="http://192.168.1.210:8080/coinblesk-server/";
+    //public final static String COINBLESK_SERVER_BASE_URL_TEST="http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
     // coinblesk server communication
     public static String COINBLESK_SERVER_BASE_URL = null;
     public static Retrofit RETROFIT = null;
-    public static Retrofit.Builder RETROFIT_BUILDER = null;
+    public static Retrofit RETROFIT_SESSION = null;
 
     public static final UUID BLUETOOTH_SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");
     public static final UUID BLUETOOTH_WRITE_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc3");

@@ -127,7 +127,7 @@ public final class SharedPrefUtils {
     }
 
     public static void setJSessionID(Context context, String jsessionID) {
-        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.jsessionid), Context.MODE_PRIVATE);
+        SharedPreferences prefs = preferences(context);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(context.getResources().getString(R.string.jsessionid), jsessionID);
         editor.commit();
