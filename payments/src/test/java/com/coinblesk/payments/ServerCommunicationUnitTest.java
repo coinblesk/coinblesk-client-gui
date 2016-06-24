@@ -1,6 +1,7 @@
 package com.coinblesk.payments;
 // needed as long as server is not working properly
 
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.json.KeyTO;
 import com.google.gson.Gson;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;

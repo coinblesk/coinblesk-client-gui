@@ -391,4 +391,7 @@
     <string name="edit_login">Login</string>
     <string name="additional_services_description">Additional services are not required for the core operations</string>
     <string name="additional_services_titel">Login for additional services</string>
+    <string name="jsessionid">jsessionid</string>
+    <string name="additional_services_balance">Balance:</string>
+    <string name="additional_services_balance_default">0</string>
 </resources>

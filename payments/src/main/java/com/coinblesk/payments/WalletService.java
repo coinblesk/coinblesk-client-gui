@@ -456,7 +456,7 @@ public class WalletService extends Service {
             throw new CoinbleskException("Could not connect to server: " + e.getMessage(), e);
         }
 
-        if (response != null && response.isSuccess()) {
+        if (response != null && response.body().isSuccess()) {
             final KeyTO responseTO = response.body();
             serverECKey = ECKey.fromPublicOnly(responseTO.publicKey());
             if (!SerializeUtils.verifyJSONSignature(responseTO, serverECKey)) {
@@ -585,7 +585,7 @@ public class WalletService extends Service {
                 .createTimeLockedAddress(request)
                 .execute();
 
-        if (!response.isSuccess()) {
+        if (!response.body().isSuccess()) {
             throw new CoinbleskException("Could not create new address. Code: " + response.code());
         }
 

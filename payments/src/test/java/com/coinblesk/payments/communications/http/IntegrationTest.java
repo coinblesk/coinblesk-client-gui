@@ -36,8 +36,8 @@ public class IntegrationTest {
         final KeyTO clientKey = new KeyTO();
         clientKey.publicKey(clientMultiSigKey.getPubKey());
         Response<KeyTO> response = service.keyExchange(clientKey).execute();
-        Assert.assertEquals(true,response.isSuccess());
-        if (response.isSuccess()) {
+        Assert.assertEquals(true,response.isSuccessful());
+        if (response.isSuccessful()) {
             final KeyTO serverKey = response.body();
             final ECKey serverMultiSigKey = ECKey.fromPublicOnly(serverKey.publicKey());
             UuidObjectStorage.getInstance().addEntry(new ECKeyWrapper(clientMultiSigKey.getPrivKeyBytes(), Constants.MULTISIG_CLIENT_KEY_NAME), ECKeyWrapper.class);

@@ -11,6 +11,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.test.suitebuilder.annotation.SmallTest;
 import android.util.Log;
 
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.steps.PaymentAuthorizationReceiveStep;
 import com.coinblesk.payments.communications.steps.PaymentFinalSignatureOutpointsReceiveStep;

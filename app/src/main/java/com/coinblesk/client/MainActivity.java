@@ -52,6 +52,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.coinblesk.client.about.AboutActivity;
+import com.coinblesk.client.additionalservices.AdditionalServiceUtils;
 import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
@@ -144,24 +145,24 @@ public class MainActivity extends AppCompatActivity
         switch (networkSettings) {
             case "test-net-3":
                 Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
-                // bitcoin2-test.csg.uzh.ch
-                Constants.COINBLESK_SERVER_BASE_URL = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+                Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
-                Constants.RETROFIT = new Retrofit.Builder()
-                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-                        .build();
                 break;
             default:
                 Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
-                Constants.COINBLESK_SERVER_BASE_URL = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+                Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
-                Constants.RETROFIT = new Retrofit.Builder()
-                        .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                        .baseUrl(Constants.COINBLESK_SERVER_BASE_URL)
-                        .build();
                 break;
         }
+
+        Constants.RETROFIT = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+
+        Constants.RETROFIT_SESSION = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                .client(AdditionalServiceUtils.jsessionClient(this))
+                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();
@@ -681,7 +682,7 @@ public class MainActivity extends AppCompatActivity
                 VersionTO requestTO = new VersionTO();
                 requestTO.clientVersion(AppUtils.getAppVersion());
                 Response<VersionTO> response = service.version(requestTO).execute();
-                if (!response.isSuccess()) {
+                if (!response.body().isSuccess()) {
                     throw new CoinbleskException(
                             "Version compatibility check: request failed with code: "
                             + response.code());
