@@ -29,11 +29,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.listeners.OnResultListener;
-import com.coinblesk.client.R;
-import com.coinblesk.client.ui.widgets.RecyclerView;
 
+import com.coinblesk.client.R;
+import com.coinblesk.client.models.AddressBookItem;
+import com.coinblesk.client.ui.widgets.RecyclerView;
+import com.coinblesk.client.utils.SharedPrefUtils;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,32 +65,23 @@ public class AddressList extends DialogFragment {
 
     private void loadAddresses() {
         Log.d(TAG, "Load addresses from storage.");
-        UuidObjectStorage
-                .getInstance()
-                .getEntriesAsList(new OnResultListener<List<AddressItem>>() {
-                    @Override
-                    public void onSuccess(List<AddressItem> objects) {
-                        if (objects != null && !objects.isEmpty()) {
-                            Collections.sort(objects);
-                            adapter.getItems().addAll(objects);
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    adapter.notifyDataSetChanged();
-                                }
-                            });
-                        }
-                    }
+        List<AddressBookItem> loadedItems;
+        try {
+            loadedItems = SharedPrefUtils.getAddressBookItems(getContext());
+            Collections.sort(loadedItems);
+        } catch (Exception e) {
+            Log.w(TAG, "Could not load addresses: ", e);
+            loadedItems = new ArrayList<>(0);
+            String msg = (e.getMessage() != null) ? String.format(" (%s)", e.getMessage()) : "";
+            Toast.makeText(getActivity(),
+                    getString(R.string.addresses_msg_load_error, msg),
+                    Toast.LENGTH_LONG)
+                    .show();
+        }
 
-                    @Override
-                    public void onError(String s) {
-                        String msg = (s != null) ? String.format(" (%s)", s) : "";
-                        Toast.makeText(getActivity(),
-                                getString(R.string.addresses_msg_load_error, msg),
-                                Toast.LENGTH_LONG)
-                                .show();
-                    }
-                }, AddressItem.class);
+        adapter.getItems().clear();
+        adapter.getItems().addAll(loadedItems);
+        adapter.notifyDataSetChanged();
     }
 
 

@@ -22,7 +22,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.coinblesk.client.R;
+import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 
 import java.util.ArrayList;
@@ -34,12 +36,12 @@ import java.util.List;
 public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.ViewHolder> {
     private static final String TAG = AddressListAdapter.class.getName();
 
-    private final List<AddressItem> addresses;
+    private final List<AddressBookItem> addresses;
 
     private AddressItemClickListener itemClickListener;
 
-    public AddressListAdapter(List<AddressItem> addresses, AddressItemClickListener itemClickListener) {
-        this.addresses = addresses != null ? addresses : new ArrayList<AddressItem>();
+    public AddressListAdapter(List<AddressBookItem> addresses, AddressItemClickListener itemClickListener) {
+        this.addresses = addresses != null ? addresses : new ArrayList<AddressBookItem>();
         this.itemClickListener = itemClickListener;
     }
 
@@ -64,7 +66,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
     public void onBindViewHolder(ViewHolder holder, int position) {
         // - get element from the dataset at this position
         // - replace the contents of the view with that element
-        AddressItem address = addresses.get(position);
+        AddressBookItem address = addresses.get(position);
         holder.update(address);
     }
 
@@ -74,7 +76,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
         return addresses.size();
     }
 
-    public List<AddressItem> getItems() {
+    public List<AddressBookItem> getItems() {
         return addresses;
     }
 
@@ -87,8 +89,8 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
     }
 
     public interface AddressItemClickListener {
-        void onItemClick(AddressItem item, int itemPosition);
-        boolean onItemLongClick(AddressItem item, int itemPosition);
+        void onItemClick(AddressBookItem item, int itemPosition);
+        boolean onItemLongClick(AddressBookItem item, int itemPosition);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder
@@ -119,7 +121,7 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
             Log.d(TAG, "onLongClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
             if (itemClickListener != null) {
                 int pos = getAdapterPosition();
-                AddressItem item = getItems().get(pos);
+                AddressBookItem item = getItems().get(pos);
                 return itemClickListener.onItemLongClick(item, pos);
             }
             return false;
@@ -130,14 +132,14 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
             Log.d(TAG, "onClick - Address=" + address.getText().toString() + ", Label=" + addressLabel.getText().toString());
             if (itemClickListener != null) {
                 int pos = getAdapterPosition();
-                AddressItem item = getItems().get(pos);
+                AddressBookItem item = getItems().get(pos);
                 itemClickListener.onItemClick(item, pos);
             }
         }
 
-        void update(AddressItem addressItem) {
-            String label = addressItem.getAddressLabel();
-            String base58 = addressItem.getAddress();
+        void update(AddressBookItem addressBookItem) {
+            String label = addressBookItem.getAddressLabel();
+            String base58 = addressBookItem.getAddress();
             addressLabel.setText(label);
             address.setText(base58);
         }

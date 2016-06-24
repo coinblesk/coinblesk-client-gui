@@ -18,4 +18,36 @@
 
 <resources>
     <string name="app_name">coinblesk-client-common</string>
+
+    <string name="pref_connection_settings">pref_connection_settings</string>
+
+    <string name="pref_network_list">pref_network_list</string>
+    <string name="pref_network_default_value">main-net</string>
+
+    <string name="pref_currency_list">pref_currency_list</string>
+    <string name="pref_currency_default_value">EUR</string>
+    <!-- argument: currency symbol, e.g. EUR, CHF, ... -->
+    <string name="pref_exchange_rate">pref_exchange_rate_%1$s</string>
+    <string name="pref_exchange_rate_default_USD"></string>
+    <string name="pref_exchange_rate_default_EUR"></string>
+    <string name="pref_exchange_rate_default_CHF"></string>
+
+
+    <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
+    <string name="pref_bitcoin_rep_default_value">BTC</string>
+
+    <string name="pref_balance_list">pref_balance_list</string>
+    <string name="pref_balance_default_value">Bitcoin</string>
+
+    <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
+    <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
+
+    <string name="pref_custom_buttons">pref_custom_buttons</string>
+    <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
+
+    <string name="jsessionid">jsessionid</string>
+
+    <string name="pref_address_book_items">pref_address_book_items</string>
+
+
 </resources>

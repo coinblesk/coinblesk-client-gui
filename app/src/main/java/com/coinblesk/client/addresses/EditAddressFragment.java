@@ -37,6 +37,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.models.AddressBookItem;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.WrongNetworkException;
@@ -160,8 +162,8 @@ public class EditAddressFragment extends DialogFragment {
             }
 
             // everything OK
-            final AddressItem addressItem = new AddressItem(label, address);
-            listener.onNewOrChangedAddress(addressItem);
+            final AddressBookItem addressBookItem = new AddressBookItem(label, address);
+            listener.onNewOrChangedAddress(addressBookItem);
             dialog.dismiss();
         }
     }
@@ -256,6 +258,6 @@ public class EditAddressFragment extends DialogFragment {
          *       object even if the item is changed and not new.
          * @param address
          */
-        void onNewOrChangedAddress(AddressItem address);
+        void onNewOrChangedAddress(AddressBookItem address);
     }
 }

@@ -33,14 +33,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
-import ch.papers.objectstorage.UuidObjectStorage;
-import ch.papers.objectstorage.UuidObjectStorageException;
 
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
+import com.coinblesk.client.models.AddressBookItem;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
+
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -135,7 +136,7 @@ public class AddressActivity extends AppCompatActivity
         showAddAddressDialog(null, address);
     }
 
-    private void showAddAddressDialog(AddressItem address) {
+    private void showAddAddressDialog(AddressBookItem address) {
         showAddAddressDialog(address.getAddressLabel(), address.getAddress());
     }
 
@@ -149,7 +150,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewOrChangedAddress(AddressItem address) {
+    public void onNewOrChangedAddress(AddressBookItem address) {
         if (address == null) {
             return;
         }
@@ -163,7 +164,7 @@ public class AddressActivity extends AppCompatActivity
             final int numItems = addressListAdapter.getItemCount();
             int existingIndex = -1;
             for (int i = 0; i < numItems; ++i) {
-                AddressItem item = addressListAdapter.getItems().get(i);
+                AddressBookItem item = addressListAdapter.getItems().get(i);
                 if (item.getAddress().equals(address.getAddress())) {
                     existingIndex = i;
                     break;
@@ -187,34 +188,29 @@ public class AddressActivity extends AppCompatActivity
         }
     }
 
-    private void addAddressToList(AddressItem address) {
+    private void addAddressToList(AddressBookItem address) {
         // add new item
         final int last = addressListAdapter.getItemCount();
         addressListAdapter.getItems().add(address);
         addressListAdapter.notifyItemInserted(last);
-        storeAddress(address);
+        saveAddresses();
     }
 
-    private void updateAddressInList(int itemIndex, AddressItem newAddress) {
+    private void updateAddressInList(int itemIndex, AddressBookItem newAddress) {
         // update the existing item.
-        AddressItem current = addressListAdapter.getItems().get(itemIndex);
+        AddressBookItem current = addressListAdapter.getItems().get(itemIndex);
         current.setAddress(newAddress.getAddress().trim());
         current.setAddressLabel(newAddress.getAddressLabel().trim());
         addressListAdapter.notifyItemChanged(itemIndex);
-        storeAddress(current);
+        saveAddresses();
     }
 
-    private void storeAddress(AddressItem address) {
-        try {
-            UuidObjectStorage.getInstance().addEntry(address, AddressItem.class);
-            UuidObjectStorage.getInstance().commit();
-        } catch (Exception e) {
-            Toast.makeText(this, R.string.addresses_msg_saved_error, Toast.LENGTH_LONG).show();
-        }
+    private void saveAddresses() {
+        SharedPrefUtils.setAddressBookItems(this, addressListAdapter.getItems());
     }
 
     @Override
-    public boolean onItemLongClick(AddressItem item, int itemPosition) {
+    public boolean onItemLongClick(AddressBookItem item, int itemPosition) {
         if (item != null) {
             if (actionMode != null) {
                 return false; // already open
@@ -229,7 +225,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     @Override
-    public void onItemClick(AddressItem item, int itemPosition) {
+    public void onItemClick(AddressBookItem item, int itemPosition) {
         // ignore short clicks on items.
     }
 
@@ -252,7 +248,7 @@ public class AddressActivity extends AppCompatActivity
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Pair<Integer, AddressItem> data = getAddressItem(mode);
+            Pair<Integer, AddressBookItem> data = getAddressItem(mode);
             if(data != null) {
                 switch (item.getItemId()) {
                     case R.id.action_copy:
@@ -276,17 +272,17 @@ public class AddressActivity extends AppCompatActivity
             actionMode = null;
         }
 
-        private Pair<Integer, AddressItem> getAddressItem(ActionMode am) {
+        private Pair<Integer, AddressBookItem> getAddressItem(ActionMode am) {
             if (am.getTag() != null) {
                 @SuppressWarnings("unchecked")
-                Pair<Integer, AddressItem> address = Pair.class.cast(am.getTag());
+                Pair<Integer, AddressBookItem> address = Pair.class.cast(am.getTag());
                 return address;
             }
             return null;
         }
     };
 
-    private void itemActionCopy(int itemPosition, AddressItem item) {
+    private void itemActionCopy(int itemPosition, AddressBookItem item) {
         Log.d(TAG, "Copy address at position " + itemPosition + ", " + item);
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Address", item.getAddress());
@@ -298,7 +294,7 @@ public class AddressActivity extends AppCompatActivity
                 .show();
     }
 
-    private void itemActionEdit(int itemPosition, AddressItem item) {
+    private void itemActionEdit(int itemPosition, AddressBookItem item) {
         Log.d(TAG, "Edit address at position " + itemPosition + ", " + item);
         showAddAddressDialog(item);
         // the adapter is notified about the change later in onNewOrChangedAddress
@@ -306,21 +302,15 @@ public class AddressActivity extends AppCompatActivity
         finishActionMode();
     }
 
-    private void itemActionDelete(int itemPosition, AddressItem item) {
+    private void itemActionDelete(int itemPosition, AddressBookItem item) {
         Log.d(TAG, "Delete address at position " + itemPosition + ", " + item);
-        try {
-            UuidObjectStorage
-                    .getInstance()
-                    .deleteEntry(item, AddressItem.class);
-            UuidObjectStorage.getInstance().commit();
-        } catch (UuidObjectStorageException e) {
-            Log.w("Delete Failed.", e);
-        }
 
         boolean removed = addressListAdapter.getItems().remove(item);
         if (removed) {
             addressListAdapter.notifyItemRemoved(itemPosition);
         }
+
+        saveAddresses();
 
         finishActionMode();
         Snackbar.make(findViewById(android.R.id.content),
