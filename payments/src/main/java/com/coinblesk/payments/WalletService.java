@@ -702,15 +702,26 @@ public class WalletService extends Service {
     }
 
     private void fetchExchangeRate() {
-        Thread t = bitcoinjThreadFactory.newThread(new ExchangeRateFetcher());
+        Thread t = bitcoinjThreadFactory.newThread(new ExchangeRateFetcher(this.walletServiceBinder));
         t.setName("WalletService.ExchangeRateFetcher");
         t.start();
     }
 
     private void setExchangeRate(ExchangeRate exchangeRate) {
         this.exchangeRate = exchangeRate;
+        saveExchangeRate();
         broadcastBalanceChanged();
         broadcastExchangeRateChanged();
+    }
+
+    private void saveExchangeRate() {
+        try {
+            storage.deleteEntries(new MatchAllFilter(), ExchangeRateWrapper.class);
+            storage.addEntry(new ExchangeRateWrapper(exchangeRate), ExchangeRateWrapper.class);
+            storage.commit();
+        } catch (UuidObjectStorageException e) {
+            Log.w(TAG, "Could not store exchange rate: " + e);
+        }
     }
 
     private List<TransactionOutput> getUnlockedUnspentOutputs() {
@@ -905,6 +916,10 @@ public class WalletService extends Service {
 
         public ExchangeRate getExchangeRate() {
             return exchangeRate;
+        }
+
+        protected void setExchangeRate(ExchangeRate exchangeRate) {
+            WalletService.this.setExchangeRate(exchangeRate);
         }
 
         public String getCurrency() {
@@ -1240,57 +1255,6 @@ public class WalletService extends Service {
             LocalBroadcastManager
                     .getInstance(WalletService.this)
                     .sendBroadcast(walletProgress);
-        }
-    }
-
-    private class ExchangeRateFetcher implements Runnable {
-
-        @Override
-        public void run() {
-            try {
-                Exchange bitstamp = ExchangeFactory.INSTANCE
-                        .createExchange(BitstampExchange.class.getName());
-                Ticker bitstampTicker = bitstamp.getPollingMarketDataService()
-                        .getTicker(CurrencyPair.BTC_USD);
-                CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
-
-                double conversionRate = 1.0;
-                ExchangeRateTO result;
-                switch (fiatCurrency) {
-                    case "USD":
-                        // usd: get directly
-                        conversionRate = 1.0;
-                        break;
-                    case "CHF":
-                        result = service.chfToUsd().execute().body();
-                        conversionRate = Double.parseDouble(result.rate());
-                        break;
-                    case "EUR":
-                        result = service.eurToUsd().execute().body();
-                        conversionRate = Double.parseDouble(result.rate());
-                        break;
-                    default:
-                        Log.w(TAG, "Cannot fetch exchange rate (unknown currency symbol): " + fiatCurrency);
-                }
-
-                final long currentAsk = bitstampTicker.getAsk().longValue();
-                final long fiatValue = (long) (currentAsk * 10000.0 * (1.0 / conversionRate));
-                final ExchangeRate exchangeRate = new ExchangeRate(Fiat.valueOf(fiatCurrency, fiatValue));
-                Log.d(TAG, "ExchangeRateFetcher - "
-                        + "currency: " + fiatCurrency
-                        + ", conversion: " + conversionRate
-                        + ", fiatValue: " + fiatValue);
-
-                // setExchangeRate accesses wallet functions (balance).
-                // Context.propagate(bitcoinjContext);
-                setExchangeRate(exchangeRate);
-
-                storage.deleteEntries(new MatchAllFilter(), ExchangeRateWrapper.class);
-                storage.addEntry(new ExchangeRateWrapper(exchangeRate), ExchangeRateWrapper.class);
-                storage.commit();
-            } catch (Exception e) {
-                Log.w(TAG, "Exception - could not fetch exchange rate: ", e);
-            }
         }
     }
 }
