@@ -48,8 +48,8 @@ class ExchangeRateFetcher implements Runnable {
     private final WeakReference<WalletService.WalletServiceBinder> weakWalletService;
     private final String fiatCurrency;
 
-    public ExchangeRateFetcher(WalletService.WalletServiceBinder walletService) {
-        this.fiatCurrency = walletService.getCurrency();
+    public ExchangeRateFetcher(String fiatCurrency, WalletService.WalletServiceBinder walletService) {
+        this.fiatCurrency = fiatCurrency;
         this.weakWalletService = new WeakReference<>(walletService);
     }
 
@@ -65,7 +65,7 @@ class ExchangeRateFetcher implements Runnable {
                     currentAsk, "USD", conversionRate, fiatValue/10000.0, fiatCurrency));
 
             WalletService.WalletServiceBinder walletService = weakWalletService.get();
-            if (walletService != null) {
+            if (walletService != null && walletService.getCurrency().equals(fiatCurrency)) {
                 ExchangeRate exchangeRate = new ExchangeRate(Fiat.valueOf(fiatCurrency, fiatValue));
                 walletService.setExchangeRate(exchangeRate);
             }

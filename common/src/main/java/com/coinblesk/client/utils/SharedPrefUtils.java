@@ -167,7 +167,18 @@ public final class SharedPrefUtils {
 
     public static ExchangeRate getExchangeRate(Context context, String currencySymbol) {
         String key = context.getString(R.string.pref_exchange_rate, currencySymbol);
-        long oneCoinInFiat = getLong(context, key, 0);
+        long defaultValue = 0;
+        if (!preferences(context).contains(key)) {
+            String defaultResourceName = context.getString(R.string.pref_exchange_rate_default_key, currencySymbol);
+            int defaultResourceId = context.getResources()
+                    .getIdentifier(defaultResourceName, "string", context.getPackageName());
+            if (defaultResourceId != 0) {
+                defaultValue = 10000 * Long.valueOf(context.getString(defaultResourceId));
+            } else {
+                defaultValue = 10000; // result: 1 coin = 1 amount of unknown currency
+            }
+        }
+        long oneCoinInFiat = getLong(context, key, defaultValue);
         return new ExchangeRate(Fiat.valueOf(currencySymbol, oneCoinInFiat));
     }
 

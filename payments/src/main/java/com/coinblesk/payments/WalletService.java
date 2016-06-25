@@ -31,14 +31,13 @@ import com.coinblesk.bitcoin.AddressCoinSelector;
 import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.json.BaseTO;
-import com.coinblesk.json.ExchangeRateTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.steps.cltv.CLTVInstantPaymentStep;
 import com.coinblesk.client.models.ECKeyWrapper;
-import com.coinblesk.client.models.ExchangeRateWrapper;
 import com.coinblesk.client.models.TimeLockedAddressWrapper;
 import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.client.models.filters.ECKeyWrapperFilter;
@@ -52,11 +51,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.xeiam.xchange.Exchange;
-import com.xeiam.xchange.ExchangeFactory;
-import com.xeiam.xchange.bitstamp.BitstampExchange;
-import com.xeiam.xchange.currency.CurrencyPair;
-import com.xeiam.xchange.dto.marketdata.Ticker;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.BlockChain;
@@ -112,13 +106,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 import ch.papers.objectstorage.UuidObjectStorage;
 import ch.papers.objectstorage.UuidObjectStorageException;
-import ch.papers.objectstorage.filters.MatchAllFilter;
-import ch.papers.objectstorage.listeners.OnResultListener;
 import retrofit2.Response;
 
 /**
@@ -128,7 +119,7 @@ import retrofit2.Response;
 public class WalletService extends Service {
     private final static String TAG = WalletService.class.getName();
 
-    private String fiatCurrency = "USD";
+    private String fiatCurrency;
     private ExchangeRate exchangeRate;
 
     private double progress = 0.0;
@@ -179,11 +170,13 @@ public class WalletService extends Service {
         Log.d(TAG, "onCreate");
         ClientUtils.fixECKeyComparator();
         initLogging();
-        initExchangeRate();
-        
-        walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+
         bitcoinjContext = new Context(Constants.PARAMS);
         Context.propagate(bitcoinjContext);
+
+        initExchangeRate();
+
+        walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
         kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
             protected void onSetupCompleted() {
@@ -682,32 +675,33 @@ public class WalletService extends Service {
     }
 
     private void initExchangeRate() {
-        exchangeRate = new ExchangeRate(Fiat.parseFiat("USD", "440"));
+        if (fiatCurrency == null) {
+            fiatCurrency = SharedPrefUtils.getCurrency(this);
+        }
         loadExchangeRateFromStorage();
+        Log.d(TAG, "init exchange rate - currency: " + fiatCurrency
+                + ", exchangeRate: 1 Coin = " + exchangeRate.coinToFiat(Coin.COIN).toFriendlyString());
+
+        fetchExchangeRate();
     }
 
     private void loadExchangeRateFromStorage() {
-        storage.getFirstMatchEntry(new MatchAllFilter(), new OnResultListener<ExchangeRateWrapper>() {
-            @Override
-            public void onSuccess(ExchangeRateWrapper exr) {
-                exchangeRate = exr.getExchangeRate();
-            }
-
-            @Override
-            public void onError(String s) {
-                Log.d(TAG, "Could not retrieve old exchangerate from storage: '" + s
-                        + "', staying with preshiped default: " + exchangeRate.fiat);
-            }
-        }, ExchangeRateWrapper.class);
+        exchangeRate = SharedPrefUtils.getExchangeRate(this, fiatCurrency);
     }
 
     private void fetchExchangeRate() {
-        Thread t = bitcoinjThreadFactory.newThread(new ExchangeRateFetcher(this.walletServiceBinder));
+        Thread t = bitcoinjThreadFactory.newThread(new ExchangeRateFetcher(fiatCurrency, walletServiceBinder));
         t.setName("WalletService.ExchangeRateFetcher");
         t.start();
     }
 
     private void setExchangeRate(ExchangeRate exchangeRate) {
+        if (!fiatCurrency.equals(exchangeRate.fiat.getCurrencyCode())) {
+            throw new IllegalArgumentException(String.format(Locale.US,
+                    "Exchange rate currency code (%s) does not match current currencyCode (%s)",
+                    exchangeRate.fiat.getCurrencyCode(), fiatCurrency));
+        }
+
         this.exchangeRate = exchangeRate;
         saveExchangeRate();
         broadcastBalanceChanged();
@@ -715,13 +709,7 @@ public class WalletService extends Service {
     }
 
     private void saveExchangeRate() {
-        try {
-            storage.deleteEntries(new MatchAllFilter(), ExchangeRateWrapper.class);
-            storage.addEntry(new ExchangeRateWrapper(exchangeRate), ExchangeRateWrapper.class);
-            storage.commit();
-        } catch (UuidObjectStorageException e) {
-            Log.w(TAG, "Could not store exchange rate: " + e);
-        }
+        SharedPrefUtils.setExchangeRate(this, exchangeRate.fiat);
     }
 
     private List<TransactionOutput> getUnlockedUnspentOutputs() {

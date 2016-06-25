@@ -412,8 +412,6 @@ public class MainActivity extends AppCompatActivity
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             initPeers();
-            String currency = SharedPrefUtils.getCurrency(MainActivity.this);
-            walletServiceBinder.setCurrency(currency);
         }
 
         @Override

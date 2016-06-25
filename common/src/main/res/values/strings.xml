@@ -28,10 +28,11 @@
     <string name="pref_currency_default_value">EUR</string>
     <!-- argument: currency symbol, e.g. EUR, CHF, ... -->
     <string name="pref_exchange_rate">pref_exchange_rate_%1$s</string>
-    <string name="pref_exchange_rate_default_USD"></string>
-    <string name="pref_exchange_rate_default_EUR"></string>
-    <string name="pref_exchange_rate_default_CHF"></string>
-
+    <!-- default values - only relevant after install until current rate is fetched -->
+    <string name="pref_exchange_rate_default_key">pref_exchange_rate_default_%1$s</string>
+    <string name="pref_exchange_rate_default_USD">670</string>
+    <string name="pref_exchange_rate_default_EUR">610</string>
+    <string name="pref_exchange_rate_default_CHF">660</string>
 
     <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
     <string name="pref_bitcoin_rep_default_value">BTC</string>
