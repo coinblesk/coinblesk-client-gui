@@ -578,7 +578,7 @@ public class WalletService extends Service {
                 .createTimeLockedAddress(request)
                 .execute();
 
-        if (!response.body().isSuccess()) {
+        if (!response.isSuccessful()) {
             throw new CoinbleskException("Could not create new address. Code: " + response.code());
         }
 
