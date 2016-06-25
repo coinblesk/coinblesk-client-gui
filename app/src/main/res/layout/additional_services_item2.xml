@@ -34,6 +34,18 @@
         android:layout_alignParentRight="true"
         android:layout_alignWithParentIfMissing="false" />
 
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/checkBox"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="@string/additional_services_description_2"
+        android:textSize="12sp"
+        android:paddingLeft="15dp"/>
+
 
 
 </RelativeLayout>

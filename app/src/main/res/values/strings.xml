@@ -384,14 +384,27 @@
 
     <string name="pref_custom_buttons">pref_custom_buttons</string>
     <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
+
+
     <string name="additional_services">Additional Services</string>
     <string name="additional_services_email">Email</string>
     <string name="additional_services_password">Password</string>
     <string name="signup">Sign Up</string>
-    <string name="edit_login">Login</string>
+    <string name="login_signup">Login/Signup</string>
+    <string name="login_logout">Login/Logout</string>
     <string name="additional_services_description">Additional services are not required for the core operations</string>
     <string name="additional_services_titel">Login for additional services</string>
     <string name="jsessionid">jsessionid</string>
     <string name="additional_services_balance">Balance:</string>
     <string name="additional_services_balance_default">0</string>
+    <string name="logout">Logout</string>
+    <string name="additional_services_titel_logout">Logged in. Tap to Logout</string>
+    <string name="additional_services_description_2">Transfer your BTC from coinblesk 1 to current version</string>
+    <string name="additional_services_login_success">Login success</string>
+    <string name="additional_services_login_user_password_incorrect">Password/username incorrect</string>
+    <string name="additional_services_login_error">Login Error:</string>
+    <string name="additional_services_logout_success">Logged out</string>
+    <string name="additional_services_logout_error">Logout Error:</string>
+    <string name="additional_services_signup_error">Signup Error:</string>
+    <string name="additional_services_signup_success">Confirmation email sent</string>
 </resources>

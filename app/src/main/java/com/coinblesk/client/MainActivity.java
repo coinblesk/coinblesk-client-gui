@@ -159,10 +159,7 @@ public class MainActivity extends AppCompatActivity
                 .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
                 .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
 
-        Constants.RETROFIT_SESSION = new Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                .client(AdditionalServiceUtils.jsessionClient(this))
-                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+        AdditionalServiceUtils.setSessionID(this, null);
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();

@@ -1,5 +1,6 @@
 package com.coinblesk.client.additionalservices;
 
+import android.app.Activity;
 import android.content.Context;
 
 import com.coinblesk.client.config.Constants;
@@ -23,7 +24,23 @@ public class AdditionalServiceUtils {
         return Constants.RETROFIT_SESSION.create(CoinbleskWebService.class);
     }
 
-    public static final OkHttpClient jsessionClient(Context context) {
+    public static void setSessionID(Activity activity, String cookie) {
+        if(cookie != null) {
+            SharedPrefUtils.setJSessionID(activity, cookie);
+        }
+        if("".equals(cookie)) {
+            Constants.RETROFIT_SESSION = new Retrofit.Builder()
+                    .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                    .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+        } else {
+            Constants.RETROFIT_SESSION = new Retrofit.Builder()
+                    .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                    .client(jsessionClient(activity))
+                    .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+        }
+    }
+
+    private static final OkHttpClient jsessionClient(Context context) {
         final OkHttpClient okHttpClient = new OkHttpClient();
         String jSessionID = SharedPrefUtils.getJSessionID(context);
         return okHttpClient.newBuilder().addInterceptor(new HeaderInterceptor(jSessionID)).build();
@@ -47,10 +64,14 @@ public class AdditionalServiceUtils {
         }
     }
 
-    //TODO: check bounds
     public static String parseCookie(String rawCookie) {
         int indexStart = rawCookie.indexOf("JSESSIONID=");
-        int indexStop = rawCookie.indexOf(";", indexStart);
-        return rawCookie.substring(indexStart, indexStop);
+        if(indexStart >= 0) {
+            int indexStop = rawCookie.indexOf(";", indexStart);
+            if(indexStop >=0 && indexStop > indexStart) {
+                return rawCookie.substring(indexStart, indexStop);
+            }
+        }
+        return "";
     }
 }
