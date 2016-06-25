@@ -6,17 +6,14 @@
     <TextView
         android:id="@+id/additional_services_label"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-
-        android:layout_alignWithParentIfMissing="false"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
+
         android:text="@string/additional_services_balance"
         android:textSize="18sp"
         android:singleLine="true"
         android:paddingLeft="15dp"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="false" />
+        android:paddingTop="5dp"/>
 
     <TextView
         android:id="@+id/additional_services_balance"
@@ -24,27 +21,27 @@
         android:layout_width="wrap_content"
 
         android:gravity="center_vertical"
-        android:ellipsize="marquee"
         android:text="@string/additional_services_balance_default"
+
         android:textSize="18sp"
         android:paddingLeft="15dp"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentBottom="false"
-        android:layout_alignParentRight="true"
-        android:layout_alignWithParentIfMissing="false" />
+        android:layout_alignParentRight="true" />
 
     <TextView
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_toRightOf="@id/checkBox"
+        android:layout_alignParentLeft="false"
+
         android:ellipsize="marquee"
         android:singleLine="true"
         android:text="@string/additional_services_description_2"
         android:textSize="12sp"
-        android:paddingLeft="15dp"/>
+        android:paddingLeft="15dp"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentStart="false"
+        android:layout_below="@+id/additional_services_label"
+        android:layout_alignParentBottom="true"
+        android:gravity="left|bottom" />
 
 
 

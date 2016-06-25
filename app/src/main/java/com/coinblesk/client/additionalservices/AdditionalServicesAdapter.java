@@ -20,11 +20,14 @@ public class AdditionalServicesAdapter extends ArrayAdapter<String> {
 
     final private WalletService.WalletServiceBinder walletServiceBinder;
     final private AdditionalServicesActivity.AdditionalServiceGUIState listener;
+    final private Activity activity;
 
     public AdditionalServicesAdapter(Activity activity, WalletService.WalletServiceBinder walletServiceBinder, AdditionalServicesActivity.AdditionalServiceGUIState listener) {
         super(activity, 0);
+        this.activity = activity;
         this.walletServiceBinder = walletServiceBinder;
         this.listener = listener;
+
     }
 
     @Override
@@ -48,7 +51,7 @@ public class AdditionalServicesAdapter extends ArrayAdapter<String> {
                         @Override
                         public void onClick(View v) {
                             new AdditionalServicesUsernameDialog()
-                                    .setData(listener)
+                                    .setData(activity, listener)
                                     .show(((Activity) getContext()).getFragmentManager(), TAG);
                         }
                     });

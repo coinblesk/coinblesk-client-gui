@@ -19,6 +19,9 @@ import com.coinblesk.client.R;
 import com.coinblesk.json.UserAccountTO;
 import com.coinblesk.payments.WalletService;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.BtcFormat;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -131,16 +134,17 @@ public class AdditionalServicesActivity extends AppCompatActivity {
                             checkBox.setChecked(false);
                         }
                     }
-                    if(success) {
-                        for(TextView textView:textViews) {
-                            textView.setText(R.string.additional_services_titel_logout);
-                        }
+
+                    for(TextView textView:textViews) {
+                        textView.setText(success? R.string.additional_services_titel_logout : R.string.additional_services_titel);
                     }
+
                     for(TextView balance:balances) {
                         if (userAccountTO != null && balance != null) {
-                            balance.setText(Long.toString(userAccountTO.balance()));
+                            Coin coin = Coin.valueOf(userAccountTO.balance());
+                            balance.setText(coin.toFriendlyString());
                         } else if (balance != null) {
-                            balance.setText("no balance");
+                            balance.setText( R.string.additional_services_no_balance);
                         }
                     }
                 }

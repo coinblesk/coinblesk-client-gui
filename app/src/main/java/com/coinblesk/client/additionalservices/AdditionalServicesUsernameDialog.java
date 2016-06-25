@@ -34,8 +34,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
     private static final String TAG = AdditionalServicesUsernameDialog.class.getName();
 
     private AdditionalServicesActivity.AdditionalServiceGUIState listener;
-    public AdditionalServicesUsernameDialog setData(AdditionalServicesActivity.AdditionalServiceGUIState listener) {
+    private Activity parent;
+    public AdditionalServicesUsernameDialog setData(Activity parent, AdditionalServicesActivity.AdditionalServiceGUIState listener) {
         this.listener = listener;
+        this.parent = parent;
         return this;
     }
 
@@ -68,12 +70,12 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     @Override
                     public void onTaskCompleted(boolean success, String message) {
                         if(success) {
-                            toast(getResources().getString(R.string.additional_services_login_success));
+                            toast(R.string.additional_services_login_success);
                         } else {
                             if(message == null) {
-                                toast(getResources().getString(R.string.additional_services_login_user_password_incorrect));
+                                toast(R.string.additional_services_login_user_password_incorrect);
                             } else {
-                                toast(getResources().getString(R.string.additional_services_login_error) + message);
+                                toast(R.string.additional_services_login_error, message);
                             }
                         }
                     }
@@ -95,9 +97,9 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
                                     if(success) {
-                                        toast(getResources().getString(R.string.additional_services_logout_success));
+                                        toast(R.string.additional_services_logout_success);
                                     } else {
-                                        toast(getResources().getString(R.string.additional_services_logout_error) + message);
+                                        toast(R.string.additional_services_logout_error, message);
                                     }
                                 }
                             }).execute();
@@ -117,9 +119,9 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
                                     if(success) {
-                                        toast(getResources().getString(R.string.additional_services_signup_success));
+                                        toast(R.string.additional_services_signup_success);
                                     } else {
-                                        toast(getResources().getString(R.string.additional_services_signup_error) + message);
+                                        toast(R.string.additional_services_signup_error, message);
                                     }
                                 }
                             }).execute(new Pair<String, String>(
@@ -130,11 +132,22 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
         }
     }
 
-    private void toast(final String text)  {
-        getActivity().runOnUiThread(new Runnable() {
+    private void toast(final int text)  {
+        parent.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getActivity(), text, Toast.LENGTH_LONG).show();
+                String resolved = parent.getResources().getString(text);
+                Toast.makeText(parent, resolved, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void toast(final int text, final String msg)  {
+        parent.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String resolved = parent.getResources().getString(text);
+                Toast.makeText(parent, resolved + msg, Toast.LENGTH_LONG).show();
             }
         });
     }
