@@ -227,7 +227,7 @@ public class NFCClientServiceCLTV extends HostApduService {
     }
 
     private void handlePaymentCompleted() {
-        walletServiceBinder.commitAndBroadcastTransaction(transaction);
+        walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
         broadcastInstantPaymentSuccess();
         long duration = System.currentTimeMillis() - startTime;
         Log.d(TAG, "Payment completed: " + duration + "ms");

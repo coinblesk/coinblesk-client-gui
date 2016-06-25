@@ -32,7 +32,7 @@ import android.widget.Toast;
 
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
-import com.coinblesk.client.addresses.AddressItem;
+import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.addresses.AddressList;
 import com.coinblesk.client.addresses.AddressListAdapter;
 import com.coinblesk.client.config.Constants;
@@ -155,7 +155,7 @@ public class SendDialogFragment extends DialogFragment
         addressListDialog.setItemClickListener(new AddressListAdapter.AddressItemClickListener() {
 
             @Override
-            public void onItemClick(AddressItem item, int itemPosition) {
+            public void onItemClick(AddressBookItem item, int itemPosition) {
                 if (item != null) {
                     addressEditText.setText(item.getAddress());
                 }
@@ -163,7 +163,7 @@ public class SendDialogFragment extends DialogFragment
             }
 
             @Override
-            public boolean onItemLongClick(AddressItem item, int itemPosition) {
+            public boolean onItemLongClick(AddressBookItem item, int itemPosition) {
                 // long click is ignored
                 return false;
             }

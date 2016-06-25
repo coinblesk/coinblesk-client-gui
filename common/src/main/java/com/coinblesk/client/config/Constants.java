@@ -42,6 +42,9 @@ public final class Constants {
 
     public static NetworkParameters PARAMS = TestNet3Params.get();
 
+    public static final java.util.logging.Level JAVA_LOGGER_LEVEL = java.util.logging.Level.INFO;
+    public static final ch.qos.logback.classic.Level LOGBACK_LOGGER_LEVEL = ch.qos.logback.classic.Level.INFO;
+
     public static final Coin MIN_PAYMENT_REQUEST_AMOUNT = Transaction.MIN_NONDUST_OUTPUT;
 
     public final static long UNIX_TIME_MONTH = 60 * 60 * 24 * 30;

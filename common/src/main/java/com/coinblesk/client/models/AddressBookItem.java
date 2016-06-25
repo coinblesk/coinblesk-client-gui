@@ -15,22 +15,19 @@
  *
  */
 
-package com.coinblesk.client.addresses;
-
-import ch.papers.objectstorage.models.AbstractUuidObject;
+package com.coinblesk.client.models;
 
 import java.io.Serializable;
 
 /**
  * @author Andreas Albrecht
  */
-public class AddressItem extends AbstractUuidObject
-                            implements Serializable, Comparable<AddressItem> {
+public class AddressBookItem implements Serializable, Comparable<AddressBookItem> {
 
     private String addressLabel;
     private String address;
 
-    public AddressItem(String addressLabel, String address) {
+    public AddressBookItem(String addressLabel, String address) {
         super();
         this.addressLabel = addressLabel;
         this.address = address;
@@ -56,8 +53,8 @@ public class AddressItem extends AbstractUuidObject
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (!(obj instanceof AddressItem)) { return false; }
-        AddressItem other = (AddressItem) obj;
+        if (!(obj instanceof AddressBookItem)) { return false; }
+        AddressBookItem other = (AddressBookItem) obj;
 
         return com.google.common.base.Objects.equal(addressLabel, other.addressLabel) &&
                 com.google.common.base.Objects.equal(address, other.address);
@@ -70,14 +67,14 @@ public class AddressItem extends AbstractUuidObject
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this)
+        return com.google.common.base.MoreObjects.toStringHelper(this)
                 .add("addressLabel", addressLabel)
                 .add("address", address)
                 .toString();
     }
 
     @Override
-    public int compareTo(AddressItem another) {
+    public int compareTo(AddressBookItem another) {
         int label = addressLabel.compareToIgnoreCase(another.getAddressLabel());
         if (label != 0) { return label; }
         else { return address.compareTo(another.address); }

@@ -50,11 +50,7 @@
         <item>bt-checked</item>
         <item>wifi-checked</item>
     </string-array>
-    <string-array name="pref_connection_default">
-        <item>nfc-checked</item>
-        <item>bt-checked</item>
-        <item>wifi-checked</item>
-    </string-array>
+
 
     <!--Empty Array-->
     <string-array name="empty_array"></string-array>
