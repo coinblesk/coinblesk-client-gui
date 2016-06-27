@@ -456,7 +456,7 @@ public class WalletService extends Service {
             throw new CoinbleskException("Could not connect to server: " + e.getMessage(), e);
         }
 
-        if (response != null && response.body().isSuccess()) {
+        if (response != null && response.isSuccessful()) {
             final KeyTO responseTO = response.body();
             serverECKey = ECKey.fromPublicOnly(responseTO.publicKey());
             if (!SerializeUtils.verifyJSONSignature(responseTO, serverECKey)) {
@@ -466,8 +466,9 @@ public class WalletService extends Service {
             saveKeys(clientECKey, serverECKey);
             Log.i(TAG, "Key exchange with server completed.");
         } else {
-            Log.e(TAG, "Error during key setup - code: " + response.code());
-            throw new CoinbleskException("Could not execute key-exchange, code: " + response.code());
+            String errorCode = (response != null) ? Integer.toString(response.code()) : "(unknown)";
+            Log.e(TAG, "Error during key setup - code: " + errorCode);
+            throw new CoinbleskException("Could not execute key-exchange, code: " + errorCode);
         }
     }
 

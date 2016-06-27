@@ -76,7 +76,7 @@ class ExchangeRateFetcher implements Runnable {
     }
 
     private double fetchConversionRate() throws IOException, CoinbleskException {
-        CoinbleskWebService service = coinbleskService();
+        CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
         Response<ExchangeRateTO> response;
         double conversionRate;
         switch (fiatCurrency) {
@@ -99,12 +99,16 @@ class ExchangeRateFetcher implements Runnable {
         return conversionRate;
     }
 
-    private double getRate(Response<ExchangeRateTO> response) throws IOException {
+    private double getRate(Response<ExchangeRateTO> response) throws CoinbleskException, IOException {
         if (!response.isSuccessful()) {
             throw new IOException("Could not fetch exchange rate: HTTP " + response.code());
         }
 
         ExchangeRateTO exchangeTO = response.body();
+        if (!exchangeTO.isSuccess()) {
+            throw new CoinbleskException("Could not fetch exchange rate, server responded with error type: "
+                    + exchangeTO.type().toString());
+        }
         return Double.parseDouble(exchangeTO.rate());
     }
 
@@ -112,10 +116,6 @@ class ExchangeRateFetcher implements Runnable {
         Exchange exchange = ExchangeFactory.INSTANCE.createExchange(BitstampExchange.class.getName());
         Ticker ticker = exchange.getPollingMarketDataService().getTicker(CurrencyPair.BTC_USD);
         return ticker;
-    }
-
-    private CoinbleskWebService coinbleskService() {
-        return Constants.RETROFIT.create(CoinbleskWebService.class);
     }
 
 }

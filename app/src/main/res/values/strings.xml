@@ -315,8 +315,6 @@
     <string name="pref_wallet_settings_title">Wallet Settings</string>
     <string name="pref_wallet_locktime_period_title">Locktime Period</string>
     <string name="pref_wallet_locktime_period_summary">Time span after which funds can be redeemed.</string>
-    <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
-    <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
 
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>

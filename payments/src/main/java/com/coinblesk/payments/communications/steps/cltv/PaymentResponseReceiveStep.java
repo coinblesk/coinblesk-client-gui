@@ -101,7 +101,6 @@ public class PaymentResponseReceiveStep extends AbstractStep {
     @NonNull
     private SignVerifyTO serverSignVerify(SignVerifyTO signTO) throws PaymentException {
         final Response<SignVerifyTO> serverResponse;
-        SignVerifyTO serverSignTO;
         try {
             final CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
             serverResponse = service.signVerify(signTO).execute();
@@ -109,13 +108,12 @@ public class PaymentResponseReceiveStep extends AbstractStep {
             throw new PaymentException(PaymentError.SERVER_ERROR, e.getMessage());
         }
 
-        // TODO: IF payment was successful but tag is lost now --> payment went through even tough tag is lost exception is thrown (but client will not get Tx/signatures from server).
-        if (!serverResponse.body().isSuccess()) {
+        if (!serverResponse.isSuccessful()) {
             throw new PaymentException(PaymentError.SERVER_ERROR,
                     "HTTP code: " + serverResponse.code());
         }
 
-        serverSignTO = serverResponse.body();
+        final SignVerifyTO serverSignTO = serverResponse.body();
 
         // verify my signature (payee sig)
         TxSig payeeSig = serverSignTO.payeeMessageSig();

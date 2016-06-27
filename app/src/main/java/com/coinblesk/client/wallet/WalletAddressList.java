@@ -159,7 +159,8 @@ public class WalletAddressList extends Fragment
         Map<Address, Coin> balances = walletService.getBalanceByAddress();
         adapter.setBalanceByAddress(balances);
         adapter.getItems().clear();
-        adapter.getItems().addAll(walletService.getAddresses());
+        adapter.getItems().addAll(walletService.getAddresses()); // returns sorted by [old....young]
+        Collections.reverse(adapter.getItems());
         adapter.notifyDataSetChanged();
         Log.d(TAG, "Update addresses, total addresses=" + adapter.getItems().size());
     }

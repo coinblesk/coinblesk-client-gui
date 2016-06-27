@@ -55,7 +55,7 @@
         android:title="@string/pref_wallet_settings_title">
 
         <ListPreference
-            android:key="@+id/pref_wallet_locktime_period"
+            android:key="@string/pref_wallet_locktime_period"
             android:title="@string/pref_wallet_locktime_period_title"
             android:summary="@string/pref_wallet_locktime_period_summary"
             android:dialogTitle="@string/pref_wallet_locktime_period_title"

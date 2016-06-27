@@ -677,7 +677,7 @@ public class MainActivity extends AppCompatActivity
                 VersionTO requestTO = new VersionTO();
                 requestTO.clientVersion(AppUtils.getAppVersion());
                 Response<VersionTO> response = service.version(requestTO).execute();
-                if (!response.body().isSuccess()) {
+                if (!response.isSuccessful()) {
                     throw new CoinbleskException(
                             "Version compatibility check: request failed with code: "
                             + response.code());

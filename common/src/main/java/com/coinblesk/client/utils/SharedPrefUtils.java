@@ -259,7 +259,22 @@ public final class SharedPrefUtils {
             throw new IllegalArgumentException("ClientKey does not have private key.");
         }
 
+        // for safety, we store the old value (i.e. do not overwrite key data)
+        archiveKey(context, key);
+
         setBytes(context, key, clientKey.getPrivKeyBytes());
+    }
+
+    private static void archiveKey(Context context, String prefKey) {
+        byte[] privateKey = getBytes(context, prefKey, null);
+        if (privateKey != null) {
+            String archiveKey = prefKey + "_" + System.currentTimeMillis();
+            int i = 1;
+            while (preferences(context).contains(archiveKey)) {
+                archiveKey = archiveKey + "_" + i;
+            }
+            setBytes(context, archiveKey, privateKey);
+        }
     }
 
     public static ECKey getServerKey(Context context, NetworkParameters params) {
@@ -276,6 +291,9 @@ public final class SharedPrefUtils {
         if (serverKey.hasPrivKey()) {
             throw new IllegalArgumentException("ServerKey should not have private key. Wrong key?");
         }
+
+        // copy current key.
+        archiveKey(context, key);
 
         setBytes(context, key, serverKey.getPubKey());
     }
