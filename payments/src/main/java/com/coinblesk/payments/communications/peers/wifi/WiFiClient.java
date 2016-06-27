@@ -34,6 +34,7 @@ import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.OnResultListener;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.handlers.DHKeyExchangeClientHandler;
 
@@ -51,8 +52,6 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import ch.papers.objectstorage.listeners.OnResultListener;
 
 /**
  * @author Alessandro De Carli

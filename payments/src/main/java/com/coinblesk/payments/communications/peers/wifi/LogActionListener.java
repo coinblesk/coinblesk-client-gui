@@ -8,7 +8,7 @@ import android.util.Log;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class LogActionListener implements WifiP2pManager.ActionListener {
+class LogActionListener implements WifiP2pManager.ActionListener {
     private final String tag;
     public LogActionListener(String tag){
         this.tag = tag;

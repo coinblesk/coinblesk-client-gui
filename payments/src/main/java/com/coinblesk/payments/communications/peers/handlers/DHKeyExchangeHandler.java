@@ -2,6 +2,8 @@ package com.coinblesk.payments.communications.peers.handlers;
 
 import android.util.Log;
 
+import com.coinblesk.payments.communications.OnResultListener;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
@@ -14,7 +16,6 @@ import java.security.spec.ECGenParameterSpec;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import ch.papers.objectstorage.listeners.OnResultListener;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 27/02/16.

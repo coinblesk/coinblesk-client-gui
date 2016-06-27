@@ -100,7 +100,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import ch.papers.objectstorage.UuidObjectStorage;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -148,11 +147,13 @@ public class MainActivity extends AppCompatActivity
                 Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 break;
-            default:
+            case "main-net":
                 Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
                 Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
                 break;
+            default:
+                throw new RuntimeException("Unknown network set in preferences: " + networkSettings);
         }
 
         Constants.RETROFIT = new Retrofit.Builder()
@@ -163,7 +164,6 @@ public class MainActivity extends AppCompatActivity
 
         File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
         objectStorageDir.mkdirs();
-        UuidObjectStorage.getInstance().init(objectStorageDir);
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
         upgradeUtils.checkUpgrade(this);

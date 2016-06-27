@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.payments.communications.OnResultListener;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,7 +16,6 @@ import java.util.Arrays;
 import javax.crypto.KeyAgreement;
 import javax.crypto.spec.SecretKeySpec;
 
-import ch.papers.objectstorage.listeners.OnResultListener;
 
 /**
  * Created by Alessandro De Carli (@a_d_c_) on 05/03/16.

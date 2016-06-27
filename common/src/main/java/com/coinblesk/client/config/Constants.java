@@ -40,8 +40,6 @@ public final class Constants {
         // prevent instances
     }
 
-    public static NetworkParameters PARAMS = TestNet3Params.get();
-
     public static final java.util.logging.Level JAVA_LOGGER_LEVEL = java.util.logging.Level.INFO;
     public static final ch.qos.logback.classic.Level LOGBACK_LOGGER_LEVEL = ch.qos.logback.classic.Level.INFO;
 
@@ -55,12 +53,7 @@ public final class Constants {
     /* create new address if current expires in less than this timespan */
     public final static long MIN_LOCKTIME_SPAN_SECONDS = 60*60*24 * 14;
 
-    public final static int LOCK_THRESHOLD = 60 * 4; //https://bitcoin.org/en/developer-reference#block-headers
     public static String WALLET_FILES_PREFIX = "mainnet_wallet_";
-    public final static String WALLET_KEY_NAME = "remote_wallet_key";
-
-    public static final String MULTISIG_CLIENT_KEY_NAME = "remote_client_public_key";
-    public static final String MULTISIG_SERVER_KEY_NAME = "remote_server_public_key";
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
     public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";
@@ -86,19 +79,17 @@ public final class Constants {
     public static final String INSTANT_PAYMENT_SUCCESSFUL_ACTION = "INSTANT_PAYMENT_SUCCESSFUL_ACTION";
     public static final String INSTANT_PAYMENT_FAILED_ACTION = "INSTANT_PAYMENT_FAILED_ACTION";
 
-    //public static final String PAYMENT_SUCCESSFUL_ACTION = "PAYMENT_SUCCESSFUL_ACTION";
-    //public static final String PAYMENT_FAILED_ACTION = "PAYMENT_FAILED_ACTION";
-
     // Crypto constants
     public final static String SYMMETRIC_CIPHER_ALGORITH = "AES";
     public final static String SYMMETRIC_CIPHER_MODE = "AES/CFB8/NoPadding";
     public final static int SYMMETRIC_KEY_SIZE = 128 / 8;
 
+    public static NetworkParameters PARAMS = null;
 
-    //public final static String COINBLESK_SERVER_BASE_URL_PROD="https://bitcoin.csg.uzh.ch/coinblesk-server/";
-    public final static String COINBLESK_SERVER_BASE_URL_PROD="http://192.168.1.210:8080/coinblesk-server/";
-    public final static String COINBLESK_SERVER_BASE_URL_TEST="http://192.168.1.210:8080/coinblesk-server/";
-    //public final static String COINBLESK_SERVER_BASE_URL_TEST="http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    //public final static String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+    public final static String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+    public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    //public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
     // coinblesk server communication
     public static String COINBLESK_SERVER_BASE_URL = null;
