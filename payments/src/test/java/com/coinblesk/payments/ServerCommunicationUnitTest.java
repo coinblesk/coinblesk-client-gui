@@ -5,7 +5,6 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.json.KeyTO;
 import com.google.gson.Gson;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
-import com.coinblesk.client.models.User;
 
 import junit.framework.Assert;
 

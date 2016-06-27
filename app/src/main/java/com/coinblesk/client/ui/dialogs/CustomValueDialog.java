@@ -83,7 +83,7 @@ public class CustomValueDialog extends Dialog implements View.OnClickListener {
                 priceEditText.getText().toString());
         Gson gson = new Gson();
         String jsonCustomButton = gson.toJson(customButton);
-        SharedPrefUtils.putCustomButton(getContext(), customizeButton, jsonCustomButton);
+        SharedPrefUtils.setCustomButton(getContext(), customizeButton, jsonCustomButton);
         if(customValueListener!=null){
             customValueListener.onSharedPrefsUpdated(customizeButton);
         }

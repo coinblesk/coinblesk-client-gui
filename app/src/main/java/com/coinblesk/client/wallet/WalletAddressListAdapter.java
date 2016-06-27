@@ -24,11 +24,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.config.Constants;
-import com.coinblesk.client.models.TimeLockedAddressWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -46,7 +47,7 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
     private static final String TAG = WalletAddressListAdapter.class.getName();
 
-    private final List<TimeLockedAddressWrapper> addresses;
+    private final List<TimeLockedAddress> addresses;
     private Map<Address, Coin> balanceByAddress;
 
     private ItemClickListener listener;
@@ -55,10 +56,10 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
         this(null);
     }
 
-    public WalletAddressListAdapter(List<TimeLockedAddressWrapper> addresses) {
+    public WalletAddressListAdapter(List<TimeLockedAddress> addresses) {
         this.addresses = (addresses != null)
                 ? addresses
-                : Collections.synchronizedList(new ArrayList<TimeLockedAddressWrapper>());
+                : Collections.synchronizedList(new ArrayList<TimeLockedAddress>());
     }
 
     @Override
@@ -73,9 +74,8 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        final TimeLockedAddressWrapper item = addresses.get(position);
-        final Address address = item.getTimeLockedAddress().getAddress(Constants.PARAMS);
-        final long lockTime = item.getTimeLockedAddress().getLockTime();
+        final TimeLockedAddress item = addresses.get(position);
+        final Address address = item.getAddress(Constants.PARAMS);
         final long currentTime = Utils.currentTimeSeconds();
         final Context context = holder.root.getContext();
 
@@ -89,12 +89,12 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
         }
         holder.addressBalance.setText(balance.toFriendlyString());
 
-        String lockedUntil = UIUtils.lockedUntilText(lockTime);
+        String lockedUntil = UIUtils.lockedUntilText(item.getLockTime());
         String info = holder.address.getContext().getString(R.string.time_locked_address_info, lockedUntil);
         holder.addressInfo.setText(info);
 
         Drawable icon;
-        icon = (BitcoinUtils.isBeforeLockTime(currentTime, lockTime))
+        icon = (BitcoinUtils.isBeforeLockTime(currentTime, item.getLockTime()))
                 ? context.getDrawable(R.drawable.ic_lock_24dp)
                 : context.getDrawable(R.drawable.ic_lock_open_24dp);
         holder.icon.setImageDrawable(icon);
@@ -107,7 +107,7 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
         return addresses.size();
     }
 
-    public List<TimeLockedAddressWrapper> getItems() {
+    public List<TimeLockedAddress> getItems() {
         return addresses;
     }
 
@@ -150,13 +150,13 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
             if (listener != null) {
                 int pos = getAdapterPosition();
-                TimeLockedAddressWrapper item = getItems().get(pos);
+                TimeLockedAddress item = getItems().get(pos);
                 listener.onItemClick(item, pos);
             }
         }
     }
 
     public interface ItemClickListener {
-        void onItemClick(TimeLockedAddressWrapper item, int position);
+        void onItemClick(TimeLockedAddress item, int position);
     }
 }

@@ -19,6 +19,8 @@
 <resources>
     <string name="app_name">coinblesk-client-common</string>
 
+    <string name="pref_app_version">pref_app_version</string>
+
     <string name="pref_connection_settings">pref_connection_settings</string>
 
     <string name="pref_network_list">pref_network_list</string>
@@ -43,12 +45,24 @@
     <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
     <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
 
-    <string name="pref_custom_buttons">pref_custom_buttons</string>
+    <!-- argument: button identifier -->
+    <string name="pref_custom_buttons">pref_custom_buttons_%1$s</string>
+
     <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
 
     <string name="jsessionid">jsessionid</string>
 
-    <string name="pref_address_book_items">pref_address_book_items</string>
+    <!-- argument: network identifier -->
+    <string name="pref_address_book_items">%1$s_pref_address_book_items</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_client_private_key">%1$s_pref_client_private_key</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_server_public_key">%1$s_pref_server_public_key</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_address_lock_times">%1$s_pref_address_lock_times</string>
 
 
 </resources>

@@ -1,7 +1,5 @@
 package com.coinblesk.payments.communications.http;
 
-import com.coinblesk.client.models.User;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

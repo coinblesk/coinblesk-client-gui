@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity
         objectStorageDir.mkdirs();
         UuidObjectStorage.getInstance().init(objectStorageDir);
 
-        UpgradeUtils upgradeUtils = new UpgradeUtils(UuidObjectStorage.getInstance());
+        UpgradeUtils upgradeUtils = new UpgradeUtils();
         upgradeUtils.checkUpgrade(this);
 
         startWalletService();

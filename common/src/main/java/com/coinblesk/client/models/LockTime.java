@@ -16,54 +16,40 @@
 
 package com.coinblesk.client.models;
 
-import ch.papers.objectstorage.models.AbstractUuidObject;
-import com.coinblesk.bitcoin.TimeLockedAddress;
 import org.bitcoinj.core.Utils;
 
+import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * @author Andreas Albrecht
  */
-public class TimeLockedAddressWrapper extends AbstractUuidObject {
+public class LockTime implements Serializable {
     private long timeCreatedSeconds;
-    private ECKeyWrapper clientKey;
-    private ECKeyWrapper serverKey;
-    private TimeLockedAddress timeLockedAddress;
+    private long lockTime;
 
-    private TimeLockedAddressWrapper() {
+    private LockTime() {
         // use static create() instead
     }
 
-    public TimeLockedAddress getTimeLockedAddress() {
-        return timeLockedAddress;
-    }
-
-    public ECKeyWrapper getClientKey() {
-        return clientKey;
-    }
-
-    public ECKeyWrapper getServerKey() {
-        return serverKey;
+    public long getLockTime() {
+        return lockTime;
     }
 
     public long getTimeCreatedSeconds() {
         return timeCreatedSeconds;
     }
 
-    public static TimeLockedAddressWrapper create(TimeLockedAddress address,
-                                                  ECKeyWrapper clientKey,
-                                                  ECKeyWrapper serverKey) {
+    public static LockTime create(long lockTime) {
 
-        TimeLockedAddressWrapper addressWrapper = new TimeLockedAddressWrapper();
-        addressWrapper.timeCreatedSeconds = Utils.currentTimeSeconds();
-        addressWrapper.clientKey = clientKey;
-        addressWrapper.serverKey = serverKey;
-        addressWrapper.timeLockedAddress = address;
-        return addressWrapper;
+        LockTime lt = new LockTime();
+        lt.timeCreatedSeconds = Utils.currentTimeSeconds();
+        lt.lockTime = lockTime;
+        return lt;
     }
 
-    public static class TimeCreatedComparator implements Comparator<TimeLockedAddressWrapper> {
+    public static class TimeCreatedComparator implements Comparator<LockTime> {
         private final boolean ascending;
 
         public TimeCreatedComparator(boolean ascending) {
@@ -71,7 +57,7 @@ public class TimeLockedAddressWrapper extends AbstractUuidObject {
         }
 
         @Override
-        public int compare(TimeLockedAddressWrapper lhs, TimeLockedAddressWrapper rhs) {
+        public int compare(LockTime lhs, LockTime rhs) {
             if (lhs.timeCreatedSeconds < rhs.timeCreatedSeconds) {
                 return ascending ? -1 : 1;
             } else if (lhs.timeCreatedSeconds > rhs.timeCreatedSeconds) {
@@ -80,5 +66,12 @@ public class TimeLockedAddressWrapper extends AbstractUuidObject {
                 return 0;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US,
+                "%s - lockTime: %d, timeCreatedSeconds: %d",
+                LockTime.class.getSimpleName(), lockTime, timeCreatedSeconds);
     }
 }

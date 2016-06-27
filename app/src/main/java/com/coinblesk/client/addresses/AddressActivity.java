@@ -36,12 +36,14 @@ import android.widget.Toast;
 
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -54,21 +56,23 @@ public class AddressActivity extends AppCompatActivity
 
     private final static String TAG = AddressActivity.class.getName();
 
+    private NetworkParameters params;
     private AddressList addressList;
     private AddressListAdapter addressListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_address);
         initToolbar();
     }
 
     @Override
     protected void onStart() {
-        Log.d(TAG, "onStart");
         super.onStart();
+        Log.d(TAG, "onStart");
+        params = Constants.PARAMS;
         initAddressList();
     }
 
@@ -78,7 +82,6 @@ public class AddressActivity extends AppCompatActivity
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            // getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
     }
 
@@ -193,20 +196,27 @@ public class AddressActivity extends AppCompatActivity
         final int last = addressListAdapter.getItemCount();
         addressListAdapter.getItems().add(address);
         addressListAdapter.notifyItemInserted(last);
-        saveAddresses();
+        saveAddress(address);
     }
 
     private void updateAddressInList(int itemIndex, AddressBookItem newAddress) {
-        // update the existing item.
+        // update the existing item (remove/add for persistence).
         AddressBookItem current = addressListAdapter.getItems().get(itemIndex);
+        deleteAddress(current);
+
         current.setAddress(newAddress.getAddress().trim());
         current.setAddressLabel(newAddress.getAddressLabel().trim());
         addressListAdapter.notifyItemChanged(itemIndex);
-        saveAddresses();
+
+        saveAddress(current);
     }
 
-    private void saveAddresses() {
-        SharedPrefUtils.setAddressBookItems(this, addressListAdapter.getItems());
+    private void saveAddress(AddressBookItem addressToAdd) {
+        SharedPrefUtils.addAddressBookItem(this, params, addressToAdd);
+    }
+
+    private void deleteAddress(AddressBookItem addressToRemove) {
+        SharedPrefUtils.removeAddressBookItem(this, params, addressToRemove);
     }
 
     @Override
@@ -310,7 +320,7 @@ public class AddressActivity extends AppCompatActivity
             addressListAdapter.notifyItemRemoved(itemPosition);
         }
 
-        saveAddresses();
+        deleteAddress(item);
 
         finishActionMode();
         Snackbar.make(findViewById(android.R.id.content),

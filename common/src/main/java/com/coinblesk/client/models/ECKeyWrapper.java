@@ -25,7 +25,7 @@ import ch.papers.objectstorage.models.AbstractUuidObject;
  * Papers.ch
  * a.decarli@papers.ch
  */
-public class ECKeyWrapper extends AbstractUuidObject {
+public class ECKeyWrapper {
     private final byte[] keyPayload;
     private final String name;
     private final boolean isPublicOnly;

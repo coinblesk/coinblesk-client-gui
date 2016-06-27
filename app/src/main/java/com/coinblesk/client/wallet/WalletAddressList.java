@@ -29,6 +29,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.*;
 import android.widget.ProgressBar;
+
+import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
@@ -36,7 +38,7 @@ import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.client.models.TimeLockedAddressWrapper;
+import com.coinblesk.client.models.LockTime;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
@@ -59,7 +61,7 @@ public class WalletAddressList extends Fragment
 
     private WalletAddressListAdapter adapter;
     private RecyclerView recyclerView;
-    private AsyncTask<Void, Void, TimeLockedAddressWrapper> task;
+    private AsyncTask<Void, Void, TimeLockedAddress> task;
 
     public static Fragment newInstance() {
         return new WalletAddressList();
@@ -158,7 +160,6 @@ public class WalletAddressList extends Fragment
         adapter.setBalanceByAddress(balances);
         adapter.getItems().clear();
         adapter.getItems().addAll(walletService.getAddresses());
-        Collections.sort(adapter.getItems(), new TimeLockedAddressWrapper.TimeCreatedComparator(false));
         adapter.notifyDataSetChanged();
         Log.d(TAG, "Update addresses, total addresses=" + adapter.getItems().size());
     }
@@ -203,15 +204,15 @@ public class WalletAddressList extends Fragment
         dialog.show();
     }
 
-    private AsyncTask<Void, Void, TimeLockedAddressWrapper> createNewAddress() {
+    private AsyncTask<Void, Void, TimeLockedAddress> createNewAddress() {
         Log.d(TAG, "Create new address.");
         return new CreateAddressTask().execute();
     }
 
     @Override
-    public void onItemClick(TimeLockedAddressWrapper item, int position) {
+    public void onItemClick(TimeLockedAddress item, int position) {
         try {
-            Address address = item.getTimeLockedAddress().getAddress(Constants.PARAMS);
+            Address address = item.getAddress(Constants.PARAMS);
             String uri = BitcoinURI.convertToBitcoinURI(address, null, null, null);
             BitcoinURI addressUri = new BitcoinURI(uri);
             QrDialogFragment
@@ -257,7 +258,7 @@ public class WalletAddressList extends Fragment
         showSendDialog(refundBalance);
     }
 
-    private class CreateAddressTask extends AsyncTask<Void, Void, TimeLockedAddressWrapper> {
+    private class CreateAddressTask extends AsyncTask<Void, Void, TimeLockedAddress> {
 
         private Exception thrownException;
 
@@ -268,9 +269,9 @@ public class WalletAddressList extends Fragment
         }
 
         @Override
-        protected TimeLockedAddressWrapper doInBackground(Void... params) {
+        protected TimeLockedAddress doInBackground(Void... params) {
             // runs on background thread
-            TimeLockedAddressWrapper newAddress;
+            TimeLockedAddress newAddress;
             try {
                 newAddress = walletService.createTimeLockedAddress();
             } catch (Exception e) {
@@ -282,7 +283,7 @@ public class WalletAddressList extends Fragment
         }
 
         @Override
-        protected void onPostExecute (TimeLockedAddressWrapper result) {
+        protected void onPostExecute (TimeLockedAddress newAddress) {
             if (getActivity() == null || getActivity().isDestroyed()) {
                 // may happen if user goes back before task completed.
                 return;
@@ -292,7 +293,7 @@ public class WalletAddressList extends Fragment
             stopProgress();
             task = null;
 
-            if (thrownException != null || result == null) {
+            if (thrownException != null || newAddress == null) {
                 String errorMsg = (thrownException != null) ? thrownException.getMessage() : "unknown";
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
                 builder
@@ -306,9 +307,9 @@ public class WalletAddressList extends Fragment
                         .setMessage(getString(R.string.wallet_create_address_failed_message, errorMsg))
                         .create()
                         .show();
-            } else if (result != null) {
-                Address address = result.getTimeLockedAddress().getAddress(Constants.PARAMS);
-                long lockTime = result.getTimeLockedAddress().getLockTime();
+            } else if (newAddress != null) {
+                Address address = newAddress.getAddress(Constants.PARAMS);
+                long lockTime = newAddress.getLockTime();
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
                 builder
                         .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -326,7 +327,7 @@ public class WalletAddressList extends Fragment
         }
 
         @Override
-        protected void onCancelled (TimeLockedAddressWrapper result) {
+        protected void onCancelled (TimeLockedAddress result) {
             stopProgress();
             task = null;
         }

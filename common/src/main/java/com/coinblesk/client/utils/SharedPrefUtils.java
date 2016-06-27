@@ -20,19 +20,22 @@ package com.coinblesk.client.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 
 import com.coinblesk.client.common.R;
 import com.coinblesk.client.models.AddressBookItem;
+import com.coinblesk.client.models.LockTime;
 import com.coinblesk.util.SerializeUtils;
 import com.google.gson.reflect.TypeToken;
 
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,11 +53,11 @@ public final class SharedPrefUtils {
     private static SharedPreferences preferences(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context);
     }
-
+/*
     private static SharedPreferences preferences(Context context, String name, int mode) {
         return context.getSharedPreferences(name, mode);
     }
-
+*/
     private static String getString(Context context, String key, String defaultValue) {
         return preferences(context).getString(key, defaultValue);
     }
@@ -95,6 +98,25 @@ public final class SharedPrefUtils {
         editor.commit();
     }
 
+    private static byte[] getBytes(Context context, String key, byte[] defaultValue) {
+        String valueBase64 = getString(context, key, null);
+        return (valueBase64 == null) ? defaultValue : Base64.decode(valueBase64, Base64.NO_WRAP);
+    }
+
+    private static void setBytes(Context context, String key, byte[] value) {
+        String valueBase64 = Base64.encodeToString(value, Base64.NO_WRAP);
+        setString(context, key, valueBase64);
+    }
+
+    public static String getAppVersion(Context context) {
+        return getString(context, context.getString(R.string.pref_app_version), null);
+    }
+
+    public static void setAppVersion(Context context, String versionName) {
+        String key = context.getString(R.string.pref_app_version);
+        setString(context, key, versionName);
+    }
+
     public static String getNetwork(Context context) {
         return getString(context, context.getString(R.string.pref_network_list),
                 context.getString(R.string.pref_network_default_value));
@@ -115,7 +137,7 @@ public final class SharedPrefUtils {
 
     public static Set<String> getConnectionSettings(Context context) {
         String [] connections = context.getResources().getStringArray(R.array.pref_connection_default);
-        return getStringSet(context, context.getResources().getString(R.string.pref_connection_settings),  new HashSet<String>(Arrays.asList(connections)));
+        return getStringSet(context, context.getResources().getString(R.string.pref_connection_settings),  new HashSet<>(Arrays.asList(connections)));
     }
 
     public static String getPrimaryBalance(Context context) {
@@ -128,33 +150,24 @@ public final class SharedPrefUtils {
     }
 
     public static int getLockTimePeriodMonths(Context context) {
-        String months = getString(context, context.getResources().getString(R.string.pref_wallet_locktime_period),
-                context.getResources().getString(R.string.pref_wallet_locktime_period_default));
+        String key = context.getString(R.string.pref_wallet_locktime_period);
+        String defaultMonths = context.getString(R.string.pref_wallet_locktime_period_default);
+        String months = getString(context, key, defaultMonths);
         return Integer.valueOf(months);
     }
 
-    public static String getCustomButton(Context context, String buttonKey) {
-        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.pref_custom_buttons), Context.MODE_PRIVATE);
-        return prefs.getString(buttonKey, null);
+    public static String getCustomButton(Context context, String buttonId) {
+        String key = context.getString(R.string.pref_custom_buttons, buttonId);
+        return getString(context, key, null);
     }
 
-    public static void putCustomButton(Context context, String buttonKey, String content) {
-        SharedPreferences prefs = preferences(context, context.getResources().getString(R.string.pref_custom_buttons), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(buttonKey, content);
-        editor.commit();
+    public static void setCustomButton(Context context, String buttonId, String content) {
+        String key = context.getString(R.string.pref_custom_buttons, buttonId);
+        setString(context, key, content);
     }
 
     public static boolean isCustomButtonEmpty(Context context, String buttonKey) {
         return getCustomButton(context, buttonKey) == null;
-    }
-
-    public static void enableMultisig2of2ToCltvForwarder(Context context) {
-        setBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), true);
-    }
-
-    public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
-        return getBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), false);
     }
 
     public static String getJSessionID(Context context) {
@@ -187,8 +200,17 @@ public final class SharedPrefUtils {
         setLong(context, key, oneCoinInFiat.getValue());
     }
 
-    public static List<AddressBookItem> getAddressBookItems(Context context) {
-        String json = getString(context, context.getString(R.string.pref_address_book_items), null);
+    public static void enableMultisig2of2ToCltvForwarder(Context context) {
+        setBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), true);
+    }
+
+    public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
+        return getBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), false);
+    }
+
+    public static List<AddressBookItem> getAddressBookItems(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_address_book_items, params.getId());
+        String json = getString(context, key, null);
         if (json == null || json.isEmpty()) {
             return new ArrayList<>(0);
         }
@@ -198,9 +220,91 @@ public final class SharedPrefUtils {
         return items;
     }
 
-    public static void setAddressBookItems(Context context, List<AddressBookItem> items) {
+    private static void setAddressBookItems(Context context, NetworkParameters params, List<AddressBookItem> items) {
+        String key = context.getString(R.string.pref_address_book_items, params.getId());
         String json = SerializeUtils.GSON.toJson(items);
-        setString(context, context.getString(R.string.pref_address_book_items), json);
+        setString(context, key, json);
+    }
+
+    public static void addAddressBookItem(Context context, NetworkParameters params, AddressBookItem itemToAdd) {
+        List<AddressBookItem> items = getAddressBookItems(context, params);
+        if (items == null) {
+            items = new ArrayList<>(1);
+        }
+        items.add(itemToAdd);
+        setAddressBookItems(context, params, items);
+    }
+
+    public static void removeAddressBookItem(Context context, NetworkParameters params, AddressBookItem itemToRemove) {
+        List<AddressBookItem> items = getAddressBookItems(context, params);
+        if (items == null) {
+            return;
+        }
+        items.remove(itemToRemove);
+        setAddressBookItems(context, params, items);
+    }
+
+    public static ECKey getClientKey(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_client_private_key, params.getId());
+        byte[] privateKey = getBytes(context, key, null);
+        return (privateKey != null) ? ECKey.fromPrivate(privateKey) : null;
+    }
+
+    public static void setClientKey(Context context, NetworkParameters params, ECKey clientKey) {
+        String key = context.getString(R.string.pref_client_private_key, params.getId());
+        if (clientKey == null) {
+            setBytes(context, key, null);
+        }
+        if (!clientKey.hasPrivKey()) {
+            throw new IllegalArgumentException("ClientKey does not have private key.");
+        }
+
+        setBytes(context, key, clientKey.getPrivKeyBytes());
+    }
+
+    public static ECKey getServerKey(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_server_public_key, params.getId());
+        byte[] publicKey = getBytes(context, key, null);
+        return (publicKey != null) ? ECKey.fromPublicOnly(publicKey) : null;
+    }
+
+    public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey) {
+        String key = context.getString(R.string.pref_server_public_key, params.getId());
+        if (serverKey == null) {
+            setBytes(context, key, null);
+        }
+        if (serverKey.hasPrivKey()) {
+            throw new IllegalArgumentException("ServerKey should not have private key. Wrong key?");
+        }
+
+        setBytes(context, key, serverKey.getPubKey());
+    }
+
+    public static List<LockTime> getLockTimes(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_address_lock_times, params.getId());
+        String json = getString(context, key, null);
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        Type arrayListType = new TypeToken<ArrayList<LockTime>>(){}.getType();
+        List<LockTime> lockTimes = SerializeUtils.GSON.fromJson(json, arrayListType);
+        return lockTimes;
+    }
+
+    private static void setLockTimes(Context context, NetworkParameters params, List<LockTime> lockTimes) {
+        String json = SerializeUtils.GSON.toJson(lockTimes);
+        String key = context.getString(R.string.pref_address_lock_times, params.getId());
+        setString(context, key, json);
+    }
+
+    public static void addLockTime(Context context, NetworkParameters params, LockTime lockTimeToAdd) {
+        List<LockTime> lockTimes = getLockTimes(context, params);
+        if (lockTimes == null) {
+            lockTimes = new ArrayList<>(1);
+        }
+        lockTimes.add(lockTimeToAdd);
+        setLockTimes(context, params, lockTimes);
     }
 
 }

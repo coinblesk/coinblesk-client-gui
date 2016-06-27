@@ -19,11 +19,12 @@ package com.coinblesk.payments.communications.steps.cltv;
 
 import android.support.annotation.Nullable;
 
+import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.client.models.TimeLockedAddressWrapper;
+import com.coinblesk.client.models.LockTime;
 import static com.google.common.base.Preconditions.checkState;
 
 import org.bitcoinj.core.Transaction;
@@ -81,10 +82,9 @@ public class PaymentFinalizeStep extends AbstractStep {
         for (int i = 0; i < numClientSigs; ++i) {
             TransactionInput txIn = transaction.getInput(i);
             byte[] hash = txIn.getConnectedOutput().getScriptPubKey().getPubKeyHash();
-            TimeLockedAddressWrapper redeemData = walletService.findTimeLockedAddressByHash(hash);
-            Script scriptSig = redeemData
-                    .getTimeLockedAddress()
-                    .createScriptSigBeforeLockTime(clientTxSignatures.get(i), serverTxSignatures.get(i));
+            TimeLockedAddress tla = walletService.findTimeLockedAddressByHash(hash);
+            Script scriptSig = tla.createScriptSigBeforeLockTime(
+                    clientTxSignatures.get(i), serverTxSignatures.get(i));
             txIn.setScriptSig(scriptSig);
             txIn.verify();
         }

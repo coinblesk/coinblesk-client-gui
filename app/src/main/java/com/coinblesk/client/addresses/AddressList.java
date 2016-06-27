@@ -31,9 +31,12 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.utils.SharedPrefUtils;
+
+import org.bitcoinj.core.NetworkParameters;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +51,7 @@ public class AddressList extends DialogFragment {
 
     private AddressListAdapter adapter;
     private RecyclerView recyclerView;
+    private NetworkParameters params;
 
     public static AddressList newInstance() {
         return new AddressList();
@@ -58,8 +62,10 @@ public class AddressList extends DialogFragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+        params = Constants.PARAMS;
         loadAddresses();
     }
 
@@ -67,7 +73,7 @@ public class AddressList extends DialogFragment {
         Log.d(TAG, "Load addresses from storage.");
         List<AddressBookItem> loadedItems;
         try {
-            loadedItems = SharedPrefUtils.getAddressBookItems(getContext());
+            loadedItems = SharedPrefUtils.getAddressBookItems(getContext(), params);
             Collections.sort(loadedItems);
         } catch (Exception e) {
             Log.w(TAG, "Could not load addresses: ", e);
