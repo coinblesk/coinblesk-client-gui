@@ -66,6 +66,9 @@ public interface CoinbleskWebService {
     @GET("v1/user/auth/get")
     Call<UserAccountTO> getAccount();
 
-    @GET("v1/user/auth/transfer-p2sh")
+    @POST("v1/user/auth/transfer-p2sh")
     Call<UserAccountTO> transferToP2SH(@Body BaseTO request);
+
+    @GET("v1/user/auth/logout")
+    Call<UserAccountStatusTO> logout();
 }

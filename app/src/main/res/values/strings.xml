@@ -177,21 +177,26 @@
 
 
     <!--Currency List Dialog-->
+    <string name="pref_balance_default_value">Bitcoin</string>
     <string name="pref_balance_title">Primary Balance</string>
     <string name="pref_balance_description">Change your balance representation.</string>
     <string name="pref_balance_dialog_title">Change primary balance.</string>
-
+    <string name="pref_balance_list">pref_balance_list</string>
 
 
     <!--Currency List Dialog-->
     <string name="pref_currency_title">Fiat Currency</string>
     <string name="pref_currency_description">Change your Currency.</string>
     <string name="pref_currency_dialog_title">Change your Currency.</string>
+    <string name="pref_currency_default_value">EUR</string>
+    <string name="pref_currency_list">pref_currency_list</string>
 
     <!--Bitcoin Representation List Dialog-->
     <string name="pref_bitcoin_rep_title">Bitcoin representation</string>
     <string name="pref_bitcoin_rep_dialog_title">Change the Bitcoin representation.</string>
     <string name="pref_bitcoin_rep_description">Change the Bitcoin representation for coinblesk.</string>
+    <string name="pref_bitcoin_rep_default_value">BTC</string>
+    <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
 
 
     <!--Transaction History List Dialog-->
@@ -207,6 +212,8 @@
     <string name="pref_connection_settings_summary">Define contactless payment protocols.</string>
     <string name="pref_connection_nfc_summary">Use NFC for Contactless Payment</string>
     <string name="pref_connection_nfc_title">Activate NFC</string>
+    <string name="pref_connection_settings">pref_connection_settings</string>
+
 
     <!--Transaction Fee-->
     <string name="pref_fee_description">Activate transaction fee when receiving a payment</string>
@@ -299,6 +306,8 @@
     <string name="pref_advanced_settings_category_title">Advanced</string>
     <string name="pref_network_dialog_title">Bitcoin Network</string>
     <string name="pref_network_description">Select the bitcoin network</string>
+    <string name="pref_network_default_value">main-net</string>
+    <string name="pref_network_list">pref_network_list</string>
     <string name="fragment_receive_title">Receive payment</string>
     <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
@@ -306,6 +315,8 @@
     <string name="pref_wallet_settings_title">Wallet Settings</string>
     <string name="pref_wallet_locktime_period_title">Locktime Period</string>
     <string name="pref_wallet_locktime_period_summary">Time span after which funds can be redeemed.</string>
+    <string name="pref_wallet_locktime_period_default">3</string> <!-- 3 months -->
+    <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
 
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>
@@ -324,7 +335,7 @@
     <string name="action_add">Add</string>
     <string name="addresses_msg_saved">Address saved.</string>
     <string name="addresses_msg_saved_error">Could not save address.</string>
-    <string name="addresses_msg_load_error">Could not load addresses%1$s</string>
+    <string name="addresses_msg_load_error">Could not load address%1$s</string>
     <string name="addresses_msg_removed">Address removed.</string>
     <string name="addresses_list_empty">The address list is empty.</string>
     <string name="aiddescription">Coinblesk InstantPayment</string>
@@ -372,13 +383,30 @@
     <!-- argument: currency symbol, e.g. EUR, CHF, ... -->
     <string name="pref_exchange_rate">pref_exchange_rate_%1$s</string>
 
+
+    <string name="pref_custom_buttons">pref_custom_buttons</string>
+    <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
     <string name="additional_services">Additional Services</string>
     <string name="additional_services_email">Email</string>
     <string name="additional_services_password">Password</string>
     <string name="signup">Sign Up</string>
-    <string name="edit_login">Login</string>
+    <string name="login_signup">Login/Signup</string>
+    <string name="login_logout">Login/Logout</string>
     <string name="additional_services_description">Additional services are not required for the core operations</string>
     <string name="additional_services_titel">Login for additional services</string>
+    <string name="jsessionid">jsessionid</string>
     <string name="additional_services_balance">Balance:</string>
-    <string name="additional_services_balance_default">0</string>
+    <string name="additional_services_balance_default">0 BTC</string>
+    <string name="logout">Logout</string>
+    <string name="additional_services_titel_logout">Logged in. Tap to Logout</string>
+    <string name="additional_services_description_2">Transfer your BTC from coinblesk 1 to current version</string>
+    <string name="additional_services_login_success">Login success</string>
+    <string name="additional_services_login_user_password_incorrect">Password/username incorrect</string>
+    <string name="additional_services_login_error">Login Error:</string>
+    <string name="additional_services_logout_success">Logged out</string>
+    <string name="additional_services_logout_error">Logout Error:</string>
+    <string name="additional_services_signup_error">Signup Error:</string>
+    <string name="additional_services_signup_success">Confirmation email sent</string>
+    <string name="additional_services_curr">BTC</string>
+    <string name="additional_services_no_balance">no balance</string>
 </resources>
