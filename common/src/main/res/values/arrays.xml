@@ -7,4 +7,84 @@
         <item>wifi-checked</item>
     </string-array>
 
+    <string-array name="pref_balance_values">
+        <item>Fiat Currency</item>
+        <item>Bitcoin</item>
+    </string-array>
+
+    <!--Official ISO 4217 currency codes http://www.currency-iso.org/dam/downloads/lists/list_one.xml-->
+    <string-array name="pref_currency_entries">
+        <item>Euro (EUR)</item>
+        <item>Swiss Franc (CHF)</item>
+        <item>US Dollar (USD)</item>
+    </string-array>
+
+    <string-array name="pref_currency_values">
+        <item>EUR</item>
+        <item>CHF</item>
+        <item>USD</item>
+    </string-array>
+
+    <!--Bitcoin Representation Settings-->
+    <string-array name="pref_bitcoin_rep_entries">
+        <item>Bitcoin (BTC)</item>
+        <item>milli-Bitcoin (mBTC)</item>
+        <item>micro-Bitcoin (μBTC)</item>
+    </string-array>
+    <string-array name="pref_bitcoin_rep_values">
+        <item>BTC</item>
+        <item>mBTC</item>
+        <item>μBTC</item>
+    </string-array>
+
+    <!--Transaction History Settings-->
+    <string-array name="pref_transaction_history_values">
+        <item>5</item>
+        <item>10</item>
+        <item>50</item>
+        <item>Show all transactions</item>
+    </string-array>
+
+    <!--Connection Settings-->
+    <string-array name="pref_connection_entries">
+        <item>NFC</item>
+        <item>Bluetooth LE</item>
+        <item>WiFi Direct</item>
+    </string-array>
+    <string-array name="pref_connection_values">
+        <item>nfc-checked</item>
+        <item>bt-checked</item>
+        <item>wifi-checked</item>
+    </string-array>
+
+
+    <!--Empty Array-->
+    <string-array name="empty_array"></string-array>
+
+    <!--Network Settings-->
+    <string-array name="pref_network_values">
+        <item>main-net</item>
+        <item>test-net-3</item>
+    </string-array>
+    <string-array name="pref_network_entries">
+        <item>MainNet</item>
+        <item>TestNet3</item>
+    </string-array>
+
+
+    <!-- Locktime periods -->
+    <string-array name="pref_wallet_locktime_periods_entries">
+        <item>1 Month</item>
+        <item>3 Months</item>
+        <item>6 Months</item>
+        <item>12 Months</item>
+    </string-array>
+    <string-array name="pref_wallet_locktime_periods_values">
+        <!-- Values: in months -->
+        <item>1</item>
+        <item>3</item>
+        <item>6</item>
+        <item>12</item>
+    </string-array>
+
 </resources>

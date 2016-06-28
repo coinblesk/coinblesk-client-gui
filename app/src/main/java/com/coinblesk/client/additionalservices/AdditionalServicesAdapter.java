@@ -50,8 +50,8 @@ public class AdditionalServicesAdapter extends ArrayAdapter<String> {
                     convertView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            new AdditionalServicesUsernameDialog()
-                                    .setData(activity, listener)
+                            AdditionalServicesUsernameDialog a = new AdditionalServicesUsernameDialog();
+                            a.setData(listener)
                                     .show(((Activity) getContext()).getFragmentManager(), TAG);
                         }
                     });

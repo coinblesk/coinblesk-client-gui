@@ -168,7 +168,7 @@ public final class SharedPrefUtils {
     }
 
     public static String getBitcoinScalePrefix(Context context) {
-        return getString(context, context.getResources().getString(R.string.pref_bitcoin_rep_list), null);
+        return getString(context, context.getResources().getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
     }
 
     public static int getLockTimePeriodMonths(Context context) {
