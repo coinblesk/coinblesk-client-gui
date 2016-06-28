@@ -53,7 +53,11 @@ public final class Constants {
     /* create new address if current expires in less than this timespan */
     public final static long MIN_LOCKTIME_SPAN_SECONDS = 60*60*24 * 14;
 
-    public static String WALLET_FILES_PREFIX = "mainnet_wallet_";
+    public static final String SHARED_PREFERENCES_NAME = "coinblesk_preferences";
+
+    public static String WALLET_FILES_PREFIX = null;
+    public static final String WALLET_FILES_PREFIX_TEST = "coinblesk_testnet";
+    public static final String WALLET_FILES_PREFIX_MAIN = "coinblesk_mainnet";
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
     public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";

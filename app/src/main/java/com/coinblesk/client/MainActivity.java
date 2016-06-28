@@ -137,18 +137,17 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        PreferenceManager.setDefaultValues(this, R.xml.settings_pref, false);
+        SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
 
         final String networkSettings = SharedPrefUtils.getNetwork(this);
         switch (networkSettings) {
             case "test-net-3":
-                Constants.WALLET_FILES_PREFIX = "testnet_wallet_";
+                Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
                 Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
                 Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
                 break;
             case "main-net":
-                Constants.WALLET_FILES_PREFIX = "mainnet_wallet_";
+                Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
                 Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
                 Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
                 break;
@@ -161,9 +160,6 @@ public class MainActivity extends AppCompatActivity
                 .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
 
         AdditionalServiceUtils.setSessionID(this, null);
-
-        File objectStorageDir = new File(this.getFilesDir(), Constants.WALLET_FILES_PREFIX + "_uuid_object_storage");
-        objectStorageDir.mkdirs();
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
         upgradeUtils.checkUpgrade(this);

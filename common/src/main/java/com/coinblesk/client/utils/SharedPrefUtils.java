@@ -23,6 +23,7 @@ import android.preference.PreferenceManager;
 import android.util.Base64;
 
 import com.coinblesk.client.common.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.models.LockTime;
 import com.coinblesk.util.SerializeUtils;
@@ -33,6 +34,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,14 +52,34 @@ public final class SharedPrefUtils {
     // prevent instances
     private SharedPrefUtils() {}
 
+    public static String getSharedPreferencesName() {
+        return Constants.SHARED_PREFERENCES_NAME;
+    }
+
+    public static int getSharedPreferencesMode() {
+        return Context.MODE_PRIVATE;
+    }
+
+    public static File getSharedPreferencesFile(Context context) {
+        String fileName = getSharedPreferencesName() + ".xml";
+        File sharedPrefs = new File(context.getApplicationInfo().dataDir, "shared_prefs");
+        return new File(sharedPrefs, fileName);
+    }
+
+    public static void initDefaults(Context context, int resId, boolean readAgain) {
+        PreferenceManager.setDefaultValues(
+                context,
+                getSharedPreferencesName(),
+                getSharedPreferencesMode(),
+                resId,
+                readAgain);
+    }
+
     private static SharedPreferences preferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
+        return context.getSharedPreferences(getSharedPreferencesName(), getSharedPreferencesMode());
+        //return PreferenceManager.getDefaultSharedPreferences(context);
     }
-/*
-    private static SharedPreferences preferences(Context context, String name, int mode) {
-        return context.getSharedPreferences(name, mode);
-    }
-*/
+
     private static String getString(Context context, String key, String defaultValue) {
         return preferences(context).getString(key, defaultValue);
     }
@@ -201,11 +223,11 @@ public final class SharedPrefUtils {
     }
 
     public static void enableMultisig2of2ToCltvForwarder(Context context) {
-        setBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), true);
+        setBoolean(context, context.getString(R.string.pref_multisig_2of2_to_cltv), true);
     }
 
     public static boolean isMultisig2of2ToCltvForwardingEnabled(Context context) {
-        return getBoolean(context, context.getResources().getString(R.string.pref_multisig_2of2_to_cltv), false);
+        return getBoolean(context, context.getString(R.string.pref_multisig_2of2_to_cltv), false);
     }
 
     public static List<AddressBookItem> getAddressBookItems(Context context, NetworkParameters params) {
@@ -252,15 +274,15 @@ public final class SharedPrefUtils {
 
     public static void setClientKey(Context context, NetworkParameters params, ECKey clientKey) {
         String key = context.getString(R.string.pref_client_private_key, params.getId());
+        // for safety, we store the old value (i.e. do not overwrite key data)
+        archiveKey(context, key);
+
         if (clientKey == null) {
-            setBytes(context, key, null);
+            preferences(context).edit().remove(key).commit();
         }
         if (!clientKey.hasPrivKey()) {
             throw new IllegalArgumentException("ClientKey does not have private key.");
         }
-
-        // for safety, we store the old value (i.e. do not overwrite key data)
-        archiveKey(context, key);
 
         setBytes(context, key, clientKey.getPrivKeyBytes());
     }
@@ -285,15 +307,15 @@ public final class SharedPrefUtils {
 
     public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey) {
         String key = context.getString(R.string.pref_server_public_key, params.getId());
+        // copy current key.
+        archiveKey(context, key);
+
         if (serverKey == null) {
-            setBytes(context, key, null);
+            preferences(context).edit().remove(key).commit();
         }
         if (serverKey.hasPrivKey()) {
             throw new IllegalArgumentException("ServerKey should not have private key. Wrong key?");
         }
-
-        // copy current key.
-        archiveKey(context, key);
 
         setBytes(context, key, serverKey.getPubKey());
     }

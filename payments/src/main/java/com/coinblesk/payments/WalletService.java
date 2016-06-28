@@ -19,10 +19,8 @@ package com.coinblesk.payments;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -91,7 +89,6 @@ import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -159,7 +156,7 @@ public class WalletService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "onCreate - network parameters: " + Constants.PARAMS.getId());
         ClientUtils.fixECKeyComparator();
         initLogging();
 
@@ -169,6 +166,7 @@ public class WalletService extends Service {
         initExchangeRate();
 
         walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+        Log.d(TAG, "Wallet file: " + walletFile + ", already exists: " + walletFile.exists());
         kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
             protected void onSetupCompleted() {
@@ -257,11 +255,15 @@ public class WalletService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "onDestroy - shutdown wallet service");
+        Log.i(TAG, "onDestroy");
+        shutdownService();
+    }
 
+    private void shutdownService() {
+        Log.d(TAG, "Shutdown wallet service.");
         stopPeerGroup();
-        closeBlockChain();
-        shutdownWallet();
+        stopBlockChain();
+        stopWallet();
 
         kit = null;
         scheduledPeerGroupShutdown = null;
@@ -285,7 +287,7 @@ public class WalletService extends Service {
         }
     }
 
-    private void closeBlockChain() {
+    private void stopBlockChain() {
         try {
             if (blockStore != null) {
                 blockStore.close();
@@ -299,10 +301,13 @@ public class WalletService extends Service {
         }
     }
 
-    private void shutdownWallet() {
+    private void stopWallet() {
         try {
-            wallet.saveToFile(walletFile);
-            Log.d(TAG, "Wallet saved to file: " + walletFile);
+            if (wallet != null) {
+                wallet.saveToFile(walletFile);
+                wallet.shutdownAutosaveAndWait();
+                Log.d(TAG, "Wallet saved to file: " + walletFile);
+            }
         } catch (Exception e) {
             Log.w(TAG, "Could not shutdown wallet: ", e);
         } finally {
@@ -1181,6 +1186,11 @@ public class WalletService extends Service {
             wallet.delete();
         }
 
+        public void requestServiceShutdown() {
+            shutdownService();
+            stopSelf();
+        }
+
         public boolean isReady() {
             return wallet != null;
         }
@@ -1218,6 +1228,8 @@ public class WalletService extends Service {
         @Override
         public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
             if (progress >= 100.0) {
+                // we do not broadcast during wallet download because this would trigger
+                // a broadcast with every block (since the height/confidence changes).
                 broadcastConfidenceChanged(tx.getHashAsString());
             }
         }

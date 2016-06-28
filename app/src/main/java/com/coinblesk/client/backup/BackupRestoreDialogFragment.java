@@ -48,6 +48,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -160,6 +163,30 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         }
     }
 
+    private void cleanupBeforeRestore() {
+        stopWalletService();
+
+        // clear fiels directory (by moving everything to an archive folder)
+
+        File filesDir = getActivity().getFilesDir();
+        File archiveDir = new File(filesDir, "archive_" + System.currentTimeMillis());
+        File[] filesInFilesDir = filesDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                // exclude archive dirs
+                return !filename.startsWith("archive_");
+            }
+        });
+        for (File file : filesInFilesDir) {
+            try {
+                FileUtils.moveToDirectory(file, archiveDir, true);
+                Log.d(TAG, "Moved file '"+file+"' to '"+archiveDir+"'");
+            } catch (IOException e) {
+                Log.w(TAG, "Could not move file: " + file.toString());
+            }
+        }
+    }
+
     private void restore() {
         final String password = txtPassword.getText().toString();
         final File selectedBackupFile = (File) backupFilesList.getSelectedItem();
@@ -168,11 +195,14 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         Preconditions.checkState(selectedBackupFile != null && selectedBackupFile.exists());
 
         try {
+            cleanupBeforeRestore();
+
             final String encryptedBackup = Files.toString(selectedBackupFile, Charsets.UTF_8);
             final byte[] decryptedBackup = EncryptionUtils.decryptBytes(encryptedBackup, password.toCharArray());
             Log.d(TAG, String.format("Decrypted backup file: [%s] (%d bytes)", selectedBackupFile, decryptedBackup.length));
 
             extractZip(decryptedBackup);
+
             cleanupAfterRestore();
 
         } catch (Exception e) {
@@ -245,7 +275,8 @@ public class BackupRestoreDialogFragment extends DialogFragment {
     private void extractFromZipAndSaveToFile(ZipInputStream zis, ZipEntry ze) throws IOException {
         byte[] data = extractFileFromZip(zis);
         String filename = ze.getName();
-        File toFile = new File(getActivity().getFilesDir(), filename);
+        File root = new File(getActivity().getApplicationInfo().dataDir);
+        File toFile = new File(root, filename);
         saveToFile(toFile, data);
         Log.i(TAG, "Extracted file from backup: ["+filename+"] -> ["+toFile+"]");
     }
@@ -296,11 +327,14 @@ public class BackupRestoreDialogFragment extends DialogFragment {
     }
 
     private void cleanupAfterRestore() {
-        walletServiceBinder.prepareWalletReset();
-        Intent intent = new Intent(getActivity(), WalletService.class);
-        getActivity().stopService(intent);
         dismiss();
         getActivity().finishAffinity();
+        // must kill process in order to force refresh of the shared preferences
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+    private void stopWalletService() {
+        walletServiceBinder.requestServiceShutdown();
     }
 
     private void clearPasswordInput() {

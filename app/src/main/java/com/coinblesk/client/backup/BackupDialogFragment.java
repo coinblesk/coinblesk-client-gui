@@ -40,6 +40,7 @@ import android.widget.TextView;
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.EncryptionUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.payments.WalletService;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -47,6 +48,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.zip.ZipEntry;
@@ -205,15 +207,23 @@ public class BackupDialogFragment extends DialogFragment {
     }
 
     private void addFilesToZip(ZipOutputStream zos) throws IOException {
-        // all files (recursive) in filesDir
-        File root = getActivity().getFilesDir();
-        Collection<File> files = FileUtils.listFiles(root, null, true);
-        Log.d(TAG, String.format("Found %d files in directory [%s]", files.size(), root));
-        for (File f : files) {
-            byte[] data = FileUtils.readFileToByteArray(f);
-            String zipName = stripParentPath(f, root);
+        File root = new File(getActivity().getApplicationInfo().dataDir);
+        Collection<File> filesToBackup = filesToBackup();
+        for (File file : filesToBackup) {
+            byte[] data = FileUtils.readFileToByteArray(file);
+            String zipName = stripParentPath(file, root);
             addZipEntry(zipName, data, zos);
         }
+    }
+
+    private Collection<File> filesToBackup() {
+        // all files (recursive) in filesDir
+        //File root = getActivity().getFilesDir();
+        //Collection<File> files = FileUtils.listFiles(root, null, true);
+        Collection<File> files = new ArrayList<File>();
+        files.add(SharedPrefUtils.getSharedPreferencesFile(getContext()));
+        //Log.d(TAG, String.format("Found %d files in directory [%s]", files.size(), root));
+        return files;
     }
 
     private String stripParentPath(File file, File parent) {

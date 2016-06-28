@@ -45,14 +45,17 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
 
 
         if (getFragmentManager().findFragmentById(R.id.fragment_settings) == null) {
-            getFragmentManager().beginTransaction()
-                    .add(R.id.fragment_settings,
-                            new Prefs()).commit();
+            getFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.fragment_settings, new Prefs())
+                    .commit();
         }
     }
 
@@ -60,6 +63,9 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            getPreferenceManager().setSharedPreferencesName(SharedPrefUtils.getSharedPreferencesName());
+            getPreferenceManager().setSharedPreferencesMode(SharedPrefUtils.getSharedPreferencesMode());
+
             addPreferencesFromResource(R.xml.settings_pref);
 
             initRestartAfterNetworkChange();
