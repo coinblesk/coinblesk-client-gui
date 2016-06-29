@@ -79,6 +79,7 @@ import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletProtobufSerializer;
 import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.slf4j.LoggerFactory;
@@ -165,7 +166,7 @@ public class WalletService extends Service {
 
         initExchangeRate();
 
-        walletFile = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+        walletFile = walletFile();
         Log.d(TAG, "Wallet file: " + walletFile + ", already exists: " + walletFile.exists());
         kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
             @Override
@@ -218,6 +219,14 @@ public class WalletService extends Service {
         Log.d(TAG, "Wallet started");
     }
 
+    private File walletFile() {
+        return new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+    }
+
+    private File blockChainFile() {
+        return new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -256,10 +265,10 @@ public class WalletService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "onDestroy");
-        shutdownService();
+        shutdownWalletService();
     }
 
-    private void shutdownService() {
+    private void shutdownWalletService() {
         Log.d(TAG, "Shutdown wallet service.");
         stopPeerGroup();
         stopBlockChain();
@@ -268,7 +277,11 @@ public class WalletService extends Service {
         kit = null;
         scheduledPeerGroupShutdown = null;
 
-        // TODO: should we clear more fields? address list, keys, ...
+        multisigClientKey = null;
+        multisigServerKey = null;
+
+        addressHashes.clear();
+        addresses.clear();
     }
 
     private void stopPeerGroup() {
@@ -375,6 +388,7 @@ public class WalletService extends Service {
         wallet.addCoinsSentEventListener(walletEventListener);
         wallet.addTransactionConfidenceEventListener(walletEventListener);
         wallet.addScriptsChangeEventListener(walletEventListener);
+        wallet.addChangeEventListener(walletEventListener);
     }
 
     private void setChainCheckpoints() {
@@ -795,6 +809,17 @@ public class WalletService extends Service {
         return signatures;
     }
 
+    private boolean deleteBlockChainFile() {
+        File chainFile = blockChainFile();
+        if (chainFile.delete()) {
+            Log.i(TAG, "Deleted blockchain file: " + chainFile.toString());
+            return true;
+        } else {
+            Log.w(TAG, "Blockchain file could not be deleted: " + chainFile.toString());
+            return false;
+        }
+    }
+
     private CoinbleskWebService coinbleskService() {
         return Constants.RETROFIT.create(CoinbleskWebService.class);
     }
@@ -842,10 +867,28 @@ public class WalletService extends Service {
         getLocalBroadcaster().sendBroadcast(scriptsChanged);
     }
 
-    private void broadcastConfidenceChanged(final String txHash) {
-        Intent txChanged = new Intent(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-        txChanged.putExtra("transactionHash", txHash);
+    private void broadcastConfidenceChanged(Transaction tx) {
+        Intent txChanged = new Intent(Constants.WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION);
+        txChanged.putExtra("transactionHash", tx.getHashAsString());
         getLocalBroadcaster().sendBroadcast(txChanged);
+    }
+
+    private void broadcastWalletChanged() {
+        Intent walletChanged = new Intent(Constants.WALLET_CHANGED_ACTION);
+        getLocalBroadcaster().sendBroadcast(walletChanged);
+    }
+
+    private void broadcastDownloadDone() {
+        Intent walletProgress = new Intent(Constants.WALLET_DOWNLOAD_DONE_ACTION);
+        getLocalBroadcaster().sendBroadcast(walletProgress);
+    }
+
+    private void broadcastDownloadProgress(double pct, int blocksToGo, Date date) {
+        Intent walletProgress = new Intent(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
+        walletProgress.putExtra("progress", pct);
+        walletProgress.putExtra("blocksToGo", blocksToGo);
+        walletProgress.putExtra("blockDate", date);
+        getLocalBroadcaster().sendBroadcast(walletProgress);
     }
 
     private void broadcastExchangeRateChanged() {
@@ -1168,46 +1211,37 @@ public class WalletService extends Service {
             return proto.toByteArray();
         }
 
-        public void prepareWalletReset() {
+        /**
+         *
+         *
+         * Important: quit app and reload such that app and service is initialized again
+         */
+        public void resetWallet() {
             Log.i(TAG, "Wallet reset");
+            // clear transactions
             wallet.reset();
-            // delete chain file - this triggers re-downloading the chain (wallet replay) in the next start
-            kit.stopAsync().awaitTerminated();
-            blockStore = null;
-            File blockstore = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
-            if (blockstore.delete()) {
-                Log.i(TAG, "Deleted blockchain file: " + blockstore.toString());
-            }
-            stopSelf();
-        }
+            requestServiceShutdown();
 
-        public void deleteWalletFile() {
-            File wallet = new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
-            wallet.delete();
+            // delete chain file - this triggers re-creating and re-downloading the chain
+            // (wallet replay) in the next start
+            deleteBlockChainFile();
         }
 
         public void requestServiceShutdown() {
-            shutdownService();
+            shutdownWalletService();
             stopSelf();
         }
 
         public boolean isReady() {
             return wallet != null;
         }
-
-        public double getProgress() {
-            return progress;
-        }
-
-        public LocalBroadcastManager getLocalBroadcastManager(){
-            return LocalBroadcastManager.getInstance(WalletService.this);
-        }
     }
 
     private class CoinbleskWalletEventListener implements WalletCoinsReceivedEventListener,
                                                           WalletCoinsSentEventListener,
                                                           ScriptsChangeEventListener,
-                                                          TransactionConfidenceEventListener {
+                                                          TransactionConfidenceEventListener,
+                                                          WalletChangeEventListener {
         @Override
         public void onCoinsReceived(Wallet w, Transaction tx, Coin prevBalance, Coin newBalance) {
             broadcastBalanceChanged();
@@ -1226,12 +1260,13 @@ public class WalletService extends Service {
         }
 
         @Override
-        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            if (progress >= 100.0) {
-                // we do not broadcast during wallet download because this would trigger
-                // a broadcast with every block (since the height/confidence changes).
-                broadcastConfidenceChanged(tx.getHashAsString());
-            }
+        public void onWalletChanged(Wallet wallet) {
+            broadcastWalletChanged();
+        }
+
+        @Override
+        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {;
+            broadcastConfidenceChanged(tx);
         }
     }
 
@@ -1244,20 +1279,14 @@ public class WalletService extends Service {
         }
 
         @Override
-        public void progress(double pct, int blocksSoFar, Date date) {
-            super.progress(pct, blocksSoFar, date);
+        public void progress(double pct, int blocksToGo, Date date) {
+            super.progress(pct, blocksToGo, date);
             Log.d(TAG, "DownloadListener - progress: " + pct
-                    + ", blocks to go: " + blocksSoFar
+                    + ", blocks to go: " + blocksToGo
                     + ", date: " + org.bitcoinj.core.Utils.dateTimeFormat(date));
             progress = pct;
 
-            Intent walletProgress = new Intent(Constants.WALLET_PROGRESS_ACTION);
-            walletProgress.putExtra("progress", pct);
-            walletProgress.putExtra("blocksSoFar", blocksSoFar);
-            walletProgress.putExtra("date", date);
-            LocalBroadcastManager
-                    .getInstance(WalletService.this)
-                    .sendBroadcast(walletProgress);
+            broadcastDownloadProgress(pct, blocksToGo, date);
         }
 
         @Override
@@ -1266,10 +1295,7 @@ public class WalletService extends Service {
             Log.i(TAG, "DownloadListener - doneDownload");
             progress = 100.0;
 
-            Intent walletProgress = new Intent(Constants.WALLET_READY_ACTION);
-            LocalBroadcastManager
-                    .getInstance(WalletService.this)
-                    .sendBroadcast(walletProgress);
+            broadcastDownloadDone();
         }
     }
 }

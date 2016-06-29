@@ -96,4 +96,9 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     public int getItemCount() {
         return transactionWrappers.size();
     }
+
+    public List<TransactionWrapper> getItems() {
+        return transactionWrappers;
+    }
+
 }

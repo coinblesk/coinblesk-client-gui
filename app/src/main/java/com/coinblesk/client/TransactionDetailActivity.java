@@ -51,6 +51,11 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 
+/**
+ * @author ckiller
+ * @author Andreas Albrecht
+ * @author Alessandro De Carli
+ */
 public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
     public static final String ARGS_TRANSACTION_HASH = "transaction_hash";
@@ -88,14 +93,19 @@ public class TransactionDetailActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         Intent intent = new Intent(this, WalletService.class);
-        this.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION);
+        filter.addAction(Constants.WALLET_INIT_DONE_ACTION);
+        filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        unbindService(serviceConnection);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
-        this.unbindService(serviceConnection);
     }
 
     @Override
@@ -252,9 +262,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            filter.addAction(Constants.WALLET_READY_ACTION);
-            LocalBroadcastManager.getInstance(TransactionDetailActivity.this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
 
             if(walletServiceBinder.isReady()){
                 updateTransactionDetails();

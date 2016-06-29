@@ -27,6 +27,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,14 +38,18 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.client.models.TransactionWrapper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Created by ckiller
+ * @author ckiller
+ * @author Andreas Albrecht
  */
 
 public class HistoryFragment extends android.support.v4.app.Fragment {
 
     private RecyclerView recyclerView;
+    private TransactionWrapperRecyclerViewAdapter transactionAdapter;
+    private WalletService.WalletServiceBinder walletServiceBinder;
 
     @Nullable
     @Override
@@ -53,34 +58,52 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
         recyclerView = (RecyclerView) view.findViewById(R.id.txhistoryview);
         View empty = view.findViewById(R.id.txhistory_emptyview);
         recyclerView.setEmptyView(empty);
-        recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(new ArrayList<TransactionWrapper>()));
+        transactionAdapter = new TransactionWrapperRecyclerViewAdapter(new ArrayList<TransactionWrapper>());
+        recyclerView.setAdapter(transactionAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
 
         return view;
     }
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
-    private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver walletChangedBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(walletServiceBinder.getTransactionsByTime()));
+            updateTransactions();
         }
     };
 
-    private WalletService.WalletServiceBinder walletServiceBinder;
+    private void updateTransactions() {
+        if (walletServiceBinder == null) {
+            return; // service not connected yet.
+        }
+
+        List<TransactionWrapper> transactions = walletServiceBinder.getTransactionsByTime();
+        transactionAdapter.getItems().clear();
+        transactionAdapter.getItems().addAll(transactions);
+        transactionAdapter.notifyDataSetChanged();
+        Log.d(getClass().getName(), "Transaction history updated.");
+    }
 
     @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
-        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(getActivity(), WalletService.class);
+        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
+        filter.addAction(Constants.WALLET_COINS_SENT_ACTION);
+        filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
+        filter.addAction(Constants.WALLET_INIT_DONE_ACTION);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(walletChangedBroadcastReceiver, filter);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        this.getActivity().unbindService(serviceConnection);
-        LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).unregisterReceiver(walletBalanceChangeBroadcastReceiver);
+        getActivity().unbindService(serviceConnection);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(walletChangedBroadcastReceiver);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -88,12 +111,8 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            filter.addAction(Constants.WALLET_READY_ACTION);
-            filter.addAction(Constants.EXCHANGE_RATE_CHANGED_ACTION);
 
-            LocalBroadcastManager.getInstance(HistoryFragment.this.getActivity()).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
-            recyclerView.setAdapter(new TransactionWrapperRecyclerViewAdapter(walletServiceBinder.getTransactionsByTime()));
+            updateTransactions();
         }
 
         @Override

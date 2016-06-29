@@ -63,12 +63,13 @@ public final class Constants {
     public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";
 
     // communication via broadcast receiver, these are the actions
-    public final static String WALLET_READY_ACTION = "WALLET_READY_ACTION";
+    public final static String WALLET_DOWNLOAD_DONE_ACTION = "WALLET_DOWNLOAD_DONE_ACTION";
     public final static String WALLET_ERROR_ACTION = "WALLET_ERROR_ACTION";
     public final static String WALLET_INIT_DONE_ACTION = "WALLET_INIT_DONE_ACTION";
-    public final static String WALLET_PROGRESS_ACTION = "WALLET_PROGRESS_ACTION";
+    public final static String WALLET_DOWNLOAD_PROGRESS_ACTION = "WALLET_DOWNLOAD_PROGRESS_ACTION";
     public final static String WALLET_BALANCE_CHANGED_ACTION = "WALLET_BALANCE_CHANGED_ACTION";
-    public final static String WALLET_TRANSACTIONS_CHANGED_ACTION = "WALLET_TRANSACTIONS_CHANGED_ACTION";
+    public final static String WALLET_CHANGED_ACTION = "WALLET_CHANGED_ACTION";
+    public final static String WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION = "WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION";
     public final static String WALLET_SCRIPTS_CHANGED_ACTION = "WALLET_SCRIPTS_CHANGED_ACTION";
     public static final String WALLET_INSUFFICIENT_BALANCE_ACTION = "WALLET_INSUFFICIENT_BALANCE_ACTION";
     public static final String WALLET_COINS_SENT_ACTION = "WALLET_COINS_SENT_ACTION";

@@ -78,7 +78,7 @@
     <string name="backup_refresh_content_description">Refresh your wallet</string>
     <string name="backup_refresh_dialog_title">Refresh Wallet</string>
     <string name="backup_refresh_dialog_message">If you continue the transaction history and wallet balance will be
-        cleared temporarily. Replaying the blockchain may take a while.
+        cleared temporarily. Replaying the blockchain may take a while. If you proceed, the app must be restarted.
     </string>
 
     <string name="fragment_backup_title">Backup Wallet</string>

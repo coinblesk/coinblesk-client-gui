@@ -19,13 +19,8 @@ package com.coinblesk.client.backup;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -36,7 +31,6 @@ import android.view.View;
 
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.AppUtils;
-import com.coinblesk.payments.WalletService;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -80,9 +74,6 @@ public class BackupActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart");
-        Intent intent = new Intent(this, WalletService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-
         checkAndRequestPermissions();
     }
 
@@ -90,7 +81,6 @@ public class BackupActivity extends AppCompatActivity {
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop");
-        unbindService(serviceConnection);
     }
 
     private class BackupClickListener implements View.OnClickListener {
@@ -105,12 +95,6 @@ public class BackupActivity extends AppCompatActivity {
         }
     }
 
-    private void showBackupDialog() {
-        FragmentManager fm = getSupportFragmentManager();
-        DialogFragment backupDialog = BackupDialogFragment.newInstance();
-        backupDialog.show(fm, "fragment_backup_dialog");
-    }
-
     private class RestoreClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
@@ -123,12 +107,6 @@ public class BackupActivity extends AppCompatActivity {
         }
     }
 
-    private void showRestoreDialog() {
-        FragmentManager fm = getSupportFragmentManager();
-        DialogFragment restoreDialog = BackupRestoreDialogFragment.newInstance();
-        restoreDialog.show(fm, "fragment_backup_restore_dialog");
-    }
-
     private class RefreshClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
@@ -137,40 +115,23 @@ public class BackupActivity extends AppCompatActivity {
         }
     }
 
-    private void showRefreshDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(BackupActivity.this)
-                .setTitle(R.string.backup_refresh_dialog_title)
-                .setMessage(R.string.backup_refresh_dialog_message)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        walletServiceBinder.prepareWalletReset();
-                        dialog.dismiss();
-                        // close app such that wallet service is "restarted".
-                        finishAffinity();
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        AlertDialog dialog = builder.create();
-        dialog.show();
+    private void showBackupDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment backupDialog = BackupDialogFragment.newInstance();
+        backupDialog.show(fm, "fragment_backup_dialog");
     }
 
-    private WalletService.WalletServiceBinder walletServiceBinder;
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
+    private void showRestoreDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment restoreDialog = BackupRestoreDialogFragment.newInstance();
+        restoreDialog.show(fm, "fragment_backup_restore_dialog");
+    }
 
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder binder) {
-            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            walletServiceBinder = null;
-        }
-    };
+    private void showRefreshDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment refreshDialog = RefreshDialogFragment.newInstance();
+        refreshDialog.show(fm, "fragment_refresh_dialog");
+    }
 
     private void checkAndRequestPermissions() {
         if (!AppUtils.hasPermissions(this, BACKUP_RESTORE_PERMISSIONS)) {

@@ -126,14 +126,22 @@ public class CurrentBalanceFragment extends Fragment {
     private BroadcastReceiver walletProgressBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final double progress = intent.getExtras().getDouble("progress",100);
-            if(getView() != null) {
-                if (progress < 100) {
-                    getView().findViewById(R.id.walletSyncProgressBar).setVisibility(View.VISIBLE);
-                    ((ProgressBar) getView().findViewById(R.id.walletSyncProgressBar)).setProgress((int) progress);
-                } else {
-                    getView().findViewById(R.id.walletSyncProgressBar).setVisibility(View.GONE);
-                }
+            if(getView() == null) return;
+
+            ProgressBar progressBar = (ProgressBar) getView().findViewById(R.id.walletSyncProgressBar);
+            switch (intent.getAction()) {
+                case Constants.WALLET_DOWNLOAD_PROGRESS_ACTION:
+                    double progress = intent.getExtras().getDouble("progress", 100.0);
+                    if (progress < 100) {
+                        progressBar.setVisibility(View.VISIBLE);
+                        progressBar.setProgress((int) progress);
+                    } else {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                    break;
+                case Constants.WALLET_DOWNLOAD_DONE_ACTION:
+                    progressBar.setVisibility(View.GONE);
+                    break;
             }
         }
     };
@@ -161,11 +169,10 @@ public class CurrentBalanceFragment extends Fragment {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             final LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
             IntentFilter balanceIntentFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
-            //balanceIntentFilter.addAction(Constants.WALLET_TRANSACTIONS_CHANGED_ACTION);
-            //balanceIntentFilter.addAction(Constants.WALLET_READY_ACTION);
             broadcastManager.registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
 
-            IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_PROGRESS_ACTION);
+            IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
+            walletProgressIntentFilter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
             broadcastManager.registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
 
             if (walletServiceBinder.isReady()) {
