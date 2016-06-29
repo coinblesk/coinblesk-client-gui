@@ -19,13 +19,14 @@ package com.coinblesk.client.backup;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.*;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.FileProvider;
 import android.text.Editable;
 import android.text.Html;
@@ -37,16 +38,22 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.EncryptionUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
-import com.coinblesk.payments.WalletService;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+
 import org.apache.commons.io.FileUtils;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,8 +77,6 @@ public class BackupDialogFragment extends DialogFragment {
 
     private final static String TAG = BackupDialogFragment.class.getName();
     private final static String ARGS_BACKUP_FILE = "backup_file";
-
-    private WalletService.WalletServiceBinder walletServiceBinder;
 
     private EditText txtPassword;
     private EditText txtPasswordAgain;
@@ -157,7 +162,7 @@ public class BackupDialogFragment extends DialogFragment {
     }
 
     private void backup() {
-        final File backupFile = getWalletBackupFileName();
+        final File backupFile = newWalletBackupFile();
         final String password = txtPassword.getText().toString();
         Preconditions.checkState(password.equals(txtPasswordAgain.getText().toString()) && password.length() > 0);
         clearPasswordInput();
@@ -178,10 +183,10 @@ public class BackupDialogFragment extends DialogFragment {
             fileOut = new OutputStreamWriter(new FileOutputStream(backupFile), Charsets.UTF_8);
             fileOut.write(encryptedBackup);
             fileOut.flush();
-            Log.i(TAG, "Wallet backup finished. File = [" + backupFile + "]");
+            Log.i(TAG, "Wallet backup finished. File = [" + backupFile + "], size = " + backupFile.length() + "bytes, exists = " + backupFile.exists());
 
             // ask user whether he wants backup file as mail attachment
-            showSendMailDialog(backupFile);
+            showBackupCompletedDialog(backupFile);
 
         } catch (Exception e) {
             Log.w(TAG, "Could not write to file", e);
@@ -207,22 +212,19 @@ public class BackupDialogFragment extends DialogFragment {
     }
 
     private void addFilesToZip(ZipOutputStream zos) throws IOException {
-        File root = new File(getActivity().getApplicationInfo().dataDir);
+        File appRoot = new File(getActivity().getApplicationInfo().dataDir);
         Collection<File> filesToBackup = filesToBackup();
         for (File file : filesToBackup) {
             byte[] data = FileUtils.readFileToByteArray(file);
-            String zipName = stripParentPath(file, root);
+            String zipName = stripParentPath(file, appRoot);
             addZipEntry(zipName, data, zos);
+            Log.i(TAG, "Added file to zip: app["+file.toString()+"] -> backup["+zipName+"]");
         }
     }
 
     private Collection<File> filesToBackup() {
-        // all files (recursive) in filesDir
-        //File root = getActivity().getFilesDir();
-        //Collection<File> files = FileUtils.listFiles(root, null, true);
-        Collection<File> files = new ArrayList<File>();
+        Collection<File> files = new ArrayList<>();
         files.add(SharedPrefUtils.getSharedPreferencesFile(getContext()));
-        //Log.d(TAG, String.format("Found %d files in directory [%s]", files.size(), root));
         return files;
     }
 
@@ -241,10 +243,9 @@ public class BackupDialogFragment extends DialogFragment {
         zos.write(data);
         zos.closeEntry();
         zos.flush();
-        Log.i(TAG, "Added file to zip: ["+filename+"]");
     }
 
-    private File getWalletBackupFileName() {
+    private File newWalletBackupFile() {
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File walletFile = null;
 
@@ -260,14 +261,15 @@ public class BackupDialogFragment extends DialogFragment {
         }
     }
 
-    private void showSendMailDialog(File backupFile) {
-        DialogFragment newFragment = SendMailDialogFragment.newInstance(backupFile.getAbsolutePath());
-        newFragment.show(getFragmentManager(), "backup_send_mail_dialog");
+    private void showBackupCompletedDialog(File backupFile) {
+        FragmentManager fm = getFragmentManager();
+        DialogFragment newFragment = BackupCompletedDialogFragment.newInstance(backupFile.getAbsolutePath());
+        newFragment.show(fm, "backup_completed_dialog");
     }
 
-    public static class SendMailDialogFragment extends DialogFragment {
-        public static SendMailDialogFragment newInstance(String backupFile) {
-            SendMailDialogFragment frag = new SendMailDialogFragment();
+    public static class BackupCompletedDialogFragment extends DialogFragment {
+        public static BackupCompletedDialogFragment newInstance(String backupFile) {
+            BackupCompletedDialogFragment frag = new BackupCompletedDialogFragment();
             Bundle args = new Bundle();
             args.putString(ARGS_BACKUP_FILE, backupFile);
             frag.setArguments(args);
@@ -279,7 +281,7 @@ public class BackupDialogFragment extends DialogFragment {
             final String backupFile = getArguments().getString(ARGS_BACKUP_FILE);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                     .setTitle(R.string.fragment_backup_success_title)
-                    .setMessage(Html.fromHtml(String.format(getString(R.string.fragment_backup_success_message), backupFile)))
+                    .setMessage(Html.fromHtml(getString(R.string.fragment_backup_success_message, backupFile)))
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Log.d(TAG, "User wants backup as mail attachment");
@@ -313,30 +315,16 @@ public class BackupDialogFragment extends DialogFragment {
         }
     }
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder binder) {
-            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            walletServiceBinder = null;
-        }
-    };
-
     @Override
     public void onStart() {
         super.onStart();
-        Intent intent = new Intent(this.getActivity(), WalletService.class);
-        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "onStart");
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        this.getActivity().unbindService(serviceConnection);
+        Log.d(TAG, "onStop");
     }
 
 }

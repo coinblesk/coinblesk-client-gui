@@ -45,11 +45,10 @@ import com.coinblesk.client.R;
 import com.coinblesk.client.utils.EncryptionUtils;
 import com.coinblesk.payments.WalletService;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
 import com.google.common.io.Files;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -114,13 +113,15 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         });
 
         List<File> backupFiles = new ArrayList<>();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (File f : files) {
                 backupFiles.add(f);
             }
         }
         Collections.sort(backupFiles);
-        ArrayAdapter<File> fileAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, backupFiles);
+        ArrayAdapter<File> fileAdapter = new ArrayAdapter<>(getContext(),
+                R.layout.simple_multiline_list_item, R.id.text1,
+                backupFiles);
         backupFilesList.setAdapter(fileAdapter);
     }
 
@@ -166,7 +167,7 @@ public class BackupRestoreDialogFragment extends DialogFragment {
     private void cleanupBeforeRestore() {
         stopWalletService();
 
-        // clear fiels directory (by moving everything to an archive folder)
+        // clear files directory (by moving everything to an archive folder)
 
         File filesDir = getActivity().getFilesDir();
         File archiveDir = new File(filesDir, "archive_" + System.currentTimeMillis());
@@ -191,15 +192,16 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         final String password = txtPassword.getText().toString();
         final File selectedBackupFile = (File) backupFilesList.getSelectedItem();
         clearPasswordInput();
-        Preconditions.checkState(password != null && password.length() > 0);
-        Preconditions.checkState(selectedBackupFile != null && selectedBackupFile.exists());
+        checkState(password != null && password.length() > 0);
+        checkState(selectedBackupFile != null && selectedBackupFile.exists());
 
         try {
-            cleanupBeforeRestore();
-
             final String encryptedBackup = Files.toString(selectedBackupFile, Charsets.UTF_8);
             final byte[] decryptedBackup = EncryptionUtils.decryptBytes(encryptedBackup, password.toCharArray());
             Log.d(TAG, String.format("Decrypted backup file: [%s] (%d bytes)", selectedBackupFile, decryptedBackup.length));
+
+            // before we extract the backup, we do a cleanup.
+            cleanupBeforeRestore();
 
             extractZip(decryptedBackup);
 
@@ -207,9 +209,10 @@ public class BackupRestoreDialogFragment extends DialogFragment {
 
         } catch (Exception e) {
             Log.w(TAG, "Could not restore backup: ", e);
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "(unknown)";
             new AlertDialog.Builder(this.getContext())
                     .setTitle(R.string.fragment_backup_restore_failed_title)
-                    .setMessage(getString(R.string.fragment_backup_restore_failed_message) + ": " + e.getMessage())
+                    .setMessage(getString(R.string.fragment_backup_restore_failed_message, errorMsg))
                     .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

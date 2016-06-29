@@ -105,8 +105,9 @@
     <string name="fragment_backup_restore_description">Select the wallet backup file and enter your password. The backup
         file must be in your Download folder.
     </string>
+    <string name="backup_restore_warning">Warning: If you proceed, the current wallet will be removed and overwritten.</string>
     <string name="fragment_backup_restore_failed_title">Restore Failed</string>
-    <string name="fragment_backup_restore_failed_message">Could not restore backup from file due to error</string>
+    <string name="fragment_backup_restore_failed_message">Could not restore backup from file due to error:\n%1$s\n\nDid you use the correct password?</string>
 
     <string name="backup_storage_permissions_title">Storage Permissions</string>
     <string name="backup_storage_permissions_rationale">Coinblesk requires access to storage in oder to save the wallet backup and load existing backup archives.</string>

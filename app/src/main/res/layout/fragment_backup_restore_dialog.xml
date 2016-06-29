@@ -20,7 +20,9 @@
         <Spinner
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/fragment_restore_file_spinner" android:layout_marginBottom="10dp"/>
+                android:spinnerMode="dialog"
+                android:id="@+id/fragment_restore_file_spinner"
+                android:layout_marginBottom="10dp"/>
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/backup_password_layout"
@@ -38,6 +40,14 @@
                     android:theme="@style/EditTextTheme"
                     android:password="true" />
         </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="@string/backup_restore_warning"
+            android:id="@+id/backup_restore_warning"
+            android:layout_marginTop="@dimen/card_margin" />
 
     </LinearLayout>
 
