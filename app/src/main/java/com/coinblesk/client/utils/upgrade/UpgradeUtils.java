@@ -73,7 +73,7 @@ public class UpgradeUtils {
                 // migration is done for mainnet and testnet regardless of the current network setting of the app!
                 NetworkParameters[] cltvMigrationParams = new NetworkParameters[]{MainNetParams.get(), TestNet3Params.get()};
                 for (NetworkParameters migrationParams : cltvMigrationParams) {
-                    doMigrateFrom_v1_0_262(context, params);
+                    doMigrateFrom_v1_0_262(context, migrationParams);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Migration failed: ", e);
@@ -102,22 +102,27 @@ public class UpgradeUtils {
         final File walletFile;
         final File chainFile;
 
+
+        final File newWalletFile;
+        final File newChainFile;
+
         if (ClientUtils.isMainNet(migrationParams)) {
             storageDir = new File(rootDir, "mainnet_wallet__uuid_object_storage");
             walletFile = new File(rootDir, "mainnet_wallet_.wallet");
+            newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".wallet");
             chainFile = new File(rootDir, "mainnet_wallet_.spvchain");
+            newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".spvchain");
         } else if (ClientUtils.isTestNet3(migrationParams)) {
             storageDir = new File(rootDir, "testnet_wallet__uuid_object_storage");
             walletFile = new File(rootDir, "testnet_wallet_.wallet");
+            newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_TEST + ".wallet");
             chainFile = new File(rootDir, "testnet_wallet_.spvchain");
+            newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_TEST + ".spvchain");
         } else {
             throw new RuntimeException("Network params not supported (unknown): " + migrationParams.toString());
         }
 
         final File keyFile = new File(storageDir, "ECKeyWrapper.json");
-
-        final File newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX + ".wallet");
-        final File newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX + ".spvchain");
 
         if (keyFile.exists() && walletFile.exists()) {
 
