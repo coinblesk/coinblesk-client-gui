@@ -17,7 +17,6 @@
 #}
 -dontobfuscate
 
--keep class * implements ch.papers.objectstorage.models.UuidObject { *; }
 -keep public class * extends android.app.Service
 -keep public class * extends android.content.BroadcastReceiver
 
