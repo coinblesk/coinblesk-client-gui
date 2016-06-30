@@ -92,6 +92,7 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
         getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         IntentFilter filter = new IntentFilter();
+        filter.addAction(Constants.WALLET_CHANGED_ACTION);
         filter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
         filter.addAction(Constants.WALLET_COINS_SENT_ACTION);
         filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
