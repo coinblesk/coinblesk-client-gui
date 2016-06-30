@@ -150,7 +150,6 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         transactionTO.transaction(transaction.unsafeBitcoinSerialize());
         SerializeUtils.signJSON(transactionTO, clientKey);
 
-
         Response<SignTO> signTOResponse = getCoinbleskService().sign(transactionTO).execute();
         SignTO signedTO = signTOResponse.body();
 
