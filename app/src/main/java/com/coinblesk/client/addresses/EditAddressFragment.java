@@ -25,6 +25,7 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 
+import android.net.Network;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -41,6 +42,7 @@ import com.coinblesk.client.models.AddressBookItem;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
@@ -178,23 +180,30 @@ public class EditAddressFragment extends DialogFragment {
     private Pair<Boolean,String> addressValidation(String address) {
         // the address can be a Bitcoin address OR an bitcoin Uri from e.g. a QR Code
         // (from which we can extract the address part).
+        final NetworkParameters params = Constants.PARAMS;
         String addressError = null;
         try {
             BitcoinURI bitcoinURI = new BitcoinURI(address);
             if (bitcoinURI.getAddress() != null) {
-                address = bitcoinURI.getAddress().toString();
+                address = bitcoinURI.getAddress().toBase58();
+                Address.fromBase58(params, address); // for network validation
                 return Pair.create(true, address);
             }
         } catch (BitcoinURIParseException e) {
             // ignore because we try a different approach below.
+        } catch (WrongNetworkException e) {
+            addressError = getString(R.string.send_address_wrong_network, params.getId());
+            return Pair.create(false, addressError);
+        } catch (AddressFormatException e) {
+            // ignore
         }
 
         try {
             // bitcoinURI parsing failed. now try as regular address string
-            Address btcAddress = new Address(Constants.PARAMS, address);
+            Address btcAddress = Address.fromBase58(params, address);
             return Pair.create(true, address);
         } catch (WrongNetworkException e) {
-            addressError = getString(R.string.send_address_wrong_network, Constants.PARAMS.getId());
+            addressError = getString(R.string.send_address_wrong_network, params.getId());
         } catch (AddressFormatException e) {
             addressError = getString(R.string.send_address_parse_error);
         }

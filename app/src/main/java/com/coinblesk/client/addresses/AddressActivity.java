@@ -43,6 +43,8 @@ import com.coinblesk.client.utils.UIUtils;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
@@ -118,15 +120,40 @@ public class AddressActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AppConstants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                final String contents = data.getStringExtra(Intents.Scan.RESULT);
-                try {
-                    BitcoinURI bitcoinURI = new BitcoinURI(contents);
-                    String result = bitcoinURI.getAddress().toString();
-                    showAddAddressDialog(result);
-                } catch (BitcoinURIParseException e) {
+                String scannedContent = data.getStringExtra(Intents.Scan.RESULT);
+                if (scannedContent == null) {
                     Toast.makeText(this, R.string.send_address_parse_error, Toast.LENGTH_LONG).show();
+                    return;
                 }
 
+                String scannedAddress = null;
+                try {
+                    // first try to parse as bitcoin URI
+                    BitcoinURI bitcoinURI = new BitcoinURI(scannedContent);
+                    scannedAddress = bitcoinURI.getAddress() != null ? bitcoinURI.getAddress().toBase58() : null;
+                } catch (BitcoinURIParseException e) {
+                    // not a bitcoin URI - ignore
+                }
+
+                if (scannedAddress != null) {
+                    showAddAddressDialog(scannedAddress);
+                    return;
+                }
+
+                try {
+                    // scanned content is not an URI, try regular address (plain text)
+                    scannedAddress = Address.fromBase58(null, scannedContent).toBase58();
+                } catch (AddressFormatException e) {
+                    // not a bitcoin address - ignore
+                }
+
+                if (scannedAddress != null) {
+                    showAddAddressDialog(scannedAddress);
+                    return;
+                }
+
+                // parsing failed
+                Toast.makeText(this, R.string.send_address_parse_error, Toast.LENGTH_LONG).show();
             }
         }
     }
