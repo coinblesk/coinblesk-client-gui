@@ -93,8 +93,6 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Constants.WALLET_CHANGED_ACTION);
-        filter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
-        filter.addAction(Constants.WALLET_COINS_SENT_ACTION);
         filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
         filter.addAction(Constants.WALLET_INIT_DONE_ACTION);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(walletChangedBroadcastReceiver, filter);

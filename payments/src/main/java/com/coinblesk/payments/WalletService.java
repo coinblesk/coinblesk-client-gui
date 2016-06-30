@@ -1267,7 +1267,7 @@ public class WalletService extends Service {
         }
 
         @Override
-        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {;
+        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
             broadcastConfidenceChanged(tx);
         }
     }
