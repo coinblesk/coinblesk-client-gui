@@ -89,8 +89,10 @@ public class CLTVInstantPaymentStep extends AbstractStep {
 
 
         } catch (PaymentException pex) {
+            Log.e(TAG, "Exception: ", pex);
             throw pex;
         } catch (Exception e) {
+            Log.e(TAG, "Exception: ", e);
             throw new PaymentException(PaymentError.ERROR, e);
         }
         return null;

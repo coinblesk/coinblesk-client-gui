@@ -22,14 +22,15 @@ import android.util.Log;
 
 import com.coinblesk.client.BuildConfig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
-import com.coinblesk.util.SerializeUtils;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 
 import java.io.File;
@@ -46,7 +47,7 @@ public class UpgradeUtils {
 
     private static boolean checkDone = false;
 
-    public void checkUpgrade(Context context) {
+    public void checkUpgrade(Context context, NetworkParameters params) {
         if (checkDone) {
             // skip if already done
             return;
@@ -54,52 +55,71 @@ public class UpgradeUtils {
 
         String appVersion = SharedPrefUtils.getAppVersion(context);
         if (appVersion == null) {
-            // first start OR upgrade from initial app
-
-            if(!migrateFrom_v1_0_262(context)) {
-                // first start: no version yet
-                Log.d(TAG, "No appVersion yet - first launch");
-            } else {
-                Log.d(TAG, "No appVersion yet - upgrade from v1.0.262 / 2of2 multisig (CeBIT)");
-                /* special case: ECKeys already exist, but no version
-                 * - migrate from early version v1.0.262 (CeBIT)
-                 * - transfer funds to new address (2of2 multisig to cltv)
-                 */
-                // TODO: parameters!
-                try {
-                    upgradeFrom_v1_0_262(context, TestNet3Params.get());
-                } catch (Exception e) {
-                    Log.e(TAG, "Upgrade failed: ", e);
-                }
-            }
-
+            // first start - no app version yet.
+            Log.d(TAG, "No appVersion yet - first launch");
         } else if (appVersion.equals(BuildConfig.VERSION_NAME)) {
             Log.d(TAG, "appVersion '" + appVersion + "' equals current version - no action required");
         } else {
             // add upgrade instructions as needed.
         }
 
-        SharedPrefUtils.setAppVersion(context, BuildConfig.VERSION_NAME);
+        if(migrateFrom_v1_0_262(context)) {
+            Log.d(TAG, "Migrate from v1.0.262 / 2of2 multisig (CeBIT) to CLTV");
+            /* special case: migrate from objectstore and 2of2 multisig wallet
+             * - migrate from early version v1.0.262 (CeBIT)
+             * - enable transfer of funds to new address (2of2 multisig to cltv)
+             */
+            try {
+                // migration is done for mainnet and testnet regardless of the current network setting of the app!
+                NetworkParameters[] cltvMigrationParams = new NetworkParameters[]{MainNetParams.get(), TestNet3Params.get()};
+                for (NetworkParameters migrationParams : cltvMigrationParams) {
+                    doMigrateFrom_v1_0_262(context, params);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Migration failed: ", e);
+            }
+        }
 
+
+        SharedPrefUtils.setAppVersion(context, BuildConfig.VERSION_NAME);
         checkDone = true;
     }
 
     private boolean migrateFrom_v1_0_262(Context context) {
-        // these directories are from the object store.
-        return new File(context.getFilesDir(), "testnet_wallet_" + "_uuid_object_storage").exists() ||
-                new File(context.getFilesDir(), "mainnet_wallet_" + "_uuid_object_storage").exists();
+        // these directories were used by the object store
+        // if any of these exist, we migrate from an existing wallet.
+        File objectStoreMain = new File(context.getFilesDir(), "mainnet_wallet_" + "_uuid_object_storage");
+        File objectStoreTest = new File(context.getFilesDir(), "testnet_wallet_" + "_uuid_object_storage");
+        return objectStoreMain.exists() || objectStoreTest.exists();
     }
 
-    private void upgradeFrom_v1_0_262(Context context, NetworkParameters migrationParams) throws IOException {
-        // TODO: implement upgrade: forward from 2-of-2 to cltv
-        Log.d(TAG, "********* MIGRATION FROM v1.0.262 *********");
+    private void doMigrateFrom_v1_0_262(Context context, NetworkParameters migrationParams) throws IOException {
+        Log.d(TAG, "********* MIGRATION FROM v1.0.262 - "+migrationParams.getId()+"*********");
 
         final File rootDir = context.getFilesDir();
-        final File storageDir = new File(rootDir, "testnet_wallet_" + "_uuid_object_storage");
-        final File keyFile = new File(storageDir, "ECKeyWrapper.json");
-        final File walletFile = new File(rootDir, "testnet_wallet_" + "_.wallet");
+        final File storageDir;
+        final File archiveDir = new File(rootDir, "archive_" + System.currentTimeMillis());
+        final File walletFile;
+        final File chainFile;
 
-        if (keyFile.exists()) {
+        if (ClientUtils.isMainNet(migrationParams)) {
+            storageDir = new File(rootDir, "mainnet_wallet__uuid_object_storage");
+            walletFile = new File(rootDir, "mainnet_wallet_.wallet");
+            chainFile = new File(rootDir, "mainnet_wallet_.spvchain");
+        } else if (ClientUtils.isTestNet3(migrationParams)) {
+            storageDir = new File(rootDir, "testnet_wallet__uuid_object_storage");
+            walletFile = new File(rootDir, "testnet_wallet_.wallet");
+            chainFile = new File(rootDir, "testnet_wallet_.spvchain");
+        } else {
+            throw new RuntimeException("Network params not supported (unknown): " + migrationParams.toString());
+        }
+
+        final File keyFile = new File(storageDir, "ECKeyWrapper.json");
+
+        final File newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX + ".wallet");
+        final File newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX + ".spvchain");
+
+        if (keyFile.exists() && walletFile.exists()) {
 
             // Keys: stored in ECKeyWrapper.json
             /* Key format (JSON):
@@ -120,10 +140,10 @@ public class UpgradeUtils {
             */
 
             Log.d(TAG, "Key file found: " + keyFile);
-            String json = FileUtils.readFileToString(keyFile);
+            String keyFileJson = FileUtils.readFileToString(keyFile);
             Type type = new TypeToken<Map<String, ECKeyWrapper>>(){}.getType();
             // Note: do not use gson from serializeutils (key is not stored in base64).
-            Map<String, ECKeyWrapper> keys = new Gson().fromJson(json, type);
+            Map<String, ECKeyWrapper> keys = new Gson().fromJson(keyFileJson, type);
             ECKey serverKey = null;
             ECKey clientKey = null;
             for (ECKeyWrapper key : keys.values()) {
@@ -139,28 +159,50 @@ public class UpgradeUtils {
             if (clientKey != null && serverKey != null) {
                 Log.d(TAG, "Found client and server keys - store in shared preferences.");
                 try {
+
+                    /********** Actual Migration Code **********/
                     SharedPrefUtils.setClientKey(context, migrationParams, clientKey);
                     SharedPrefUtils.setServerKey(context, migrationParams, serverKey);
                     Log.d(TAG, "Migrated keys:"
                             + " clientPubKey=" + clientKey.getPublicKeyAsHex()
                             + ", serverPubKey=" + serverKey.getPublicKeyAsHex());
+
+                    // move wallet file
+                    Log.d(TAG, "Migrate wallet file: " + walletFile.toString() + " -> " + newWalletFile.toString());
+                    FileUtils.copyFile(walletFile, newWalletFile);
+                    Log.d(TAG, "Migrate chain file: " + chainFile.toString() + " -> " + newChainFile.toString());
+                    FileUtils.copyFile(chainFile, newChainFile);
+
+                    SharedPrefUtils.enableMultisig2of2ToCltvForwarder(context);
+
+                    // move everything to an archive file.
+                    Log.d(TAG, "Move old files to archive dir: " + archiveDir.toString());
+                    FileUtils.moveToDirectory(storageDir, archiveDir, true);
+                    FileUtils.moveToDirectory(walletFile, archiveDir, true);
+                    FileUtils.moveToDirectory(chainFile, archiveDir, true);
+
                 } catch (Exception e) {
                     Log.d(TAG, "Exception: ", e);
+                    // clear the changes made.
                     SharedPrefUtils.setClientKey(context, migrationParams, null);
                     SharedPrefUtils.setServerKey(context, migrationParams, null);
+                    if (newWalletFile.exists()) {
+                        newWalletFile.delete();
+                    }
                 }
             }
         } else {
-            Log.d(TAG, "Key file not found: " + keyFile);
+            Log.d(TAG, "Key file or wallet file not found - no migration required - "
+                    + String.format("keyFile: %s (exists: %s), walletFile: %s (exists: %s)",
+                    keyFile.toString(), keyFile.exists(), walletFile.toString(), walletFile.exists()));
         }
-
-        SharedPrefUtils.enableMultisig2of2ToCltvForwarder(context);
 
         Log.d(TAG, "********* MIGRATION FROM v1.0.262 FINISHED *********");
     }
 
 
     private static class ECKeyWrapper {
+        /* keys stored in the objectstore have the following structure */
         byte[] keyPayload;
         boolean isPublicOnly;
         String name;

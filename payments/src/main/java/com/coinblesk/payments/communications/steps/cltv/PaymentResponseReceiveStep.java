@@ -118,8 +118,8 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         // verify my signature (payee sig)
         TxSig payeeSig = serverSignTO.payeeMessageSig();
         serverSignTO.payeeMessageSig(null);
-        ECKey payeeServerPubKey = ECKey.fromPublicOnly(serverSignTO.payeePublicKey());
         if (verifyPayeeSig) {
+            ECKey payeeServerPubKey = ECKey.fromPublicOnly(serverSignTO.payeePublicKey());
             if (!Arrays.equals(
                     walletService.getMultisigServerKey().getPubKey(), payeeServerPubKey.getPubKey())) {
                 throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);

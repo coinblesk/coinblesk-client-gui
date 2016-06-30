@@ -869,7 +869,9 @@ public class WalletService extends Service {
 
     private void broadcastConfidenceChanged(Transaction tx) {
         Intent txChanged = new Intent(Constants.WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION);
-        txChanged.putExtra("transactionHash", tx.getHashAsString());
+        if (tx != null) {
+            txChanged.putExtra("transactionHash", tx.getHashAsString());
+        }
         getLocalBroadcaster().sendBroadcast(txChanged);
     }
 
@@ -1075,7 +1077,7 @@ public class WalletService extends Service {
                     CLTVInstantPaymentStep step = new CLTVInstantPaymentStep(walletServiceBinder, payment);
                     step.process(null);
                     Transaction fullySignedTx = step.getTransaction();
-                    commitAndBroadcastTransaction(fullySignedTx);
+                    maybeCommitAndBroadcastTransaction(fullySignedTx);
                     Log.i(TAG, "Send Coins - address=" + address + ", amount=" + amount
                             + ", txHash=" + fullySignedTx.getHashAsString());
                     return fullySignedTx;

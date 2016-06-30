@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity
         AdditionalServiceUtils.setSessionID(this, null);
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
-        upgradeUtils.checkUpgrade(this);
+        upgradeUtils.checkUpgrade(this, Constants.PARAMS);
 
         startWalletService();
 
