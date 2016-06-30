@@ -25,6 +25,7 @@ import com.coinblesk.util.SerializeUtils;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.List;
@@ -55,7 +56,8 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
 
             signTO.addressTo(getBitcoinURI().getAddress().toBase58());
             signTO.amountToSpend(getBitcoinURI().getAmount().longValue());
-            signTO.amountChange(transaction.getOutput(1).getValue().longValue());
+            boolean isNotFirst = transaction.getOutputs().get(0).getScriptPubKey().getToAddress(transaction.getParams()).equals(getBitcoinURI().getAddress());
+            signTO.amountChange(isNotFirst? transaction.getOutputs().get(1).getValue().longValue() : transaction.getOutputs().get(0).getValue().longValue());
             /*
             List<byte[]> transactionInputs = new ArrayList<>(transaction.getInputs().size());
             for (TransactionInput txIn : transaction.getInputs()) {

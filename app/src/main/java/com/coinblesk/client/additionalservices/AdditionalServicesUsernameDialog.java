@@ -69,7 +69,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                 .setView(view)
                 .setPositiveButton(R.string.ok, null)
                 .setNegativeButton(R.string.cancel, null)
-                .setNeutralButton(R.string.logout, null)
+                .setNeutralButton(isLoggedin? R.string.logout : R.string.signup, null)
                 .create();
 
         final View.OnClickListener okClickListener = new View.OnClickListener() {

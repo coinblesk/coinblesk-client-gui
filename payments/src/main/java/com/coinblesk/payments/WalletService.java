@@ -447,16 +447,16 @@ public class WalletService extends Service {
         }
     }
 
-    private void saveKeys(ECKey clientECKey, ECKey serverECKey) throws CoinbleskException {
+    private void saveKeys(ECKey clientECKey, ECKey serverECKey, String url) throws CoinbleskException {
         final NetworkParameters params = Constants.PARAMS;
         try {
             SharedPrefUtils.setClientKey(this, params, clientECKey);
-            SharedPrefUtils.setServerKey(this, params, serverECKey);
+            SharedPrefUtils.setServerKey(this, params, serverECKey, url);
         } catch (Exception e) {
             // clear keys, we either save both keys or none in order to make sure we do not use
             // keys that the other party (server or client) is not aware of.
             SharedPrefUtils.setClientKey(this, params, null);
-            SharedPrefUtils.setServerKey(this, params, null);
+            SharedPrefUtils.setServerKey(this, params, null, "");
             throw new CoinbleskException("Could not store keys.", e);
         }
     }
@@ -482,7 +482,7 @@ public class WalletService extends Service {
                 throw new CoinbleskException("Verification of server response failed.");
             }
 
-            saveKeys(clientECKey, serverECKey);
+            saveKeys(clientECKey, serverECKey, Constants.RETROFIT.baseUrl().toString());
             Log.i(TAG, "Key exchange with server completed.");
         } else {
             String errorCode = (response != null) ? Integer.toString(response.code()) : "(unknown)";

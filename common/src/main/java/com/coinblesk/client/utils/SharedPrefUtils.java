@@ -305,19 +305,28 @@ public final class SharedPrefUtils {
         return (publicKey != null) ? ECKey.fromPublicOnly(publicKey) : null;
     }
 
-    public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey) {
+    public static String getServerUrl(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_server_public_key_url, params.getId());
+        return getString(context, key, "n/a");
+    }
+
+    public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey, String url) {
         String key = context.getString(R.string.pref_server_public_key, params.getId());
+        String key_url = context.getString(R.string.pref_server_public_key_url, params.getId());
         // copy current key.
         archiveKey(context, key);
+        archiveKey(context, key_url);
 
         if (serverKey == null) {
             preferences(context).edit().remove(key).commit();
+            preferences(context).edit().remove(key_url).commit();
         }
         if (serverKey.hasPrivKey()) {
             throw new IllegalArgumentException("ServerKey should not have private key. Wrong key?");
         }
 
         setBytes(context, key, serverKey.getPubKey());
+        setString(context, key_url, url);
     }
 
     public static List<LockTime> getLockTimes(Context context, NetworkParameters params) {

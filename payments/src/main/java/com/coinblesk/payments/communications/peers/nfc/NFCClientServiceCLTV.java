@@ -93,7 +93,7 @@ public class NFCClientServiceCLTV extends HostApduService {
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        //Log.d(TAG, "processCommandApdu - commandApdu.length=" + commandApdu.length);
+        Log.d(TAG, "processCommandApdu - commandApdu.length=" + commandApdu.length);
         if (startTime == 0) {
             startTime = System.currentTimeMillis();
         }

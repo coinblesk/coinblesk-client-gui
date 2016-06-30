@@ -167,7 +167,7 @@ public class UpgradeUtils {
 
                     /********** Actual Migration Code **********/
                     SharedPrefUtils.setClientKey(context, migrationParams, clientKey);
-                    SharedPrefUtils.setServerKey(context, migrationParams, serverKey);
+                    SharedPrefUtils.setServerKey(context, migrationParams, serverKey, "n/a - migration");
                     Log.d(TAG, "Migrated keys:"
                             + " clientPubKey=" + clientKey.getPublicKeyAsHex()
                             + ", serverPubKey=" + serverKey.getPublicKeyAsHex());
@@ -190,7 +190,7 @@ public class UpgradeUtils {
                     Log.d(TAG, "Exception: ", e);
                     // clear the changes made.
                     SharedPrefUtils.setClientKey(context, migrationParams, null);
-                    SharedPrefUtils.setServerKey(context, migrationParams, null);
+                    SharedPrefUtils.setServerKey(context, migrationParams, null, "");
                     if (newWalletFile.exists()) {
                         newWalletFile.delete();
                     }
