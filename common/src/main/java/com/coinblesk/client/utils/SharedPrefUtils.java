@@ -343,8 +343,10 @@ public final class SharedPrefUtils {
         if (lockTimes == null) {
             lockTimes = new ArrayList<>(1);
         }
-        lockTimes.add(lockTimeToAdd);
-        setLockTimes(context, params, lockTimes);
+        if (!lockTimes.contains(lockTimeToAdd)) {
+            lockTimes.add(lockTimeToAdd);
+            setLockTimes(context, params, lockTimes);
+        }
     }
 
 }

@@ -21,6 +21,8 @@ import org.bitcoinj.core.Utils;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.concurrent.locks.Lock;
 
 /**
  * @author Andreas Albrecht
@@ -47,6 +49,19 @@ public class LockTime implements Serializable {
         lt.timeCreatedSeconds = Utils.currentTimeSeconds();
         lt.lockTime = lockTime;
         return lt;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) return false;
+        if (this == other) return true;
+        if (!(other instanceof LockTime)) return false;
+        return this.lockTime == ((LockTime)other).lockTime;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.valueOf(lockTime).hashCode();
     }
 
     public static class TimeCreatedComparator implements Comparator<LockTime> {
