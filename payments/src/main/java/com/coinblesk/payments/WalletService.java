@@ -482,8 +482,11 @@ public class WalletService extends Service {
                 throw new CoinbleskException("Verification of server response failed.");
             }
 
-            saveKeys(clientECKey, serverECKey, Constants.RETROFIT.baseUrl().toString());
-            Log.i(TAG, "Key exchange with server completed.");
+            String serverUrl = Constants.RETROFIT.baseUrl().toString();
+            saveKeys(clientECKey, serverECKey, serverUrl);
+            Log.i(TAG, "Key exchange with server completed"
+                    + "- clientPubKey=" + clientECKey.getPublicKeyAsHex()
+                    + ", serverPubKey=" + serverECKey.getPublicKeyAsHex());
         } else {
             String errorCode = (response != null) ? Integer.toString(response.code()) : "(unknown)";
             Log.e(TAG, "Error during key setup - code: " + errorCode);

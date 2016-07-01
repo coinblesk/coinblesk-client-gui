@@ -77,7 +77,6 @@ public final class SharedPrefUtils {
 
     private static SharedPreferences preferences(Context context) {
         return context.getSharedPreferences(getSharedPreferencesName(), getSharedPreferencesMode());
-        //return PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     private static String getString(Context context, String key, String defaultValue) {
@@ -120,6 +119,26 @@ public final class SharedPrefUtils {
         editor.commit();
     }
 
+    private static int getInt(Context context, String key, int defaultValue) {
+        return preferences(context).getInt(key, defaultValue);
+    }
+
+    private static void setInt(Context context, String key, int value) {
+        SharedPreferences.Editor editor = preferences(context).edit();
+        editor.putInt(key, value);
+        editor.commit();
+    }
+
+    private static float getFloat(Context context, String key, float defaultValue) {
+        return preferences(context).getFloat(key, defaultValue);
+    }
+
+    private static void setFloat(Context context, String key, float value) {
+        SharedPreferences.Editor editor = preferences(context).edit();
+        editor.putFloat(key, value);
+        editor.commit();
+    }
+
     private static byte[] getBytes(Context context, String key, byte[] defaultValue) {
         String valueBase64 = getString(context, key, null);
         return (valueBase64 == null) ? defaultValue : Base64.decode(valueBase64, Base64.NO_WRAP);
@@ -128,6 +147,40 @@ public final class SharedPrefUtils {
     private static void setBytes(Context context, String key, byte[] value) {
         String valueBase64 = Base64.encodeToString(value, Base64.NO_WRAP);
         setString(context, key, valueBase64);
+    }
+
+    private static void saveArchivedCopy(Context context, final String prefKey) {
+        final Object value = preferences(context).getAll().get(prefKey);
+        if (value == null) {
+            return;
+        }
+
+        String archiveKey = null;
+        long currentTime = System.currentTimeMillis();
+        for (int i = 0; ; ++i) {
+            String postfix = i > 0 ? String.format("_%d", i) : "";
+            archiveKey = String.format("%s_%d%s", prefKey, currentTime, postfix);
+            if (!preferences(context).contains(archiveKey)) {
+                break;
+            }
+        }
+
+        if (value instanceof Integer) {
+            setInt(context, archiveKey, (Integer) value);
+        } else if (value instanceof Long) {
+            setLong(context, archiveKey, (Long) value);
+        } else if (value instanceof Float) {
+            setFloat(context, archiveKey, (Float) value);
+        } else if (value instanceof Boolean) {
+            setBoolean(context, archiveKey, (Boolean) value);
+        } else if (value instanceof String) {
+            setString(context, archiveKey, (String) value);
+        } else if (value instanceof Set<?> &&
+                (!((Set<?>) value).isEmpty() && (((Set<?>)value).iterator().next() instanceof String))) {
+            setStringSet(context, archiveKey, (Set<String>) value);
+        } else {
+            throw new IllegalStateException("Unknown type");
+        }
     }
 
     public static String getAppVersion(Context context) {
@@ -153,22 +206,22 @@ public final class SharedPrefUtils {
     }
 
     public static String getCurrency(Context context) {
-        return getString(context, context.getResources().getString(R.string.pref_currency_list),
-                context.getResources().getString(R.string.pref_currency_default_value));
+        return getString(context, context.getString(R.string.pref_currency_list),
+                context.getString(R.string.pref_currency_default_value));
     }
 
     public static Set<String> getConnectionSettings(Context context) {
         String [] connections = context.getResources().getStringArray(R.array.pref_connection_default);
-        return getStringSet(context, context.getResources().getString(R.string.pref_connection_settings),  new HashSet<>(Arrays.asList(connections)));
+        return getStringSet(context, context.getString(R.string.pref_connection_settings),  new HashSet<>(Arrays.asList(connections)));
     }
 
     public static String getPrimaryBalance(Context context) {
-        return getString(context, context.getResources().getString(R.string.pref_balance_list),
-                context.getResources().getString(R.string.pref_balance_default_value));
+        return getString(context, context.getString(R.string.pref_balance_list),
+                context.getString(R.string.pref_balance_default_value));
     }
 
     public static String getBitcoinScalePrefix(Context context) {
-        return getString(context, context.getResources().getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
+        return getString(context, context.getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
     }
 
     public static int getLockTimePeriodMonths(Context context) {
@@ -193,7 +246,7 @@ public final class SharedPrefUtils {
     }
 
     public static String getJSessionID(Context context) {
-        return getString(context, context.getResources().getString(R.string.jsessionid), "");
+        return getString(context, context.getString(R.string.jsessionid), "");
     }
 
     public static void setJSessionID(Context context, String jsessionID) {
@@ -253,8 +306,11 @@ public final class SharedPrefUtils {
         if (items == null) {
             items = new ArrayList<>(1);
         }
-        items.add(itemToAdd);
-        setAddressBookItems(context, params, items);
+
+        if (!items.contains(itemToAdd)) {
+            items.add(itemToAdd);
+            setAddressBookItems(context, params, items);
+        }
     }
 
     public static void removeAddressBookItem(Context context, NetworkParameters params, AddressBookItem itemToRemove) {
@@ -275,28 +331,19 @@ public final class SharedPrefUtils {
     public static void setClientKey(Context context, NetworkParameters params, ECKey clientKey) {
         String key = context.getString(R.string.pref_client_private_key, params.getId());
         // for safety, we store the old value (i.e. do not overwrite key data)
-        archiveKey(context, key);
+        saveArchivedCopy(context, key);
 
         if (clientKey == null) {
             preferences(context).edit().remove(key).commit();
+            return;
         }
+
+        // safety check - client key must include private key.
         if (!clientKey.hasPrivKey()) {
             throw new IllegalArgumentException("ClientKey does not have private key.");
         }
 
         setBytes(context, key, clientKey.getPrivKeyBytes());
-    }
-
-    private static void archiveKey(Context context, String prefKey) {
-        byte[] privateKey = getBytes(context, prefKey, null);
-        if (privateKey != null) {
-            String archiveKey = prefKey + "_" + System.currentTimeMillis();
-            int i = 1;
-            while (preferences(context).contains(archiveKey)) {
-                archiveKey = archiveKey + "_" + i;
-            }
-            setBytes(context, archiveKey, privateKey);
-        }
     }
 
     public static ECKey getServerKey(Context context, NetworkParameters params) {
@@ -310,23 +357,27 @@ public final class SharedPrefUtils {
         return getString(context, key, "n/a");
     }
 
-    public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey, String url) {
+    public static void setServerKey(Context context, NetworkParameters params, ECKey serverKey, String serverUrl) {
         String key = context.getString(R.string.pref_server_public_key, params.getId());
         String key_url = context.getString(R.string.pref_server_public_key_url, params.getId());
-        // copy current key.
-        archiveKey(context, key);
-        archiveKey(context, key_url);
+        // for safety, we store the old value (i.e. do not overwrite key data)
+        saveArchivedCopy(context, key);
 
         if (serverKey == null) {
-            preferences(context).edit().remove(key).commit();
-            preferences(context).edit().remove(key_url).commit();
+            preferences(context).edit()
+                    .remove(key)
+                    .remove(key_url)
+                    .commit();
+            return;
         }
+
+        // safety check - server key is public only.
         if (serverKey.hasPrivKey()) {
             throw new IllegalArgumentException("ServerKey should not have private key. Wrong key?");
         }
 
         setBytes(context, key, serverKey.getPubKey());
-        setString(context, key_url, url);
+        setString(context, key_url, serverUrl);
     }
 
     public static List<LockTime> getLockTimes(Context context, NetworkParameters params) {
