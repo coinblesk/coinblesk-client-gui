@@ -17,9 +17,13 @@
 package com.coinblesk.client.settings;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
@@ -57,9 +61,25 @@ public class SettingsActivity extends AppCompatActivity {
                     .add(R.id.fragment_settings, new Prefs())
                     .commit();
         }
+
     }
 
     public static class Prefs extends PreferenceFragment {
+        private WalletService.WalletServiceBinder walletService;
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            Intent walletServiceIntent = new Intent(getActivity(), WalletService.class);
+            getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            getActivity().unbindService(serviceConnection);
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -69,6 +89,21 @@ public class SettingsActivity extends AppCompatActivity {
             addPreferencesFromResource(R.xml.settings_pref);
 
             initRestartAfterNetworkChange();
+            initOnFiatCurrencyChanged();
+        }
+
+        private void initOnFiatCurrencyChanged() {
+            final String key = getString(R.string.pref_currency_list);
+            Preference pref = findPreference(key);
+            pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    if (walletService != null) {
+                        walletService.setCurrency((String) newValue);
+                    }
+                    return true;
+                }
+            });
         }
 
         private void initRestartAfterNetworkChange() {
@@ -102,5 +137,17 @@ public class SettingsActivity extends AppCompatActivity {
             getActivity().stopService(intent);
         }
 
+        private final ServiceConnection serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                walletService = (WalletService.WalletServiceBinder) service;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                walletService = null;
+            }
+        };
     }
+
 }

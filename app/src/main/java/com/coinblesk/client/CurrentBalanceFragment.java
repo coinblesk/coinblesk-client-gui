@@ -170,12 +170,13 @@ public class CurrentBalanceFragment extends Fragment {
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             final LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
-            IntentFilter balanceIntentFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
-            broadcastManager.registerReceiver(walletBalanceChangeBroadcastReceiver, balanceIntentFilter);
+            IntentFilter balanceFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
+            balanceFilter.addAction(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+            broadcastManager.registerReceiver(walletBalanceChangeBroadcastReceiver, balanceFilter);
 
-            IntentFilter walletProgressIntentFilter = new IntentFilter(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
-            walletProgressIntentFilter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
-            broadcastManager.registerReceiver(walletProgressBroadcastReceiver, walletProgressIntentFilter);
+            IntentFilter walletProgressFilter = new IntentFilter(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
+            walletProgressFilter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
+            broadcastManager.registerReceiver(walletProgressBroadcastReceiver, walletProgressFilter);
 
             if (walletServiceBinder.isReady()) {
                 refreshBalance();

@@ -164,7 +164,7 @@ public class WalletService extends Service {
         bitcoinjContext = new Context(Constants.PARAMS);
         Context.propagate(bitcoinjContext);
 
-        initExchangeRate();
+        initFiatCurrency();
 
         walletFile = walletFile();
         Log.d(TAG, "Wallet file: " + walletFile + ", already exists: " + walletFile.exists());
@@ -703,19 +703,20 @@ public class WalletService extends Service {
         return true;
     }
 
-    private void initExchangeRate() {
-        if (fiatCurrency == null) {
-            fiatCurrency = SharedPrefUtils.getCurrency(this);
+    private void setFiatCurrency(String currencySymbol) {
+        fiatCurrency = currencySymbol;
+        if (exchangeRate == null || !fiatCurrency.equals(exchangeRate.fiat.getCurrencyCode())) {
+            ExchangeRate savedRate = loadExchangeRateFromStorage();
+            setExchangeRate(savedRate);
         }
-        loadExchangeRateFromStorage();
-        Log.d(TAG, "init exchange rate - currency: " + fiatCurrency
-                + ", exchangeRate: 1 Coin = " + exchangeRate.coinToFiat(Coin.COIN).toFriendlyString());
-
+        saveFiatCurrency();
+        broadcastBalanceChanged();
         fetchExchangeRate();
     }
 
-    private void loadExchangeRateFromStorage() {
-        exchangeRate = SharedPrefUtils.getExchangeRate(this, fiatCurrency);
+    private void initFiatCurrency() {
+        String savedFiatCurrency = loadFiatCurrencyFromStorage();
+        setFiatCurrency(savedFiatCurrency);
     }
 
     private void fetchExchangeRate() {
@@ -732,13 +733,25 @@ public class WalletService extends Service {
         }
 
         this.exchangeRate = exchangeRate;
+        Log.d(TAG, "setExchangeRate: 1 Bitcoin = " + exchangeRate.coinToFiat(Coin.COIN).toFriendlyString());
         saveExchangeRate();
-        broadcastBalanceChanged();
         broadcastExchangeRateChanged();
+    }
+
+    private ExchangeRate loadExchangeRateFromStorage() {
+        return SharedPrefUtils.getExchangeRate(this, fiatCurrency);
     }
 
     private void saveExchangeRate() {
         SharedPrefUtils.setExchangeRate(this, exchangeRate.fiat);
+    }
+
+    private String loadFiatCurrencyFromStorage() {
+        return SharedPrefUtils.getCurrency(this);
+    }
+
+    private void saveFiatCurrency() {
+        SharedPrefUtils.setCurrency(this, fiatCurrency);
     }
 
     private List<TransactionOutput> getUnlockedUnspentOutputs() {
@@ -973,8 +986,7 @@ public class WalletService extends Service {
         }
 
         public void setCurrency(String currency) {
-            fiatCurrency = currency;
-            fetchExchangeRate();
+            WalletService.this.setFiatCurrency(fiatCurrency);
         }
 
         public Address getCurrentReceiveAddress() {

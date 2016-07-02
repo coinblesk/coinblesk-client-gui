@@ -607,10 +607,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onStop() {
         super.onStop();
         this.getActivity().unbindService(serviceConnection);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(exchangeRateChangeListener);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentErrorListener);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(instantPaymentSuccessListener);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(insufficientFundsListener);
+        LocalBroadcastManager broadcaster = LocalBroadcastManager.getInstance(getActivity());
+        broadcaster.unregisterReceiver(exchangeRateChangeListener);
+        broadcaster.unregisterReceiver(instantPaymentErrorListener);
+        broadcaster.unregisterReceiver(instantPaymentSuccessListener);
+        broadcaster.unregisterReceiver(insufficientFundsListener);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -619,10 +620,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             exchangeRate = walletServiceBinder.getExchangeRate();
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(instantPaymentErrorListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(insufficientFundsListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
+            LocalBroadcastManager broadcaster = LocalBroadcastManager.getInstance(getActivity());
+            broadcaster.registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
+            broadcaster.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+            broadcaster.registerReceiver(instantPaymentErrorListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
+            broadcaster.registerReceiver(insufficientFundsListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
             updateAmount();
         }
 

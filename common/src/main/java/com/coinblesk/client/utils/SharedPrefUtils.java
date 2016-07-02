@@ -206,8 +206,14 @@ public final class SharedPrefUtils {
     }
 
     public static String getCurrency(Context context) {
-        return getString(context, context.getString(R.string.pref_currency_list),
+        return getString(context,
+                context.getString(R.string.pref_currency_list),
                 context.getString(R.string.pref_currency_default_value));
+    }
+
+    public static void setCurrency(Context context, String currency) {
+        String key = context.getString(R.string.pref_currency_list);
+        setString(context, key, currency);
     }
 
     public static Set<String> getConnectionSettings(Context context) {
