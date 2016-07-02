@@ -40,8 +40,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
-import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.EncryptionUtils;
 import com.coinblesk.payments.WalletService;
 import com.google.common.base.Charsets;
@@ -108,7 +108,7 @@ public class BackupRestoreDialogFragment extends DialogFragment {
         File[] files = backupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
-                return filename.startsWith(AppConstants.BACKUP_FILE_PREFIX);
+                return filename.startsWith(Constants.BACKUP_FILE_PREFIX);
             }
         });
 

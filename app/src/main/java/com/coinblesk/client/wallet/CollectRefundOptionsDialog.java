@@ -73,7 +73,7 @@ public class CollectRefundOptionsDialog extends DialogFragment {
 
         EditText amountText = (EditText) v.findViewById(R.id.amount_edit_text);
         if (amountText != null) {
-            amountText.setText(UIUtils.scaleCoinForDialogs(amount, getContext()));
+            amountText.setText(UIUtils.scaleCoinForDialogs(getContext(), amount));
         }
 
         View sendView = v.findViewById(R.id.collect_refund_send_touch_area);

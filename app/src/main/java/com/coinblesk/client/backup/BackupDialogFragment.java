@@ -39,8 +39,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.EncryptionUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.google.common.base.Charsets;
@@ -252,7 +252,7 @@ public class BackupDialogFragment extends DialogFragment {
         for (int i = 0; ; ++i) {
             String currentTime = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
             String postfix = i > 0 ? String.format("_%d", i) : "";
-            String fileName = String.format("%s_%s%s", AppConstants.BACKUP_FILE_PREFIX, currentTime, postfix);
+            String fileName = String.format("%s_%s%s", Constants.BACKUP_FILE_PREFIX, currentTime, postfix);
 
             walletFile = new File(path, fileName);
             if (!walletFile.exists()) {
@@ -302,7 +302,7 @@ public class BackupDialogFragment extends DialogFragment {
 
         private void sendMailWithBackup(File backupFile) {
             Uri backupFileUri = FileProvider.getUriForFile(
-                    getContext(), AppConstants.FILE_PROVIDER_AUTHORITY, backupFile);
+                    getContext(), Constants.FILE_PROVIDER_AUTHORITY, backupFile);
 
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
             // The "mail intent" does not have a type, so declare the "text/html".

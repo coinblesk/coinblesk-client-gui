@@ -109,7 +109,7 @@ public class AuthenticationDialog extends DialogFragment {
         final boolean showAccept = getArguments().getBoolean(ARG_SHOW_ACCEPT);
         final View authView = getActivity().getLayoutInflater().inflate(R.layout.fragment_authview_dialog, null);
         final TextView amountTextView = (TextView) authView.findViewById(R.id.authview_amount_content);
-        amountTextView.setText(UIUtils.scaleCoinForDialogs(Coin.valueOf(amount), getContext()));
+        amountTextView.setText(UIUtils.scaleCoinForDialogs(getContext(), Coin.valueOf(amount)));
         final TextView addressTextView = (TextView) authView.findViewById(R.id.authview_address_content);
         addressTextView.setText(address);
 

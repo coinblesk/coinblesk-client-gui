@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string-array name="pref_connection_default">
-        <item>nfc-checked</item>
-        <item>bt-checked</item>
-        <item>wifi-checked</item>
+    <!--Empty Array-->
+    <string-array name="empty_array" />
+
+
+    <!-- primary balance: bitcoin or fiat -->
+    <string-array name="pref_balance_entries">
+        <item>Bitcoin</item>
+        <item>Fiat Currency</item>
     </string-array>
 
     <string-array name="pref_balance_values">
-        <item>Fiat Currency</item>
-        <item>Bitcoin</item>
+        <item>@string/pref_balance_bitcoin</item>
+        <item>@string/pref_balance_fiat</item>
     </string-array>
+
 
     <!--Official ISO 4217 currency codes http://www.currency-iso.org/dam/downloads/lists/list_one.xml-->
     <string-array name="pref_currency_entries">
@@ -25,17 +30,20 @@
         <item>USD</item>
     </string-array>
 
+
     <!--Bitcoin Representation Settings-->
     <string-array name="pref_bitcoin_rep_entries">
         <item>Bitcoin (BTC)</item>
         <item>milli-Bitcoin (mBTC)</item>
         <item>micro-Bitcoin (μBTC)</item>
     </string-array>
+
     <string-array name="pref_bitcoin_rep_values">
-        <item>BTC</item>
-        <item>mBTC</item>
-        <item>μBTC</item>
+        <item>@string/pref_bitcoin_rep_BTC</item>
+        <item>@string/pref_bitcoin_rep_milliBTC</item>
+        <item>@string/pref_bitcoin_rep_microBTC</item>
     </string-array>
+
 
     <!--Transaction History Settings-->
     <string-array name="pref_transaction_history_values">
@@ -45,30 +53,36 @@
         <item>Show all transactions</item>
     </string-array>
 
+
     <!--Connection Settings-->
     <string-array name="pref_connection_entries">
         <item>NFC</item>
         <item>Bluetooth LE</item>
         <item>WiFi Direct</item>
     </string-array>
+
     <string-array name="pref_connection_values">
-        <item>nfc-checked</item>
-        <item>bt-checked</item>
-        <item>wifi-checked</item>
+        <item>@string/pref_connection_nfc</item>
+        <item>@string/pref_connection_bt_le</item>
+        <item>@string/pref_connection_wifi_direct</item>
     </string-array>
 
+    <string-array name="pref_connection_default">
+        <item>@string/pref_connection_nfc</item>
+        <item>@string/pref_connection_bt_le</item>
+        <item>@string/pref_connection_wifi_direct</item>
+    </string-array>
 
-    <!--Empty Array-->
-    <string-array name="empty_array"></string-array>
 
     <!--Network Settings-->
     <string-array name="pref_network_values">
-        <item>main-net</item>
-        <item>test-net-3</item>
+        <item>@string/pref_network_mainnet</item>
+        <item>@string/pref_network_testnet</item>
     </string-array>
+
     <string-array name="pref_network_entries">
         <item>MainNet</item>
-        <item>TestNet3</item>
+        <item>TestNet</item>
     </string-array>
 
 
@@ -79,6 +93,7 @@
         <item>6 Months</item>
         <item>12 Months</item>
     </string-array>
+
     <string-array name="pref_wallet_locktime_periods_values">
         <!-- Values: in months -->
         <item>1</item>

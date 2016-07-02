@@ -175,38 +175,28 @@
     <!--Preference Strings-->
     <string name="pref_general_settings_category_title">General Settings</string>
     <string name="pref_payment_settings_category_title">Payment Settings</string>
-
+    <string name="pref_advanced_settings_category_title">Advanced</string>
 
     <!--Currency List Dialog-->
-    <string name="pref_balance_default_value">Bitcoin</string>
     <string name="pref_balance_title">Primary Balance</string>
     <string name="pref_balance_description">Change your balance representation.</string>
-    <string name="pref_balance_dialog_title">Change primary balance.</string>
-    <string name="pref_balance_list">pref_balance_list</string>
-
 
     <!--Currency List Dialog-->
     <string name="pref_currency_title">Fiat Currency</string>
-    <string name="pref_currency_description">Change your Currency.</string>
-    <string name="pref_currency_dialog_title">Change your Currency.</string>
-    <string name="pref_currency_default_value">EUR</string>
-    <string name="pref_currency_list">pref_currency_list</string>
+    <string name="pref_currency_description">Change your fiat currency.</string>
 
     <!--Bitcoin Representation List Dialog-->
-    <string name="pref_bitcoin_rep_title">Bitcoin representation</string>
-    <string name="pref_bitcoin_rep_dialog_title">Change the Bitcoin representation.</string>
-    <string name="pref_bitcoin_rep_description">Change the Bitcoin representation for coinblesk.</string>
-    <string name="pref_bitcoin_rep_default_value">BTC</string>
-    <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
+    <string name="pref_bitcoin_rep_title">Bitcoin Representation</string>
+    <string name="pref_bitcoin_rep_description">Change the Bitcoin representation unit.</string>
 
 
     <!--Transaction History List Dialog-->
+    <!--
     <string name="pref_transaction_history_title">Transaction History</string>
     <string name="pref_transaction_history_dialog_title">Change number of transactions.</string>
-    <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history
-        layout.
-    </string>
+    <string name="pref_transaction_history_description">Change the number of transactions shown in the payment history layout.</string>
     <string name="pref_transaction_history_default_value">Show all transactions</string>
+    -->
 
     <!--Connection Checkbox Screen-->
     <string name="pref_connection_settings_title">Contactless Payment Settings</string>
@@ -234,15 +224,6 @@
     <!--Auto-Accept Payments - Amount-->
     <string name="pref_auto_accept_amount_default_value">0.1</string>
     <string name="pref_auto_accept_amount_title">Auto-Accept Payment Limit</string>
-
-    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-        eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-        nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-        sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
-        laborum.
-    </string>
-
 
     <!--Transaction Detail-->
     <string name="txdetail_coin_amount_title">Amount</string>
@@ -297,21 +278,20 @@
     </string>
     <string name="payment_request_html_subject">New bitcoin payment request</string>
     <string name="accept">Accept</string>
-    <string name="payment_succesful_message">Payment was succesful!</string>
+    <string name="payment_succesful_message">Payment was successful!</string>
     <string name="instant_payment_success_message">Instant Payment was successful</string>
     <string name="insufficient_funds">Insufficient Funds</string>
     <string name="instant_payment_error_message">Unfortunately, there was an error during the instant payment process:
         %1$s
     </string>
     <string name="authview_title">Authview</string>
-    <string name="pref_advanced_settings_category_title">Advanced</string>
+
     <string name="pref_network_dialog_title">Bitcoin Network</string>
     <string name="pref_network_description">Select the bitcoin network</string>
-    <string name="pref_network_default_value">main-net</string>
-    <string name="pref_network_list">pref_network_list</string>
-    <string name="fragment_receive_title">Receive payment</string>
-    <string name="restart">Restart</string>
     <string name="pref_network_changed_restart">The wallet must be restarted in order to change the network.</string>
+    <string name="restart">Restart</string>
+
+    <string name="fragment_receive_title">Receive payment</string>
 
     <string name="pref_wallet_settings_title">Wallet Settings</string>
     <string name="pref_wallet_locktime_period_title">Locktime Period</string>
@@ -364,6 +344,8 @@
 
     <string name="version_compatibility_dialog_title">Version incompatible</string>
     <string name="version_compatibility_dialog_message">This client is not compatible with the current server. Please upgrade the client.\n\nClient version: %1$s</string>
+    <string name="network_compatibility_dialog_title">Network incompatible</string>
+    <string name="network_compatibility_dialog_message">This client\'s Bitcoin network settings are not compatible with the server.\n\nClient network: %1$s\nServer network: %2$s\n\nPlease check your settings.</string>
 
     <string name="payment_error_message_error">An unexpected error occurred.</string>
     <string name="payment_error_message_protocol_version_not_supported">The communication protocols are not compatible.</string>
@@ -379,12 +361,6 @@
     <string name="upgrade_multisig_2of2_to_cltv_forward_message">Your multisig funds were forwarded to a new address of your Coinblesk wallet due to an upgrade of the wallet.</string>
     <string name="upgrade_multisig_2of2_to_cltv_forward_error_message">Your multisig funds could not be forwarded to a new address of your Coinblesk wallet. This is required due to an upgrade of the wallet software.\n\nError message: %1$s</string>
 
-    <!-- argument: currency symbol, e.g. EUR, CHF, ... -->
-    <string name="pref_exchange_rate">pref_exchange_rate_%1$s</string>
-
-
-    <string name="pref_custom_buttons">pref_custom_buttons</string>
-    <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
     <string name="additional_services">Additional Services</string>
     <string name="additional_services_email">Email</string>
     <string name="additional_services_password">Password</string>
@@ -408,4 +384,6 @@
     <string name="additional_services_signup_success">Confirmation email sent</string>
     <string name="additional_services_curr">BTC</string>
     <string name="additional_services_no_balance">no balance</string>
+
+    <string name="testnet_warning">Connected to: %1$s</string>
 </resources>

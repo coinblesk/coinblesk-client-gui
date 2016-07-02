@@ -29,9 +29,9 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 
-import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
@@ -50,130 +50,113 @@ import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
- * Created by ckiller on 03/03/16.
+ * @author ckiller
+ * @author Andreas Albrecht
  */
 
 public class UIUtils {
-
-
     private static final String TAG = UIUtils.class.getName();
 
+    private static final Float CONNECTION_ICON_ENABLED = 0.8f;
+    private static final Float CONNECTION_ICON_DISABLED = 0.25f;  // see: styles.xml -> card_view_connection_icon
+    private static final String COLOR_MATERIAL_LIGHT_YELLOW_900 = "#F47F1F";
+    private static final String COLOR_COLOR_ACCENT = "#AEEA00";
+    private static final String COLOR_WHITE = "#FFFFFF";
+
     public static SpannableString getLargeBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
-        // Get all Preferences
-
-        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
-        String isLargeAmount = SharedPrefUtils.getPrimaryBalance(context);
-
-        // TODO -> As of now, currency retrieved via getBalanceFiat().getCurrencyCode()
-        // TODO -> Does this make sense? What it a user changes his primary currency?
-
-        SpannableString result = new SpannableString("");
-        switch (isLargeAmount) {
-            case AppConstants.BTC_AS_PRIMARY:
-                result = toLargeSpannable(context, scaleCoin(balanceCoin, coinDenomination), coinDenomination);
-                break;
-            case AppConstants.FIAT_AS_PRIMARY:
-                result = toLargeSpannable(context, balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
-                break;
+        SpannableString result;
+        if (SharedPrefUtils.isBitcoinPrimaryBalance(context)) {
+            String coinScale = SharedPrefUtils.getBitcoinScalePrefix(context);
+            result = toLargeSpannable(context, scaleCoin(context, balanceCoin), coinScale);
+        } else if (SharedPrefUtils.isFiatPrimaryBalance(context)) {
+            result = toLargeSpannable(context, balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
+        } else {
+            Log.e(TAG, "Unknown setting for primary balance: " + SharedPrefUtils.getPrimaryBalance(context));
+            result = new SpannableString("N/A");
         }
-
         return result;
     }
 
     public static SpannableString getSmallBalance(Context context, Coin balanceCoin, Fiat balanceFiat) {
-        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
-        String isLargeAmount = SharedPrefUtils.getPrimaryBalance(context);
-        SpannableString result = new SpannableString("");
-
-        switch (isLargeAmount) {
-            case AppConstants.BTC_AS_PRIMARY:
-                result = toSmallSpannable(balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
-                break;
-            case AppConstants.FIAT_AS_PRIMARY:
-                result = toSmallSpannable(scaleCoin(balanceCoin, coinDenomination), coinDenomination);
-                break;
+        SpannableString result;
+        if (SharedPrefUtils.isBitcoinPrimaryBalance(context)) {
+            result = toSmallSpannable(balanceFiat.toPlainString(), balanceFiat.getCurrencyCode());
+        } else if (SharedPrefUtils.isFiatPrimaryBalance(context)) {
+            String btcSymbol = SharedPrefUtils.getBitcoinScalePrefix(context);
+            result = toSmallSpannable(scaleCoin(context, balanceCoin), btcSymbol);
+        } else {
+            Log.e(TAG, "Unknown setting for primary balance: " + SharedPrefUtils.getPrimaryBalance(context));
+            result = new SpannableString("N/A");
         }
         return result;
-
     }
 
-    public static String scaleCoin(Coin coin, String coinDenomination) {
-        String result = "";
+    public static String scaleCoin(Context context, Coin coin) {
+        String result;
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
-        switch (coinDenomination) {
-            case AppConstants.COIN:
-                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
-                break;
-            case AppConstants.MILLICOIN:
-                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
-                break;
-            case AppConstants.MICROCOIN:
-                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
-                break;
+
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin);
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
+        } else {
+            throw new RuntimeException("Unknown coin scale.");
         }
 
         return result;
     }
 
-    public static SpannableString scaleCoinForDialogs(Coin coin, Context context) {
-        String result = "";
+    public static SpannableString scaleCoinForDialogs(Context context, Coin coin) {
+        String result = "n/a";
         String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
         // Dont try to use the Builder,"You cannot invoke both scale() and style()"... Add Symbol (Style) Manually
-        switch (coinDenomination) {
-            case AppConstants.COIN:
-                result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
-                break;
-            case AppConstants.MILLICOIN:
-                result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
-                break;
-            case AppConstants.MICROCOIN:
-                result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
-                break;
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.MILLICOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin, 0, BtcFixedFormat.REPEATING_PLACES);
         }
 
         // 1.3F Size Span necessary - otherwise Overflowing Edge of Dialog
         float sizeSpan = 1.3F;
-
         return toLargeSpannable(context, result, coinDenomination, sizeSpan);
     }
 
 
-    public static Coin getValue(String amount, Context context) {
+    public static Coin getValue(Context context, String amount) {
         BigDecimal bdAmount = new BigDecimal(amount);
-
         BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
-        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
-        switch (coinDenomination) {
-            case AppConstants.MILLICOIN:
-                multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
-                break;
-            case AppConstants.MICROCOIN:
-                multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
-                break;
+
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            multiplicand = new BigDecimal(Coin.COIN.getValue());
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
         }
-
         return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
-
     }
 
-    public static String coinToAmount(Coin coin, Context context) {
+    public static String coinToAmount(Context context, Coin coin) {
         // transform a given coin value to the "amount string".
         BigDecimal coinAmount = new BigDecimal(coin.getValue());
-        BigDecimal div;
-        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(context);
-        switch (coinDenomination) {
-            case AppConstants.MILLICOIN:
-                div = new BigDecimal(Coin.MILLICOIN.getValue());
-                break;
-            case AppConstants.MICROCOIN:
-                div = new BigDecimal(Coin.MICROCOIN.getValue());
-                break;
-            default:
-                div = new BigDecimal(Coin.COIN.getValue());
+        BigDecimal div = new BigDecimal(Coin.COIN.getValue());
+
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            div = new BigDecimal(Coin.COIN.getValue());
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            div = new BigDecimal(Coin.MILLICOIN.getValue());
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            div = new BigDecimal(Coin.MICROCOIN.getValue());
         }
+
         DecimalFormat df = new DecimalFormat("#.####");
         df.setRoundingMode(RoundingMode.DOWN);
         df.setMaximumFractionDigits(4);
@@ -186,13 +169,12 @@ public class UIUtils {
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
         StringBuffer stringBuffer = new StringBuffer(amount + " " + currency);
-        SpannableString spannableString = new SpannableString(stringBuffer);
-        return spannableString;
+        return new SpannableString(stringBuffer);
     }
 
     public static SpannableString toLargeSpannable(Context context, String amount, String currency) {
         final int amountLength = amount.length();
-        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency.toString()));
+        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency));
         result.setSpan(new RelativeSizeSpan(2), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, result.length(), 0);
@@ -201,7 +183,7 @@ public class UIUtils {
 
     public static SpannableString toLargeSpannable(Context context, String amount, String currency, float sizeSpan) {
         final int amountLength = amount.length();
-        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency.toString()));
+        SpannableString result = new SpannableString(new StringBuffer(amount + " " + currency));
         result.setSpan(new RelativeSizeSpan(sizeSpan), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(Color.WHITE), 0, amountLength, 0);
         result.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), amountLength, result.length(), 0);
@@ -209,19 +191,6 @@ public class UIUtils {
     }
 
     public static int getLargeTextSize(Context context, int amountLength) {
-
-            /*final int screenLayout = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
-        switch (screenLayout) {
-            case Configuration.SCREENLAYOUT_SIZE_LARGE:
-            case Configuration.SCREENLAYOUT_SIZE_XLARGE:
-                // TABLETS
-                break;
-            default:
-                // PHONES
-                break;
-        }*/
-
-
         int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
         final int orientation = context.getResources().getConfiguration().orientation;
         switch (orientation) {
@@ -342,10 +311,7 @@ public class UIUtils {
     public static boolean stringIsNotZero(String amountString){
         //Checks if a string is actually of Zero value 0.00 0 0.000 etc.
         BigDecimal bd = new BigDecimal(amountString);
-        if(bd.compareTo(BigDecimal.ZERO) == 0){
-            return false;
-        }
-        return true;
+        return bd.compareTo(BigDecimal.ZERO) != 0;
     }
 
     public static List<String> getCustomButton(Context context, String customKey) {
@@ -365,41 +331,45 @@ public class UIUtils {
         return null;
     }
 
-
-    public static void formatConnectionIcon(Context context, ImageView imageView, String status) {
-        Set<String> connectionSettings = SharedPrefUtils.getConnectionSettings(context);
-        // see: styles.xml -> card_view_connection_icon
-        float alpphaDeactivated = 0.25f;
-        imageView.setAlpha(alpphaDeactivated);
-        imageView.clearColorFilter();
-
-         // Set the Icon Color and Visibility
-        if (connectionSettings != null) {
-            for (String s : connectionSettings) {
-                switch (s) {
-                    case AppConstants.NFC_ACTIVATED:
-                        if (status.equals(AppConstants.NFC_ACTIVATED)) {
-                            makeVisible(context, imageView);
-                        }
-                        break;
-                    case AppConstants.BT_ACTIVATED:
-                        if (status.equals(AppConstants.BT_ACTIVATED)) {
-                            makeVisible(context, imageView);
-                        }
-                        break;
-                    case AppConstants.WIFIDIRECT_ACTIVATED:
-                        if (status.equals(AppConstants.WIFIDIRECT_ACTIVATED)) {
-                            makeVisible(context, imageView);
-                        }
-                        break;
-                }
-            }
+    /**
+     * Updates the connection icons (enables/disables the icons)
+     * @param context
+     * @param container root view
+     */
+    public static void refreshConnectionIconStatus(Context context, View container) {
+        if (container == null) {
+            return;
         }
+
+        UIUtils.formatConnectionIcon(
+                context,
+                (ImageView) container.findViewById(R.id.nfc_balance),
+                SharedPrefUtils.isConnectionNfcEnabled(context));
+        UIUtils.formatConnectionIcon(
+                context,
+                (ImageView) container.findViewById(R.id.bluetooth_balance),
+                SharedPrefUtils.isConnectionBluetoothLeEnabled(context));
+        UIUtils.formatConnectionIcon(
+                context,
+                (ImageView) container.findViewById(R.id.wifidirect_balance),
+                SharedPrefUtils.isConnectionWiFiDirectEnabled(context));
+
     }
 
-    private static void makeVisible(Context context, ImageView imageView) {
-        imageView.setAlpha(AppConstants.ICON_VISIBLE);
-        imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
+
+    /* sets the icon style (color and alpha) depending on isEnabled */
+    private static void formatConnectionIcon(Context context, ImageView icon, boolean isEnabled) {
+        if (icon == null) {
+            return;
+        }
+
+        if (isEnabled) {
+            icon.setAlpha(CONNECTION_ICON_ENABLED);
+            icon.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
+        } else {
+            icon.setAlpha(CONNECTION_ICON_DISABLED);
+            icon.clearColorFilter();
+        }
     }
 
     public static int getFractionalLengthFromString(String amount) {
@@ -423,32 +393,28 @@ public class UIUtils {
     }
 
     public static boolean isDecimal(String amount) {
-        return ((amount.contains(".")) ? true : false);
+        return amount.contains(".");
 
     }
 
-    public static int getDecimalThreshold(String coinDenomination) {
-        int threshold = 2;
-        switch (coinDenomination) {
-            case AppConstants.COIN:
-                threshold = 4;
-                break;
-            case AppConstants.MILLICOIN:
-                threshold = 5;
-                break;
-            case AppConstants.MICROCOIN:
-                threshold = 2;
-                break;
+    public static int getDecimalThreshold(Context context) {
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            return 4;
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            return 5;
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            return 2;
         }
-        return threshold;
+
+        return 2;
     }
 
     public static int getStatusColorFilter(int depthInBlock, boolean instantPayment) {
         if (instantPayment)
-            return Color.parseColor(AppConstants.COLOR_COLOR_ACCENT);
+            return Color.parseColor(COLOR_COLOR_ACCENT);
         if (depthInBlock == 0)
-            return Color.parseColor(AppConstants.COLOR_MATERIAL_LIGHT_YELLOW_900);
-        return Color.parseColor(AppConstants.COLOR_WHITE);
+            return Color.parseColor(COLOR_MATERIAL_LIGHT_YELLOW_900);
+        return Color.parseColor(COLOR_WHITE);
     }
 
     public static String lockedUntilText(long lockTime) {
@@ -456,7 +422,7 @@ public class UIUtils {
         if (BitcoinUtils.isLockTimeByTime(lockTime)) {
             lockedUntil = DateFormat.getDateTimeInstance().format(new Date(lockTime * 1000L));
         } else {
-            lockedUntil = String.format("block %d", lockTime);
+            lockedUntil = String.format(Locale.US, "block %d", lockTime);
         }
         return lockedUntil;
     }

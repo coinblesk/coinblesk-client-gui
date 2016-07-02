@@ -20,8 +20,6 @@ import com.google.common.primitives.UnsignedBytes;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,10 +120,10 @@ public final class ClientUtils {
 
 
     public static boolean isMainNet(NetworkParameters params) {
-        return params.getId().equals(MainNetParams.get().getId());
+        return params.getId().equals(NetworkParameters.ID_MAINNET);
     }
 
-    public static boolean isTestNet3(NetworkParameters params) {
-        return params.getId().equals(TestNet3Params.get().getId());
+    public static boolean isTestNet(NetworkParameters params) {
+        return params.getId().equals(NetworkParameters.ID_TESTNET);
     }
 }

@@ -55,6 +55,10 @@ import java.util.List;
 public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
     private final static String TAG = KeyboardFragment.class.getSimpleName();
 
+    private static final int MAXIMUM_COIN_AMOUNT_LENGTH = 7;
+    private static final int MAXIMUM_FIAT_AMOUNT_LENGTH = 6;
+    private static final int FIAT_DECIMAL_THRESHOLD = 2;
+
     private final static String KEY_AMOUNT = "amount";
     private final static String KEY_SUM = "sum";
     private final static String KEY_IS_BITCOIN_LARGE_AMOUNT = "isBitcoinLargeAmount";
@@ -71,7 +75,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Log.d(TAG, "onCreate");
-        isBitcoinLargeAmount = SharedPrefUtils.getPrimaryBalance(getContext()).equals("Bitcoin");
+        isBitcoinLargeAmount = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
     }
 
     @Override
@@ -89,13 +93,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
         }
 
-        final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
-        final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
-        final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
-
-        UIUtils.formatConnectionIcon(this.getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
-        UIUtils.formatConnectionIcon(this.getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
+        UIUtils.refreshConnectionIconStatus(getContext(), view);
 
         this.onKeyboardListener = this;
         return view;
@@ -333,9 +331,9 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected Coin getCoin() {
         if (isBitcoinLargeAmount) {
-            return UIUtils.getValue(this.amountString, this.getContext());
+            return UIUtils.getValue(getContext(), amountString);
         } else {
-            return exchangeRate.fiatToCoin(this.getFiat());
+            return exchangeRate.fiatToCoin(getFiat());
         }
     }
 
@@ -343,7 +341,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         if (!isBitcoinLargeAmount) {
             return Fiat.parseFiat(exchangeRate.fiat.currencyCode, this.amountString);
         } else {
-            return exchangeRate.coinToFiat(UIUtils.getValue(this.amountString, this.getContext()));
+            return exchangeRate.coinToFiat(UIUtils.getValue(getContext(), amountString));
         }
     }
 
@@ -362,13 +360,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), exchangeRate.fiat.getCurrencyCode()));
         } else {
             largeTextView.setText(UIUtils.toLargeSpannable(getContext(), amountString, exchangeRate.fiat.getCurrencyCode()));
-            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(coin, coinDenomination), coinDenomination));
+            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(getContext(), coin), coinDenomination));
         }
     }
 
     protected void setAmountByCoin(Coin newAmount) {
         if (isBitcoinLargeAmount) {
-            amountString = UIUtils.coinToAmount(newAmount, getContext());
+            amountString = UIUtils.coinToAmount(getContext(), newAmount);
         } else {
             amountString = exchangeRate.coinToFiat(newAmount).toPlainString();
         }
@@ -400,7 +398,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         final boolean isDecimal = UIUtils.isDecimal(this.amountString);
 
         if (isDecimal) {
-            if (fractionalLength < AppConstants.FIAT_DECIMAL_THRESHOLD) {
+            if (fractionalLength < FIAT_DECIMAL_THRESHOLD) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -408,7 +406,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
         if (!isDecimal) {
-            if (integerLength < AppConstants.MAXIMUM_FIAT_AMOUNT_LENGTH) {
+            if (integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();
@@ -417,8 +415,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     public void onCoinDigit(int digit) {
-        final String coinDenom = SharedPrefUtils.getBitcoinScalePrefix(getContext());
-        final int decimalThreshold = UIUtils.getDecimalThreshold(coinDenom);
+        final int decimalThreshold = UIUtils.getDecimalThreshold(getContext());
         final int fractionalLength = UIUtils.getFractionalLengthFromString(amountString);
         final int integerLength = UIUtils.getIntegerLengthFromString(amountString);
 
@@ -433,7 +430,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
 
         if (!isDecimal) {
-            if (integerLength < AppConstants.MAXIMUM_COIN_AMOUNT_LENGTH) {
+            if (integerLength < MAXIMUM_COIN_AMOUNT_LENGTH) {
                 this.amountString += digit;
                 this.amountString = new BigDecimal(amountString).toString();
                 this.updateAmount();

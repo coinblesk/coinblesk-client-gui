@@ -45,7 +45,7 @@ public class BalanceFragment extends Fragment {
 
     // Embeds the child fragment dynamically
     private void insertNestedFragment() {
-        Fragment balanceCurrent_childFragment = new CurrentBalanceFragment();
+        Fragment balanceCurrent_childFragment = CurrentBalanceFragment.newInstance();
         Fragment history_childFragment = new HistoryFragment();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction

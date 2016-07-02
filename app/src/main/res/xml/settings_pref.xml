@@ -8,30 +8,30 @@
 
         <ListPreference
             android:key="@string/pref_balance_list"
-            android:defaultValue="@string/pref_balance_default_value"
-            android:dialogTitle="@string/pref_balance_dialog_title"
-            android:entries="@array/pref_balance_values"
-            android:entryValues="@array/pref_balance_values"
+            android:title="@string/pref_balance_title"
             android:summary="@string/pref_balance_description"
-            android:title="@string/pref_balance_title" />
+            android:defaultValue="@string/pref_balance_default_value"
+            android:dialogTitle="@string/pref_balance_title"
+            android:entries="@array/pref_balance_entries"
+            android:entryValues="@array/pref_balance_values" />
 
         <ListPreference
             android:key="@string/pref_currency_list"
-            android:defaultValue="@string/pref_currency_default_value"
-            android:dialogTitle="@string/pref_currency_dialog_title"
-            android:entries="@array/pref_currency_entries"
-            android:entryValues="@array/pref_currency_values"
+            android:title="@string/pref_currency_title"
             android:summary="@string/pref_currency_description"
-            android:title="@string/pref_currency_title" />
+            android:defaultValue="@string/pref_currency_default_value"
+            android:dialogTitle="@string/pref_currency_title"
+            android:entries="@array/pref_currency_entries"
+            android:entryValues="@array/pref_currency_values" />
 
         <ListPreference
             android:key="@string/pref_bitcoin_rep_list"
-            android:defaultValue="@string/pref_bitcoin_rep_default_value"
-            android:dialogTitle="@string/pref_bitcoin_rep_dialog_title"
-            android:entries="@array/pref_bitcoin_rep_entries"
-            android:entryValues="@array/pref_bitcoin_rep_values"
+            android:title="@string/pref_bitcoin_rep_title"
             android:summary="@string/pref_bitcoin_rep_description"
-            android:title="@string/pref_bitcoin_rep_title" />
+            android:defaultValue="@string/pref_bitcoin_rep_default_value"
+            android:dialogTitle="@string/pref_bitcoin_rep_title"
+            android:entries="@array/pref_bitcoin_rep_entries"
+            android:entryValues="@array/pref_bitcoin_rep_values" />
 
     </PreferenceCategory>
 

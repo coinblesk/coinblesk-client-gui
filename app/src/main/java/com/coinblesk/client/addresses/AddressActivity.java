@@ -34,7 +34,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
@@ -118,7 +117,7 @@ public class AddressActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == AppConstants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
+        if (requestCode == Constants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 String scannedContent = data.getStringExtra(Intents.Scan.RESULT);
                 if (scannedContent == null) {

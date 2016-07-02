@@ -30,24 +30,27 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.coinblesk.client.utils.ClientUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.Fiat;
 
 /**
- * Created by ckiller on 10/01/16.
+ * @author ckiller
+ * @author Andreas Albrecht
  */
 
 public class CurrentBalanceFragment extends Fragment {
     private static final String TAG = CurrentBalanceFragment.class.getSimpleName();
     private WalletService.WalletServiceBinder walletServiceBinder;
 
-    public static CurrentBalanceFragment newInstance() {
-        CurrentBalanceFragment fragment = new CurrentBalanceFragment();
-        return fragment;
+    public static Fragment newInstance() {
+        return new CurrentBalanceFragment();
     }
 
     @Override
@@ -55,25 +58,20 @@ public class CurrentBalanceFragment extends Fragment {
         super.onResume();
 
         final View view = getView();
-        final ImageView nfcIcon = (ImageView) view.findViewById(R.id.nfc_balance);
-        final ImageView bluetoothIcon = (ImageView) view.findViewById(R.id.bluetooth_balance);
-        final ImageView wifiIcon = (ImageView) view.findViewById(R.id.wifidirect_balance);
+        if (view != null) {
 
-        UIUtils.formatConnectionIcon(getContext(), nfcIcon, AppConstants.NFC_ACTIVATED);
-        UIUtils.formatConnectionIcon(getContext(), bluetoothIcon, AppConstants.BT_ACTIVATED);
-        UIUtils.formatConnectionIcon(getContext(), wifiIcon, AppConstants.WIFIDIRECT_ACTIVATED);
+            UIUtils.refreshConnectionIconStatus(getContext(), view);
 
-        if(!Constants.PARAMS.equals(MainNetParams.get())) {
-            final TextView warning = (TextView) view.findViewById(R.id.testnet_textview);
-            warning.setText("Connected to:" + Constants.PARAMS.getClass().getSimpleName());
-            warning.setTextColor(Color.parseColor("#ffff4444"));
-            warning.setVisibility(View.VISIBLE);
+            final NetworkParameters params = Constants.PARAMS;
+            if(!ClientUtils.isMainNet(params)) {
+                final TextView warning = (TextView) view.findViewById(R.id.testnet_textview);
+                if (warning != null) {
+                    warning.setText(getString(R.string.testnet_warning, params.getClass().getSimpleName()));
+                    warning.setTextColor(Color.parseColor("#ffff4444"));
+                    warning.setVisibility(View.VISIBLE);
+                }
+            }
         }
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -88,22 +86,26 @@ public class CurrentBalanceFragment extends Fragment {
         Fiat fiatBalance = walletServiceBinder.getExchangeRate().coinToFiat(coinBalance);
         refreshBalance(coinBalance, fiatBalance);
     }
+
     private void refreshBalance(Coin coinBalance, Fiat fiatBalance) {
         final View root = getView();
         if (root == null || coinBalance == null || fiatBalance == null) {
             return;
         }
+
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        Log.d(TAG, "refresh balance: coin=" + coinBalance.toFriendlyString() + ", fiat=" + fiatBalance.toFriendlyString());
         if (largeBalance != null) {
             largeBalance.setText(UIUtils.getLargeBalance(getContext(), coinBalance, fiatBalance));
             int len = largeBalance.getText().length();
             largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(getContext(), len));
         }
+
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
         if (smallBalance != null) {
             smallBalance.setText(UIUtils.getSmallBalance(getContext(), coinBalance, fiatBalance));
         }
+
+        Log.d(TAG, "refresh balance: coin=" + coinBalance.toFriendlyString() + ", fiat=" + fiatBalance.toFriendlyString());
     }
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {

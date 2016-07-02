@@ -112,7 +112,7 @@ public class UpgradeUtils {
             newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".wallet");
             chainFile = new File(rootDir, "mainnet_wallet_.spvchain");
             newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".spvchain");
-        } else if (ClientUtils.isTestNet3(migrationParams)) {
+        } else if (ClientUtils.isTestNet(migrationParams)) {
             storageDir = new File(rootDir, "testnet_wallet__uuid_object_storage");
             walletFile = new File(rootDir, "testnet_wallet_.wallet");
             newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_TEST + ".wallet");

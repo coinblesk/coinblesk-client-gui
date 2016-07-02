@@ -198,11 +198,11 @@ public final class SharedPrefUtils {
     }
 
     public static boolean isNetworkTestnet(Context context) {
-        return getNetwork(context).equals("test-net-3");
+        return getNetwork(context).equals(context.getString(R.string.pref_network_testnet));
     }
 
     public static boolean isNetworkMainnet(Context context) {
-        return getNetwork(context).equals("main-net");
+        return getNetwork(context).equals(context.getString(R.string.pref_network_mainnet));
     }
 
     public static String getCurrency(Context context) {
@@ -211,17 +211,57 @@ public final class SharedPrefUtils {
     }
 
     public static Set<String> getConnectionSettings(Context context) {
-        String [] connections = context.getResources().getStringArray(R.array.pref_connection_default);
-        return getStringSet(context, context.getString(R.string.pref_connection_settings),  new HashSet<>(Arrays.asList(connections)));
+        String [] connectionDefaults = context.getResources().getStringArray(R.array.pref_connection_default);
+        String key = context.getString(R.string.pref_connection_settings);
+        return getStringSet(context, key,  new HashSet<>(Arrays.asList(connectionDefaults)));
+    }
+
+    public static boolean isConnectionNfcEnabled(Context context) {
+        return getConnectionSettings(context)
+                .contains(context.getString(R.string.pref_connection_nfc));
+    }
+
+    public static boolean isConnectionBluetoothLeEnabled(Context context) {
+        return getConnectionSettings(context)
+                .contains(context.getString(R.string.pref_connection_bt_le));
+    }
+
+    public static boolean isConnectionWiFiDirectEnabled(Context context) {
+        return getConnectionSettings(context)
+                .contains(context.getString(R.string.pref_connection_wifi_direct));
     }
 
     public static String getPrimaryBalance(Context context) {
-        return getString(context, context.getString(R.string.pref_balance_list),
+        return getString(context,
+                context.getString(R.string.pref_balance_list),
                 context.getString(R.string.pref_balance_default_value));
+    }
+
+    public static boolean isBitcoinPrimaryBalance(Context context) {
+        return getPrimaryBalance(context).equals(context.getString(R.string.pref_balance_bitcoin));
+    }
+
+    public static boolean isFiatPrimaryBalance(Context context) {
+        return !isBitcoinPrimaryBalance(context);
     }
 
     public static String getBitcoinScalePrefix(Context context) {
         return getString(context, context.getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
+    }
+
+    public static boolean isBitcoinScaleBTC(Context context) {
+        return getBitcoinScalePrefix(context)
+                .equals(context.getString(R.string.pref_bitcoin_rep_BTC));
+    }
+
+    public static boolean isBitcoinScaleMilliBTC(Context context) {
+        return getBitcoinScalePrefix(context)
+                .equals(context.getString(R.string.pref_bitcoin_rep_milliBTC));
+    }
+
+    public static boolean isBitcoinScaleMicroBTC(Context context) {
+        return getBitcoinScalePrefix(context)
+                .equals(context.getString(R.string.pref_bitcoin_rep_microBTC));
     }
 
     public static int getLockTimePeriodMonths(Context context) {

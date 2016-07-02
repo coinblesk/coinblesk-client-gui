@@ -43,6 +43,12 @@ public final class Constants {
     public static final java.util.logging.Level JAVA_LOGGER_LEVEL = java.util.logging.Level.INFO;
     public static final ch.qos.logback.classic.Level LOGBACK_LOGGER_LEVEL = ch.qos.logback.classic.Level.INFO;
 
+    public static final int QR_ACTIVITY_RESULT_REQUEST_CODE = 0x0000c0de; // bottom 16 bits
+
+    public static final String BACKUP_FILE_PREFIX = "coinblesk_wallet_backup";
+
+    public static final String FILE_PROVIDER_AUTHORITY = "com.coinblesk.fileprovider";
+
     public static final Coin MIN_PAYMENT_REQUEST_AMOUNT = Transaction.MIN_NONDUST_OUTPUT;
 
     public final static long UNIX_TIME_MONTH = 60 * 60 * 24 * 30;

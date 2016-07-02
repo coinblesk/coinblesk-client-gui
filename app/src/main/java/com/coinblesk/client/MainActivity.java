@@ -29,10 +29,9 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -68,9 +67,7 @@ import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
 import com.coinblesk.client.utils.upgrade.UpgradeUtils;
 import com.coinblesk.client.wallet.WalletActivity;
-import com.coinblesk.json.VersionTO;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.peers.AbstractClient;
 import com.coinblesk.payments.communications.peers.AbstractServer;
 import com.coinblesk.payments.communications.peers.PaymentRequestDelegate;
@@ -81,26 +78,24 @@ import com.coinblesk.payments.communications.peers.nfc.NFCServerACSCLTV;
 import com.coinblesk.payments.communications.peers.nfc.NFCServerCLTV;
 import com.coinblesk.payments.communications.peers.wifi.WiFiClient;
 import com.coinblesk.payments.communications.peers.wifi.WiFiServer;
-import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.SerializeUtils;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -117,12 +112,11 @@ public class MainActivity extends AppCompatActivity
 
     private final static String TAG = MainActivity.class.getName();
     private final static int FINE_LOCATION_PERMISSION_REQUEST = 1;
-
-    private NavigationView navigationView;
+    
     private DrawerLayout drawerLayout;
 
-    private final List<AbstractClient> clients = new ArrayList<AbstractClient>();
-    private final List<AbstractServer> servers = new ArrayList<AbstractServer>();
+    private final List<AbstractClient> clients = new ArrayList<>();
+    private final List<AbstractServer> servers = new ArrayList<>();
     // if true, servers are started onStart (e.g. when user switches back from settings to coinblesk).
     private boolean restartServers;
 
@@ -138,31 +132,14 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
+        final NetworkParameters params = initBitcoinNetwork();
 
-        final String networkSettings = SharedPrefUtils.getNetwork(this);
-        switch (networkSettings) {
-            case "test-net-3":
-                Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
-                Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
-                Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
-                break;
-            case "main-net":
-                Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
-                Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
-                Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
-                break;
-            default:
-                throw new RuntimeException("Unknown network set in preferences: " + networkSettings);
-        }
-
-        Constants.RETROFIT = new Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+        initRetrofit();
 
         AdditionalServiceUtils.setSessionID(this, null);
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
-        upgradeUtils.checkUpgrade(this, Constants.PARAMS);
+        upgradeUtils.checkUpgrade(this, params);
 
         startWalletService();
 
@@ -171,15 +148,16 @@ public class MainActivity extends AppCompatActivity
         initNavigationView();
         initViewPager();
 
-
-
         final Intent intent = getIntent();
         final String scheme = intent.getScheme();
-        if (scheme != null && scheme.equals(Constants.PARAMS.getUriScheme())) {
+        if (scheme != null && scheme.equals(params.getUriScheme())) {
             final String uri = intent.getDataString();
             try {
                 BitcoinURI bitcoinURI = new BitcoinURI(uri);
-                SendDialogFragment.newInstance(bitcoinURI.getAddress(), bitcoinURI.getAmount()).show(this.getSupportFragmentManager(), "send-dialog");
+                SendDialogFragment.newInstance(
+                        bitcoinURI.getAddress(),
+                        bitcoinURI.getAmount())
+                        .show(getSupportFragmentManager(), "send-dialog");
             } catch (BitcoinURIParseException e) {
                 Log.w(TAG, "Could not parse Bitcoin URI: " + uri);
             }
@@ -189,13 +167,37 @@ public class MainActivity extends AppCompatActivity
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
 
-        checkVersionCompatibility();
+        checkVersionCompatibility(params);
     }
 
-    private void checkVersionCompatibility() {
+    private NetworkParameters initBitcoinNetwork() {
+        final String networkSettings = SharedPrefUtils.getNetwork(this);
+        Log.d(TAG, "Network settings: " + networkSettings);
+        if (SharedPrefUtils.isNetworkMainnet(this)) {
+            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
+            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
+            Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
+        } else if (SharedPrefUtils.isNetworkTestnet(this)) {
+            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
+            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
+            Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
+        } else {
+            throw new RuntimeException("Unknown network set in preferences: " + networkSettings);
+        }
+        return Constants.PARAMS;
+    }
+
+    private void initRetrofit() {
+        Constants.RETROFIT = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+    }
+
+    private void checkVersionCompatibility(NetworkParameters params) {
         // message is only displayed if request succeeds and answer from server is negative in order
-        // to avoid annoying message dialogs. (the client or the server may just be temporary offline).
-        new VersionCheckTask().execute();
+        // to av
+        // oid annoying message dialogs. (the client or the server may just be temporary offline).
+        new VersionCheckTask(params, AppUtils.getAppVersion(), this).execute();
     }
 
     private void startWalletService() {
@@ -206,31 +208,42 @@ public class MainActivity extends AppCompatActivity
     private void initViewPager() {
         // Get the ViewPager and set its PagerAdapter so that it can display items
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
-        viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
-
+        if (viewPager != null) {
+            viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
+        }
 
         // Give the TabLayout the ViewPager
         TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
-        tabLayout.setTabMode(TabLayout.MODE_FIXED);
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        tabLayout.setupWithViewPager(viewPager);
+        if (tabLayout != null) {
+            tabLayout.setTabMode(TabLayout.MODE_FIXED);
+            tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+            tabLayout.setupWithViewPager(viewPager);
+        }
     }
 
     private void initToolbar() {
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
 
     @Override
     public void setTitle(CharSequence title) {
-        getActionBar().setTitle(title);
+        if (getActionBar() != null) {
+            getActionBar().setTitle(title);
+        }
     }
 
 
     private void initNavigationView() {
-        navigationView = (NavigationView) findViewById(R.id.navigation_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.navigation_view);
+        if (navigationView == null) {
+            Log.w(TAG, "Did not find navigation view!");
+            return;
+        }
 
         //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -416,7 +429,8 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
+                                                                @NonNull int[] grantResults) {
         switch (requestCode) {
             case FINE_LOCATION_PERMISSION_REQUEST: {
                 // If request is cancelled, the result arrays are empty.
@@ -526,21 +540,19 @@ public class MainActivity extends AppCompatActivity
         this.servers.clear();
         this.clients.clear();
 
-        final Set<String> connectionSettings = SharedPrefUtils.getConnectionSettings(this);
-
-        if (connectionSettings.contains(AppConstants.NFC_ACTIVATED)) {
+        if (SharedPrefUtils.isConnectionNfcEnabled(this)) {
             clients.add(new NFCClient(this, walletServiceBinder));
             servers.add(new NFCServerACSCLTV(this, walletServiceBinder));
             servers.add(new NFCServerCLTV(this, walletServiceBinder));
 
         }
 
-        if (connectionSettings.contains(AppConstants.BT_ACTIVATED)) {
+        if (SharedPrefUtils.isConnectionBluetoothLeEnabled(this)) {
             clients.add(new BluetoothLEClient(this, walletServiceBinder));
             servers.add(new BluetoothLEServer(this, walletServiceBinder));
         }
 
-        if (connectionSettings.contains(AppConstants.WIFIDIRECT_ACTIVATED)) {
+        if (SharedPrefUtils.isConnectionWiFiDirectEnabled(this)) {
             clients.add(new WiFiClient(this, walletServiceBinder));
             servers.add(new WiFiServer(this, walletServiceBinder));
         }
@@ -662,65 +674,4 @@ public class MainActivity extends AppCompatActivity
         authViewDialog = null;
     }
 
-    private class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
-
-        private Exception exception;
-
-        protected VersionTO doInBackground(Void... params) {
-            try {
-                CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
-
-                VersionTO requestTO = new VersionTO();
-                requestTO.clientVersion(AppUtils.getAppVersion());
-                Response<VersionTO> response = service.version(requestTO).execute();
-                if (!response.isSuccessful()) {
-                    throw new CoinbleskException(
-                            "Version compatibility check: request failed with code: "
-                            + response.code());
-                }
-
-                VersionTO responseTO = response.body();
-                if (!responseTO.isSuccess()) {
-                    throw new CoinbleskException(
-                            "Version compatibility check: server responded with error: "
-                            + responseTO.type().toString());
-                }
-
-                return responseTO;
-            } catch (Exception e) {
-                Log.e(TAG, "Could not do version check: ", e);
-                this.exception = e;
-            }
-            return null;
-        }
-
-        protected void onPostExecute(VersionTO responseTO) {
-            if (responseTO == null) {
-                return;
-            }
-
-            Log.d(TAG, String.format(
-                    "Version compatibility check: clientVersion=%s, isSupported=%s",
-                    AppUtils.getAppVersion(), responseTO.isSupported()));
-            if (!responseTO.isSupported()) {
-                showIncompatibleVersionDialog();
-            }
-        }
-
-        private void showIncompatibleVersionDialog() {
-            String clientVersion = AppUtils.getAppVersion();
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogAccent)
-                    .setTitle(R.string.version_compatibility_dialog_title)
-                    .setMessage(getString(R.string.version_compatibility_dialog_message, clientVersion))
-                    .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-            Dialog dialog = builder.create();
-            dialog.show();
-        }
-    }
 }
-

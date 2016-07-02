@@ -30,7 +30,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.coinblesk.client.AppConstants;
 import com.coinblesk.client.R;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.addresses.AddressList;
@@ -114,7 +113,7 @@ public class SendDialogFragment extends DialogFragment
 
         final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
         amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-        amountEditText.setText(UIUtils.scaleCoinForDialogs(amount, getContext()));
+        amountEditText.setText(UIUtils.scaleCoinForDialogs(getContext(), amount));
 
         view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
@@ -173,7 +172,7 @@ public class SendDialogFragment extends DialogFragment
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == AppConstants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
+        if (requestCode == Constants.QR_ACTIVITY_RESULT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 final String scanContent = data.getStringExtra(Intents.Scan.RESULT);
                 try {
