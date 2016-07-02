@@ -174,13 +174,13 @@ public class MainActivity extends AppCompatActivity
         final String networkSettings = SharedPrefUtils.getNetwork(this);
         Log.d(TAG, "Network settings: " + networkSettings);
         if (SharedPrefUtils.isNetworkMainnet(this)) {
-            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
-            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
-            Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
-        } else if (SharedPrefUtils.isNetworkTestnet(this)) {
             Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
             Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
             Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
+        } else if (SharedPrefUtils.isNetworkTestnet(this)) {
+            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
+            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
+            Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
         } else {
             throw new RuntimeException("Unknown network set in preferences: " + networkSettings);
         }
