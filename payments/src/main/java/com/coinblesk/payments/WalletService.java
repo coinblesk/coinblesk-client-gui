@@ -118,7 +118,7 @@ public class WalletService extends Service {
     private String fiatCurrency;
     private ExchangeRate exchangeRate;
 
-    private double progress = 0.0;
+    private int downloadProgress = 0;
 
     private WalletAppKit kit;
     private volatile org.bitcoinj.core.Context bitcoinjContext;
@@ -888,9 +888,9 @@ public class WalletService extends Service {
         getLocalBroadcaster().sendBroadcast(walletProgress);
     }
 
-    private void broadcastDownloadProgress(double pct, int blocksToGo, Date date) {
+    private void broadcastDownloadProgress(int progress, int blocksToGo, Date date) {
         Intent walletProgress = new Intent(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
-        walletProgress.putExtra("progress", pct);
+        walletProgress.putExtra("progress", progress);
         walletProgress.putExtra("blocksToGo", blocksToGo);
         walletProgress.putExtra("blockDate", date);
         getLocalBroadcaster().sendBroadcast(walletProgress);
@@ -1211,6 +1211,14 @@ public class WalletService extends Service {
             return wallet;
         }
 
+        public int getDownloadProgress() {
+            return downloadProgress;
+        }
+
+        public boolean isDownloadDone() {
+            return downloadProgress == 100;
+        }
+
         public byte[] getSerializedWallet() {
             Protos.Wallet proto = new WalletProtobufSerializer().walletToProto(wallet);
             return proto.toByteArray();
@@ -1286,20 +1294,22 @@ public class WalletService extends Service {
         @Override
         public void progress(double pct, int blocksToGo, Date date) {
             super.progress(pct, blocksToGo, date);
-            Log.d(TAG, "DownloadListener - progress: " + pct
+            int previousDownloadProgress = downloadProgress;
+            downloadProgress = (int) pct;
+            Log.d(TAG, "DownloadListener - progress: " + downloadProgress + "%"
                     + ", blocks to go: " + blocksToGo
                     + ", date: " + org.bitcoinj.core.Utils.dateTimeFormat(date));
-            progress = pct;
 
-            broadcastDownloadProgress(pct, blocksToGo, date);
+            if (downloadProgress > previousDownloadProgress) {
+                broadcastDownloadProgress(downloadProgress, blocksToGo, date);
+            }
         }
 
         @Override
         protected void doneDownload() {
             super.doneDownload();
             Log.i(TAG, "DownloadListener - doneDownload");
-            progress = 100.0;
-
+            downloadProgress = 100;
             broadcastDownloadDone();
         }
     }

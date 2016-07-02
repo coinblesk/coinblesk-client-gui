@@ -131,10 +131,10 @@ public class CurrentBalanceFragment extends Fragment {
             ProgressBar progressBar = (ProgressBar) getView().findViewById(R.id.walletSyncProgressBar);
             switch (intent.getAction()) {
                 case Constants.WALLET_DOWNLOAD_PROGRESS_ACTION:
-                    double progress = intent.getExtras().getDouble("progress", 100.0);
+                    int progress = intent.getExtras().getInt("progress", 100);
                     if (progress < 100) {
                         progressBar.setVisibility(View.VISIBLE);
-                        progressBar.setProgress((int) progress);
+                        progressBar.setProgress(progress);
                     } else {
                         progressBar.setVisibility(View.GONE);
                     }

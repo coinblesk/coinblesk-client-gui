@@ -51,6 +51,8 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     private TransactionWrapperRecyclerViewAdapter transactionAdapter;
     private WalletService.WalletServiceBinder walletServiceBinder;
 
+    private int walletProgressLastRefresh = 0;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,6 +71,17 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     private final BroadcastReceiver walletChangedBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            int currentWalletProgress = walletServiceBinder.getDownloadProgress();
+            if (!walletServiceBinder.isDownloadDone()) {
+                // during wallet sync, we prevent updating the tx history for every block
+                // and only update once in a while every x%
+                int progress = currentWalletProgress - walletProgressLastRefresh;
+                if (progress >= 0 && progress < 5) {
+                    return;
+                }
+            }
+            walletProgressLastRefresh = currentWalletProgress;
             updateTransactions();
         }
     };
