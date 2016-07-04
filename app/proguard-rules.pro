@@ -80,6 +80,7 @@
 -keep,includedescriptorclasses class org.bitcoin.protocols.payments.Protos$** { *; }
 -dontwarn org.bitcoinj.store.WindowsMMapHack
 -dontwarn org.bitcoinj.store.LevelDBBlockStore
+-dontwarn org.bitcoinj.store.LevelDBFullPrunedBlockStore*
 -dontnote org.bitcoinj.crypto.DRMWorkaround
 -dontnote org.bitcoinj.crypto.TrustStoreLoader$DefaultTrustStoreLoader
 -dontnote com.subgraph.orchid.crypto.PRNGFixes
