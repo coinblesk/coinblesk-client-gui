@@ -42,14 +42,6 @@ public class PaymentResponseReceiveCompactStep extends PaymentResponseReceiveSte
         byte[] serializedTx = parser.getBytes();
         long amountChange = parser.getLong();
 
-        /*
-        DERPayloadParser txInParser = new DERPayloadParser(parser.getDERSequence());
-        List<byte[]> transactionInputs = new ArrayList<>(txInParser.size());
-        for (int i = 0; i < txInParser.size(); ++i) {
-            transactionInputs.add(txInParser.getBytes());
-        }
-        */
-
         List<TxSig> signatures = parser.getTxSigList();
         TxSig messageSig = parser.getTxSig();
 

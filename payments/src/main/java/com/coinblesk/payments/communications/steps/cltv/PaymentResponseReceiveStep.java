@@ -130,13 +130,6 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         }
         serverSignTO.payeePublicKey(null);
 
-
-        // verify payer signature
-        if (!SerializeUtils.verifyJSONSignature(serverSignTO,
-                                ECKey.fromPublicOnly(serverSignTO.publicKey()))) {
-            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
-        }
-
         if (!serverSignTO.isSuccess()) {
             throw new PaymentException(PaymentError.SERVER_ERROR,
                     "Code: " + serverSignTO.type().toString());
