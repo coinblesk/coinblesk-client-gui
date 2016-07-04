@@ -70,7 +70,6 @@
     <string-array name="pref_connection_default">
         <item>@string/pref_connection_nfc</item>
         <item>@string/pref_connection_bt_le</item>
-        <item>@string/pref_connection_wifi_direct</item>
     </string-array>
 
 
