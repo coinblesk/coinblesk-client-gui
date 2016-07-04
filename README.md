@@ -1,5 +1,4 @@
-# coinblesk-client-gui
+# Coinblesk Client Application
 
-## Synopsis
-
-Coinblesk Client **Redesign** Android Studio Project
+Get the Android Application on 
+https://play.google.com/store/apps/details?id=com.coinblesk.client&hl=en
