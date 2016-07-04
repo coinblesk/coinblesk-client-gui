@@ -386,4 +386,5 @@
     <string name="additional_services_no_balance">no balance</string>
 
     <string name="testnet_warning">Connected to: %1$s</string>
+    <string name="additional_services_description_3">Transfer Balance</string>
 </resources>

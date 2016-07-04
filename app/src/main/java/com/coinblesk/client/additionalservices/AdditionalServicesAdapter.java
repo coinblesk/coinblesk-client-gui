@@ -1,6 +1,8 @@
 package com.coinblesk.client.additionalservices;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,7 +68,15 @@ public class AdditionalServicesAdapter extends ArrayAdapter<String> {
                     convertView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            new AdditionalServicesTasks.TransferP2SHTask(walletServiceBinder.getMultisigClientKey(), listener).execute();
+                            new AlertDialog.Builder(getContext())
+                                    .setMessage(R.string.additional_services_description_2)
+                                    .setTitle(R.string.additional_services_description_3)
+                                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            new AdditionalServicesTasks.TransferP2SHTask(walletServiceBinder.getMultisigClientKey(), listener).execute();
+                                        }
+                                    }).setNegativeButton(R.string.cancel, null).create().show();
                         }
                     });
                 }
