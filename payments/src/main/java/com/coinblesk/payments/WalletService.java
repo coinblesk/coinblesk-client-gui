@@ -959,7 +959,8 @@ public class WalletService extends Service {
                         Constants.PARAMS,
                         getUnspentInstantOutputs(),
                         getCurrentReceiveAddress(),
-                        getCurrentReceiveAddress(), true);
+                        getCurrentReceiveAddress(),
+                        false);
                 maxSpendableAmount = dummyTx.getOutputSum();
             } catch (CoinbleskException | InsufficientFunds e) {
                 // ignore since not interested in Tx anyways.
@@ -1138,7 +1139,8 @@ public class WalletService extends Service {
                             Constants.PARAMS,
                             unlockedTxOut,
                             getCurrentReceiveAddress(),
-                            sendTo, true);
+                            sendTo,
+                            false);
 
                     // since we sign with 1 key (without server key), we need to set
                     // the nLockTime and sequence number flags of CLTV inputs.

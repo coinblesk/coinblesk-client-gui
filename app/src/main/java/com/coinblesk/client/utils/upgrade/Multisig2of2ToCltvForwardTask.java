@@ -141,7 +141,8 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
                 Constants.PARAMS,
                 outputs,
                 addressTo,
-                addressTo, true);
+                addressTo,
+                false);
 
         // let server sign first
         SignTO transactionTO = new SignTO();

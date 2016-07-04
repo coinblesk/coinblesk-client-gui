@@ -23,7 +23,9 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.uri.BitcoinURI;
@@ -41,30 +43,28 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
 
     @Override
     protected SignVerifyTO createSignTO(Transaction transaction, List<TransactionSignature> txSignatures, ECKey clientKey) {
-
+        final NetworkParameters params = transaction.getParams();
         SignVerifyTO signTO = new SignVerifyTO()
                 .publicKey(clientKey.getPubKey())
                 .signatures(SerializeUtils.serializeSignatures(txSignatures));
 
         if (transaction.getOutputs().size() == 2) {
-            Transaction smallTx = new Transaction(transaction.getParams(), transaction.bitcoinSerialize());
-            // remove change output
-            //TransactionOutput txOut = smallTx.getOutput(0);
+            Transaction smallTx = new Transaction(params, transaction.bitcoinSerialize());
             smallTx.clearOutputs();
-            //smallTx.addOutput(txOut);
             signTO.transaction(smallTx.unsafeBitcoinSerialize());
 
             signTO.addressTo(getBitcoinURI().getAddress().toBase58());
             signTO.amountToSpend(getBitcoinURI().getAmount().longValue());
-            boolean isNotFirst = transaction.getOutputs().get(0).getScriptPubKey().getToAddress(transaction.getParams()).equals(getBitcoinURI().getAddress());
-            signTO.amountChange(isNotFirst? transaction.getOutputs().get(1).getValue().longValue() : transaction.getOutputs().get(0).getValue().longValue());
-            /*
-            List<byte[]> transactionInputs = new ArrayList<>(transaction.getInputs().size());
-            for (TransactionInput txIn : transaction.getInputs()) {
-                transactionInputs.add(txIn.unsafeBitcoinSerialize());
+
+            TransactionOutput firstTxOut = transaction.getOutputs().get(0);
+            TransactionOutput secondTxOut = transaction.getOutputs().get(1);
+            boolean changeIsFirstOutput = getBitcoinURI().getAddress().equals(
+                    secondTxOut.getScriptPubKey().getToAddress(params));
+            if (changeIsFirstOutput) {
+                signTO.amountChange(firstTxOut.getValue().longValue());
+            } else {
+                signTO.amountChange(secondTxOut.getValue().longValue());
             }
-            signTO.transactionInputs(transactionInputs);
-            */
         } else {
             signTO.transaction(transaction.unsafeBitcoinSerialize());
         }
@@ -75,13 +75,6 @@ public class PaymentResponseSendCompactStep extends PaymentResponseSendStep {
 
     @Override
     protected DERPayloadBuilder appendSignTO(DERPayloadBuilder builder, SignVerifyTO signTO) {
-        /*
-        DERPayloadBuilder txInputs = new DERPayloadBuilder();
-        for (byte[] txIn : signTO.transactionInputs()) {
-            txInputs.add(txIn);
-        }
-        */
-
         builder.add(signTO.publicKey())
                 .add(signTO.transaction())
                 .add(signTO.amountChange())
