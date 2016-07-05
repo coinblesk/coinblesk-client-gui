@@ -802,7 +802,7 @@ public class WalletService extends Service {
     }
 
     private void markTransactionInstant(String txHash) {
-        SharedPrefUtils.addInstantTransaction(this, txHash);
+        SharedPrefUtils.addInstantTransaction(this, appConfig.getNetworkParameters(), txHash);
     }
 
     private boolean isTransactionInstant(Transaction tx) {
@@ -810,7 +810,7 @@ public class WalletService extends Service {
     }
 
     private boolean isTransactionInstant(String txHash) {
-        Set<String> instantTx = SharedPrefUtils.getInstantTransactions(this);
+        Set<String> instantTx = SharedPrefUtils.getInstantTransactions(this, appConfig.getNetworkParameters());
         return instantTx != null && instantTx.contains(txHash);
     }
 
@@ -1207,6 +1207,10 @@ public class WalletService extends Service {
 
         public TimeLockedAddress findTimeLockedAddressByHash(byte[] addressHash) {
             return WalletService.this.findTimeLockedAddressByHash(addressHash);
+        }
+
+        public void markTransactionInstant(String txHash) {
+            WalletService.this.markTransactionInstant(txHash);
         }
 
         public ECKey getMultisigClientKey() {

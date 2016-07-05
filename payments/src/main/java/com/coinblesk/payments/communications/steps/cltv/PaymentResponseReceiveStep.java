@@ -19,9 +19,12 @@ package com.coinblesk.payments.communications.steps.cltv;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.json.SignVerifyTO;
 import com.coinblesk.json.TxSig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.json.Type;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
@@ -32,6 +35,8 @@ import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERSequence;
 import com.coinblesk.util.SerializeUtils;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 import retrofit2.Response;
 
@@ -133,6 +138,14 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         if (!serverSignTO.isSuccess()) {
             throw new PaymentException(PaymentError.SERVER_ERROR,
                     "Code: " + serverSignTO.type().toString());
+        }
+
+        if (serverSignTO.type() == Type.SUCCESS_INSTANT) {
+            String txHash = new Transaction(
+                    walletService.getNetworkParameters(),
+                    serverSignTO.transaction())
+                    .getHashAsString();
+            walletService.markTransactionInstant(txHash);
         }
 
         return serverSignTO;

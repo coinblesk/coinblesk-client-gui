@@ -16,6 +16,8 @@
 
 package com.coinblesk.client.utils;
 
+import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.models.TransactionWrapper;
 import com.google.common.primitives.UnsignedBytes;
 
 import org.bitcoinj.core.ECKey;
@@ -125,5 +127,10 @@ public final class ClientUtils {
 
     public static boolean isTestNet(NetworkParameters params) {
         return params.getId().equals(NetworkParameters.ID_TESTNET);
+    }
+
+    public static boolean isConfidenceReached(TransactionWrapper txWrapper) {
+        long confBlocks = txWrapper.getTransaction().getConfidence().getDepthInBlocks();
+        return (confBlocks >= Constants.MIN_CONF_BLOCKS) || txWrapper.isInstant();
     }
 }

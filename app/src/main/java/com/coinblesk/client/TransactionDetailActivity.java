@@ -42,6 +42,7 @@ import android.widget.TextView;
 import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.TransactionWrapper;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.payments.WalletService;
 import com.google.common.util.concurrent.FutureCallback;
@@ -49,7 +50,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -195,11 +195,12 @@ public class TransactionDetailActivity extends AppCompatActivity {
             View v;
             ImageView statusIcon;
             if ((statusIcon = (ImageView) findViewById(R.id.txdetail_status_icon)) != null) {
-                statusIcon.setImageResource(
-                        (transaction.getConfidence().getDepthInBlocks() > 0)
+                statusIcon.setImageResource(ClientUtils.isConfidenceReached(txWrapper)
                                 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
                                 : R.drawable.ic_clock_white_18dp);
-                statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
+                statusIcon.setColorFilter(UIUtils.getStatusColorFilter(
+                        transaction.getConfidence().getDepthInBlocks(),
+                        txWrapper.isInstant()));
             }
 
             TextView txt;

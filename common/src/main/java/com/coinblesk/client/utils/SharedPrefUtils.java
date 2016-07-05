@@ -90,7 +90,7 @@ public final class SharedPrefUtils {
     }
 
     private static Set<String> getStringSet(Context context, String key, Set<String> defaultValues) {
-        return preferences(context).getStringSet(key, defaultValues);
+        return new HashSet<>(preferences(context).getStringSet(key, defaultValues));
     }
 
     private static void setStringSet(Context context, String key, Set<String> values) {
@@ -455,13 +455,13 @@ public final class SharedPrefUtils {
         }
     }
 
-    public static Set<String> getInstantTransactions(Context context) {
-        String key = context.getString(R.string.pref_instant_transactions);
+    public static Set<String> getInstantTransactions(Context context, NetworkParameters params) {
+        String key = context.getString(R.string.pref_instant_transactions, params.getId());
         return getStringSet(context, key, new HashSet<String>());
     }
 
-    public static void addInstantTransaction(Context context, String txHash) {
-        String key = context.getString(R.string.pref_instant_transactions);
+    public static void addInstantTransaction(Context context, NetworkParameters params, String txHash) {
+        String key = context.getString(R.string.pref_instant_transactions, params.getId());
         Set<String> instantTx = getStringSet(context, key, new HashSet<String>());
         instantTx.add(txHash);
         setStringSet(context, key, instantTx);

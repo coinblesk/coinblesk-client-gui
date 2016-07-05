@@ -44,6 +44,8 @@ public final class Constants {
 
     public static final Coin MIN_PAYMENT_REQUEST_AMOUNT = Transaction.MIN_NONDUST_OUTPUT;
 
+    public static final long MIN_CONF_BLOCKS = 1;
+
     /* do not accept addresses that have lock time higher than (now + timespan) */
     public static final long MAX_LOCKTIME_SPAN_SECONDS = 60*60*24 * 365 + 3600;
     /* create new address if current expires in less than this timespan */
@@ -95,8 +97,8 @@ public final class Constants {
     /* coinblesk server communication */
 
     //public final static String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "http://192.168.0.105:8080/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://192.168.0.105:8080/coinblesk-server/";
     //public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
     public static String COINBLESK_SERVER_BASE_URL = null;
