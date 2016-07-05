@@ -27,6 +27,7 @@ import android.util.Log;
 
 import com.coinblesk.bitcoin.AddressCoinSelector;
 import com.coinblesk.bitcoin.TimeLockedAddress;
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
@@ -121,6 +122,7 @@ public class WalletService extends Service {
     private int downloadProgress = 0;
 
     private WalletAppKit kit;
+    private NetworkParameters networkParameters;
     private volatile org.bitcoinj.core.Context bitcoinjContext;
     private boolean appKitInitDone = false;
     private ScheduledExecutorService scheduledPeerGroupShutdown;
@@ -135,6 +137,7 @@ public class WalletService extends Service {
 
     private ECKey multisigClientKey;
     private ECKey multisigServerKey;
+
 
     /* Addresses:
      * - map for fast lookup by hash, hex encoded (e.g. get redeem data)
@@ -157,11 +160,14 @@ public class WalletService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate - network parameters: " + Constants.PARAMS.getId());
+
+        networkParameters = ((CoinbleskApp) getApplication()).getNetworkParameters();
+
+        Log.d(TAG, "onCreate - network parameters: " + networkParameters.getId());
         ClientUtils.fixECKeyComparator();
         initLogging();
 
-        bitcoinjContext = new Context(Constants.PARAMS);
+        bitcoinjContext = new Context(networkParameters);
         Context.propagate(bitcoinjContext);
 
         initFiatCurrency();
@@ -182,7 +188,7 @@ public class WalletService extends Service {
                     Coin coinBalance = wallet.getBalance();
                     broadcastBalanceChanged(coinBalance, exchangeRate.coinToFiat(coinBalance));
 
-                    addPeers();
+                    //addPeers();
                     initWalletEventListener();
 
                     /*
@@ -356,8 +362,8 @@ public class WalletService extends Service {
             return;
         }
         if (peerGroup == null || !peerGroup.isRunning()) {
-            peerGroup = new PeerGroup(Constants.PARAMS, blockChain);
-            DnsDiscovery discovery = new DnsDiscovery(Constants.PARAMS);
+            peerGroup = new PeerGroup(networkParameters, blockChain);
+            DnsDiscovery discovery = new DnsDiscovery(networkParameters);
             peerGroup.addPeerDiscovery(discovery);
             peerGroup.addWallet(wallet);
             Futures.addCallback(peerGroup.startAsync(), new FutureCallback() {
@@ -393,10 +399,12 @@ public class WalletService extends Service {
 
     private void setChainCheckpoints() {
         try {
-            if (Constants.PARAMS.equals(TestNet3Params.get())) {
-                kit.setCheckpoints(getAssets().open("checkpoints-testnet"));
-            } else if (Constants.PARAMS.equals(MainNetParams.get())) {
-                kit.setCheckpoints(getAssets().open("checkpoints-mainnet"));
+            if (ClientUtils.isMainNet(networkParameters)) {
+                kit.setCheckpoints(getAssets().open("checkpoints.txt"));
+            } else if (ClientUtils.isTestNet(networkParameters)) {
+                kit.setCheckpoints(getAssets().open("checkpoints-testnet.txt"));
+            } else {
+                throw new RuntimeException("Unknown network parameters.");
             }
         } catch (IOException e) {
             Log.w(TAG, "Exception while setting checkpoints: ", e);
@@ -404,8 +412,11 @@ public class WalletService extends Service {
     }
 
     private void addPeers() {
+        // TODO: remove static peers?
         String[] peers = {};
-        if (Constants.PARAMS.equals(TestNet3Params.get())) {
+        if (ClientUtils.isMainNet(networkParameters)) {
+            // no mainnet peers at the moment
+        } else if (ClientUtils.isTestNet(networkParameters)) {
             // testnet peers
             peers = new String[] {
                     "144.76.175.228",
@@ -414,8 +425,8 @@ public class WalletService extends Service {
                     "176.9.24.110",
                     "144.76.175.228"
             };
-        } else if (Constants.PARAMS.equals(MainNetParams.get())) {
-            // no mainnet peers at the moment
+        } else {
+            throw new RuntimeException("Unknown network parameters.");
         }
 
         for (String ip : peers) {
@@ -428,9 +439,8 @@ public class WalletService extends Service {
     }
 
     private boolean loadKeysIfExist() throws CoinbleskException {
-        final NetworkParameters params = Constants.PARAMS;
-        multisigClientKey = SharedPrefUtils.getClientKey(this, params);
-        multisigServerKey = SharedPrefUtils.getServerKey(this, params);
+        multisigClientKey = SharedPrefUtils.getClientKey(this, networkParameters);
+        multisigServerKey = SharedPrefUtils.getServerKey(this, networkParameters);
 
         if (multisigClientKey != null && multisigServerKey != null) {
             Log.d(TAG, String.format(Locale.US, "loadKeysIfExist - loaded client and server key from storage - clientPubKey=%s, serverPubKey=%s",
@@ -448,15 +458,14 @@ public class WalletService extends Service {
     }
 
     private void saveKeys(ECKey clientECKey, ECKey serverECKey, String url) throws CoinbleskException {
-        final NetworkParameters params = Constants.PARAMS;
         try {
-            SharedPrefUtils.setClientKey(this, params, clientECKey);
-            SharedPrefUtils.setServerKey(this, params, serverECKey, url);
+            SharedPrefUtils.setClientKey(this, networkParameters, clientECKey);
+            SharedPrefUtils.setServerKey(this, networkParameters, serverECKey, url);
         } catch (Exception e) {
             // clear keys, we either save both keys or none in order to make sure we do not use
             // keys that the other party (server or client) is not aware of.
-            SharedPrefUtils.setClientKey(this, params, null);
-            SharedPrefUtils.setServerKey(this, params, null, "");
+            SharedPrefUtils.setClientKey(this, networkParameters, null);
+            SharedPrefUtils.setServerKey(this, networkParameters, null, "");
             throw new CoinbleskException("Could not store keys.", e);
         }
     }
@@ -523,9 +532,8 @@ public class WalletService extends Service {
     private void loadAddresses() {
         addresses.clear();
         addressHashes.clear();
-        final NetworkParameters params = Constants.PARAMS;
         try {
-            List<LockTime> lockTimes = SharedPrefUtils.getLockTimes(this, params);
+            List<LockTime> lockTimes = SharedPrefUtils.getLockTimes(this, networkParameters);
             if (lockTimes != null) {
                 addAddresses(lockTimes);
             }
@@ -559,7 +567,7 @@ public class WalletService extends Service {
             addressScripts.add(pubKeyScript);
 
             addressLog.append("  ")
-                    .append(tla.toString(Constants.PARAMS))
+                    .append(tla.toString(networkParameters))
                     .append("\n");
         }
         // now add to wallet, address lists and hash index
@@ -582,7 +590,7 @@ public class WalletService extends Service {
         Script pubKeyScript = address.createPubkeyScript();
         pubKeyScript.setCreationTimeSeconds(lockTime.getTimeCreatedSeconds());
         wallet.addWatchedScripts(ImmutableList.of(pubKeyScript));
-        Log.d(TAG, "Added address: " + address.toString(Constants.PARAMS));
+        Log.d(TAG, "Added address: " + address.toString(networkParameters));
         return address;
     }
 
@@ -592,7 +600,6 @@ public class WalletService extends Service {
         }
 
         CoinbleskWebService service = coinbleskService();
-        final NetworkParameters params = Constants.PARAMS;
         final long nextLockTime = calculateNextLockTime();
         final TimeLockedAddress expectedAddress = new TimeLockedAddress(
                 multisigClientKey.getPubKey(),
@@ -636,13 +643,13 @@ public class WalletService extends Service {
 
         LockTime lockTime = LockTime.create(nextLockTime);
         try {
-            SharedPrefUtils.addLockTime(this, params, lockTime);
+            SharedPrefUtils.addLockTime(this, networkParameters, lockTime);
         } catch (Exception e) {
             throw new CoinbleskException("Could not store address.", e);
         }
 
         TimeLockedAddress addedAddress = addAddress(lockTime);
-        Log.d(TAG, "Created new time locked address: " + lockedAddress.toStringDetailed(params));
+        Log.d(TAG, "Created new time locked address: " + lockedAddress.toStringDetailed(networkParameters));
         return addedAddress;
     }
 
@@ -660,7 +667,7 @@ public class WalletService extends Service {
         }
 
         final byte[] addressHash = receivedAddress.getAddressHash();
-        if (addressHash == null || addressHash.length <= 0 || !receivedAddress.getAddress(Constants.PARAMS).isP2SHAddress()) {
+        if (addressHash == null || addressHash.length <= 0 || !receivedAddress.getAddress(networkParameters).isP2SHAddress()) {
             return false;
         }
 
@@ -796,7 +803,7 @@ public class WalletService extends Service {
         Address changeAddress = walletServiceBinder.getCurrentReceiveAddress();
         List<TransactionOutput> outputs = walletServiceBinder.getUnspentInstantOutputs();
         Transaction transaction = BitcoinUtils.createTx(
-                Constants.PARAMS,
+                networkParameters,
                 outputs,
                 changeAddress,
                 addressTo,
@@ -930,6 +937,10 @@ public class WalletService extends Service {
 
     public class WalletServiceBinder extends Binder {
 
+        public NetworkParameters networkParameters() {
+            return networkParameters;
+        }
+
         public Coin getBalance() {
             Coin amount = Coin.ZERO;
             for (TransactionOutput transactionOutput : getUnspentInstantOutputs()) {
@@ -956,7 +967,7 @@ public class WalletService extends Service {
             Coin maxSpendableAmount;
             try {
                 Transaction dummyTx = BitcoinUtils.createSpendAllTx(
-                        Constants.PARAMS,
+                        networkParameters,
                         getUnspentInstantOutputs(),
                         getCurrentReceiveAddress(),
                         getCurrentReceiveAddress(),
@@ -991,7 +1002,7 @@ public class WalletService extends Service {
         }
 
         public Address getCurrentReceiveAddress() {
-            return getCurrentTimeLockedReceiveAddress().getAddress(Constants.PARAMS);
+            return getCurrentTimeLockedReceiveAddress().getAddress(networkParameters);
         }
 
         public TimeLockedAddress getCurrentTimeLockedReceiveAddress() {
@@ -1023,7 +1034,7 @@ public class WalletService extends Service {
         }
 
         public Map<Address, Coin> getBalanceByAddress() {
-            AddressCoinSelector selector = new AddressCoinSelector(null, Constants.PARAMS);
+            AddressCoinSelector selector = new AddressCoinSelector(null, networkParameters);
             selector.select(Coin.ZERO, getUnspentInstantOutputs());
             return selector.getAddressBalances();
         }
@@ -1136,7 +1147,7 @@ public class WalletService extends Service {
                 public Transaction call() throws Exception {
                     final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
                     Transaction transaction = BitcoinUtils.createSpendAllTx(
-                            Constants.PARAMS,
+                            networkParameters,
                             unlockedTxOut,
                             getCurrentReceiveAddress(),
                             sendTo,

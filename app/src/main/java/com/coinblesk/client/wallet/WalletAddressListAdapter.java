@@ -33,6 +33,7 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.util.BitcoinUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Utils;
 
 import java.util.ArrayList;
@@ -47,16 +48,18 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
 
     private static final String TAG = WalletAddressListAdapter.class.getName();
 
+    private final NetworkParameters params;
     private final List<TimeLockedAddress> addresses;
     private Map<Address, Coin> balanceByAddress;
 
     private ItemClickListener listener;
 
-    public WalletAddressListAdapter() {
-        this(null);
+    public WalletAddressListAdapter(NetworkParameters params) {
+        this(params, null);
     }
 
-    public WalletAddressListAdapter(List<TimeLockedAddress> addresses) {
+    public WalletAddressListAdapter(NetworkParameters params, List<TimeLockedAddress> addresses) {
+        this.params = params;
         this.addresses = (addresses != null)
                 ? addresses
                 : Collections.synchronizedList(new ArrayList<TimeLockedAddress>());
@@ -75,7 +78,7 @@ class WalletAddressListAdapter extends RecyclerView.Adapter<WalletAddressListAda
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final TimeLockedAddress item = addresses.get(position);
-        final Address address = item.getAddress(Constants.PARAMS);
+        final Address address = item.getAddress(params);
         final long currentTime = Utils.currentTimeSeconds();
         final Context context = holder.root.getContext();
 

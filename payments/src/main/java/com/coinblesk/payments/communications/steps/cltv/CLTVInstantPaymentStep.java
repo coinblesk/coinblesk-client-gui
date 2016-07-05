@@ -56,7 +56,7 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             /* Payment Request */
             PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI(), walletServiceBinder.getMultisigClientKey());
             DERObject requestOutput = sendRequest.process(null);
-            PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep();
+            PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
             receiveRequest.process(requestOutput);
 
             /* Payment Response */

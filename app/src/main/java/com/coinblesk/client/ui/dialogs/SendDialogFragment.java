@@ -21,6 +21,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
@@ -30,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.addresses.AddressList;
@@ -42,6 +44,7 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
@@ -61,6 +64,8 @@ public class SendDialogFragment extends DialogFragment
     private EditText addressEditText;
     private EditText amountEditText;
 
+    private NetworkParameters params;
+
     private SendDialogListener listener;
 
     public static DialogFragment newInstance(Coin amount) {
@@ -78,6 +83,12 @@ public class SendDialogFragment extends DialogFragment
         arguments.putString(ARGS_KEY_ADDRESS, address.toString());
         fragment.setArguments(arguments);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
     }
 
     @Override
@@ -104,7 +115,7 @@ public class SendDialogFragment extends DialogFragment
         addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
         final String addressStr = getArguments().getString(ARGS_KEY_ADDRESS, "");
         try {
-            Address address = Address.fromBase58(Constants.PARAMS, addressStr);
+            Address address = Address.fromBase58(params, addressStr);
             addressEditText.setText(address.toString());
         } catch (AddressFormatException e) {
             Log.w(TAG, "Could not parse address: " + addressStr);
@@ -124,6 +135,7 @@ public class SendDialogFragment extends DialogFragment
     }
 
     @Override
+    @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.setTitle(R.string.fragment_send_dialog_title);
@@ -189,14 +201,14 @@ public class SendDialogFragment extends DialogFragment
     private void sendCoins() {
         try {
             Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
-            Address sendTo = Address.fromBase58(Constants.PARAMS, addressEditText.getText().toString().trim());
+            Address sendTo = Address.fromBase58(params, addressEditText.getText().toString().trim());
             if (listener != null) {
                 listener.sendCoins(sendTo, amount);
             }
             dismiss();
         } catch (WrongNetworkException e) {
             Toast.makeText(getContext(),
-                    getString(R.string.send_address_wrong_network, Constants.PARAMS.getId()),
+                    getString(R.string.send_address_wrong_network, params.getId()),
                     Toast.LENGTH_SHORT)
                     .show();
         } catch (AddressFormatException e) {
@@ -209,8 +221,8 @@ public class SendDialogFragment extends DialogFragment
     public interface SendDialogListener {
         /**
          * Called when "send" is clicked.
-         * @param address
-         * @param amount
+         * @param address the entered address
+         * @param amount the entered amount
          */
         void sendCoins(Address address, Coin amount);
     }

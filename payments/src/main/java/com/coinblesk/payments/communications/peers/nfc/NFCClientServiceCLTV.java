@@ -234,7 +234,7 @@ public class NFCClientServiceCLTV extends HostApduService {
     }
 
     private void handlePaymentRequestReceive(byte[] requestPayload) throws PaymentException {
-        PaymentRequestReceiveStep request = new PaymentRequestReceiveStep();
+        PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
         DERObject input = DERParser.parseDER(requestPayload);
         request.process(input);
         bitcoinURI = request.getBitcoinURI();

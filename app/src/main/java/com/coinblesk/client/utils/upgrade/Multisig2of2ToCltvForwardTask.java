@@ -75,7 +75,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
     }
 
     @Override
-    protected Transaction doInBackground(Void... params) {
+    protected Transaction doInBackground(Void... voidParams) {
         try {
             return forwardFromMultisig2of2();
         } catch (Exception e) {
@@ -138,7 +138,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
 
         Address addressTo = walletService.getCurrentReceiveAddress();
         final Transaction transaction = BitcoinUtils.createSpendAllTx(
-                Constants.PARAMS,
+                walletService.networkParameters(),
                 outputs,
                 addressTo,
                 addressTo,
@@ -153,9 +153,6 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
 
         Response<SignTO> signTOResponse = getCoinbleskService().sign(transactionTO).execute();
         SignTO signedTO = signTOResponse.body();
-
-        //This is needed because otherwise we mix up signature order
-        List<ECKey> keys = getSortedKeys();
 
         Script redeemScript = createRedeemScript();
 
@@ -184,20 +181,12 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         return transaction;
     }
 
-    private Coin calculateBalance(List<TransactionOutput> outputs) {
-        Coin balance = Coin.ZERO;
-        for (TransactionOutput txOut : outputs) {
-            balance = balance.add(txOut.getValue());
-        }
-        return balance;
-    }
-
     private List<TransactionOutput> getMultisig2of2Outputs() {
         Address address2of2 = getMultisig2of2Address();
         List<TransactionOutput> txOutputs2of2 = new ArrayList<>();
         List<TransactionOutput> candidates = walletService.getWallet().calculateAllSpendCandidates(false, false);
         for (TransactionOutput txOut : candidates) {
-            Address paidTo = txOut.getAddressFromP2SH(Constants.PARAMS);
+            Address paidTo = txOut.getAddressFromP2SH(walletService.networkParameters());
             if (paidTo != null && paidTo.equals(address2of2)) {
                 txOutputs2of2.add(txOut);
             }
@@ -229,7 +218,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
 
     private Address getMultisig2of2Address() {
         Script script = createMultisig2of2Script(clientKey, serverKey);
-        return script.getToAddress(Constants.PARAMS);
+        return script.getToAddress(walletService.networkParameters());
     }
 
     private Script createMultisig2of2Script(ECKey clientKey, ECKey serverKey) {

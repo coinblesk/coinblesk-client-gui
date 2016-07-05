@@ -36,8 +36,9 @@ import android.view.View;
 
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
-import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 
 import org.bitcoinj.core.Address;
@@ -62,8 +63,7 @@ public class EditAddressFragment extends DialogFragment {
     private EditText addressEditText;
     private AddressFragmentInteractionListener listener;
 
-    public EditAddressFragment() {
-    }
+    private NetworkParameters params;
 
     public static DialogFragment newInstance(String addressLabel, String address) {
         EditAddressFragment fragment = new EditAddressFragment();
@@ -117,6 +117,8 @@ public class EditAddressFragment extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
 
         /* the click listener is set here such that we can perform input validation (is address correct, and so on).
          * unfortunately, the AlertDialog with the builder usually does autoDismiss with an additional after a button click.
@@ -180,7 +182,6 @@ public class EditAddressFragment extends DialogFragment {
     private Pair<Boolean,String> addressValidation(String address) {
         // the address can be a Bitcoin address OR an bitcoin Uri from e.g. a QR Code
         // (from which we can extract the address part).
-        final NetworkParameters params = Constants.PARAMS;
         String addressError = null;
         try {
             BitcoinURI bitcoinURI = new BitcoinURI(address);
@@ -265,7 +266,7 @@ public class EditAddressFragment extends DialogFragment {
          * Called if item is added or changed.
          * Note: the address reference may not point to the same
          *       object even if the item is changed and not new.
-         * @param address
+         * @param address the new/edited item
          */
         void onNewOrChangedAddress(AddressBookItem address);
     }

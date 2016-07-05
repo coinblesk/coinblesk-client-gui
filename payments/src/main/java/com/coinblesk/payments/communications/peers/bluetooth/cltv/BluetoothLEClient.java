@@ -159,7 +159,7 @@ public class BluetoothLEClient extends AbstractClient {
                         case 0:
                             DERObject paymentRequest = DERParser.parseDER(derRequestPayload);
                         /* 1. RECEIVE PAYMENT REQUEST */
-                            paymentRequestReceive = new PaymentRequestReceiveStep();
+                            paymentRequestReceive = new PaymentRequestReceiveStep(getWalletServiceBinder().networkParameters());
                             paymentRequestReceive.process(paymentRequest);
 
                         /* 2. AUTHORIZE REQUEST (by user) */

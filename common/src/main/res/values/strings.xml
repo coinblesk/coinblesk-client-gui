@@ -19,6 +19,10 @@
 <resources>
     <string name="app_name">coinblesk-client-common</string>
 
+    <!-- argument: tx hash -->
+    <string name="url_blocktrail_explorer_mainnet">https://www.blocktrail.com/BTC/tx/%1$s</string>
+    <string name="url_blocktrail_explorer_testnet">https://www.blocktrail.com/tBTC/tx/%1$s</string>
+
     <string name="pref_app_version">pref_app_version</string>
     <string name="url_github_coinblesk">http://www.github.com/coinblesk</string>
     <string name="url_bitcoin_csg_website">http://www.bitcoin.csg.uzh.ch</string>

@@ -46,15 +46,16 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 public class PaymentRequestReceiveStep extends AbstractStep {
     private final static String TAG = PaymentRequestReceiveStep.class.getName();
 
-    public PaymentRequestReceiveStep() {
+    private final NetworkParameters networkParameters;
+
+    public PaymentRequestReceiveStep(NetworkParameters networkParameters) {
         super();
+        this.networkParameters = networkParameters;
     }
 
     @Override
     @Nullable
     public DERObject process(@NonNull DERObject input) throws PaymentException {
-        final NetworkParameters params = Constants.PARAMS;
-
         /* deserialize payment request */
         PaymentRequestTO request = null;
         try {
@@ -87,7 +88,7 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         /* payment address */
         final Address addressTo;
         try {
-            addressTo = Address.fromBase58(params, request.address());
+            addressTo = Address.fromBase58(networkParameters, request.address());
             Log.d(TAG, "Received address: " + addressTo);
         } catch (WrongNetworkException e) {
             throw new PaymentException(PaymentError.WRONG_BITCOIN_NETWORK);

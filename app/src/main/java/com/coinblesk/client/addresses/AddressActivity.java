@@ -32,8 +32,10 @@ import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
@@ -65,6 +67,8 @@ public class AddressActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
+        params = ((CoinbleskApp) getApplication()).getNetworkParameters();
+
         setContentView(R.layout.activity_address);
         initToolbar();
     }
@@ -73,7 +77,6 @@ public class AddressActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         Log.d(TAG, "onStart");
-        params = Constants.PARAMS;
         initAddressList();
     }
 
@@ -210,10 +213,13 @@ public class AddressActivity extends AppCompatActivity
                 addAddressToList(address);
             }
 
-            Snackbar.make(findViewById(android.R.id.content),
-                    UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_saved)),
-                    Snackbar.LENGTH_LONG)
-                    .show();
+            View container = findViewById(android.R.id.content);
+            if (container != null) {
+                Snackbar.make(container,
+                        UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_saved)),
+                        Snackbar.LENGTH_LONG)
+                        .show();
+            }
         }
     }
 
@@ -324,10 +330,14 @@ public class AddressActivity extends AppCompatActivity
         ClipData clip = ClipData.newPlainText("Address", item.getAddress());
         clipboard.setPrimaryClip(clip);
         finishActionMode();
-        Snackbar.make(findViewById(android.R.id.content),
-                UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
-                Snackbar.LENGTH_LONG)
-                .show();
+
+        View container = findViewById(android.R.id.content);
+        if (container != null) {
+            Snackbar.make(container,
+                    UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
+                    Snackbar.LENGTH_LONG)
+                    .show();
+        }
     }
 
     private void itemActionEdit(int itemPosition, AddressBookItem item) {
@@ -349,10 +359,14 @@ public class AddressActivity extends AppCompatActivity
         deleteAddress(item);
 
         finishActionMode();
-        Snackbar.make(findViewById(android.R.id.content),
-                UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_removed)),
-                Snackbar.LENGTH_LONG)
-                .show();
+
+        View container = findViewById(android.R.id.content);
+        if (container != null) {
+            Snackbar.make(container,
+                    UIUtils.toFriendlySnackbarString(this, getString(R.string.addresses_msg_removed)),
+                    Snackbar.LENGTH_LONG)
+                    .show();
+        }
     }
 
     private void finishActionMode() {

@@ -31,6 +31,7 @@ import android.view.*;
 import android.widget.ProgressBar;
 
 import com.coinblesk.bitcoin.TimeLockedAddress;
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
@@ -38,9 +39,9 @@ import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.client.models.LockTime;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
@@ -62,6 +63,7 @@ public class WalletAddressList extends Fragment
     private WalletAddressListAdapter adapter;
     private RecyclerView recyclerView;
     private AsyncTask<Void, Void, TimeLockedAddress> task;
+    private NetworkParameters params;
 
     public static Fragment newInstance() {
         return new WalletAddressList();
@@ -70,10 +72,11 @@ public class WalletAddressList extends Fragment
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        params = ((CoinbleskApp)getActivity().getApplication()).getNetworkParameters();
         Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
         getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         setHasOptionsMenu(true);
-        adapter = new WalletAddressListAdapter();
+        adapter = new WalletAddressListAdapter(params);
         adapter.setItemClickListener(this);
     }
 
@@ -213,7 +216,7 @@ public class WalletAddressList extends Fragment
     @Override
     public void onItemClick(TimeLockedAddress item, int position) {
         try {
-            Address address = item.getAddress(Constants.PARAMS);
+            Address address = item.getAddress(params);
             String uri = BitcoinURI.convertToBitcoinURI(address, null, null, null);
             BitcoinURI addressUri = new BitcoinURI(uri);
             QrDialogFragment
@@ -309,7 +312,7 @@ public class WalletAddressList extends Fragment
                         .create()
                         .show();
             } else if (newAddress != null) {
-                Address address = newAddress.getAddress(Constants.PARAMS);
+                Address address = newAddress.getAddress(params);
                 long lockTime = newAddress.getLockTime();
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
                 builder

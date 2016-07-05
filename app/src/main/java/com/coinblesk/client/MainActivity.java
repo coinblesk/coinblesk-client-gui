@@ -62,6 +62,7 @@ import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.utils.AppUtils;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity
         UpgradeUtils upgradeUtils = new UpgradeUtils();
         upgradeUtils.checkUpgrade(this, params);
 
-        startWalletService();
+        startWalletService(false);
 
         setContentView(R.layout.activity_main);
         initToolbar();
@@ -171,20 +172,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     private NetworkParameters initBitcoinNetwork() {
-        final String networkSettings = SharedPrefUtils.getNetwork(this);
-        Log.d(TAG, "Network settings: " + networkSettings);
-        if (SharedPrefUtils.isNetworkMainnet(this)) {
+        final NetworkParameters params = ((CoinbleskApp) getApplication()).getNetworkParameters();
+        Log.d(TAG, "Network settings: " + params);
+        if (ClientUtils.isMainNet(params)) {
             Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
             Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
-            Constants.PARAMS = MainNetParams.get(); // quick and dirty -> dont modify constants
-        } else if (SharedPrefUtils.isNetworkTestnet(this)) {
+        } else if (ClientUtils.isTestNet(params)) {
             Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
             Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
-            Constants.PARAMS = TestNet3Params.get(); // quick and dirty -> dont modify constants
         } else {
-            throw new RuntimeException("Unknown network set in preferences: " + networkSettings);
+            throw new RuntimeException("Unknown network set in preferences: " + params.getId());
         }
-        return Constants.PARAMS;
+        return params;
     }
 
     private void initRetrofit() {
@@ -200,9 +199,12 @@ public class MainActivity extends AppCompatActivity
         new VersionCheckTask(params, AppUtils.getAppVersion(), this).execute();
     }
 
-    private void startWalletService() {
+    private void startWalletService(boolean bindService) {
         Intent walletServiceIntent = new Intent(this, WalletService.class);
         startService(walletServiceIntent);
+        if (bindService) {
+            bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     private void initViewPager() {
@@ -378,9 +380,7 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
         broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
 
-        Intent walletServiceIntent = new Intent(this, WalletService.class);
-        startService(walletServiceIntent);
-        bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        startWalletService(true);
 
         // restart servers if they were running before.
         if (restartServers) {

@@ -30,8 +30,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
-import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.utils.SharedPrefUtils;
@@ -65,7 +65,7 @@ public class AddressList extends DialogFragment {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart");
-        params = Constants.PARAMS;
+        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
         loadAddresses();
     }
 

@@ -56,7 +56,7 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
             writeDERObject(DERObject.NULLOBJECT); // kick off the process
 
             /* 1. RECEIVE PAYMENT REQUEST */
-            PaymentRequestReceiveStep paymentRequestReceive = new PaymentRequestReceiveStep();
+            PaymentRequestReceiveStep paymentRequestReceive = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
             DERObject paymentRequest = readDERObject();
             paymentRequestReceive.process(paymentRequest);
 

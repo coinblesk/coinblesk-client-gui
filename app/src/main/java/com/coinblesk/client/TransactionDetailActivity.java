@@ -32,7 +32,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.payments.WalletService;
@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -59,9 +60,6 @@ import javax.annotation.Nullable;
 public class TransactionDetailActivity extends AppCompatActivity {
     private final static String TAG = TransactionDetailActivity.class.getName();
     public static final String ARGS_TRANSACTION_HASH = "transaction_hash";
-
-    private final static String BLOCKTRAIL_URL_MAINNET = "https://www.blocktrail.com/BTC/tx/";
-    private final static String BLOCKTRAIL_URL_TESTNET = "https://www.blocktrail.com/tBTC/tx/";
 
     private WalletService.WalletServiceBinder walletServiceBinder;
     private String transactionHash;
@@ -155,14 +153,17 @@ public class TransactionDetailActivity extends AppCompatActivity {
     }
 
     private void openTx() {
-        String blockchainExplorerUrl = null;
-        if (SharedPrefUtils.isNetworkTestnet(TransactionDetailActivity.this)) {
-            blockchainExplorerUrl = BLOCKTRAIL_URL_TESTNET;
-        } else if (SharedPrefUtils.isNetworkMainnet(TransactionDetailActivity.this)) {
-            blockchainExplorerUrl = BLOCKTRAIL_URL_MAINNET;
+        NetworkParameters params = walletServiceBinder.networkParameters();
+        String blockchainExplorerUrl;
+        if (ClientUtils.isMainNet(params)) {
+            blockchainExplorerUrl = getString(R.string.url_blocktrail_explorer_mainnet, transactionHash);
+        } else if (ClientUtils.isTestNet(params)) {
+            blockchainExplorerUrl = getString(R.string.url_blocktrail_explorer_testnet, transactionHash);;
+        } else {
+            throw new RuntimeException("Network not supported: " + params.getId());
         }
 
-        Uri txUri = Uri.parse(blockchainExplorerUrl + transactionHash);
+        Uri txUri = Uri.parse(blockchainExplorerUrl);
         Intent intent = new Intent(Intent.ACTION_VIEW, txUri);
         startActivity(intent);
     }
@@ -174,7 +175,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
             Futures.addCallback(future, new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(@Nullable Transaction result) {
-                    Log.d(TAG, "Broadcast Tx Success: " + result.getHashAsString());
+                    Log.d(TAG, "Broadcast Tx Success: " + (result != null ? result.getHashAsString() : "null"));
                 }
 
                 @Override
@@ -191,29 +192,30 @@ public class TransactionDetailActivity extends AppCompatActivity {
         try {
 
             // No one liner because of color filter, sorry
-            final ImageView statusIcon = (ImageView) this.findViewById(R.id.txdetail_status_icon);
+            final ImageView statusIcon = (ImageView) findViewById(R.id.txdetail_status_icon);
             statusIcon.setImageResource(
                     (transaction.getConfidence().getDepthInBlocks() > 0)
                             ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
                             : R.drawable.ic_clock_white_18dp);
             statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
 
-            ((TextView) this.findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
-            ((TextView) this.findViewById(R.id.txdetail_status_content)).setText(transaction.getConfidence().toString());
-            ((TextView) this.findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime().toString());
-            ((TextView) this.findViewById(R.id.txdetail_txhash_content)).setText(transactionHash);
+            ((TextView) findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
+            ((TextView) findViewById(R.id.txdetail_status_content)).setText(transaction.getConfidence().toString());
+            ((TextView) findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime().toString());
+            ((TextView) findViewById(R.id.txdetail_txhash_content)).setText(transactionHash);
 
             // for incoming tx, fee is null because inputs not known.
             Coin fee = transaction.getFee();
             if (fee != null) {
-                ((TextView) this.findViewById(R.id.txdetail_fee_content)).setText(fee.toFriendlyString());
+                ((TextView) findViewById(R.id.txdetail_fee_content)).setText(fee.toFriendlyString());
             } else {
-                this.findViewById(R.id.txfee).setVisibility(View.GONE);
+                findViewById(R.id.txfee).setVisibility(View.GONE);
             }
 
             String addressSentTo = sentToAddressOfTx(txWrapper);
+            // TODO: also show if sent to one of my addresses
             if (addressSentTo != null) {
-                ((TextView) this.findViewById(R.id.txdetail_address_to_content)).setText(addressSentTo);
+                ((TextView) findViewById(R.id.txdetail_address_to_content)).setText(addressSentTo);
             } else {
                 findViewById(R.id.txdetail_address_to).setVisibility(View.GONE);
             }
@@ -237,12 +239,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
                     continue;
                 }
 
-                Address to;
-                if ((to = o.getAddressFromP2PKHScript(Constants.PARAMS)) != null) {
-                    addressTo = to.toString();
-                } else if ((to = o.getAddressFromP2SH(Constants.PARAMS)) != null) {
-                    addressTo = to.toString();
-                }
+                Address addr = o.getScriptPubKey().getToAddress(walletServiceBinder.networkParameters());
+                addressTo = addr.toBase58();
             }
         }
         return addressTo;
