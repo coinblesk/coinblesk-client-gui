@@ -118,7 +118,9 @@ public class EditAddressFragment extends DialogFragment {
     public void onResume() {
         super.onResume();
 
-        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
+        params = ((CoinbleskApp) getActivity().getApplication())
+                .getAppConfig()
+                .getNetworkParameters();
 
         /* the click listener is set here such that we can perform input validation (is address correct, and so on).
          * unfortunately, the AlertDialog with the builder usually does autoDismiss with an additional after a button click.

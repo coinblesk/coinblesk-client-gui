@@ -1,4 +1,4 @@
-package com.coinblesk.client;/*
+/*
  * Copyright 2016 The Coinblesk team and the CSG Group at University of Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -14,9 +14,12 @@ package com.coinblesk.client;/*
  * the License.
  *
  */
+package com.coinblesk.client;
+
 import android.app.Application;
 import android.util.Log;
 
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.utils.SharedPrefUtils;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -29,28 +32,28 @@ import org.bitcoinj.params.TestNet3Params;
 public class CoinbleskApp extends Application {
     private static final String TAG = CoinbleskApp.class.getName();
 
-    private volatile NetworkParameters networkParameters;
+    private volatile AppConfig appConfig;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
 
-        refreshNetworkParameters();
+        refreshAppConfig();
     }
 
-    private void refreshNetworkParameters() {
+    private void refreshAppConfig() {
         if (SharedPrefUtils.isNetworkMainnet(this)) {
-            networkParameters = MainNetParams.get();
+            appConfig = AppConfig.MainNetConfig.get();
         } else if (SharedPrefUtils.isNetworkTestnet(this)) {
-            networkParameters = TestNet3Params.get();
+            appConfig = AppConfig.TestNetConfig.get();
         } else {
             throw new RuntimeException("Unsupported network: " + SharedPrefUtils.getNetwork(this));
         }
-        Log.d(TAG, "NetworkParameters: " + networkParameters.getId() + " -> " + SharedPrefUtils.getNetwork(this));
+        Log.i(TAG, "Refresh app config: " + appConfig);
     }
 
-    public NetworkParameters getNetworkParameters() {
-        return networkParameters;
+    public AppConfig getAppConfig() {
+        return appConfig;
     }
 }

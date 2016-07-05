@@ -25,6 +25,7 @@ import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -54,9 +55,10 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             checkState(getBitcoinURI() != null, "Payment request (bitcoinURI) not provided.");
 
             /* Payment Request */
+            NetworkParameters params = walletServiceBinder.getNetworkParameters();
             PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI(), walletServiceBinder.getMultisigClientKey());
             DERObject requestOutput = sendRequest.process(null);
-            PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
+            PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep(params);
             receiveRequest.process(requestOutput);
 
             /* Payment Response */

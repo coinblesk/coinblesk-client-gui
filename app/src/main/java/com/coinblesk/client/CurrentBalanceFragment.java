@@ -108,13 +108,12 @@ public class CurrentBalanceFragment extends Fragment {
         }
 
         final TextView testnetWarning = (TextView) view.findViewById(R.id.testnet_textview);
-        final NetworkParameters params = walletService.networkParameters();
+        final NetworkParameters params = walletService.getNetworkParameters();
         if (testnetWarning != null) {
             if(ClientUtils.isMainNet(params)) {
                 testnetWarning.setVisibility(View.GONE);
             } else {
                 testnetWarning.setText(getString(R.string.testnet_warning, params.getClass().getSimpleName()));
-                testnetWarning.setTextColor(getResources().getColor(R.color.cpb_red));
                 testnetWarning.setVisibility(View.VISIBLE);
             }
         }

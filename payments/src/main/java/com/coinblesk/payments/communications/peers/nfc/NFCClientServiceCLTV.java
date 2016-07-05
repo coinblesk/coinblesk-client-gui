@@ -23,6 +23,7 @@ import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveSte
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendCompactStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
@@ -234,7 +235,8 @@ public class NFCClientServiceCLTV extends HostApduService {
     }
 
     private void handlePaymentRequestReceive(byte[] requestPayload) throws PaymentException {
-        PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
+        NetworkParameters params = walletServiceBinder.getNetworkParameters();
+        PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(params);
         DERObject input = DERParser.parseDER(requestPayload);
         request.process(input);
         bitcoinURI = request.getBitcoinURI();

@@ -72,7 +72,9 @@ public class WalletAddressList extends Fragment
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        params = ((CoinbleskApp)getActivity().getApplication()).getNetworkParameters();
+        params = ((CoinbleskApp)getActivity().getApplication())
+                .getAppConfig()
+                .getNetworkParameters();
         Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
         getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         setHasOptionsMenu(true);

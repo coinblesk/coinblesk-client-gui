@@ -28,6 +28,7 @@ import android.util.Log;
 import com.coinblesk.bitcoin.AddressCoinSelector;
 import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.client.CoinbleskApp;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
@@ -68,8 +69,6 @@ import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.net.discovery.DnsDiscovery;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.uri.BitcoinURI;
@@ -121,8 +120,8 @@ public class WalletService extends Service {
 
     private int downloadProgress = 0;
 
+    private AppConfig appConfig;
     private WalletAppKit kit;
-    private NetworkParameters networkParameters;
     private volatile org.bitcoinj.core.Context bitcoinjContext;
     private boolean appKitInitDone = false;
     private ScheduledExecutorService scheduledPeerGroupShutdown;
@@ -161,20 +160,20 @@ public class WalletService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        networkParameters = ((CoinbleskApp) getApplication()).getNetworkParameters();
+        appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
+        Log.d(TAG, "onCreate with app config: " + appConfig);
 
-        Log.d(TAG, "onCreate - network parameters: " + networkParameters.getId());
         ClientUtils.fixECKeyComparator();
         initLogging();
 
-        bitcoinjContext = new Context(networkParameters);
+        bitcoinjContext = new Context(appConfig.getNetworkParameters());
         Context.propagate(bitcoinjContext);
 
         initFiatCurrency();
 
         walletFile = walletFile();
         Log.d(TAG, "Wallet file: " + walletFile + ", already exists: " + walletFile.exists());
-        kit = new WalletAppKit(bitcoinjContext, getFilesDir(), Constants.WALLET_FILES_PREFIX) {
+        kit = new WalletAppKit(bitcoinjContext, getFilesDir(), appConfig.getWalletFilesPrefix()) {
             @Override
             protected void onSetupCompleted() {
                 final long startTime = System.currentTimeMillis();
@@ -188,7 +187,6 @@ public class WalletService extends Service {
                     Coin coinBalance = wallet.getBalance();
                     broadcastBalanceChanged(coinBalance, exchangeRate.coinToFiat(coinBalance));
 
-                    //addPeers();
                     initWalletEventListener();
 
                     /*
@@ -226,11 +224,11 @@ public class WalletService extends Service {
     }
 
     private File walletFile() {
-        return new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".wallet");
+        return new File(getFilesDir(), appConfig.getWalletFilesPrefix() + ".wallet");
     }
 
     private File blockChainFile() {
-        return new File(getFilesDir(), Constants.WALLET_FILES_PREFIX + ".spvchain");
+        return new File(getFilesDir(), appConfig.getWalletFilesPrefix() + ".spvchain");
     }
 
     @Nullable
@@ -362,8 +360,8 @@ public class WalletService extends Service {
             return;
         }
         if (peerGroup == null || !peerGroup.isRunning()) {
-            peerGroup = new PeerGroup(networkParameters, blockChain);
-            DnsDiscovery discovery = new DnsDiscovery(networkParameters);
+            peerGroup = new PeerGroup(appConfig.getNetworkParameters(), blockChain);
+            DnsDiscovery discovery = new DnsDiscovery(appConfig.getNetworkParameters());
             peerGroup.addPeerDiscovery(discovery);
             peerGroup.addWallet(wallet);
             Futures.addCallback(peerGroup.startAsync(), new FutureCallback() {
@@ -399,48 +397,15 @@ public class WalletService extends Service {
 
     private void setChainCheckpoints() {
         try {
-            if (ClientUtils.isMainNet(networkParameters)) {
-                kit.setCheckpoints(getAssets().open("checkpoints.txt"));
-            } else if (ClientUtils.isTestNet(networkParameters)) {
-                kit.setCheckpoints(getAssets().open("checkpoints-testnet.txt"));
-            } else {
-                throw new RuntimeException("Unknown network parameters.");
-            }
+            kit.setCheckpoints(getAssets().open(appConfig.getCheckpointsFileName()));
         } catch (IOException e) {
             Log.w(TAG, "Exception while setting checkpoints: ", e);
         }
     }
 
-    private void addPeers() {
-        // TODO: remove static peers?
-        String[] peers = {};
-        if (ClientUtils.isMainNet(networkParameters)) {
-            // no mainnet peers at the moment
-        } else if (ClientUtils.isTestNet(networkParameters)) {
-            // testnet peers
-            peers = new String[] {
-                    "144.76.175.228",
-                    "88.198.20.152",
-                    "52.4.156.236",
-                    "176.9.24.110",
-                    "144.76.175.228"
-            };
-        } else {
-            throw new RuntimeException("Unknown network parameters.");
-        }
-
-        for (String ip : peers) {
-            try {
-                peerGroup.addAddress(Inet4Address.getByName(ip));
-            } catch (IOException e) {
-                Log.i(TAG, "Exception while adding peer with ip: " + ip, e);
-            }
-        }
-    }
-
     private boolean loadKeysIfExist() throws CoinbleskException {
-        multisigClientKey = SharedPrefUtils.getClientKey(this, networkParameters);
-        multisigServerKey = SharedPrefUtils.getServerKey(this, networkParameters);
+        multisigClientKey = SharedPrefUtils.getClientKey(this, appConfig.getNetworkParameters());
+        multisigServerKey = SharedPrefUtils.getServerKey(this, appConfig.getNetworkParameters());
 
         if (multisigClientKey != null && multisigServerKey != null) {
             Log.d(TAG, String.format(Locale.US, "loadKeysIfExist - loaded client and server key from storage - clientPubKey=%s, serverPubKey=%s",
@@ -458,14 +423,15 @@ public class WalletService extends Service {
     }
 
     private void saveKeys(ECKey clientECKey, ECKey serverECKey, String url) throws CoinbleskException {
+        final NetworkParameters params = appConfig.getNetworkParameters();
         try {
-            SharedPrefUtils.setClientKey(this, networkParameters, clientECKey);
-            SharedPrefUtils.setServerKey(this, networkParameters, serverECKey, url);
+            SharedPrefUtils.setClientKey(this, params, clientECKey);
+            SharedPrefUtils.setServerKey(this, params, serverECKey, url);
         } catch (Exception e) {
             // clear keys, we either save both keys or none in order to make sure we do not use
             // keys that the other party (server or client) is not aware of.
-            SharedPrefUtils.setClientKey(this, networkParameters, null);
-            SharedPrefUtils.setServerKey(this, networkParameters, null, "");
+            SharedPrefUtils.setClientKey(this, params, null);
+            SharedPrefUtils.setServerKey(this, params, null, "");
             throw new CoinbleskException("Could not store keys.", e);
         }
     }
@@ -533,7 +499,7 @@ public class WalletService extends Service {
         addresses.clear();
         addressHashes.clear();
         try {
-            List<LockTime> lockTimes = SharedPrefUtils.getLockTimes(this, networkParameters);
+            List<LockTime> lockTimes = SharedPrefUtils.getLockTimes(this, appConfig.getNetworkParameters());
             if (lockTimes != null) {
                 addAddresses(lockTimes);
             }
@@ -567,7 +533,7 @@ public class WalletService extends Service {
             addressScripts.add(pubKeyScript);
 
             addressLog.append("  ")
-                    .append(tla.toString(networkParameters))
+                    .append(tla.toString(appConfig.getNetworkParameters()))
                     .append("\n");
         }
         // now add to wallet, address lists and hash index
@@ -590,7 +556,7 @@ public class WalletService extends Service {
         Script pubKeyScript = address.createPubkeyScript();
         pubKeyScript.setCreationTimeSeconds(lockTime.getTimeCreatedSeconds());
         wallet.addWatchedScripts(ImmutableList.of(pubKeyScript));
-        Log.d(TAG, "Added address: " + address.toString(networkParameters));
+        Log.d(TAG, "Added address: " + address.toString(appConfig.getNetworkParameters()));
         return address;
     }
 
@@ -643,13 +609,13 @@ public class WalletService extends Service {
 
         LockTime lockTime = LockTime.create(nextLockTime);
         try {
-            SharedPrefUtils.addLockTime(this, networkParameters, lockTime);
+            SharedPrefUtils.addLockTime(this, appConfig.getNetworkParameters(), lockTime);
         } catch (Exception e) {
             throw new CoinbleskException("Could not store address.", e);
         }
 
         TimeLockedAddress addedAddress = addAddress(lockTime);
-        Log.d(TAG, "Created new time locked address: " + lockedAddress.toStringDetailed(networkParameters));
+        Log.d(TAG, "Created new time locked address: " + lockedAddress.toStringDetailed(appConfig.getNetworkParameters()));
         return addedAddress;
     }
 
@@ -667,7 +633,8 @@ public class WalletService extends Service {
         }
 
         final byte[] addressHash = receivedAddress.getAddressHash();
-        if (addressHash == null || addressHash.length <= 0 || !receivedAddress.getAddress(networkParameters).isP2SHAddress()) {
+        if (addressHash == null || addressHash.length <= 0 ||
+                !receivedAddress.getAddress(appConfig.getNetworkParameters()).isP2SHAddress()) {
             return false;
         }
 
@@ -803,7 +770,7 @@ public class WalletService extends Service {
         Address changeAddress = walletServiceBinder.getCurrentReceiveAddress();
         List<TransactionOutput> outputs = walletServiceBinder.getUnspentInstantOutputs();
         Transaction transaction = BitcoinUtils.createTx(
-                networkParameters,
+                appConfig.getNetworkParameters(),
                 outputs,
                 changeAddress,
                 addressTo,
@@ -937,8 +904,12 @@ public class WalletService extends Service {
 
     public class WalletServiceBinder extends Binder {
 
-        public NetworkParameters networkParameters() {
-            return networkParameters;
+        public AppConfig getAppConfig() {
+            return ((CoinbleskApp) getApplication()).getAppConfig();
+        }
+
+        public NetworkParameters getNetworkParameters() {
+            return getAppConfig().getNetworkParameters();
         }
 
         public Coin getBalance() {
@@ -967,7 +938,7 @@ public class WalletService extends Service {
             Coin maxSpendableAmount;
             try {
                 Transaction dummyTx = BitcoinUtils.createSpendAllTx(
-                        networkParameters,
+                        appConfig.getNetworkParameters(),
                         getUnspentInstantOutputs(),
                         getCurrentReceiveAddress(),
                         getCurrentReceiveAddress(),
@@ -1002,7 +973,7 @@ public class WalletService extends Service {
         }
 
         public Address getCurrentReceiveAddress() {
-            return getCurrentTimeLockedReceiveAddress().getAddress(networkParameters);
+            return getCurrentTimeLockedReceiveAddress().getAddress(appConfig.getNetworkParameters());
         }
 
         public TimeLockedAddress getCurrentTimeLockedReceiveAddress() {
@@ -1034,7 +1005,7 @@ public class WalletService extends Service {
         }
 
         public Map<Address, Coin> getBalanceByAddress() {
-            AddressCoinSelector selector = new AddressCoinSelector(null, networkParameters);
+            AddressCoinSelector selector = new AddressCoinSelector(null, appConfig.getNetworkParameters());
             selector.select(Coin.ZERO, getUnspentInstantOutputs());
             return selector.getAddressBalances();
         }
@@ -1147,7 +1118,7 @@ public class WalletService extends Service {
                 public Transaction call() throws Exception {
                     final List<TransactionOutput> unlockedTxOut = getUnlockedUnspentOutputs();
                     Transaction transaction = BitcoinUtils.createSpendAllTx(
-                            networkParameters,
+                            appConfig.getNetworkParameters(),
                             unlockedTxOut,
                             getCurrentReceiveAddress(),
                             sendTo,

@@ -16,7 +16,14 @@
 
 package com.coinblesk.client;
 
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -32,18 +39,17 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.client.utils.UIUtils;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
-import com.coinblesk.payments.WalletService;
 import com.coinblesk.client.models.TransactionWrapper;
+import com.coinblesk.client.utils.UIUtils;
+import com.coinblesk.payments.WalletService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -62,6 +68,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
     public static final String ARGS_TRANSACTION_HASH = "transaction_hash";
 
     private WalletService.WalletServiceBinder walletServiceBinder;
+    private AppConfig appConfig;
     private String transactionHash;
 
     public static void openTransaction(Context context, String transactionHash) {
@@ -153,16 +160,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
     }
 
     private void openTx() {
-        NetworkParameters params = walletServiceBinder.networkParameters();
-        String blockchainExplorerUrl;
-        if (ClientUtils.isMainNet(params)) {
-            blockchainExplorerUrl = getString(R.string.url_blocktrail_explorer_mainnet, transactionHash);
-        } else if (ClientUtils.isTestNet(params)) {
-            blockchainExplorerUrl = getString(R.string.url_blocktrail_explorer_testnet, transactionHash);;
-        } else {
-            throw new RuntimeException("Network not supported: " + params.getId());
-        }
-
+        String blockchainExplorerUrl = appConfig.getBlockchainExplorerUrl() + transactionHash;
         Uri txUri = Uri.parse(blockchainExplorerUrl);
         Intent intent = new Intent(Intent.ACTION_VIEW, txUri);
         startActivity(intent);
@@ -239,7 +237,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
                     continue;
                 }
 
-                Address addr = o.getScriptPubKey().getToAddress(walletServiceBinder.networkParameters());
+                Address addr = o.getScriptPubKey().getToAddress(appConfig.getNetworkParameters());
                 addressTo = addr.toBase58();
             }
         }
@@ -260,6 +258,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            appConfig = walletServiceBinder.getAppConfig();
 
             if(walletServiceBinder.isReady()){
                 updateTransactionDetails();

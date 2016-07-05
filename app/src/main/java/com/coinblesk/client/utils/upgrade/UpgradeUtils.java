@@ -21,6 +21,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.coinblesk.client.BuildConfig;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
@@ -107,17 +108,19 @@ public class UpgradeUtils {
         final File newChainFile;
 
         if (ClientUtils.isMainNet(migrationParams)) {
+            String walletFilesPrefix = AppConfig.MainNetConfig.get().getWalletFilesPrefix();
             storageDir = new File(rootDir, "mainnet_wallet__uuid_object_storage");
             walletFile = new File(rootDir, "mainnet_wallet_.wallet");
-            newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".wallet");
+            newWalletFile = new File(rootDir, walletFilesPrefix + ".wallet");
             chainFile = new File(rootDir, "mainnet_wallet_.spvchain");
-            newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_MAIN + ".spvchain");
+            newChainFile = new File(rootDir, walletFilesPrefix + ".spvchain");
         } else if (ClientUtils.isTestNet(migrationParams)) {
+            String walletFilesPrefix = AppConfig.TestNetConfig.get().getWalletFilesPrefix();
             storageDir = new File(rootDir, "testnet_wallet__uuid_object_storage");
             walletFile = new File(rootDir, "testnet_wallet_.wallet");
-            newWalletFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_TEST + ".wallet");
+            newWalletFile = new File(rootDir, walletFilesPrefix + ".wallet");
             chainFile = new File(rootDir, "testnet_wallet_.spvchain");
-            newChainFile = new File(rootDir, Constants.WALLET_FILES_PREFIX_TEST + ".spvchain");
+            newChainFile = new File(rootDir, walletFilesPrefix + ".spvchain");
         } else {
             throw new RuntimeException("Network params not supported (unknown): " + migrationParams.toString());
         }

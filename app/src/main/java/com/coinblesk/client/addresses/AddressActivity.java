@@ -67,7 +67,9 @@ public class AddressActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
-        params = ((CoinbleskApp) getApplication()).getNetworkParameters();
+        params = ((CoinbleskApp) getApplication())
+                .getAppConfig()
+                .getNetworkParameters();
 
         setContentView(R.layout.activity_address);
         initToolbar();

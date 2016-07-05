@@ -27,6 +27,7 @@ import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveSte
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -56,7 +57,8 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
             writeDERObject(DERObject.NULLOBJECT); // kick off the process
 
             /* 1. RECEIVE PAYMENT REQUEST */
-            PaymentRequestReceiveStep paymentRequestReceive = new PaymentRequestReceiveStep(walletServiceBinder.networkParameters());
+            NetworkParameters params = walletServiceBinder.getNetworkParameters();
+            PaymentRequestReceiveStep paymentRequestReceive = new PaymentRequestReceiveStep(params);
             DERObject paymentRequest = readDERObject();
             paymentRequestReceive.process(paymentRequest);
 

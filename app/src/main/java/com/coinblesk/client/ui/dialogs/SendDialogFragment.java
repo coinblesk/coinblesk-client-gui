@@ -88,7 +88,9 @@ public class SendDialogFragment extends DialogFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
+        params = ((CoinbleskApp) getActivity().getApplication())
+                .getAppConfig()
+                .getNetworkParameters();
     }
 
     @Override

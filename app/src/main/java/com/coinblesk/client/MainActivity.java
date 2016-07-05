@@ -55,6 +55,7 @@ import com.coinblesk.client.additionalservices.AdditionalServiceUtils;
 import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.settings.SettingsActivity;
 import com.coinblesk.client.ui.authview.AuthenticationDialog;
@@ -62,7 +63,6 @@ import com.coinblesk.client.ui.dialogs.ProgressSuccessOrFailDialog;
 import com.coinblesk.client.ui.dialogs.QrDialogFragment;
 import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.utils.AppUtils;
-import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
@@ -87,14 +87,11 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import retrofit2.Retrofit;
@@ -133,14 +130,14 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
-        final NetworkParameters params = initBitcoinNetwork();
+        final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
-        initRetrofit();
+        initRetrofit(appConfig);
 
         AdditionalServiceUtils.setSessionID(this, null);
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
-        upgradeUtils.checkUpgrade(this, params);
+        upgradeUtils.checkUpgrade(this, appConfig.getNetworkParameters());
 
         startWalletService(false);
 
@@ -151,7 +148,7 @@ public class MainActivity extends AppCompatActivity
 
         final Intent intent = getIntent();
         final String scheme = intent.getScheme();
-        if (scheme != null && scheme.equals(params.getUriScheme())) {
+        if (scheme != null && scheme.equals(appConfig.getNetworkParameters().getUriScheme())) {
             final String uri = intent.getDataString();
             try {
                 BitcoinURI bitcoinURI = new BitcoinURI(uri);
@@ -168,28 +165,14 @@ public class MainActivity extends AppCompatActivity
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
 
-        checkVersionCompatibility(params);
+        checkVersionCompatibility(appConfig.getNetworkParameters());
     }
 
-    private NetworkParameters initBitcoinNetwork() {
-        final NetworkParameters params = ((CoinbleskApp) getApplication()).getNetworkParameters();
-        Log.d(TAG, "Network settings: " + params);
-        if (ClientUtils.isMainNet(params)) {
-            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_MAIN;
-            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_PROD;
-        } else if (ClientUtils.isTestNet(params)) {
-            Constants.WALLET_FILES_PREFIX = Constants.WALLET_FILES_PREFIX_TEST;
-            Constants.COINBLESK_SERVER_BASE_URL = Constants.COINBLESK_SERVER_BASE_URL_TEST;
-        } else {
-            throw new RuntimeException("Unknown network set in preferences: " + params.getId());
-        }
-        return params;
-    }
-
-    private void initRetrofit() {
+    private void initRetrofit(AppConfig appConfig) {
+        Constants.COINBLESK_SERVER_BASE_URL = appConfig.getCoinbleskServerUrl();
         Constants.RETROFIT = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                .baseUrl(Constants.COINBLESK_SERVER_BASE_URL).build();
+                .baseUrl(appConfig.getCoinbleskServerUrl()).build();
     }
 
     private void checkVersionCompatibility(NetworkParameters params) {

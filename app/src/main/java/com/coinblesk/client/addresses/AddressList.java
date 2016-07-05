@@ -65,7 +65,9 @@ public class AddressList extends DialogFragment {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart");
-        params = ((CoinbleskApp) getActivity().getApplication()).getNetworkParameters();
+        params = ((CoinbleskApp) getActivity().getApplication())
+                .getAppConfig()
+                .getNetworkParameters();
         loadAddresses();
     }
 

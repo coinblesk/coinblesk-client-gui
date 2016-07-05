@@ -24,6 +24,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
@@ -59,6 +60,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
     private static final String TAG = Multisig2of2ToCltvForwardTask.class.getName();
 
     private WalletService.WalletServiceBinder walletService;
+    private AppConfig appConfig;
     private ECKey clientKey, serverKey;
 
     private Exception thrownException;
@@ -72,6 +74,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         this.clientKey = multisigClientKey;
         this.serverKey = multisigServerKey;
         this.thrownException = null;
+        this.appConfig = walletService.getAppConfig();
     }
 
     @Override
@@ -138,7 +141,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
 
         Address addressTo = walletService.getCurrentReceiveAddress();
         final Transaction transaction = BitcoinUtils.createSpendAllTx(
-                walletService.networkParameters(),
+                appConfig.getNetworkParameters(),
                 outputs,
                 addressTo,
                 addressTo,
@@ -186,7 +189,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         List<TransactionOutput> txOutputs2of2 = new ArrayList<>();
         List<TransactionOutput> candidates = walletService.getWallet().calculateAllSpendCandidates(false, false);
         for (TransactionOutput txOut : candidates) {
-            Address paidTo = txOut.getAddressFromP2SH(walletService.networkParameters());
+            Address paidTo = txOut.getAddressFromP2SH(appConfig.getNetworkParameters());
             if (paidTo != null && paidTo.equals(address2of2)) {
                 txOutputs2of2.add(txOut);
             }
@@ -218,7 +221,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
 
     private Address getMultisig2of2Address() {
         Script script = createMultisig2of2Script(clientKey, serverKey);
-        return script.getToAddress(walletService.networkParameters());
+        return script.getToAddress(appConfig.getNetworkParameters());
     }
 
     private Script createMultisig2of2Script(ECKey clientKey, ECKey serverKey) {

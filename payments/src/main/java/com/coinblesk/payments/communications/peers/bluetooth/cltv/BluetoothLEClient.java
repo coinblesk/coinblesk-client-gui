@@ -40,6 +40,7 @@ import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveSte
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
@@ -159,7 +160,8 @@ public class BluetoothLEClient extends AbstractClient {
                         case 0:
                             DERObject paymentRequest = DERParser.parseDER(derRequestPayload);
                         /* 1. RECEIVE PAYMENT REQUEST */
-                            paymentRequestReceive = new PaymentRequestReceiveStep(getWalletServiceBinder().networkParameters());
+                            NetworkParameters params = getWalletServiceBinder().getNetworkParameters();
+                            paymentRequestReceive = new PaymentRequestReceiveStep(params);
                             paymentRequestReceive.process(paymentRequest);
 
                         /* 2. AUTHORIZE REQUEST (by user) */
