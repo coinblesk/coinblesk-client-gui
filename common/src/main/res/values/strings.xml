@@ -80,4 +80,6 @@
     <!-- argument: network identifier -->
     <string name="pref_address_lock_times">%1$s_pref_address_lock_times</string>
 
+    <string name="pref_instant_transactions">pref_instant_transactions</string>
+
 </resources>

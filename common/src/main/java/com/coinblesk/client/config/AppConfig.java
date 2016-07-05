@@ -18,7 +18,7 @@ public abstract class AppConfig {
     protected String coinbleskServerUrl;
     protected String blockchainExplorerUrl;
 
-    public String getName() {
+    private String getName() {
         return getClass().getSimpleName();
     }
 

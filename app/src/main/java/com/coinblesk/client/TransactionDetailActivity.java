@@ -151,12 +151,14 @@ public class TransactionDetailActivity extends AppCompatActivity {
         clipboard.setPrimaryClip(clip);
 
         View root = findViewById(android.R.id.content);
-        Snackbar.make(root,
+        if (root != null) {
+            Snackbar.make(root,
                     UIUtils.toFriendlySnackbarString(this, getString(R.string.snackbar_address_copied)),
                     Snackbar.LENGTH_LONG)
-                .setActionTextColor(ContextCompat.getColor(this, R.color.colorAccent))
-                .setAction("Action", null)
-                .show();
+                    .setActionTextColor(ContextCompat.getColor(this, R.color.colorAccent))
+                    .setAction("Action", null)
+                    .show();
+        }
     }
 
     private void openTx() {
@@ -190,32 +192,55 @@ public class TransactionDetailActivity extends AppCompatActivity {
         try {
 
             // No one liner because of color filter, sorry
-            final ImageView statusIcon = (ImageView) findViewById(R.id.txdetail_status_icon);
-            statusIcon.setImageResource(
-                    (transaction.getConfidence().getDepthInBlocks() > 0)
-                            ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
-                            : R.drawable.ic_clock_white_18dp);
-            statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
+            View v;
+            ImageView statusIcon;
+            if ((statusIcon = (ImageView) findViewById(R.id.txdetail_status_icon)) != null) {
+                statusIcon.setImageResource(
+                        (transaction.getConfidence().getDepthInBlocks() > 0)
+                                ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
+                                : R.drawable.ic_clock_white_18dp);
+                statusIcon.setColorFilter(UIUtils.getStatusColorFilter(transaction.getConfidence().getDepthInBlocks(), false));
+            }
 
-            ((TextView) findViewById(R.id.txdetail_amount_content)).setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
-            ((TextView) findViewById(R.id.txdetail_status_content)).setText(transaction.getConfidence().toString());
-            ((TextView) findViewById(R.id.txdetail_date_content)).setText(transaction.getUpdateTime().toString());
-            ((TextView) findViewById(R.id.txdetail_txhash_content)).setText(transactionHash);
+            TextView txt;
+            if((txt = ((TextView) findViewById(R.id.txdetail_amount_content))) != null) {
+                // TODO: should we respect user setting (micro/milli coin?)
+                txt.setText(UIUtils.toFriendlyAmountString(getApplicationContext(), txWrapper));
+            }
 
-            // for incoming tx, fee is null because inputs not known.
-            Coin fee = transaction.getFee();
-            if (fee != null) {
-                ((TextView) findViewById(R.id.txdetail_fee_content)).setText(fee.toFriendlyString());
-            } else {
-                findViewById(R.id.txfee).setVisibility(View.GONE);
+            if((txt = ((TextView) findViewById(R.id.txdetail_status_content))) != null) {
+                txt.setText(transaction.getConfidence().toString());
+            }
+
+            if((txt = ((TextView) findViewById(R.id.txdetail_instant_content))) != null) {
+                txt.setText(txWrapper.isInstant() ? R.string.yes : R.string.no);
+            }
+
+            if((txt = ((TextView) findViewById(R.id.txdetail_date_content))) != null) {
+                txt.setText(transaction.getUpdateTime().toString());
+            }
+
+            if((txt = ((TextView) findViewById(R.id.txdetail_txhash_content))) != null) {
+                txt.setText(transactionHash);
+            }
+
+            if ((txt = (TextView) findViewById(R.id.txdetail_fee_content)) != null) {
+                // for incoming tx, fee is null because inputs not known.
+                if (transaction.getFee() != null) {
+                    // TODO: should we respect user setting (micro/milli coin?)
+                    txt.setText(UIUtils.toFriendlyFeeString(this, transaction));
+                } else if ((v = findViewById(R.id.txfee)) != null) {
+                    v.setVisibility(View.GONE);
+                }
             }
 
             String addressSentTo = sentToAddressOfTx(txWrapper);
-            // TODO: also show if sent to one of my addresses
-            if (addressSentTo != null) {
-                ((TextView) findViewById(R.id.txdetail_address_to_content)).setText(addressSentTo);
-            } else {
-                findViewById(R.id.txdetail_address_to).setVisibility(View.GONE);
+            if ((txt = (TextView) findViewById(R.id.txdetail_address_to_content)) != null) {
+                if (addressSentTo != null) {
+                    txt.setText(addressSentTo);
+                } else if ((v = findViewById(R.id.txdetail_address_to)) != null) {
+                    v.setVisibility(View.GONE);
+                }
             }
 
         } catch (Exception e) {
@@ -224,24 +249,29 @@ public class TransactionDetailActivity extends AppCompatActivity {
     }
 
     private String sentToAddressOfTx(TransactionWrapper txWrapper) {
-        if (txWrapper.getAmount().isPositive()) {
-            // incoming
-            return null;
-        }
+        // positive amount (for our wallet) = incoming tx
+        boolean isIncoming = txWrapper.getAmount().isPositive();
+
         List<TransactionOutput> outputs = txWrapper.getTransaction().getOutputs();
-        // due to space limitations we only display if we have exactly 1 out address (which is not ours, i.e. the change)
-        String addressTo = null;
+        // due to space limitations we only display if we have a common 2 outputs tx
         if (outputs.size() <= 2) {
             for (TransactionOutput o : outputs) {
-                if (o.isMineOrWatched(walletServiceBinder.getWallet())) {
+                // ignore:
+                // tx to me, output not, i.e. change to sender
+                // tx from me, output mine, i.e. change to me
+                boolean cont = (isIncoming && !o.isMineOrWatched(walletServiceBinder.getWallet()))
+                           || (!isIncoming &&  o.isMineOrWatched(walletServiceBinder.getWallet()));
+
+                if (cont) {
                     continue;
                 }
 
                 Address addr = o.getScriptPubKey().getToAddress(appConfig.getNetworkParameters());
-                addressTo = addr.toBase58();
+                return addr.toBase58();
             }
         }
-        return addressTo;
+
+        return null;
     }
 
 

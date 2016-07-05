@@ -21,17 +21,18 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionBag;
 
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 15/02/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 public class TransactionWrapper {
     private final Transaction transaction;
     private final Coin amount;
+    private final boolean isInstant;
 
-    public TransactionWrapper(Transaction transaction, TransactionBag transactionBag) {
+    public TransactionWrapper(Transaction transaction, TransactionBag transactionBag, boolean isInstant) {
         this.transaction = transaction;
         this.amount = transaction.getValue(transactionBag);
+        this.isInstant = isInstant;
     }
 
     public Coin getAmount() {
@@ -39,7 +40,10 @@ public class TransactionWrapper {
     }
 
     public Transaction getTransaction() {
-
         return transaction;
+    }
+
+    public boolean isInstant() {
+        return isInstant;
     }
 }

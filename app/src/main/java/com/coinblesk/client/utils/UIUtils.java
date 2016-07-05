@@ -38,8 +38,10 @@ import com.coinblesk.util.BitcoinUtils;
 import com.google.gson.Gson;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
+import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
@@ -277,6 +279,29 @@ public class UIUtils {
         friendlySpannable.setSpan(new RelativeSizeSpan(2), 0, coinLength, 0);
         friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), coinLength, (coinLength + 4), 0);
         friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)), (coinLength + 4), amountLength, 0);
+        return friendlySpannable;
+
+    }
+
+    public static SpannableString toFriendlyFeeString(Context context, Transaction tx) {
+        Coin fee = tx.getFee();
+        ExchangeRate exchangeRate = tx.getExchangeRate();
+        if (fee == null) {
+            return new SpannableString("");
+        }
+
+        StringBuffer friendlyFee = new StringBuffer(fee.toFriendlyString());
+        int feeLength = friendlyFee.length();
+
+        int exchangeRateLength = feeLength;
+        if (exchangeRate != null) {
+            friendlyFee.append(" ~ " + exchangeRate.coinToFiat(fee).toFriendlyString());
+            exchangeRateLength = friendlyFee.length();
+        }
+
+
+        SpannableString friendlySpannable = new SpannableString(friendlyFee);
+        friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)), feeLength, exchangeRateLength, 0);
         return friendlySpannable;
 
     }

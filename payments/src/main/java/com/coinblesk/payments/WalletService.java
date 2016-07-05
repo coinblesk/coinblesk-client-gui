@@ -30,6 +30,8 @@ import com.coinblesk.bitcoin.TimeLockedAddress;
 import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.models.LockTime;
+import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.json.BaseTO;
@@ -37,8 +39,6 @@ import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.payments.communications.steps.cltv.CLTVInstantPaymentStep;
-import com.coinblesk.client.models.LockTime;
-import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
@@ -75,9 +75,7 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.WalletProtobufSerializer;
 import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
@@ -86,7 +84,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -95,6 +92,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -443,7 +441,7 @@ public class WalletService extends Service {
 
         final KeyTO requestTO = new KeyTO();
         requestTO.publicKey(clientECKey.getPubKey());
-        Response<KeyTO> response = null;
+        Response<KeyTO> response;
         try {
             response = service.keyExchange(requestTO).execute();
         } catch (IOException e) {
@@ -787,7 +785,7 @@ public class WalletService extends Service {
             byte[] sentToHash = prevTxOut.getScriptPubKey().getPubKeyHash();
             TimeLockedAddress tla = findTimeLockedAddressByHash(sentToHash);
             if (tla == null) {
-                throw new CoinbleskException(String.format(
+                throw new CoinbleskException(String.format(Locale.US,
                         "Could not sign input (index=%d, pubKeyHash=%s)",
                         i, org.bitcoinj.core.Utils.HEX.encode(sentToHash)));
             }
@@ -797,6 +795,23 @@ public class WalletService extends Service {
             signatures.add(signature);
         }
         return signatures;
+    }
+
+    private void markTransactionInstant(Transaction tx) {
+        markTransactionInstant(tx.getHashAsString());
+    }
+
+    private void markTransactionInstant(String txHash) {
+        SharedPrefUtils.addInstantTransaction(this, txHash);
+    }
+
+    private boolean isTransactionInstant(Transaction tx) {
+        return isTransactionInstant(tx.getHashAsString());
+    }
+
+    private boolean isTransactionInstant(String txHash) {
+        Set<String> instantTx = SharedPrefUtils.getInstantTransactions(this);
+        return instantTx != null && instantTx.contains(txHash);
     }
 
     private boolean deleteBlockChainFile() {
@@ -989,10 +1004,6 @@ public class WalletService extends Service {
             return address;
         }
 
-        public Address getRefundAddress() {
-            return null;
-        }
-
         public List<TimeLockedAddress> getAddresses() {
             List<TimeLockedAddress> timeLockedAddresses = new ArrayList<>(addresses.size());
             for (LockTime lockTime : addresses) {
@@ -1016,16 +1027,19 @@ public class WalletService extends Service {
 
         public TransactionWrapper getTransaction(final String transactionHash) {
             Transaction tx = wallet.getTransaction(Sha256Hash.wrap(transactionHash));
-            tx.setExchangeRate(getExchangeRate());
-            return new TransactionWrapper(tx, wallet);
+            if (tx != null) {
+                tx.setExchangeRate(getExchangeRate());
+                return new TransactionWrapper(tx, wallet, isTransactionInstant(tx));
+            }
+            return null;
         }
 
         public List<TransactionWrapper> getTransactionsByTime() {
-            final List<TransactionWrapper> transactions = new ArrayList<TransactionWrapper>();
+            final List<TransactionWrapper> transactions = new ArrayList<>();
             if (wallet != null) {
-                for (Transaction transaction : wallet.getTransactionsByTime()) {
-                    transaction.setExchangeRate(getExchangeRate());
-                    transactions.add(new TransactionWrapper(transaction, wallet));
+                for (Transaction tx : wallet.getTransactionsByTime()) {
+                    tx.setExchangeRate(getExchangeRate());
+                    transactions.add(new TransactionWrapper(tx, wallet, isTransactionInstant(tx)));
                 }
             }
             return transactions;
@@ -1041,7 +1055,7 @@ public class WalletService extends Service {
             Log.d(TAG, "maybeCommitAndBroadcastTransaction: " + tx.getHashAsString());
             if (!wallet.maybeCommitTx(tx)) {
                 Log.d(TAG, "Tx was already committed to wallet (probably received over network)");
-            };
+            }
             return broadcastTransaction(tx);
         }
 
@@ -1177,7 +1191,7 @@ public class WalletService extends Service {
         }
 
         public List<TransactionOutput> getUnspentInstantOutputs() {
-            List<TransactionOutput> unspentInstantOutputs = new ArrayList<TransactionOutput>();
+            List<TransactionOutput> unspentInstantOutputs = new ArrayList<>();
             if (wallet != null) {
                 List<TransactionOutput> candidates = wallet.calculateAllSpendCandidates(false, false);
                 for (TransactionOutput unspentOutput : candidates) {
@@ -1213,11 +1227,6 @@ public class WalletService extends Service {
 
         public boolean isDownloadDone() {
             return downloadProgress == 100;
-        }
-
-        public byte[] getSerializedWallet() {
-            Protos.Wallet proto = new WalletProtobufSerializer().walletToProto(wallet);
-            return proto.toByteArray();
         }
 
         /**

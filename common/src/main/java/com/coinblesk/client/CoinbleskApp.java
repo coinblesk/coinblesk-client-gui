@@ -19,6 +19,7 @@ package com.coinblesk.client;
 import android.app.Application;
 import android.util.Log;
 
+import com.coinblesk.client.common.R;
 import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.utils.SharedPrefUtils;
 
@@ -43,12 +44,16 @@ public class CoinbleskApp extends Application {
     }
 
     private void refreshAppConfig() {
-        if (SharedPrefUtils.isNetworkMainnet(this)) {
+        refreshAppConfig(SharedPrefUtils.getNetwork(this));
+    }
+
+    public void refreshAppConfig(String networkValue) {
+        if (networkValue.equals(getString(R.string.pref_network_mainnet))) {
             appConfig = AppConfig.MainNetConfig.get();
-        } else if (SharedPrefUtils.isNetworkTestnet(this)) {
+        } else if(networkValue.equals(getString(R.string.pref_network_testnet))) {
             appConfig = AppConfig.TestNetConfig.get();
         } else {
-            throw new RuntimeException("Unsupported network: " + SharedPrefUtils.getNetwork(this));
+            throw new RuntimeException("Unsupported network: " + networkValue);
         }
         Log.i(TAG, "Refresh app config: " + appConfig);
     }

@@ -230,6 +230,7 @@
     <string name="txdetail_exchangerate_title">Exchange Rate</string>
     <string name="txdetail_fiat_title">Amount</string>
     <string name="txdetail_status_title">Status</string>
+    <string name="txdetail_instant_title">Instant</string>
     <string name="txdetail_confirmations_title">Confirmations</string>
     <string name="txdetail_fee_title">Fee</string>
     <string name="txdetail_txhash_title">Transaction</string>

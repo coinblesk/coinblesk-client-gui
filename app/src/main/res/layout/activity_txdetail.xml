@@ -59,6 +59,10 @@
 
                     <include layout="@layout/separator_line" />
 
+                    <include layout="@layout/txdetail_instant" />
+
+                    <include layout="@layout/separator_line" />
+
                     <include layout="@layout/txdetail_date" />
 
                     <include layout="@layout/separator_line" />

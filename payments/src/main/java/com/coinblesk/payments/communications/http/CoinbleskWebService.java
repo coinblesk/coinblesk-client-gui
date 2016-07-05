@@ -26,6 +26,11 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
+/**
+ * @author Andreas Albrecht
+ * @author Alessandro De Carli
+ *
+ */
 public interface CoinbleskWebService {
 
     @POST("payment/key-exchange")
@@ -71,4 +76,5 @@ public interface CoinbleskWebService {
 
     @GET("v1/user/auth/logout")
     Call<UserAccountStatusTO> logout();
+
 }

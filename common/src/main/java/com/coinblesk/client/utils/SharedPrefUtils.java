@@ -455,4 +455,16 @@ public final class SharedPrefUtils {
         }
     }
 
+    public static Set<String> getInstantTransactions(Context context) {
+        String key = context.getString(R.string.pref_instant_transactions);
+        return getStringSet(context, key, new HashSet<String>());
+    }
+
+    public static void addInstantTransaction(Context context, String txHash) {
+        String key = context.getString(R.string.pref_instant_transactions);
+        Set<String> instantTx = getStringSet(context, key, new HashSet<String>());
+        instantTx.add(txHash);
+        setStringSet(context, key, instantTx);
+    }
+
 }
