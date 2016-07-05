@@ -95,8 +95,8 @@ public final class Constants {
     /* coinblesk server communication */
 
     //public final static String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "http://130.60.157.195:8080/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://130.60.157.195:8080/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
     //public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
     public static String COINBLESK_SERVER_BASE_URL = null;

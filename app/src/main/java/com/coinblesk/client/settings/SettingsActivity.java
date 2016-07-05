@@ -30,9 +30,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.payments.WalletService;
+
+import org.bitcoinj.core.NetworkParameters;
 
 /**
  * @author ckiller
@@ -112,24 +115,21 @@ public class SettingsActivity extends AppCompatActivity {
             pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, final Object newValue) {
-                    stopWalletService();
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    builder.setTitle(R.string.restart)
-                            .setMessage(R.string.pref_network_changed_restart)
-                            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Log.i(TAG, "Restart wallet due to network change: " + newValue);
-                                    dialog.dismiss();
-                                    getActivity().finishAffinity();
-                                }
-                            })
-                            .setCancelable(false)
-                            .create()
-                            .show();
+
+                    ((CoinbleskApp) getActivity().getApplication()).refreshAppConfig(newValue.toString());
+                    restartWalletService();
+
                     return true;
                 }
             });
+        }
+
+        private void restartWalletService() {
+            getActivity().unbindService(serviceConnection);
+            walletService = null;
+            getActivity().stopService(new Intent(getActivity(), WalletService.class));
+            getActivity().startService(new Intent(getActivity(), WalletService.class));
+            getActivity().bindService(new Intent(getActivity(), WalletService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         }
 
         private void stopWalletService() {
