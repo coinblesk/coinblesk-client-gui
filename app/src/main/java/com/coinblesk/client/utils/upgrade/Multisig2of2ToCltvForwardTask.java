@@ -29,7 +29,7 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.json.SignTO;
 import com.coinblesk.json.VerifyTO;
 import com.coinblesk.payments.WalletService;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
 import com.coinblesk.util.InsufficientFunds;
@@ -37,7 +37,6 @@ import com.coinblesk.util.SerializeUtils;
 import com.google.common.collect.ImmutableList;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
@@ -154,7 +153,10 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         transactionTO.transaction(transaction.unsafeBitcoinSerialize());
         SerializeUtils.signJSON(transactionTO, clientKey);
 
-        Response<SignTO> signTOResponse = getCoinbleskService().sign(transactionTO).execute();
+        Response<SignTO> signTOResponse = appConfig
+                .getCoinbleskService()
+                .sign(transactionTO)
+                .execute();
         SignTO signedTO = signTOResponse.body();
 
         Script redeemScript = createRedeemScript();
@@ -213,10 +215,6 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
     private Script createRedeemScript() {
         List<ECKey> keys = getSortedKeys();
         return ScriptBuilder.createRedeemScript(2, keys);
-    }
-
-    private CoinbleskWebService getCoinbleskService() {
-        return Constants.RETROFIT.create(CoinbleskWebService.class);
     }
 
     private Address getMultisig2of2Address() {

@@ -43,6 +43,7 @@ import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -268,17 +269,34 @@ public class UIUtils {
 
 
     public static SpannableString toFriendlyAmountString(Context context, TransactionWrapper transaction) {
-        StringBuffer friendlyAmount = new StringBuffer(transaction.getAmount().toFriendlyString());
-        final int coinLength = friendlyAmount.length() - 3;
+        StringBuffer friendlyAmount = new StringBuffer();
 
-        friendlyAmount.append(" ~ " + transaction.getTransaction().getExchangeRate().coinToFiat(transaction.getAmount()).toFriendlyString());
-        friendlyAmount.append(System.getProperty("line.separator") + "(1 BTC = " + transaction.getTransaction().getExchangeRate().fiat.toFriendlyString() + " as of now)");
+        MonetaryFormat formatter = getMoneyFormat(context);
+        String btcCode = formatter.code();
+        String scaledAmount = formatter.noCode().format(transaction.getAmount()).toString();
+        friendlyAmount.append(scaledAmount).append(" ");
+        final int coinLength = friendlyAmount.length();
+
+        friendlyAmount.append(btcCode).append(" ");
+        final int codeLength = friendlyAmount.length();
+
+        ExchangeRate exchangeRate = transaction.getTransaction().getExchangeRate();
+        if (exchangeRate != null) {
+            Fiat fiat = exchangeRate.coinToFiat(transaction.getAmount());
+            friendlyAmount.append("~ " + fiat.toFriendlyString());
+            friendlyAmount.append(System.getProperty("line.separator") + "(1 BTC = "
+                    + exchangeRate.fiat.toFriendlyString() + " as of now)");
+        }
         final int amountLength = friendlyAmount.length();
 
         SpannableString friendlySpannable = new SpannableString(friendlyAmount);
         friendlySpannable.setSpan(new RelativeSizeSpan(2), 0, coinLength, 0);
-        friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)), coinLength, (coinLength + 4), 0);
-        friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)), (coinLength + 4), amountLength, 0);
+        friendlySpannable.setSpan(
+                new ForegroundColorSpan(context.getResources().getColor(R.color.colorAccent)),
+                coinLength, codeLength, 0);
+        friendlySpannable.setSpan(
+                new ForegroundColorSpan(context.getResources().getColor(R.color.main_color_400)),
+                codeLength, amountLength, 0);
         return friendlySpannable;
 
     }
@@ -290,7 +308,7 @@ public class UIUtils {
             return new SpannableString("");
         }
 
-        StringBuffer friendlyFee = new StringBuffer(fee.toFriendlyString());
+        StringBuffer friendlyFee = new StringBuffer(UIUtils.formatCoin(context, fee));
         int feeLength = friendlyFee.length();
 
         int exchangeRateLength = feeLength;
@@ -301,7 +319,11 @@ public class UIUtils {
 
 
         SpannableString friendlySpannable = new SpannableString(friendlyFee);
-        friendlySpannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)), feeLength, exchangeRateLength, 0);
+        friendlySpannable.setSpan(
+                new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)),
+                feeLength,
+                exchangeRateLength,
+                0);
         return friendlySpannable;
 
     }
@@ -465,5 +487,21 @@ public class UIUtils {
         drawable = DrawableCompat.wrap(drawable);
         DrawableCompat.setTint(drawable, tint);
         return drawable;
+    }
+
+    public static String formatCoin(Context context, Coin coin) {
+        return getMoneyFormat(context).format(coin).toString();
+    }
+
+    private static MonetaryFormat getMoneyFormat(Context context) {
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            return MonetaryFormat.BTC.postfixCode();
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            return MonetaryFormat.MBTC.postfixCode();
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            return MonetaryFormat.UBTC.postfixCode();
+        } else {
+            return MonetaryFormat.BTC.postfixCode();
+        }
     }
 }

@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import com.coinblesk.json.BaseTO;
 import com.coinblesk.json.UserAccountStatusTO;
 import com.coinblesk.json.UserAccountTO;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.util.Pair;
 
 import org.bitcoinj.core.ECKey;

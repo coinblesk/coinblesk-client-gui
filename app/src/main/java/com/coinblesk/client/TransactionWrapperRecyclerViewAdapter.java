@@ -29,6 +29,9 @@ import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.models.TransactionWrapper;
 
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.util.List;
@@ -45,6 +48,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
         public final View view;
         public final ImageView imageViewTxIcon;
         public final TextView textViewTitle;
+        public final TextView textViewAmountFiat;
         public final TextView textViewDescription;
         public final ImageView imageViewStatus;
 
@@ -53,6 +57,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
             this.view = view;
             this.imageViewTxIcon = (ImageView) view.findViewById(R.id.transaction_icon);
             this.textViewTitle = (TextView) view.findViewById(R.id.transaction_title);
+            this.textViewAmountFiat = (TextView) view.findViewById(R.id.transaction_amount_fiat);
             this.textViewDescription = (TextView) view.findViewById(R.id.transaction_description);
             this.imageViewStatus = (ImageView) view.findViewById(R.id.transaction_title_icon_status);
         }
@@ -75,7 +80,10 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final TransactionWrapper transaction = transactionWrappers.get(position);
 
-        holder.textViewTitle.setText(transaction.getAmount().toFriendlyString());
+        String amount = UIUtils.formatCoin(holder.view.getContext(), transaction.getAmount());
+        holder.textViewTitle.setText(amount);
+        String amountFiat = amountFiat(transaction);
+        holder.textViewAmountFiat.setText(amountFiat);
         holder.textViewDescription.setText(prettyTime.format(transaction.getTransaction().getUpdateTime()));
         holder.imageViewTxIcon.setImageResource(transaction.getAmount().isNegative()
                 ? R.drawable.ic_send_arrow_48px
@@ -97,6 +105,22 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
             }
         });
 
+    }
+
+    private String amountFiat(TransactionWrapper transaction) {
+        ExchangeRate rate = transaction.getTransaction().getExchangeRate();
+        if (rate == null) {
+            return null;
+        }
+
+        Fiat fiat = rate.coinToFiat(transaction.getAmount());
+        return MonetaryFormat.FIAT
+                .minDecimals(2)
+                .repeatOptionalDecimals(0, 0)
+                .code(0, fiat.currencyCode)
+                .postfixCode()
+                .format(fiat)
+                .toString();
     }
 
     @Override

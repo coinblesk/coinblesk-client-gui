@@ -101,10 +101,6 @@ public final class Constants {
     protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://192.168.0.105:8080/coinblesk-server/";
     //public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
-    public static String COINBLESK_SERVER_BASE_URL = null;
-    public static Retrofit RETROFIT = null;
-    public static Retrofit RETROFIT_SESSION = null;
-
     /* client to client communication */
     // version of the communication protocol for client to client communication.
     public static final int CLIENT_COMMUNICATION_PROTOCOL_VERSION = 3;

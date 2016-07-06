@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.coinblesk.payments.communications.http;
+package com.coinblesk.client;
 
 import com.coinblesk.json.*;
 

@@ -37,7 +37,7 @@ import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.json.BaseTO;
 import com.coinblesk.json.KeyTO;
 import com.coinblesk.json.TimeLockedAddressTO;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.payments.communications.steps.cltv.CLTVInstantPaymentStep;
 import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.CoinbleskException;
@@ -435,7 +435,7 @@ public class WalletService extends Service {
     }
 
     private void keyExchange() throws CoinbleskException {
-        final CoinbleskWebService service = coinbleskService();
+        final CoinbleskWebService service = getCoinbleskService();
         final ECKey clientECKey = new ECKey();
         final ECKey serverECKey;
 
@@ -455,7 +455,7 @@ public class WalletService extends Service {
                 throw new CoinbleskException("Verification of server response failed.");
             }
 
-            String serverUrl = Constants.RETROFIT.baseUrl().toString();
+            String serverUrl = appConfig.getCoinbleskServerUrl();
             saveKeys(clientECKey, serverECKey, serverUrl);
             Log.i(TAG, "Key exchange with server completed"
                     + "- clientPubKey=" + clientECKey.getPublicKeyAsHex()
@@ -563,7 +563,7 @@ public class WalletService extends Service {
             throw new IllegalStateException("No client or server multisig key, key-exchange should be done first.");
         }
 
-        CoinbleskWebService service = coinbleskService();
+        CoinbleskWebService service = getCoinbleskService();
         final long nextLockTime = calculateNextLockTime();
         final TimeLockedAddress expectedAddress = new TimeLockedAddress(
                 multisigClientKey.getPubKey(),
@@ -825,8 +825,8 @@ public class WalletService extends Service {
         }
     }
 
-    private CoinbleskWebService coinbleskService() {
-        return Constants.RETROFIT.create(CoinbleskWebService.class);
+    private CoinbleskWebService getCoinbleskService() {
+        return appConfig.getCoinbleskService();
     }
 
     private void broadcastWalletServiceInitDone() {
@@ -927,6 +927,10 @@ public class WalletService extends Service {
             return getAppConfig().getNetworkParameters();
         }
 
+        public CoinbleskWebService getCoinbleskService() {
+            return getAppConfig().getCoinbleskService();
+        }
+
         public Coin getBalance() {
             Coin amount = Coin.ZERO;
             for (TransactionOutput transactionOutput : getUnspentInstantOutputs()) {
@@ -984,7 +988,7 @@ public class WalletService extends Service {
         }
 
         public void setCurrency(String currency) {
-            WalletService.this.setFiatCurrency(fiatCurrency);
+            WalletService.this.setFiatCurrency(currency);
         }
 
         public Address getCurrentReceiveAddress() {

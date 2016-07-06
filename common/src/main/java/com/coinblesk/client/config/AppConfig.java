@@ -1,10 +1,14 @@
 package com.coinblesk.client.config;
 
+import com.coinblesk.client.CoinbleskWebService;
+import com.coinblesk.util.SerializeUtils;
+
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * @author Andreas Albrecht
@@ -56,13 +60,14 @@ public abstract class AppConfig {
     }
 
     private Retrofit getRetrofit() {
-        // TODO: return default retrofit instance
-        return null;
+        return new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                .baseUrl(getCoinbleskServerUrl())
+                .build();
     }
 
-    public void getCoinbleskService() {
-        // TODO: return coinblesk web service
-        return;
+    public CoinbleskWebService getCoinbleskService() {
+        return getRetrofit().create(CoinbleskWebService.class);
     }
 
     /**

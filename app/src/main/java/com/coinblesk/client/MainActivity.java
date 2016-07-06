@@ -132,8 +132,6 @@ public class MainActivity extends AppCompatActivity
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
         final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
-        initRetrofit(appConfig);
-
         AdditionalServiceUtils.setSessionID(this, null);
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
@@ -165,21 +163,14 @@ public class MainActivity extends AppCompatActivity
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
 
-        checkVersionCompatibility(appConfig.getNetworkParameters());
+        checkVersionCompatibility(appConfig);
     }
 
-    private void initRetrofit(AppConfig appConfig) {
-        Constants.COINBLESK_SERVER_BASE_URL = appConfig.getCoinbleskServerUrl();
-        Constants.RETROFIT = new Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                .baseUrl(appConfig.getCoinbleskServerUrl()).build();
-    }
-
-    private void checkVersionCompatibility(NetworkParameters params) {
+    private void checkVersionCompatibility(AppConfig appConfig) {
         // message is only displayed if request succeeds and answer from server is negative in order
         // to av
         // oid annoying message dialogs. (the client or the server may just be temporary offline).
-        new VersionCheckTask(params, AppUtils.getAppVersion(), this).execute();
+        new VersionCheckTask(appConfig, AppUtils.getAppVersion(), this).execute();
     }
 
     private void startWalletService(boolean bindService) {

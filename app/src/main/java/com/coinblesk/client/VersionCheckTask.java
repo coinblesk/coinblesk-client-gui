@@ -8,10 +8,10 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.coinblesk.bitcoin.BitcoinNet;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.VersionTO;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.CoinbleskException;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -27,13 +27,15 @@ public class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
 
     private final WeakReference<Activity> weakActivity;
     private Exception exception;
+    private final AppConfig appConfig;
     private final String clientAppVersion;
     private final BitcoinNet clientNetwork;
 
-    public VersionCheckTask(NetworkParameters params, String clientAppVersion, Activity activity) {
-        if (ClientUtils.isMainNet(params)) {
+    public VersionCheckTask(AppConfig appConfig, String clientAppVersion, Activity activity) {
+        this.appConfig = appConfig;
+        if (ClientUtils.isMainNet(appConfig.getNetworkParameters())) {
             clientNetwork = BitcoinNet.MAINNET;
-        } else if (ClientUtils.isTestNet(params)) {
+        } else if (ClientUtils.isTestNet(appConfig.getNetworkParameters())) {
             clientNetwork = BitcoinNet.TESTNET;
         } else {
             throw new RuntimeException("Unknown network");
@@ -45,7 +47,7 @@ public class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
 
     protected VersionTO doInBackground(Void... params) {
         try {
-            CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+            CoinbleskWebService service = appConfig.getCoinbleskService();
 
             VersionTO requestTO = new VersionTO()
                     .clientVersion(clientAppVersion)

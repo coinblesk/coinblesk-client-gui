@@ -19,9 +19,9 @@ package com.coinblesk.payments;
 
 import android.util.Log;
 
-import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.json.ExchangeRateTO;
-import com.coinblesk.payments.communications.http.CoinbleskWebService;
+import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.util.CoinbleskException;
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
@@ -46,10 +46,12 @@ class ExchangeRateFetcher implements Runnable {
     private static final String TAG = ExchangeRateFetcher.class.getName();
 
     private final WeakReference<WalletService.WalletServiceBinder> weakWalletService;
+    private final AppConfig appConfig;
     private final String fiatCurrency;
 
     public ExchangeRateFetcher(String fiatCurrency, WalletService.WalletServiceBinder walletService) {
         this.fiatCurrency = fiatCurrency;
+        this.appConfig = walletService.getAppConfig();
         this.weakWalletService = new WeakReference<>(walletService);
     }
 
@@ -76,7 +78,7 @@ class ExchangeRateFetcher implements Runnable {
     }
 
     private double fetchConversionRate() throws IOException, CoinbleskException {
-        CoinbleskWebService service = Constants.RETROFIT.create(CoinbleskWebService.class);
+        CoinbleskWebService service = appConfig.getCoinbleskService();
         Response<ExchangeRateTO> response;
         double conversionRate;
         switch (fiatCurrency) {
