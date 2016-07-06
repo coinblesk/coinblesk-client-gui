@@ -21,6 +21,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -30,7 +31,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.coinblesk.client.R;
-import com.coinblesk.client.utils.AppUtils;
+import com.coinblesk.client.utils.ClientUtils;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -64,10 +65,10 @@ public class BackupActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
-
-        findViewById(R.id.backup_backup_touch).setOnClickListener(new BackupClickListener());
-        findViewById(R.id.backup_restore_touch).setOnClickListener(new RestoreClickListener());
-        findViewById(R.id.backup_refresh_touch).setOnClickListener(new RefreshClickListener());
+        View v;
+        if ((v = findViewById(R.id.backup_backup_touch))  != null) v.setOnClickListener(new BackupClickListener());
+        if ((v = findViewById(R.id.backup_restore_touch)) != null) v.setOnClickListener(new RestoreClickListener());
+        if ((v = findViewById(R.id.backup_refresh_touch)) != null) v.setOnClickListener(new RefreshClickListener());
     }
 
     @Override
@@ -87,7 +88,7 @@ public class BackupActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Backup.");
-            if (AppUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
+            if (ClientUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
                 showBackupDialog();
             } else {
                 showPermissionRationale();
@@ -99,7 +100,7 @@ public class BackupActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "Backup: Restore.");
-            if (AppUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
+            if (ClientUtils.hasPermissions(BackupActivity.this, BACKUP_RESTORE_PERMISSIONS)) {
                 showRestoreDialog();
             } else {
                 showPermissionRationale();
@@ -134,7 +135,7 @@ public class BackupActivity extends AppCompatActivity {
     }
 
     private void checkAndRequestPermissions() {
-        if (!AppUtils.hasPermissions(this, BACKUP_RESTORE_PERMISSIONS)) {
+        if (!ClientUtils.hasPermissions(this, BACKUP_RESTORE_PERMISSIONS)) {
                 Log.d(TAG, "Request backup permissions: " + Arrays.toString(BACKUP_RESTORE_PERMISSIONS));
                 ActivityCompat.requestPermissions(this, BACKUP_RESTORE_PERMISSIONS, BACKUP_PERMISSIONS_REQUEST_CODE);
         } else {
@@ -143,17 +144,17 @@ public class BackupActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case BACKUP_PERMISSIONS_REQUEST_CODE:
-                if (AppUtils.allPermissionsGranted(grantResults)) {
+                if (ClientUtils.allPermissionsGranted(grantResults)) {
                     Log.d(TAG, "Permissions granted: " + Arrays.toString(permissions));
                 } else {
                     Log.d(TAG, "Permissions denied: " + Arrays.toString(permissions) + ", " + Arrays.toString(grantResults));
-                    if (AppUtils.shouldShowPermissionRationale(this, permissions)) {
+                    if (ClientUtils.shouldShowPermissionRationale(this, permissions)) {
                         showPermissionRationale();
                     }
-                };
+                }
                 break;
             default:
                 Log.w(TAG, "onRequestPermissionsResult: Received unknown requestCode. Missing case?");

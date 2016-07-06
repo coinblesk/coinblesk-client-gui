@@ -29,7 +29,9 @@ import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 
+import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.utils.AppUtils;
 
 /**
@@ -42,7 +44,7 @@ public class AboutActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Context context = v.getContext();
-            String urlToOpen = null;
+            String urlToOpen;
 
             switch (v.getId()) {
                 case R.id.social_github:
@@ -81,18 +83,21 @@ public class AboutActivity extends AppCompatActivity {
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        findViewById(R.id.social_github).setOnClickListener(onClickListener);
-        findViewById(R.id.social_website).setOnClickListener(onClickListener);
-        findViewById(R.id.social_tos).setOnClickListener(onClickListener);
-        findViewById(R.id.ifi_icon_box).setOnClickListener(onClickListener);
-        findViewById(R.id.uzh_icon_box).setOnClickListener(onClickListener);
-        findViewById(R.id.twitter_icon_box).setOnClickListener(onClickListener);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        View v;
+        if ((v = findViewById(R.id.social_github))      != null) v.setOnClickListener(onClickListener);
+        if ((v = findViewById(R.id.social_website))     != null) v.setOnClickListener(onClickListener);
+        if ((v = findViewById(R.id.social_tos))         != null) v.setOnClickListener(onClickListener);
+        if ((v = findViewById(R.id.ifi_icon_box))       != null) v.setOnClickListener(onClickListener);
+        if ((v = findViewById(R.id.uzh_icon_box))       != null) v.setOnClickListener(onClickListener);
+        if ((v = findViewById(R.id.twitter_icon_box))   != null) v.setOnClickListener(onClickListener);
 
         TextView body = (TextView) findViewById(R.id.about_build_info);
-        body.setText(Html.fromHtml(getString(R.string.about_build_info_main, AppUtils.getVersionName())));
+        if (body != null) body.setText(Html.fromHtml(
+                getString(R.string.about_build_info_main, AppUtils.getVersionName())));
 
     }
 

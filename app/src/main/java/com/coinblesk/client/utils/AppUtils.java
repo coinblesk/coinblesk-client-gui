@@ -75,38 +75,4 @@ public final class AppUtils {
                 return R.string.payment_error_message_error;
         }
     }
-
-
-    public static boolean hasPermissions(Context context, String... permissions) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param grantResults array as received by onRequestPermissionsResult
-     * @return true if all granted, false otherwise.
-     */
-    public static boolean allPermissionsGranted(int[] grantResults) {
-        for (int i = 0; i < grantResults.length; ++i) {
-            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean shouldShowPermissionRationale(Activity activity, String[] permissions) {
-        for (String permission : permissions) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
