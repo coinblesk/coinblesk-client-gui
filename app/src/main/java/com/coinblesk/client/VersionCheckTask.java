@@ -9,13 +9,12 @@ import android.util.Log;
 
 import com.coinblesk.bitcoin.BitcoinNet;
 import com.coinblesk.client.config.AppConfig;
-import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.VersionTO;
 import com.coinblesk.util.CoinbleskException;
 
-import org.bitcoinj.core.NetworkParameters;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 import retrofit2.Response;
@@ -35,7 +34,8 @@ public class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
         this.appConfig = appConfig;
         if (ClientUtils.isMainNet(appConfig.getNetworkParameters())) {
             clientNetwork = BitcoinNet.MAINNET;
-        } else if (ClientUtils.isTestNet(appConfig.getNetworkParameters())) {
+        } else if (ClientUtils.isTestNet(appConfig.getNetworkParameters())
+                || ClientUtils.isLocalTestNet(appConfig.getNetworkParameters())) {
             clientNetwork = BitcoinNet.TESTNET;
         } else {
             throw new RuntimeException("Unknown network");
@@ -67,6 +67,9 @@ public class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
             }
 
             return responseTO;
+        } catch (IOException e) {
+            Log.w("VersionCheckTask", "Could not do version check, the client or server is probably offline: " + e.getMessage());
+            this.exception = e;
         } catch (Exception e) {
             Log.e("VersionCheckTask", "Could not do version check: ", e);
             this.exception = e;

@@ -3,6 +3,7 @@ package com.coinblesk.client.additionalservices;
 import android.app.Activity;
 import android.os.AsyncTask;
 
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.BaseTO;
 import com.coinblesk.json.UserAccountStatusTO;
 import com.coinblesk.json.UserAccountTO;
@@ -106,7 +107,8 @@ public class AdditionalServicesTasks {
                     if(res.body().isSuccess()) {
                         callback.onTaskCompleted(true, null);
                     } else {
-                        callback.onTaskCompleted(false, res.body().message());
+                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        callback.onTaskCompleted(false, msg);
                     }
 
                 } catch (IOException e) {

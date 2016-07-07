@@ -92,10 +92,7 @@ public class TransactionWrapperRecyclerViewAdapter extends RecyclerView.Adapter<
                         ClientUtils.isConfidenceReached(transaction)
                         ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
                         : R.drawable.ic_clock_white_18dp);
-        int blocks = transaction.getTransaction().getConfidence().getDepthInBlocks();
-        int colorFilter = UIUtils.getStatusColorFilter(blocks, transaction.isInstant());
-        holder.imageViewStatus.setColorFilter(colorFilter);
-
+        holder.imageViewStatus.setColorFilter(UIUtils.getStatusColorFilter(transaction));
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

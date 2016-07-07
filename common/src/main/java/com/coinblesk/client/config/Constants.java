@@ -55,13 +55,16 @@ public final class Constants {
 
     protected static final String WALLET_FILES_PREFIX_TESTNET = "coinblesk_testnet";
     protected static final String WALLET_FILES_PREFIX_MAINNET = "coinblesk_mainnet";
+    protected static final String WALLET_FILES_PREFIX_LOCALTESTNET = "coinblesk_localtestnet";
 
     protected static final String CHECKPOINTS_FILE_NAME_MAINNET = "checkpoints.txt";
     protected static final String CHECKPOINTS_FILE_NAME_TESTNET = "checkpoints-testnet.txt";
+    protected static final String CHECKPOINTS_FILE_NAME_LOCALTESTNET = CHECKPOINTS_FILE_NAME_TESTNET;
 
     // argument: tx hash
     protected static final String URL_BLOCKTRAIL_EXPLORER_MAINNET = "https://www.blocktrail.com/BTC/tx/";
     protected static final String URL_BLOCKTRAIL_EXPLORER_TESTNET = "https://www.blocktrail.com/tBTC/tx/";
+    protected static final String URL_BLOCKTRAIL_EXPLORER_LOCALTESTNET = URL_BLOCKTRAIL_EXPLORER_TESTNET;
 
     public static final String BITCOIN_URI_KEY = "BITCOIN_URI_KEY";
     public static final String ERROR_MESSAGE_KEY = "ERROR_MESSAGE_KEY";
@@ -97,8 +100,8 @@ public final class Constants {
     /* coinblesk server communication */
 
     //public final static String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "http://192.168.0.105:8080/coinblesk-server/";
-    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://192.168.0.105:8080/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_PROD = "https://bitcoin.csg.uzh.ch/coinblesk-server/";
+    protected static final String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
     //public final static String COINBLESK_SERVER_BASE_URL_TEST = "http://bitcoin2-test.csg.uzh.ch/coinblesk-server/";
 
     /* client to client communication */

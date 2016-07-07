@@ -132,7 +132,11 @@ public class MainActivity extends AppCompatActivity
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
         final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
-        AdditionalServiceUtils.setSessionID(this, null);
+        try {
+            AdditionalServiceUtils.setSessionID(this, null);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not set sessionID: ", e);
+        }
 
         UpgradeUtils upgradeUtils = new UpgradeUtils();
         upgradeUtils.checkUpgrade(this, appConfig.getNetworkParameters());

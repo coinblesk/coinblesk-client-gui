@@ -17,6 +17,7 @@
 package com.coinblesk.client.settings;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,9 +30,12 @@ import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 
 import com.coinblesk.client.CoinbleskApp;
 import com.coinblesk.client.R;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.payments.WalletService;
 
@@ -61,13 +65,13 @@ public class SettingsActivity extends AppCompatActivity {
         if (getFragmentManager().findFragmentById(R.id.fragment_settings) == null) {
             getFragmentManager()
                     .beginTransaction()
-                    .add(R.id.fragment_settings, new Prefs())
+                    .add(R.id.fragment_settings, new CoinbleskPrefs())
                     .commit();
         }
 
     }
 
-    public static class Prefs extends PreferenceFragment {
+    public static class CoinbleskPrefs extends PreferenceFragment {
         private WalletService.WalletServiceBinder walletService;
 
         @Override
@@ -89,10 +93,15 @@ public class SettingsActivity extends AppCompatActivity {
             getPreferenceManager().setSharedPreferencesName(SharedPrefUtils.getSharedPreferencesName());
             getPreferenceManager().setSharedPreferencesMode(SharedPrefUtils.getSharedPreferencesMode());
 
-            addPreferencesFromResource(R.xml.settings_pref);
+            refreshPreferenceScreen();
 
             initRestartAfterNetworkChange();
             initOnFiatCurrencyChanged();
+        }
+
+        private void refreshPreferenceScreen() {
+            setPreferenceScreen(null);
+            addPreferencesFromResource(R.xml.settings_pref);
         }
 
         private void initOnFiatCurrencyChanged() {
@@ -110,18 +119,78 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void initRestartAfterNetworkChange() {
-            String key = getResources().getString(R.string.pref_network_list);
+            final String key = getResources().getString(R.string.pref_network_list);
             Preference pref = findPreference(key);
             pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, final Object newValue) {
+                    final String network = newValue.toString();
 
-                    ((CoinbleskApp) getActivity().getApplication()).refreshAppConfig(newValue.toString());
-                    restartWalletService();
+                    if (network.equals(getString(R.string.pref_network_localtestnet))) {
+                        showServerUrlDialog(network);
+                        // pref is accepted after user entered server url and confirms with OK
+                        return false;
+                    }
 
+                    refreshAppConfigAndRestartWallet(network);
                     return true;
                 }
             });
+        }
+
+        private void refreshAppConfigAndRestartWallet(final String network) {
+            ((CoinbleskApp) getActivity().getApplication()).refreshAppConfig(network);
+            restartWalletService();
+        }
+
+        private void showServerUrlDialog(final String network) {
+            final View serverUrlView = getActivity().getLayoutInflater().inflate(R.layout.dialog_server_url_input, null);
+            Dialog dialog = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent)
+                    .setTitle("Server URL")
+                    .setMessage("Enter the URL of a Coinblesk server.")
+                    .setView(serverUrlView)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // since we returned false below, preference is set now.
+                            String serverUrl = ((EditText) serverUrlView
+                                    .findViewById(R.id.server_url))
+                                    .getText()
+                                    .toString();
+
+                            if (!serverUrl.endsWith("/")) {
+                                // retrofit requires url ending with "/"
+                                serverUrl = serverUrl.concat("/");
+                            }
+
+                            if (ClientUtils.isValidHttpUrl(serverUrl)) {
+                                SharedPrefUtils.setLocalTestNetServerUrl(getActivity(), serverUrl);
+                                SharedPrefUtils.setNetwork(getActivity(), network);
+                                refreshAppConfigAndRestartWallet(network);
+                                refreshPreferenceScreen();
+                            } else {
+                                new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent)
+                                        .setTitle(R.string.dialog_invalid_url_title)
+                                        .setMessage(R.string.dialog_invalid_url_message)
+                                        .setNeutralButton(R.string.ok, null)
+                                        .create()
+                                        .show();
+                            }
+
+                            dialog.dismiss();
+                        }
+                    })
+                    .create();
+            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialog) {
+                    String currentServerUrl = SharedPrefUtils.getLocalTestNetServerUrl(getActivity());
+                    ((EditText)serverUrlView.findViewById(R.id.server_url)).setText(currentServerUrl);
+                }
+            });
+            dialog.show();
         }
 
         private void restartWalletService() {

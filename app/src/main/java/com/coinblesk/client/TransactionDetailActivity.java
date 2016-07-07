@@ -198,9 +198,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
                 statusIcon.setImageResource(ClientUtils.isConfidenceReached(txWrapper)
                                 ? R.drawable.ic_checkbox_marked_circle_outline_white_18dp
                                 : R.drawable.ic_clock_white_18dp);
-                statusIcon.setColorFilter(UIUtils.getStatusColorFilter(
-                        transaction.getConfidence().getDepthInBlocks(),
-                        txWrapper.isInstant()));
+                statusIcon.setColorFilter(UIUtils.getStatusColorFilter(txWrapper));
             }
 
             TextView txt;

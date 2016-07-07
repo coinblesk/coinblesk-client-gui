@@ -197,12 +197,28 @@ public final class SharedPrefUtils {
                 context.getString(R.string.pref_network_default_value));
     }
 
+    public static void setNetwork(Context context, String network) {
+        String key = context.getString(R.string.pref_network_list);
+        setString(context, key, network);
+    }
+
     public static boolean isNetworkTestnet(Context context) {
         return getNetwork(context).equals(context.getString(R.string.pref_network_testnet));
     }
 
     public static boolean isNetworkMainnet(Context context) {
         return getNetwork(context).equals(context.getString(R.string.pref_network_mainnet));
+    }
+
+    public static String getLocalTestNetServerUrl(Context context) {
+        String key = context.getString(R.string.pref_network_localtestnet_server_url);
+        String defaultValue = context.getString(R.string.pref_network_localtestnet_server_url_default);
+        return getString(context, key, defaultValue);
+    }
+
+    public static void setLocalTestNetServerUrl(Context context, String serverUrl) {
+        String key = context.getString(R.string.pref_network_localtestnet_server_url);
+        setString(context, key, serverUrl);
     }
 
     public static String getCurrency(Context context) {

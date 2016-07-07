@@ -1,6 +1,7 @@
 package com.coinblesk.client.config;
 
 import com.coinblesk.client.CoinbleskWebService;
+import com.coinblesk.client.utils.LocalTestNetParams;
 import com.coinblesk.util.SerializeUtils;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -114,6 +115,25 @@ public abstract class AppConfig {
                 instance = new TestNetConfig();
             }
             return instance;
+        }
+    }
+
+    public static class LocalTestNetConfig extends AppConfig {
+
+        private LocalTestNetConfig(String serverUrl) {
+            super();
+
+            walletFilesPrefix = Constants.WALLET_FILES_PREFIX_LOCALTESTNET;
+            coinbleskServerUrl = serverUrl;
+
+            networkParameters = LocalTestNetParams.get();
+            checkpointsFileName = Constants.CHECKPOINTS_FILE_NAME_LOCALTESTNET;
+            blockchainExplorerUrl = Constants.URL_BLOCKTRAIL_EXPLORER_LOCALTESTNET;
+        }
+
+        public static synchronized AppConfig get(String serverUrl) {
+            // not a singleton due to serverUrl that may change.
+            return new LocalTestNetConfig(serverUrl);
         }
     }
 }

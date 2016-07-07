@@ -50,8 +50,11 @@ public class CoinbleskApp extends Application {
     public void refreshAppConfig(String networkValue) {
         if (networkValue.equals(getString(R.string.pref_network_mainnet))) {
             appConfig = AppConfig.MainNetConfig.get();
-        } else if(networkValue.equals(getString(R.string.pref_network_testnet))) {
+        } else if (networkValue.equals(getString(R.string.pref_network_testnet))) {
             appConfig = AppConfig.TestNetConfig.get();
+        } else if (networkValue.equals(getString(R.string.pref_network_localtestnet))) {
+            String serverUrl = SharedPrefUtils.getLocalTestNetServerUrl(this);
+            appConfig = AppConfig.LocalTestNetConfig.get(serverUrl);
         } else {
             throw new RuntimeException("Unsupported network: " + networkValue);
         }

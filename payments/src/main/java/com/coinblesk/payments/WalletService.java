@@ -959,16 +959,14 @@ public class WalletService extends Service {
                 Transaction dummyTx = BitcoinUtils.createSpendAllTx(
                         appConfig.getNetworkParameters(),
                         getUnspentInstantOutputs(),
-                        getCurrentReceiveAddress(),
-                        getCurrentReceiveAddress(),
-                        false);
+                        getCurrentReceiveAddress());
                 maxSpendableAmount = dummyTx.getOutputSum();
             } catch (CoinbleskException | InsufficientFunds e) {
                 // ignore since not interested in Tx anyways.
                 maxSpendableAmount = getBalance();
             }
 
-            if (maxSpendableAmount.isNegative()) {
+            if (!maxSpendableAmount.isPositive()) {
                 maxSpendableAmount = Coin.ZERO;
             }
 
@@ -1138,9 +1136,7 @@ public class WalletService extends Service {
                     Transaction transaction = BitcoinUtils.createSpendAllTx(
                             appConfig.getNetworkParameters(),
                             unlockedTxOut,
-                            getCurrentReceiveAddress(),
-                            sendTo,
-                            false);
+                            sendTo);
 
                     // since we sign with 1 key (without server key), we need to set
                     // the nLockTime and sequence number flags of CLTV inputs.

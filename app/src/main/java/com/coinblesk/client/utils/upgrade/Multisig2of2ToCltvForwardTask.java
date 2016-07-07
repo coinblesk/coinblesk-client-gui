@@ -142,9 +142,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         final Transaction transaction = BitcoinUtils.createSpendAllTx(
                 appConfig.getNetworkParameters(),
                 outputs,
-                addressTo,
-                addressTo,
-                false);
+                addressTo);
 
         // let server sign first
         SignTO transactionTO = new SignTO();

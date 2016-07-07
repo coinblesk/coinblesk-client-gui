@@ -64,14 +64,15 @@ class ExchangeRateFetcher implements Runnable {
             long fiatValue = (long) (currentAsk * 10000.0 * (1.0 / conversionRate));
             Log.d(TAG, String.format(Locale.US,
                     "Exchange rate - currentAsk: %d %s, conversionRate: %f, fiatValue: %.2f %s",
-                    currentAsk, "USD", conversionRate, fiatValue/10000.0, fiatCurrency));
+                    currentAsk, "USD", conversionRate, fiatValue / 10000.0, fiatCurrency));
 
             WalletService.WalletServiceBinder walletService = weakWalletService.get();
             if (walletService != null && walletService.getCurrency().equals(fiatCurrency)) {
                 ExchangeRate exchangeRate = new ExchangeRate(Fiat.valueOf(fiatCurrency, fiatValue));
                 walletService.setExchangeRate(exchangeRate);
             }
-
+        } catch (IOException e) {
+            Log.w(TAG, "Could not fetch exchange rate, client or server probably offline: " + e.getMessage());
         } catch (Exception e) {
             Log.w(TAG, "Exception - could not fetch exchange rate: ", e);
         }

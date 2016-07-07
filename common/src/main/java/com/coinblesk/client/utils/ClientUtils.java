@@ -23,8 +23,12 @@ import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+import com.coinblesk.client.common.R;
+import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.TransactionWrapper;
+import com.coinblesk.json.BaseTO;
+import com.coinblesk.json.Type;
 import com.google.common.primitives.UnsignedBytes;
 
 import org.bitcoinj.core.ECKey;
@@ -35,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -44,6 +49,27 @@ import java.util.Comparator;
  */
 public final class ClientUtils {
     private static final Logger log = LoggerFactory.getLogger(ClientUtils.class);
+
+    public static String getMessageByType(Context context, BaseTO<?> to) {
+        final String message;
+
+        switch (to.type()) {
+            case SERVER_ERROR:
+                message = context.getString(R.string.error_server_error, to.message());
+                break;
+            case NO_EMAIL: /* fall through */
+            case INVALID_EMAIL:
+                message = context.getString(R.string.error_invalid_email);
+                break;
+            case PASSWORD_TOO_SHORT:
+                message = context.getString(R.string.error_password_too_short);
+                break;
+            default:
+                message = to.message() != null ? to.message() : to.type().toString();
+        }
+
+        return message;
+    }
 
     enum PureJavaComparator implements Comparator<byte[]> {
         INSTANCE;
@@ -138,6 +164,10 @@ public final class ClientUtils {
         return params.getId().equals(NetworkParameters.ID_TESTNET);
     }
 
+    public static boolean isLocalTestNet(NetworkParameters params) {
+        return params.getId().equals(LocalTestNetParams.ID_LOCAL_TESTNET);
+    }
+
     public static boolean isConfidenceReached(TransactionWrapper txWrapper) {
         long confBlocks = txWrapper.getTransaction().getConfidence().getDepthInBlocks();
         return (confBlocks >= Constants.MIN_CONF_BLOCKS) || txWrapper.isInstant();
@@ -174,5 +204,14 @@ public final class ClientUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isValidHttpUrl(String uri) {
+        try {
+            URL url = new URL(uri);
+            return "http".equals(url.getProtocol());
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

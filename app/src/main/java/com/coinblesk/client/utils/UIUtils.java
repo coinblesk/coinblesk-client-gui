@@ -33,6 +33,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.coinblesk.client.R;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.util.BitcoinUtils;
 import com.google.gson.Gson;
@@ -66,7 +67,7 @@ public class UIUtils {
 
     private static final Float CONNECTION_ICON_ENABLED = 0.8f;
     private static final Float CONNECTION_ICON_DISABLED = 0.25f;  // see: styles.xml -> card_view_connection_icon
-    private static final String COLOR_MATERIAL_LIGHT_YELLOW_900 = "#F47F1F";
+    private static final String COLOR_MATERIAL_LIGHT_YELLOW_900 = "#F47F1F"; // see: color_material.xml
     private static final String COLOR_COLOR_ACCENT = "#AEEA00";
     private static final String COLOR_WHITE = "#FFFFFF";
 
@@ -456,12 +457,12 @@ public class UIUtils {
         return 2;
     }
 
-    public static int getStatusColorFilter(int depthInBlock, boolean instantPayment) {
-        if (instantPayment)
-            return Color.parseColor(COLOR_COLOR_ACCENT);
-        if (depthInBlock == 0)
+    public static int getStatusColorFilter(TransactionWrapper tx) {
+        if (ClientUtils.isConfidenceReached(tx)) {
+            return Color.parseColor(COLOR_WHITE);
+        } else {
             return Color.parseColor(COLOR_MATERIAL_LIGHT_YELLOW_900);
-        return Color.parseColor(COLOR_WHITE);
+        }
     }
 
     public static String lockedUntilText(long lockTime) {

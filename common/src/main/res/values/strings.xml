@@ -35,6 +35,9 @@
     <string name="pref_network_default_value">@string/pref_network_mainnet</string>
     <string name="pref_network_mainnet">mainnet</string>
     <string name="pref_network_testnet">testnet</string>
+    <string name="pref_network_localtestnet">localtestnet</string>
+    <string name="pref_network_localtestnet_server_url">pref_network_localtestnet_server_url</string>
+    <string name="pref_network_localtestnet_server_url_default">http://localhost/coinblesk-server/</string>
 
     <string name="pref_currency_list">pref_currency_list</string>
     <string name="pref_currency_default_value">EUR</string>
@@ -81,5 +84,9 @@
     <string name="pref_address_lock_times">%1$s_pref_address_lock_times</string>
 
     <string name="pref_instant_transactions">%1$s_pref_instant_transactions</string>
+
+    <string name="error_server_error">Server error: %1$s</string>
+    <string name="error_invalid_email">Invalid email address.</string>
+    <string name="error_password_too_short">Password is too short.</string>
 
 </resources>

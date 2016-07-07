@@ -77,11 +77,13 @@
     <string-array name="pref_network_values">
         <item>@string/pref_network_mainnet</item>
         <item>@string/pref_network_testnet</item>
+        <item>@string/pref_network_localtestnet</item>
     </string-array>
 
     <string-array name="pref_network_entries">
         <item>MainNet</item>
         <item>TestNet</item>
+        <item>LocalTestNet</item>
     </string-array>
 
 
