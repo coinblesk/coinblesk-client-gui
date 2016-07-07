@@ -15,8 +15,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
-import com.coinblesk.json.UserAccountStatusTO;
-import com.coinblesk.json.UserAccountTO;
+import com.coinblesk.json.v1.UserAccountStatusTO;
+import com.coinblesk.json.v1.UserAccountTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.Pair;
 

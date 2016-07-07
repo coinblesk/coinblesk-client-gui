@@ -18,8 +18,8 @@
 package com.coinblesk.payments.communications.steps.cltv;
 
 import com.coinblesk.client.utils.DERPayloadParser;
-import com.coinblesk.json.SignVerifyTO;
-import com.coinblesk.json.TxSig;
+import com.coinblesk.json.v1.SignVerifyTO;
+import com.coinblesk.json.v1.TxSig;
 import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.uri.BitcoinURI;

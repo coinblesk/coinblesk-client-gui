@@ -21,10 +21,10 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.coinblesk.client.utils.SharedPrefUtils;
-import com.coinblesk.json.SignVerifyTO;
-import com.coinblesk.json.TxSig;
+import com.coinblesk.json.v1.SignVerifyTO;
+import com.coinblesk.json.v1.TxSig;
 import com.coinblesk.client.config.Constants;
-import com.coinblesk.json.Type;
+import com.coinblesk.json.v1.Type;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;

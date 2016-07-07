@@ -26,8 +26,8 @@ import android.util.Log;
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
-import com.coinblesk.json.SignTO;
-import com.coinblesk.json.VerifyTO;
+import com.coinblesk.json.v1.SignTO;
+import com.coinblesk.json.v1.VerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.BitcoinUtils;
@@ -143,9 +143,7 @@ public class Multisig2of2ToCltvForwardTask extends AsyncTask<Void, Void, Transac
         final Transaction transaction = BitcoinUtils.createSpendAllTx(
                 appConfig.getNetworkParameters(),
                 outputs,
-                addressTo,
-                addressTo,
-                false);
+                addressTo);
 
         // let server sign first
         SignTO transactionTO = new SignTO();

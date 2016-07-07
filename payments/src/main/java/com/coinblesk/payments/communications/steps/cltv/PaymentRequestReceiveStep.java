@@ -25,7 +25,7 @@ import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
-import com.coinblesk.json.PaymentRequestTO;
+import com.coinblesk.json.v1.PaymentRequestTO;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.util.SerializeUtils;

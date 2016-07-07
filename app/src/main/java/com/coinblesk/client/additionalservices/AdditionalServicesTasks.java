@@ -3,9 +3,9 @@ package com.coinblesk.client.additionalservices;
 import android.app.Activity;
 import android.os.AsyncTask;
 
-import com.coinblesk.json.BaseTO;
-import com.coinblesk.json.UserAccountStatusTO;
-import com.coinblesk.json.UserAccountTO;
+import com.coinblesk.json.v1.BaseTO;
+import com.coinblesk.json.v1.UserAccountStatusTO;
+import com.coinblesk.json.v1.UserAccountTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.Pair;
 

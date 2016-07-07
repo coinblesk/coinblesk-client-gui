@@ -10,7 +10,7 @@ import android.util.Log;
 import com.coinblesk.bitcoin.BitcoinNet;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.json.VersionTO;
+import com.coinblesk.json.v1.VersionTO;
 import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.CoinbleskException;
 

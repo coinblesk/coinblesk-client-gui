@@ -16,7 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.coinblesk.client.R;
-import com.coinblesk.json.UserAccountTO;
+import com.coinblesk.json.v1.UserAccountTO;
 import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.core.Coin;

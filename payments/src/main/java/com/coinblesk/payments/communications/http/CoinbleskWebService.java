@@ -16,7 +16,7 @@
 
 package com.coinblesk.payments.communications.http;
 
-import com.coinblesk.json.*;
+import com.coinblesk.json.v1.*;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
