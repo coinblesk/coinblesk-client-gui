@@ -20,6 +20,7 @@ package com.coinblesk.client.ui.dialogs;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -91,6 +92,11 @@ public class QrDialogFragment extends DialogFragment {
             clipboardButton.setOnClickListener(new CopyToClipboardClickListener());
         }
 
+        final Button shareButton = (Button) view.findViewById(R.id.qr_dialog_share);
+        if (shareButton != null) {
+            shareButton.setOnClickListener(new ShareClickListener());
+        }
+
         try {
             final ImageView qrCodeImageView = (ImageView) view.findViewById(R.id.qr_code);
             if (qrCodeImageView != null) {
@@ -128,6 +134,22 @@ public class QrDialogFragment extends DialogFragment {
             CharSequence message = UIUtils.toFriendlySnackbarString(
                     getContext(), getString(R.string.snackbar_address_copied));
             Snackbar.make(getView(), message, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    private class ShareClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            share(ClientUtils.bitcoinUriToString(bitcoinURI));
+        }
+
+        private void share(String text) {
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Bitcoin Address");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+            sendIntent.setType("text/plain");
+            startActivity(sendIntent);
         }
     }
 }

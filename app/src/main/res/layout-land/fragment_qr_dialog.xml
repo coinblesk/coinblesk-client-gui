@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="right"
         android:padding="@dimen/spacing_normal"
-        android:text="@string/qr_code_copy_to_clipboard"
+        android:text="@string/action_copy"
         android:textColor="@color/colorAccent"
         android:visibility="gone" />
 

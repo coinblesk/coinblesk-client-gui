@@ -159,7 +159,6 @@
     <!-- End Numeric Keypad Strings-->
 
     <string name="qr_code_dialog_title">Your QR Code</string>
-    <string name="qr_code_copy_to_clipboard">Copy to Clipboard</string>
     <string name="qr_code_copied">Successfully copied to your Clipboard.</string>
     <string name="qr_code_close">Close</string>
     <string name="qr_code_error_title">QR Code Error</string>
@@ -298,6 +297,7 @@
     <string name="pref_wallet_locktime_period_title">Locktime Period</string>
     <string name="pref_wallet_locktime_period_summary">Time span after which funds can be redeemed.</string>
 
+    <string name="action_share">Share</string>
     <string name="action_copy">Copy</string>
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
@@ -388,4 +388,7 @@
 
     <string name="testnet_warning">Connected to: %1$s</string>
     <string name="additional_services_description_3">Transfer Balance</string>
+    <string name="server_url_hint">Server URL</string>
+    <string name="dialog_invalid_url_title">Invalid URL</string>
+    <string name="dialog_invalid_url_message">The entered URL is not a valid HTTP URL.</string>
 </resources>
