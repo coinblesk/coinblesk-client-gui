@@ -94,6 +94,7 @@ public class NFCServerACSCLTV extends AbstractServer {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         broadcastReceiver = new USBBroadcastReceiver();
         getContext().registerReceiver(broadcastReceiver, filter);
 
@@ -238,7 +239,11 @@ public class NFCServerACSCLTV extends AbstractServer {
             throw new IOException("unknow device with pid:vid " + pid + ":" + vid);
         }
 
-        return new ACSTransceiver(reader, maxLen, isAcr122u);
+        try {
+            return new ACSTransceiver(reader, maxLen, isAcr122u);
+        } catch (ReaderException e) {
+            throw new IOException("cannot init reader", e);
+        }
     }
 
     private static boolean hasClass(String className) {
@@ -342,11 +347,35 @@ public class NFCServerACSCLTV extends AbstractServer {
                 case ACTION_USB_PERMISSION:
                     handleUsbPermission(intent);
                     break;
+                case UsbManager.ACTION_USB_DEVICE_ATTACHED:
+                    handleDeviceAttached(intent);
+                    break;
                 case UsbManager.ACTION_USB_DEVICE_DETACHED:
                     handleDeviceDetached(intent);
                     break;
                 default:
                     Log.w(TAG, "onReceive - do not known how to handle action: " + action);
+            }
+        }
+
+        private void handleDeviceAttached(Intent intent) {
+            Log.d(TAG, "handleDeviceAttached - try to create reader");
+            synchronized (this) {
+
+                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                if (device == null) {
+                    Log.w(TAG, "USB device is null. Cannot create reader.");
+                    return;
+                }
+
+                try {
+                    if(!reader.isOpened()) {
+                        reader.open(device);
+                        Log.d(TAG, "Reader opened");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not open reader: ", e);
+                }
             }
         }
 
@@ -366,8 +395,10 @@ public class NFCServerACSCLTV extends AbstractServer {
                 }
 
                 try {
-                    reader.open(device);
-                    Log.d(TAG, "Reader opened");
+                    if(!reader.isOpened()) {
+                        reader.open(device);
+                        Log.d(TAG, "Reader opened");
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Could not open reader: ", e);
                 }
