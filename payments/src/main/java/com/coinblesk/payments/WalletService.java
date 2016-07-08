@@ -1213,6 +1213,24 @@ public class WalletService extends Service {
             WalletService.this.markTransactionInstant(txHash);
         }
 
+        public Coin estimateFee(Address addressTo, Coin amount) {
+            if (addressTo == null) {
+                // assume P2SH address
+                addressTo = getCurrentReceiveAddress();
+            }
+            if (amount == null) {
+                // dummy balance
+                amount = Coin.SATOSHI;
+            }
+
+            try {
+                Transaction dummyTx = createTransaction(addressTo, amount);
+                return dummyTx.getFee();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
         public ECKey getMultisigClientKey() {
             return multisigClientKey;
         }

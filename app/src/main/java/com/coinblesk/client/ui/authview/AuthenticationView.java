@@ -34,9 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Alessandro De Carli (@a_d_c_) on 08/01/16.
- * Papers.ch
- * a.decarli@papers.ch
+ * @author Alessandro De Carli
+ * @author Andreas Albrecht
  */
 public class AuthenticationView extends View {
 
@@ -57,6 +56,7 @@ public class AuthenticationView extends View {
         } catch (NoSuchAlgorithmException e) {
             Log.w(TAG, "MessageDigest algorithm not found.");
         }
+
         this.digest = digest;
         this.dotPaint.setColor(getContext().getResources().getColor(R.color.colorPrimaryDark));
         this.dotPaint.setAntiAlias(true);
@@ -78,7 +78,7 @@ public class AuthenticationView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawColor(this.generateDigestColor());
+        canvas.drawColor(generateDigestColor());
 
         int squareSize = Math.min(canvas.getHeight(), canvas.getWidth());
 
@@ -86,9 +86,8 @@ public class AuthenticationView extends View {
         int cellPadding = cellSize / 2;
         int circleSize = cellPadding / 8;
 
-
-        this.patternPaint.setColor(this.getComplementColor(this.generateDigestColor()));
-        this.patternPaint.setStrokeWidth(circleSize * 2);
+        patternPaint.setColor(getComplementColor(generateDigestColor()));
+        patternPaint.setStrokeWidth(circleSize * 2);
 
         for (int i = 0; i < 4; i++) {
             for (int k = 0; k < 4; k++) {
@@ -98,31 +97,34 @@ public class AuthenticationView extends View {
         }
 
         for (int i = 6; i < 32; i++) {
-            if (this.isBitSet((byte)((int)digest[i]&digest[i-1]), i % 8)) {
-                final int currentNumber = this.toHalfByteInt(digest[i]);
-                final int lastNumber = this.toOtherHalfByteInt(digest[i]);
-                canvas.drawLine(this.points.get(lastNumber).x, this.points.get(lastNumber).y, this.points.get(currentNumber).x, this.points.get(currentNumber).y, this.patternPaint);
+            if (isBitSet((byte)((int)digest[i]&digest[i-1]), i % 8)) {
+                final int currentNumber = toHalfByteInt(digest[i]);
+                final int lastNumber = toOtherHalfByteInt(digest[i]);
+                canvas.drawLine(
+                        points.get(lastNumber).x, points.get(lastNumber).y,         /* start */
+                        points.get(currentNumber).x, points.get(currentNumber).y,   /* end */
+                        patternPaint);
             }
         }
     }
 
     private int generateDigestColor() {
-
         final int baseColor = Color.WHITE;
 
         final int baseRed = Color.red(baseColor);
         final int baseGreen = Color.green(baseColor);
         final int baseBlue = Color.blue(baseColor);
 
-        final int red = (baseRed + this.toUnsignedInt(digest[0])) / 2;
-        final int green = (baseGreen + this.toUnsignedInt(digest[1])) / 2;
-        final int blue = (baseBlue + this.toUnsignedInt(digest[2])) / 2;
+        final int red = (baseRed + toUnsignedInt(digest[0])) / 2;
+        final int green = (baseGreen + toUnsignedInt(digest[1])) / 2;
+        final int blue = (baseBlue + toUnsignedInt(digest[2])) / 2;
 
         return Color.rgb(red, green, blue);
     }
 
     private int getComplementColor(int color) {
-        return Color.rgb(255 - Color.red(color),
+        return Color.rgb(
+                255 - Color.red(color),
                 255 - Color.green(color),
                 255 - Color.blue(color));
     }

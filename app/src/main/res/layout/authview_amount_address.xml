@@ -4,9 +4,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- AMOUNT -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingLeft="@dimen/card_margin">
@@ -27,15 +28,47 @@
             android:id="@+id/authview_amount_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_large"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:textColor="@color/white" />
 
     </LinearLayout>
 
+    <!-- FEE -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/card_margin">
+
+        <TextView
+            android:id="@+id/authview_fee_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:text="@string/estimated_fee"
+            android:textColor="@color/authview_small_titles"
+            android:textSize="@dimen/text_size_small" />
+
+        <TextView
+            android:id="@+id/authview_fee_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <!-- ADDRESS -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/card_margin"
         android:gravity="center_vertical"
         android:orientation="vertical">

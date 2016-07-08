@@ -18,12 +18,17 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,8 +43,10 @@ import com.coinblesk.client.addresses.AddressList;
 import com.coinblesk.client.addresses.AddressListAdapter;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.UIUtils;
+import com.coinblesk.payments.WalletService;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
+import com.xeiam.xchange.Exchange;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -48,6 +55,8 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
 
 /**
  * @author ckiller
@@ -61,8 +70,11 @@ public class SendDialogFragment extends DialogFragment
     private static final String ARGS_KEY_AMOUNT = "ARGS_KEY_AMOUNT";
     private static final String ARGS_KEY_ADDRESS = "ARGS_KEY_ADDRESS";
 
+    private WalletService.WalletServiceBinder walletService;
+
     private EditText addressEditText;
     private EditText amountEditText;
+    private EditText feeEditText;
 
     private NetworkParameters params;
 
@@ -91,6 +103,15 @@ public class SendDialogFragment extends DialogFragment
         params = ((CoinbleskApp) getActivity().getApplication())
                 .getAppConfig()
                 .getNetworkParameters();
+
+        Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
+        getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDestroy() {
+        getActivity().unbindService(serviceConnection);
+        super.onDestroy();
     }
 
     @Override
@@ -115,18 +136,37 @@ public class SendDialogFragment extends DialogFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
         addressEditText = (EditText) view.findViewById(R.id.address_edit_text);
-        final String addressStr = getArguments().getString(ARGS_KEY_ADDRESS, "");
+        final String addressStr = getArguments().getString(ARGS_KEY_ADDRESS, null);
         try {
-            Address address = Address.fromBase58(params, addressStr);
-            addressEditText.setText(address.toString());
+            if (addressStr != null) {
+                // validation
+                Address address = Address.fromBase58(params, addressStr);
+                addressEditText.setText(address.toBase58());
+            } else {
+                addressEditText.setText("");
+            }
         } catch (AddressFormatException e) {
             Log.w(TAG, "Could not parse address: " + addressStr);
             addressEditText.setText("");
         }
 
+        addressEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                refreshAmountAndFee();
+            }
+        });
+
         final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
         amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-        amountEditText.setText(UIUtils.scaleCoinForDialogs(getContext(), amount));
+        amountEditText.setText(UIUtils.coinFiatSpannable(getContext(), amount, (ExchangeRate)null, true, 0.66f));
+
+        feeEditText = (EditText) view.findViewById(R.id.fee_edit_text);
+        feeEditText.setText(R.string.unknown);
 
         view.findViewById(R.id.fragment_send_dialog_cancel).setOnClickListener(this);
         view.findViewById(R.id.fragment_send_dialog_qr_scan).setOnClickListener(this);
@@ -191,19 +231,44 @@ public class SendDialogFragment extends DialogFragment
                 final String scanContent = data.getStringExtra(Intents.Scan.RESULT);
                 try {
                     BitcoinURI bitcoinURI = new BitcoinURI(scanContent);
-                    addressEditText.setText(bitcoinURI.getAddress().toString());
+                    if (bitcoinURI.getAddress() != null) {
+                        addressEditText.setText(bitcoinURI.getAddress().toString());
+                        return;
+                    }
                 } catch (BitcoinURIParseException e) {
                     Log.w(TAG, "Could not parse scanned content: '" + scanContent + "'", e);
-                    addressEditText.setText(scanContent);
                 }
+                // set to scanned content if no address detected
+                addressEditText.setText(scanContent);
             }
         }
+    }
+
+    private void refreshAmountAndFee() {
+        ExchangeRate exchangeRate = walletService != null ? walletService.getExchangeRate() : null;
+
+        final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
+        amountEditText.setText(UIUtils.coinFiatSpannable(getContext(), amount, exchangeRate, true, 0.66f));
+
+        Address addressTo = null;
+        try {
+            addressTo = Address.fromBase58(params, getAddressText());
+        } catch (Exception e) {
+            // ignore, not valid address
+        }
+        final Coin fee = walletService != null ? walletService.estimateFee(addressTo, amount) : null;
+        if (fee != null) {
+            feeEditText.setText(UIUtils.coinFiatSpannable(getContext(), fee, exchangeRate, true, 1.0f));
+        } else {
+            feeEditText.setText(R.string.unknown);
+        }
+
     }
 
     private void sendCoins() {
         try {
             Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
-            Address sendTo = Address.fromBase58(params, addressEditText.getText().toString().trim());
+            Address sendTo = Address.fromBase58(params, getAddressText());
             if (listener != null) {
                 listener.sendCoins(sendTo, amount);
             }
@@ -219,6 +284,24 @@ public class SendDialogFragment extends DialogFragment
                     .show();
         }
     }
+
+    private String getAddressText() {
+        return addressEditText.getText().toString().trim();
+    }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            walletService = (WalletService.WalletServiceBinder) service;
+
+            refreshAmountAndFee();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            walletService = null;
+        }
+    };
 
     public interface SendDialogListener {
         /**

@@ -165,8 +165,8 @@
     <string name="qr_code_error_message">Cannot display QR Code:\n%1$s</string>
 
     <!--Authview-->
-    <string name="authview_address_title">Your address</string>
-    <string name="authview_amount_title">Requested Amount</string>
+    <string name="authview_address_title">Address</string>
+    <string name="authview_amount_title">Amount</string>
     <string name="authview_authview_title">Your Unique Pattern for Identification</string>
     <string name="authview_dialog_title">Receive Contactless</string>
     <string name="snackbar_receive_contactless">Sending out payment requests</string>
@@ -391,5 +391,8 @@
     <string name="server_url_hint">Server URL</string>
     <string name="dialog_invalid_url_title">Invalid URL</string>
     <string name="dialog_invalid_url_message">The entered URL is not a valid HTTP URL.</string>
+
+    <string name="unknown">unknown</string>
+    <string name="estimated_fee">Estimated fee</string>
 
 </resources>

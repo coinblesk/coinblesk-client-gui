@@ -194,6 +194,73 @@ public class UIUtils {
         return result;
     }
 
+    public static SpannableString coinFiatSpannable(Context context, Coin amountCoin, ExchangeRate exchangeRate, boolean primaryIsCoin, float secondaryRelativeSize) {
+        Fiat amountFiat = null;
+        if (exchangeRate != null && amountCoin != null) {
+            amountFiat = exchangeRate.coinToFiat(amountCoin);
+        }
+        return coinFiatSpannable(context, amountCoin, amountFiat, primaryIsCoin, secondaryRelativeSize);
+    }
+
+    public static SpannableString coinFiatSpannable(Context context, Coin amountCoin, Fiat amountFiat, boolean primaryIsCoin, float secondaryRelativeSize) {
+        String amountCoinStr = null, coinCode = null;
+        if (amountCoin != null) {
+            // For Coin: respect the BTC, mBTC, uBTC settings
+            MonetaryFormat formatter = getMoneyFormat(context);
+            amountCoinStr = formatter.noCode().format(amountCoin).toString();
+            coinCode = formatter.code();
+        }
+
+        String amountFiatStr = null, fiatCode = null;
+        if (amountFiat != null) {
+            amountFiatStr = amountFiat.toPlainString();
+            fiatCode = amountFiat.currencyCode;
+        }
+
+        if (primaryIsCoin) {
+            return coinFiatSpannable(context, amountCoinStr, coinCode, amountFiatStr, fiatCode, secondaryRelativeSize);
+        } else {
+            return coinFiatSpannable(context, amountFiatStr, fiatCode, amountCoinStr, coinCode, secondaryRelativeSize);
+        }
+    }
+
+    private static SpannableString coinFiatSpannable(Context context, String amountFirst, String codeFirst, String amountSecond, String codeSecond, float secondaryRelativeSize) {
+        if (amountFirst == null) amountFirst = "";
+        if (codeFirst == null) codeFirst = "";
+        if (amountSecond == null) amountSecond = "";
+        if (codeSecond == null) codeSecond = "";
+
+        StringBuffer resultBuffer = new StringBuffer();
+
+        resultBuffer.append(amountFirst).append(" ");
+        int lenFirstAmount = resultBuffer.length();
+        resultBuffer.append(codeFirst);
+        int lenFirstCode = resultBuffer.length();
+
+        resultBuffer.append(" ").append(amountSecond).append(" ").append(codeSecond);
+        int lenSecond = resultBuffer.length();
+
+        SpannableString formattedString = new SpannableString(resultBuffer);
+        formattedString.setSpan(
+                new ForegroundColorSpan(Color.WHITE),
+                0, lenFirstAmount, 0);
+        formattedString.setSpan(
+                new ForegroundColorSpan(ContextCompat.getColor(context, R.color.colorAccent)),
+                lenFirstAmount, lenFirstCode, 0);
+        formattedString.setSpan(
+                new RelativeSizeSpan(secondaryRelativeSize),
+                lenFirstAmount, lenFirstCode, 0);
+
+        formattedString.setSpan(
+                new ForegroundColorSpan(ContextCompat.getColor(context, R.color.main_color_400)),
+                lenFirstCode, lenSecond, 0);
+        formattedString.setSpan(
+                new RelativeSizeSpan(secondaryRelativeSize),
+                lenFirstCode, lenSecond, 0);
+
+        return formattedString;
+    }
+
     public static int getLargeTextSize(Context context, int amountLength) {
         int textSize = context.getResources().getInteger(R.integer.text_size_xxlarge);
         final int orientation = context.getResources().getConfiguration().orientation;

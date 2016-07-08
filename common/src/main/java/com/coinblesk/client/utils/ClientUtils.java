@@ -16,26 +16,23 @@
 
 package com.coinblesk.client.utils;
 
+import com.coinblesk.client.common.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
-import com.coinblesk.client.common.R;
-import com.coinblesk.client.config.AppConfig;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.TransactionWrapper;
-import com.coinblesk.json.BaseTO;
-import com.coinblesk.json.Type;
+import com.coinblesk.json.v1.BaseTO;
 import com.google.common.primitives.UnsignedBytes;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.uri.BitcoinURI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -48,7 +45,7 @@ import java.util.Comparator;
  * @author Andreas Albrecht
  */
 public final class ClientUtils {
-    private static final Logger log = LoggerFactory.getLogger(ClientUtils.class);
+    private static final String TAG = ClientUtils.class.getName();
 
     public static String getMessageByType(Context context, BaseTO<?> to) {
         final String message;
@@ -98,9 +95,9 @@ public final class ClientUtils {
 
         try {
             setFinalStatic(ECKey.class.getField("PUBKEY_COMPARATOR"),ecKeyComparator);
-            log.debug("ECKeyComparator fix successful");
+            Log.d(TAG, "ECKeyComparator fix successful");
         } catch (Exception e) {
-            log.warn("Error during ECKeyComparator fix: " + e.getMessage());
+            Log.w(TAG, "Error during ECKeyComparator fix: " + e.getMessage());
         }
     }
 
@@ -113,7 +110,7 @@ public final class ClientUtils {
             modifiersField.setAccessible(true);
             modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
         } catch (Exception e) {
-            log.warn("Could not remove 'final' modifier: " + e.getMessage());
+            Log.w(TAG, "Could not remove 'final' modifier: " + e.getMessage());
         }
         field.set(null, newValue);
     }
