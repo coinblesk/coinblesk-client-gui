@@ -42,9 +42,9 @@ public interface PaymentRequestDelegate {
         }
     };
 
-    public boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest);
+    boolean isPaymentRequestAuthorized(BitcoinURI paymentRequest);
 
-    public void onPaymentSuccess();
+    void onPaymentSuccess();
 
-    public void onPaymentError(String errorMessage);
+    void onPaymentError(String errorMessage);
 }

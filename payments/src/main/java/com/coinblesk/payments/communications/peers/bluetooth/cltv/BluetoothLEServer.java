@@ -68,7 +68,7 @@ public class BluetoothLEServer extends AbstractServer {
     public BluetoothLEServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        connectedDevices = new ConcurrentHashMap<String, PaymentState>();
+        connectedDevices = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -212,7 +212,11 @@ public class BluetoothLEServer extends AbstractServer {
                     break;
                 case BluetoothGatt.STATE_DISCONNECTED:
                     newStateStr = "DISCONNECTED";
-                    connectedDevices.remove(device.getAddress());
+                    PaymentState removed = connectedDevices.remove(device.getAddress());
+                    if (removed != null) {
+                        Log.d(TAG, "Removed " + device.getAddress() +
+                                " from payment states (next step would have been: " + removed.stepCounter + ")");
+                    }
                     break;
                 default:
                     newStateStr = "STATE_" + status;

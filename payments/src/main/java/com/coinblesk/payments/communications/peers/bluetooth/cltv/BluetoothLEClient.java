@@ -44,7 +44,10 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -57,10 +60,12 @@ public class BluetoothLEClient extends AbstractClient {
     private final static String TAG = BluetoothLEClient.class.getName();
 
     private final BluetoothAdapter bluetoothAdapter;
+    private final List<ClientCallback> clientCallbacks;
 
     public BluetoothLEClient(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        clientCallbacks = new ArrayList<>();
     }
 
     @Override
@@ -76,17 +81,31 @@ public class BluetoothLEClient extends AbstractClient {
     @Override
     protected void onStop() {
         bluetoothAdapter.stopLeScan(leScanCallback);
+        closeAll();
+    }
+
+    private void closeAll() {
+        Iterator<ClientCallback> it = clientCallbacks.iterator();
+        while (it.hasNext()) {
+            ClientCallback c = it.next();
+            c.close();
+            it.remove();
+        }
     }
 
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             bluetoothAdapter.stopLeScan(this);
-            device.connectGatt(getContext(), false, new ClientCallback());
+            ClientCallback callback = new ClientCallback();
+            clientCallbacks.add(callback);
+            device.connectGatt(getContext(), false, callback);
         }
     };
 
     private class ClientCallback extends BluetoothGattCallback {
+
+        private BluetoothGatt bluetoothGatt;
 
         private PaymentRequestReceiveStep paymentRequestReceive;
         private PaymentResponseSendStep paymentResponseSend;
@@ -117,7 +136,11 @@ public class BluetoothLEClient extends AbstractClient {
                     break;
                 case BluetoothGatt.STATE_DISCONNECTED:
                     newStateStr = "DISCONNECTED";
-                    gatt.close();
+                    if (isPaymentDone) {
+                        close();
+                        clientCallbacks.remove(this);
+                        getPaymentRequestDelegate().onPaymentSuccess();
+                    }
                     break;
                 default:
                     newStateStr = "STATE_" + status;
@@ -139,6 +162,8 @@ public class BluetoothLEClient extends AbstractClient {
             super.onServicesDiscovered(gatt, status);
             Log.d(TAG, String.format("onServicesDiscovered - status=%d, deviceAddress=%s",
                     status, gatt.getDevice().getAddress()));
+
+            bluetoothGatt = gatt;
             stepCounter = 0;
             isPaymentDone = false;
             doReadCharacteristic(gatt);
@@ -212,7 +237,7 @@ public class BluetoothLEClient extends AbstractClient {
                     doReadCharacteristic(gatt);
                 }
             } catch (PaymentException e) {
-                // TODO: handle exception
+                // TODO: handle exception properly
                 Log.w(TAG, "Exception: ", e);
             }
         }
@@ -228,9 +253,7 @@ public class BluetoothLEClient extends AbstractClient {
             } else if (!isPaymentDone) {
                 doReadCharacteristic(gatt);
             } else if (isPaymentDone) {
-                // done and nothing to send.
-                Log.d(TAG, "payment successful!");
-                getPaymentRequestDelegate().onPaymentSuccess();
+                Log.d(TAG, "payment successful (wait for server to close)");
             } else {
                 Log.e(TAG, "onCharacteristicWrite - unknown state - do nothing");
             }
@@ -259,6 +282,14 @@ public class BluetoothLEClient extends AbstractClient {
                     .getCharacteristic(Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID);
             writeCharacteristic.setValue(value);
             return gatt.writeCharacteristic(writeCharacteristic);
+        }
+
+        public void close() {
+            if (bluetoothGatt == null) {
+                return;
+            }
+            bluetoothGatt.close();
+            bluetoothGatt = null;
         }
     }
 }
