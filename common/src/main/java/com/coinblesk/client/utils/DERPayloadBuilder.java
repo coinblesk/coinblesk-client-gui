@@ -20,7 +20,7 @@ import com.coinblesk.der.DERInteger;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
 import com.coinblesk.der.DERString;
-import com.coinblesk.json.TxSig;
+import com.coinblesk.json.v1.TxSig;
 
 import org.bitcoinj.core.Coin;
 

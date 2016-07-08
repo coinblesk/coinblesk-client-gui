@@ -22,7 +22,7 @@ import android.support.annotation.Nullable;
 
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.der.DERObject;
-import com.coinblesk.json.SignVerifyTO;
+import com.coinblesk.json.v1.SignVerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;

@@ -18,7 +18,7 @@
 package com.coinblesk.payments.communications.steps.cltv;
 
 import com.coinblesk.client.utils.DERPayloadBuilder;
-import com.coinblesk.json.SignVerifyTO;
+import com.coinblesk.json.v1.SignVerifyTO;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.util.SerializeUtils;
 

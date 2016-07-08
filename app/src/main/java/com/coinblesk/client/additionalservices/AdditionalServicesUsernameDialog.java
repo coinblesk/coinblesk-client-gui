@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,7 +15,17 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
+import com.coinblesk.json.v1.UserAccountStatusTO;
+import com.coinblesk.json.v1.UserAccountTO;
+import com.coinblesk.payments.communications.http.CoinbleskWebService;
 import com.coinblesk.util.Pair;
+
+import java.io.IOException;
+
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by draft on 16.06.16.

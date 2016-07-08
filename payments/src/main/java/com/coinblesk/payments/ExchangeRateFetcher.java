@@ -20,7 +20,7 @@ package com.coinblesk.payments;
 import android.util.Log;
 
 import com.coinblesk.client.config.AppConfig;
-import com.coinblesk.json.ExchangeRateTO;
+import com.coinblesk.json.v1.ExchangeRateTO;
 import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.util.CoinbleskException;
 import com.xeiam.xchange.Exchange;

@@ -34,10 +34,11 @@ public class ACSTransceiver {
     private final int maxLen;
     private final boolean acr122u;
 
-    public ACSTransceiver(Reader reader, int maxLen, boolean acr122u) {
+    public ACSTransceiver(Reader reader, int maxLen, boolean acr122u) throws ReaderException {
         this.reader = reader;
         this.maxLen = maxLen;
         this.acr122u = acr122u;
+        disableBuzzer();
     }
 
     private void disableBuzzer() throws ReaderException {
