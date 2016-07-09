@@ -77,7 +77,7 @@ public class SendPaymentFragment extends KeyboardFragment {
             }
         });
 
-        view.setOnTouchListener(new View.OnTouchListener() {
+        /*view.setOnTouchListener(new View.OnTouchListener() {
             private float startPoint = 0;
 
             @Override
@@ -113,7 +113,7 @@ public class SendPaymentFragment extends KeyboardFragment {
                 }
                 return false;
             }
-        });
+        });*/
 
 
         return view;

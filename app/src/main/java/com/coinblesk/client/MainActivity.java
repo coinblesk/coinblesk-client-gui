@@ -30,6 +30,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -48,6 +49,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.coinblesk.client.about.AboutActivity;
@@ -93,6 +96,7 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -148,6 +152,7 @@ public class MainActivity extends AppCompatActivity
         initNavigationView();
         initViewPager();
 
+
         final Intent intent = getIntent();
         final String scheme = intent.getScheme();
         if (scheme != null && scheme.equals(appConfig.getNetworkParameters().getUriScheme())) {
@@ -169,6 +174,8 @@ public class MainActivity extends AppCompatActivity
 
         checkVersionCompatibility(appConfig);
     }
+
+
 
     private void checkVersionCompatibility(AppConfig appConfig) {
         // message is only displayed if request succeeds and answer from server is negative in order
@@ -319,8 +326,57 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-
+        initSwitch(menu);
         return true;
+    }
+    private void initSwitch(Menu menu) {
+        MenuItem item = menu.findItem(R.id.myswitch);
+        View view = item.getActionView();
+        final Switch mySwitch = (Switch) view.findViewById(R.id.switchAB);
+        final AtomicReference<CountDownTimer> ref = new AtomicReference<>();
+        mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if(isChecked) {
+                    //enable BT
+                    ref.set(new CountDownTimer(30000, 1000) {
+                        int i=0;
+                        public void onTick(final long millisUntilFinished) {
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    mySwitch.setButtonDrawable((i++ % 2) == 0 ? R.drawable.bluetooth_onon : R.drawable.bluetooth_on);
+                                    mySwitch.setTextOn(""+millisUntilFinished / 1000);
+                                }
+                            });
+                        }
+
+                        public void onFinish() {
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    mySwitch.setChecked(false);
+                                }
+                            });
+
+                        }
+
+                    });
+                    ref.get().start();
+                    LocalBroadcastManager
+                            .getInstance(MainActivity.this)
+                            .sendBroadcast(new Intent(Constants.START_CLIENTS_ACTION));
+
+                } else {
+                    //mySwitch.setShowText(false);
+                    CountDownTimer tmp;
+                    if((tmp = ref.getAndSet(null)) != null) {
+                        tmp.cancel();
+                    }
+                    LocalBroadcastManager
+                            .getInstance(MainActivity.this)
+                            .sendBroadcast(new Intent(Constants.STOP_CLIENTS_ACTION));
+                }
+            }
+        });
     }
 
     public void showQrDialog() {
