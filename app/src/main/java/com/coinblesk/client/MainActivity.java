@@ -342,21 +342,13 @@ public class MainActivity extends AppCompatActivity
                     ref.set(new CountDownTimer(30000, 1000) {
                         int i=0;
                         public void onTick(final long millisUntilFinished) {
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    mySwitch.setButtonDrawable((i++ % 2) == 0 ? R.drawable.bluetooth_onon : R.drawable.bluetooth_on);
-                                    mySwitch.setTextOn(""+millisUntilFinished / 1000);
-                                }
-                            });
+                            mySwitch.setButtonDrawable((i++ % 2) == 0 ? R.drawable.bluetooth_onon : R.drawable.bluetooth_on);
+                            mySwitch.setTextOn(""+millisUntilFinished / 1000);
                         }
 
                         public void onFinish() {
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    mySwitch.setChecked(false);
-                                }
-                            });
-
+                            mySwitch.setButtonDrawable(R.drawable.bluetooth_on);
+                            mySwitch.setChecked(false);
                         }
 
                     });
