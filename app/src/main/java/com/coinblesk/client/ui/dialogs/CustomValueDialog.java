@@ -25,13 +25,15 @@ import android.widget.EditText;
 
 import com.coinblesk.client.R;
 import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.utils.UIUtils;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by ckiller on 28/02/16.
+ * @author ckiller
+ * @author Andreas Albrecht
  */
 public class CustomValueDialog extends Dialog implements View.OnClickListener {
 
@@ -59,7 +61,12 @@ public class CustomValueDialog extends Dialog implements View.OnClickListener {
 
         findViewById(R.id.customize_button_cancel).setOnClickListener(this);
         findViewById(R.id.customize_button_save).setOnClickListener(this);
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        loadCurrentSettings();
     }
 
     @Override
@@ -76,6 +83,14 @@ public class CustomValueDialog extends Dialog implements View.OnClickListener {
         }
     }
 
+    private void loadCurrentSettings() {
+        List<String> contentList = UIUtils.getCustomButton(getContext(), customizeButton);
+        if (contentList != null && contentList.size() == 2) {
+            descriptionEditText.setText(contentList.get(0));
+            priceEditText.setText(contentList.get(1));
+        }
+    }
+
     private void saveInput() {
 
         List<String> customButton = Arrays.asList(
@@ -84,14 +99,14 @@ public class CustomValueDialog extends Dialog implements View.OnClickListener {
         Gson gson = new Gson();
         String jsonCustomButton = gson.toJson(customButton);
         SharedPrefUtils.setCustomButton(getContext(), customizeButton, jsonCustomButton);
-        if(customValueListener!=null){
+        if (customValueListener != null) {
             customValueListener.onSharedPrefsUpdated(customizeButton);
         }
 
     }
 
     public interface CustomValueListener{
-        public void onSharedPrefsUpdated(String customKey);
+        void onSharedPrefsUpdated(String customKey);
     }
 
     public void setCustomValueListener(CustomValueListener listener) {

@@ -21,5 +21,6 @@ public interface OnKeyboardListener {
     void onDot();
     void onEnter();
     void onCustom(int digit);
+    void onCustomLong(int digit);
     void onPlus(String value);
 }

@@ -1225,8 +1225,14 @@ public class WalletService extends Service {
 
             try {
                 Transaction dummyTx = createTransaction(addressTo, amount);
-                return dummyTx.getFee();
+                Coin fee = dummyTx.getFee();
+                Log.d(TAG, "Fee estimation - fee: " + fee.toFriendlyString()
+                        + ", tx size: " + dummyTx.unsafeBitcoinSerialize().length
+                        + ", inputs: " + dummyTx.getInputs().size()
+                        + ", outputs: " + dummyTx.getOutputs().size());
+                return fee;
             } catch (Exception e) {
+                Log.w(TAG, "Cannot estimate fee: " + e.getMessage());
                 return null;
             }
         }

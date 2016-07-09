@@ -192,16 +192,21 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         view.findViewById(R.id.amount_switch_image_view).setOnClickListener(this);
 
         // Customize Buttons for Merchant Mode
-        view.findViewById(R.id.key_custom_one).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_two).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_three).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_four).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_five).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_six).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_seven).setOnClickListener(this);
-        view.findViewById(R.id.key_custom_eight).setOnClickListener(this);
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_one));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_two));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_three));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_four));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_five));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_six));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_seven));
+        setCustomButtonClickListeners(view.findViewById(R.id.key_custom_eight));
+    }
 
-
+    private void setCustomButtonClickListeners(View v) {
+        if (v != null) {
+            v.setOnClickListener(this);
+            v.setOnLongClickListener(onCustomLongClickListener);
+        }
     }
 
     private OnKeyboardListener onKeyboardListener;
@@ -475,25 +480,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         updateAmount();
     }
 
+    @Override
     public void onCustom(int customKey) {
-        if (SharedPrefUtils.isCustomButtonEmpty(getContext(), Integer.toString(customKey))) {
-            CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
-            cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
-                @Override
-                public void onSharedPrefsUpdated(String customKey) {
-                    initCustomButton(customKey);
-                }
-            });
-            cvd.show();
-        } else {
+        if (!SharedPrefUtils.isCustomButtonEmpty(getContext(), Integer.toString(customKey))) {
             try {
+                String price = null;
 
-                if (this.sumString.length() == 0) {
-                    this.sumString += UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1);
-                    ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
+                List<String> btnProperties = UIUtils.getCustomButton(getContext(), (Integer.toString(customKey)));
+                if (btnProperties != null && btnProperties.size() == 2) {
+                    price = btnProperties.get(1);
+                }
+
+                TextView sumValues = getSumValuesTextView();
+                if (price == null || sumValues == null) {
+                    return;
+                }
+
+                if (sumString.length() == 0) {
+                    sumString += price;
+                    sumValues.setText((sumString));
                 } else {
-                    this.sumString += ("+" + UIUtils.getCustomButton(this.getContext(), (Integer.toString(customKey))).get(1));
-                    ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
+                    sumString += ("+" + price);
+                    sumValues.setText((sumString + "=" + UIUtils.getSum(sumString)));
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error onCustom " + customKey + ": ", e);
@@ -501,42 +509,92 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
+    private TextView getSumValuesTextView() {
+        return ((TextView) getView().findViewById(R.id.sum_values_text_view));
+    }
+
+    private final View.OnLongClickListener onCustomLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            switch (v.getId()) {
+                case R.id.key_custom_one:
+                    onKeyboardListener.onCustomLong(1);
+                    return true;
+                case R.id.key_custom_two:
+                    onKeyboardListener.onCustomLong(2);
+                    return true;
+                case R.id.key_custom_three:
+                    onKeyboardListener.onCustomLong(3);
+                    return true;
+                case R.id.key_custom_four:
+                    onKeyboardListener.onCustomLong(4);
+                    return true;
+                case R.id.key_custom_five:
+                    onKeyboardListener.onCustomLong(5);
+                    return true;
+                case R.id.key_custom_six:
+                    onKeyboardListener.onCustomLong(6);
+                    return true;
+                case R.id.key_custom_seven:
+                    onKeyboardListener.onCustomLong(7);
+                    return true;
+                case R.id.key_custom_eight:
+                    onKeyboardListener.onCustomLong(8);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    };
+
+    @Override
+    public void onCustomLong(int customKey) {
+        CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
+        cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
+            @Override
+            public void onSharedPrefsUpdated(String customKey) {
+                initCustomButton(customKey);
+            }
+        });
+        cvd.show();
+    }
+
     protected void initCustomButton(String customKey) {
 
         List<String> contentList = UIUtils.getCustomButton(getContext(), customKey);
 
-        if (contentList != null) {
+        if (getView() != null && contentList != null) {
             View button = null;
             switch (customKey) {
                 case "1":
-                    button = getActivity().findViewById(R.id.key_custom_one);
+                    button = getView().findViewById(R.id.key_custom_one);
                     break;
                 case "2":
-                    button = getActivity().findViewById(R.id.key_custom_two);
+                    button = getView().findViewById(R.id.key_custom_two);
                     break;
                 case "3":
-                    button = getActivity().findViewById(R.id.key_custom_three);
+                    button = getView().findViewById(R.id.key_custom_three);
                     break;
                 case "4":
-                    button = getActivity().findViewById(R.id.key_custom_four);
+                    button = getView().findViewById(R.id.key_custom_four);
                     break;
                 case "5":
-                    button = getActivity().findViewById(R.id.key_custom_five);
+                    button = getView().findViewById(R.id.key_custom_five);
                     break;
                 case "6":
-                    button = getActivity().findViewById(R.id.key_custom_six);
+                    button = getView().findViewById(R.id.key_custom_six);
                     break;
                 case "7":
-                    button = getActivity().findViewById(R.id.key_custom_seven);
+                    button = getView().findViewById(R.id.key_custom_seven);
                     break;
                 case "8":
-                    button = getActivity().findViewById(R.id.key_custom_eight);
+                    button = getView().findViewById(R.id.key_custom_eight);
                     break;
                 default:
                     button = null;
             }
 
-            if (button != null) {
+            if (button != null && contentList.size() == 2) {
                 String buttonText = UIUtils.formatCustomButton(contentList.get(0), contentList.get(1));
                 ((TextView) button).setText(buttonText);
             }
