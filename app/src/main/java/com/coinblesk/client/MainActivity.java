@@ -106,6 +106,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * @author ckiller
  * @author Alessandro De Carli
  * @author Andreas Albrecht
+ * @author Thomas Bocek
  */
 
 public class MainActivity extends AppCompatActivity
@@ -545,7 +546,7 @@ public class MainActivity extends AppCompatActivity
             String uri = intent.getStringExtra(Constants.BITCOIN_URI_KEY);
             try {
                 final BitcoinURI bitcoinURI = new BitcoinURI(uri);
-                startServers(bitcoinURI);
+                startServers(uri);
                 showAuthViewAndGetResult(bitcoinURI, false, false);
             } catch (BitcoinURIParseException e) {
                 Log.w(TAG, "Could not parse Bitcoin URI: " + uri);
@@ -559,6 +560,19 @@ public class MainActivity extends AppCompatActivity
             stopClients();
         }
     };
+
+    public static class PaymentRequestReceiver extends BroadcastReceiver {
+
+        public PaymentRequestReceiver() {
+            super();
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // assumes WordService is a registered service
+            Toast.makeText(context, "Got request" + intent.getStringExtra("BitcoinURI"), Toast.LENGTH_LONG).show();
+        }
+    }
 
     private void initPeers() {
         // TODO: init peers should probably be called in onStart? (e.g. if connection settings change -> need to reload)
@@ -589,7 +603,11 @@ public class MainActivity extends AppCompatActivity
 
         for (AbstractClient client : clients) {
             client.setPaymentRequestDelegate(getClientPaymentRequestDelegate());
+            if(client instanceof  NFCClient) {
+                client.start();
+            }
         }
+
     }
 
     private void startClients() {

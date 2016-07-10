@@ -6,7 +6,7 @@
     <item android:id="@+id/action_qr_code"
         android:icon="@drawable/ic_action_qr_code"
         android:title="@string/action_qr_code"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/myswitch"

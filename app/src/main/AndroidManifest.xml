@@ -33,7 +33,6 @@
                 android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter>
@@ -47,6 +46,11 @@
 
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.coinblesk.client.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 
             <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
@@ -132,6 +136,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
         </provider>
+
+        <receiver android:name=".MainActivity$PaymentRequestReceiver">
+            <intent-filter>
+                <action android:name="com.coinblesk.client.PAYMENT_REQUEST" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
