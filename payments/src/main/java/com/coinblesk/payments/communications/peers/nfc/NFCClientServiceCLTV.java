@@ -1,10 +1,12 @@
 package com.coinblesk.payments.communications.peers.nfc;
 
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +29,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +58,8 @@ public class NFCClientServiceCLTV extends HostApduService {
     private List<TransactionSignature> clientTxSignatures;
     private List<TransactionSignature> serverTxSignatures;
 
+    private boolean bound = false;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Check if intent has extras
@@ -64,7 +69,7 @@ public class NFCClientServiceCLTV extends HostApduService {
         }
 
         Intent walletServiceIntent = new Intent(this, WalletService.class);
-        bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        bound = bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         Log.d(TAG, "onStartCommand");
         return START_NOT_STICKY;
     }
@@ -73,7 +78,10 @@ public class NFCClientServiceCLTV extends HostApduService {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        unbindService(serviceConnection);
+        if(bound) {
+            unbindService(serviceConnection);
+            bound = false;
+        }
     }
 
     @Override
@@ -98,15 +106,18 @@ public class NFCClientServiceCLTV extends HostApduService {
         if (startTime == 0) {
             startTime = System.currentTimeMillis();
         }
-        if (!isClientStarted || walletServiceBinder == null ) {
-            return NFCUtils.KEEPALIVE;
-        }
+
+
         try {
 
             int derPayloadStartIndex = 0;
 
             /* HANDSHAKE */
             if (NFCUtils.selectAidApdu(commandApdu)) {
+                Intent intent = new Intent("com.coinblesk.client.MAIN");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+
                 derPayloadStartIndex = 6 + commandApdu[4];
                 Log.d(TAG, "processCommandApdu - handshake (derPayloadStartIndex="+derPayloadStartIndex+")");
                 executeHandshake(commandApdu, derPayloadStartIndex);
@@ -123,6 +134,10 @@ public class NFCClientServiceCLTV extends HostApduService {
             /* PROCESS PAYLOAD */
             final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
             if (NFCUtils.isKeepAlive(payload)) {
+                return NFCUtils.KEEPALIVE;
+            }
+
+            if (!isClientStarted || walletServiceBinder == null ) {
                 return NFCUtils.KEEPALIVE;
             }
 
@@ -234,12 +249,17 @@ public class NFCClientServiceCLTV extends HostApduService {
         Log.d(TAG, "Payment completed: " + duration + "ms");
     }
 
-    private void handlePaymentRequestReceive(byte[] requestPayload) throws PaymentException {
+    private void handlePaymentRequestReceive(byte[] requestPayload) throws PaymentException, BitcoinURIParseException {
         NetworkParameters params = walletServiceBinder.getNetworkParameters();
         PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(params);
         DERObject input = DERParser.parseDER(requestPayload);
         request.process(input);
         bitcoinURI = request.getBitcoinURI();
+
+        Intent intent = new Intent();
+        intent.putExtra("BitcoinURI", bitcoinURI);
+        intent.setAction("com.coinblesk.client.PAYMENT_REQUEST");
+        sendBroadcast(intent);
 
         PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
         DERObject result = response.process(DERObject.NULLOBJECT);
