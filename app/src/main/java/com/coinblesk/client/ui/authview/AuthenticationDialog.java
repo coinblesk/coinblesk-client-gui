@@ -55,7 +55,7 @@ public class AuthenticationDialog extends DialogFragment {
     private static final String ARG_ADDRESS = "ADDRESS";
     private static final String ARG_AMOUNT = "AMOUNT";
     private static final String ARG_PAYMENT_REQUEST = "PAYMENT_REQUEST";
-    private static final String ARG_SHOW_ACCEPT = "SHOW_ACCEPT";
+    private static final String ARG_IS_PAYER_MODE = "IS_PAYER_MODE";
 
     private View authView;
 
@@ -66,24 +66,24 @@ public class AuthenticationDialog extends DialogFragment {
 
     private AuthenticationDialogListener listener;
 
-    public static AuthenticationDialog newInstance(BitcoinURI paymentRequest, boolean showAccept) {
+    public static AuthenticationDialog newInstance(BitcoinURI paymentRequest, boolean isPayerMode) {
         return newInstance(
                 paymentRequest.getAddress(),
                 paymentRequest.getAmount(),
                 ClientUtils.bitcoinUriToString(paymentRequest),
-                showAccept);
+                isPayerMode);
     }
 
     public static AuthenticationDialog newInstance(Address address,
                                                    Coin amount,
                                                    String paymentRequestStr,
-                                                   boolean showAccept) {
+                                                   boolean isPayerMode) {
         AuthenticationDialog frag = new AuthenticationDialog();
         Bundle args = new Bundle();
         args.putString(ARG_ADDRESS, address.toString());
         args.putLong(ARG_AMOUNT, amount.getValue());
         args.putString(ARG_PAYMENT_REQUEST, paymentRequestStr);
-        args.putBoolean(ARG_SHOW_ACCEPT, showAccept);
+        args.putBoolean(ARG_IS_PAYER_MODE, isPayerMode);
         frag.setArguments(args);
         return frag;
     }
@@ -135,7 +135,7 @@ public class AuthenticationDialog extends DialogFragment {
         amount = Coin.valueOf(getArguments().getLong(ARG_AMOUNT));
 
         final String paymentReq = getArguments().getString(ARG_PAYMENT_REQUEST);
-        final boolean showAccept = getArguments().getBoolean(ARG_SHOW_ACCEPT);
+        final boolean isPayerMode = getArguments().getBoolean(ARG_IS_PAYER_MODE);
 
         authView = getActivity().getLayoutInflater().inflate(R.layout.fragment_authview_dialog, null);
 
@@ -144,6 +144,9 @@ public class AuthenticationDialog extends DialogFragment {
 
         final LinearLayout authviewContainer = (LinearLayout) authView.findViewById(R.id.authview_container);
         authviewContainer.addView(new AuthenticationView(getContext(), paymentReq.getBytes()));
+
+        final LinearLayout feeContainer = (LinearLayout) authView.findViewById(R.id.authview_fee_container);
+        feeContainer.setVisibility(isPayerMode ? View.VISIBLE : View.GONE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent);
         builder
@@ -158,7 +161,7 @@ public class AuthenticationDialog extends DialogFragment {
                     }
                 }
             });
-            if (showAccept) {
+            if (isPayerMode) {
                 builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
