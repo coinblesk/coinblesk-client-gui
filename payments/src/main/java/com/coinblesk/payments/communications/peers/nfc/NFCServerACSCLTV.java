@@ -46,6 +46,7 @@ import static com.coinblesk.payments.communications.peers.nfc.NFCUtils.CLA_INS_P
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.RunnableFuture;
 
 /**
  * @author Andreas Albrecht
@@ -69,39 +70,32 @@ public class NFCServerACSCLTV extends AbstractServer {
     public NFCServerACSCLTV(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
 
-        if (isSupported()) {
-            initReader();
-        }
-    }
+        UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        reader = new Reader(manager);
 
-    private void initReader() {
-        UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
-        Reader reader = new Reader(manager);
-        UsbDevice externalDevice = externalReaderAttached(manager, reader);
-
-        Intent usbIntent = new Intent(ACTION_USB_PERMISSION);
-        PendingIntent permissionIntent = PendingIntent.getBroadcast(getContext(), 0, usbIntent, 0);
-        manager.requestPermission(externalDevice, permissionIntent);
-    }
-
-    @Override
-    public boolean isSupported() {
-        return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(getContext());
-    }
-
-    @Override
-    public void onStart() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         broadcastReceiver = new USBBroadcastReceiver();
         getContext().registerReceiver(broadcastReceiver, filter);
+    }
+
+    @Override
+    public boolean isSupported() {
+        return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(reader, getContext());
+    }
+
+    @Override
+    public void onStart() {
+        if (!isSupported()) {
+            return;
+        }
 
         try {
-            Pair<ACSTransceiver, Reader> pair = createReaderAndTransceiver(getContext());
-            reader = pair.element1();
-            ACSTransceiver transceiver = pair.element0();
+            Log.d(TAG, "Starting ACS now");
+
+            ACSTransceiver  transceiver = createTransceiver(reader, getContext());
             NFCServerACSCallback callback = new NFCServerACSCallbackImpl();
             reader.setOnStateChangeListener(new ReaderStateChangeListener(transceiver, callback));
         } catch (IOException e) {
@@ -112,6 +106,7 @@ public class NFCServerACSCLTV extends AbstractServer {
     @Override
     public void onStop() {
         setPaymentRequestUri(null);
+        reader.setOnStateChangeListener(null);
         // TODO: close reader? unregister receiver?
 /*        try {
             if (!this.isRunning()) {
@@ -184,25 +179,27 @@ public class NFCServerACSCLTV extends AbstractServer {
         return result;
     }
 
-    private static Pair<ACSTransceiver, Reader> createReaderAndTransceiver(final Context context) throws IOException {
+    private static ACSTransceiver createTransceiver(Reader reader, final Context context) throws IOException {
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-        Reader reader = new Reader(manager);
-        UsbDevice externalDevice = externalReaderAttached(manager, reader);
-        if (externalDevice == null) {
-            throw new IOException("External device is not set");
-        }
+
+
 
         ACSTransceiver transceiver;
         try {
+            UsbDevice externalDevice = externalReaderAttached(manager, reader);
+
+            if(!reader.isOpened()) {
+                reader.open(externalDevice);
+                Log.d(TAG, "Reader opened");
+            }
+
             transceiver = createAcsTransceiver(reader, externalDevice);
-            Log.d(TAG, "ask user for permission");
-            reader.open(externalDevice);
         } catch (IllegalArgumentException e) {
             Log.d(TAG, "could not access device, no permissions given?", e);
             throw new IOException(e);
         }
 
-        return new Pair<ACSTransceiver, Reader>(transceiver, reader);
+        return transceiver;
     }
 
     @NonNull
@@ -255,9 +252,8 @@ public class NFCServerACSCLTV extends AbstractServer {
         }
     }
 
-    private static boolean isExternalReaderAttached(Context context) {
+    private static boolean isExternalReaderAttached(Reader reader, Context context) {
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-        Reader reader = new Reader(manager);
         return externalReaderAttached(manager, reader) != null;
     }
 
@@ -274,9 +270,25 @@ public class NFCServerACSCLTV extends AbstractServer {
         private final ACSTransceiver transceiver;
         private final NFCServerACSCallback callback;
 
-        public ReaderStateChangeListener(ACSTransceiver transceiver, NFCServerACSCallback callback) {
+        public ReaderStateChangeListener(final ACSTransceiver transceiver, final NFCServerACSCallback callback) {
             this.transceiver = transceiver;
             this.callback = callback;
+            int state = transceiver.getReader().getState(0);
+            if (state == Reader.CARD_PRESENT) {
+                try {
+                    transceiver.initCard(0);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.tagDiscovered(transceiver);
+                        }
+                    }).start();
+
+                } catch (ReaderException e) {
+                    Log.e(TAG, "Could not connnect reader (ReaderException): ", e);
+                    callback.tagFailed();
+                }
+            }
         }
 
         public void onStateChange(int slotNum, int prevState, int currState) {
@@ -285,10 +297,6 @@ public class NFCServerACSCLTV extends AbstractServer {
             if (currState == Reader.CARD_PRESENT) {
                 try {
                     transceiver.initCard(slotNum);
-                        /*if(!disabledBuzzer) {
-                            transceiver.disableBuzzer();
-                            disabledBuzzer = true;
-                        }*/
                     callback.tagDiscovered(transceiver);
                 } catch (ReaderException e) {
                     Log.e(TAG, "Could not connnect reader (ReaderException): ", e);
@@ -336,6 +344,15 @@ public class NFCServerACSCLTV extends AbstractServer {
         }
     }
 
+    private void initReader() {
+        UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
+        UsbDevice externalDevice = externalReaderAttached(manager, reader);
+
+        Intent usbIntent = new Intent(ACTION_USB_PERMISSION);
+        PendingIntent permissionIntent = PendingIntent.getBroadcast(getContext(), 0, usbIntent, 0);
+        manager.requestPermission(externalDevice, permissionIntent);
+    }
+
     private class USBBroadcastReceiver extends BroadcastReceiver {
 
         @Override
@@ -360,23 +377,7 @@ public class NFCServerACSCLTV extends AbstractServer {
 
         private void handleDeviceAttached(Intent intent) {
             Log.d(TAG, "handleDeviceAttached - try to create reader");
-            synchronized (this) {
-
-                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                if (device == null) {
-                    Log.w(TAG, "USB device is null. Cannot create reader.");
-                    return;
-                }
-
-                try {
-                    if(!reader.isOpened()) {
-                        reader.open(device);
-                        Log.d(TAG, "Reader opened");
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Could not open reader: ", e);
-                }
-            }
+            initReader();
         }
 
         private void handleUsbPermission(Intent intent) {
@@ -395,7 +396,7 @@ public class NFCServerACSCLTV extends AbstractServer {
                 }
 
                 try {
-                    if(!reader.isOpened()) {
+                    if(reader != null && !reader.isOpened()) {
                         reader.open(device);
                         Log.d(TAG, "Reader opened");
                     }

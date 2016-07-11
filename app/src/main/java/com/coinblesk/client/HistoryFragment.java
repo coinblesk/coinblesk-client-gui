@@ -71,7 +71,9 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
     private final BroadcastReceiver walletChangedBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            if (walletServiceBinder == null) {
+                return; // service not connected yet.
+            }
             int currentWalletProgress = walletServiceBinder.getDownloadProgress();
             if (!walletServiceBinder.isDownloadDone()) {
                 // during wallet sync, we prevent updating the tx history for every block

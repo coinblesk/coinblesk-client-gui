@@ -116,5 +116,9 @@ public final class Constants {
 
     public static final int WIFI_SERVICE_PORT = 60030;
 
-
+    public static final String PAYMENT_REQUEST = "com.coinblesk.client.PAYMENT_REQUEST";
+    public static final String START_COINBLESK = "com.coinblesk.client.MAIN";
+    public static final String PAYMENT_REQUEST_ADDRESS = "com.coinblesk.client.PAYMENT_REQUEST_ADDRESS";
+    public static final String PAYMENT_REQUEST_AMOUNT = "com.coinblesk.client.PAYMENT_REQUEST_AMOUNT";
+    public static final String PAYMENT_REQUEST_APPROVED = "com.coinblesk.client.PAYMENT_REQUEST_APPROVED";
 }

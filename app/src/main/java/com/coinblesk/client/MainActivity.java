@@ -19,6 +19,7 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -34,6 +35,7 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -56,6 +58,7 @@ import android.widget.Toast;
 import com.coinblesk.client.about.AboutActivity;
 import com.coinblesk.client.additionalservices.AdditionalServiceUtils;
 import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
+import com.coinblesk.client.additionalservices.AdditionalServicesUsernameDialog;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
 import com.coinblesk.client.config.AppConfig;
@@ -68,6 +71,7 @@ import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.utils.AppUtils;
 import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
 import com.coinblesk.client.utils.upgrade.UpgradeUtils;
 import com.coinblesk.client.wallet.WalletActivity;
@@ -134,6 +138,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerPaymentRequestReceiver();
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
         final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
@@ -395,6 +400,15 @@ public class MainActivity extends AppCompatActivity
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
     private WalletService.WalletServiceBinder walletServiceBinder;
 
+    private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                approvePaymentDialog.dismiss();
+            }
+        }
+    };
+
     @Override
     public void onStart() {
         super.onStart();
@@ -406,6 +420,11 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
         broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
         broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
+
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
 
         startWalletService(true);
 
@@ -428,6 +447,10 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.unregisterReceiver(stopClientsBroadcastReceiver);
         broadcastManager.unregisterReceiver(startServersBroadcastReceiver);
         broadcastManager.unregisterReceiver(walletServiceInitDone);
+
+        broadcastManager.unregisterReceiver(instantPaymentSuccessListener);
+
+
         this.stopServers();
 
         unbindService(serviceConnection);
@@ -546,7 +569,7 @@ public class MainActivity extends AppCompatActivity
             String uri = intent.getStringExtra(Constants.BITCOIN_URI_KEY);
             try {
                 final BitcoinURI bitcoinURI = new BitcoinURI(uri);
-                startServers(uri);
+                startServers(bitcoinURI);
                 showAuthViewAndGetResult(bitcoinURI, false, false);
             } catch (BitcoinURIParseException e) {
                 Log.w(TAG, "Could not parse Bitcoin URI: " + uri);
@@ -561,17 +584,22 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    public static class PaymentRequestReceiver extends BroadcastReceiver {
+    private ApprovePaymentDialog approvePaymentDialog;
 
-        public PaymentRequestReceiver() {
-            super();
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // assumes WordService is a registered service
-            Toast.makeText(context, "Got request" + intent.getStringExtra("BitcoinURI"), Toast.LENGTH_LONG).show();
-        }
+    private void registerPaymentRequestReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        approvePaymentDialog = new ApprovePaymentDialog();
+                        Bundle args = new Bundle();
+                        args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
+                        args.putString(Constants.PAYMENT_REQUEST_AMOUNT, intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT));
+                        approvePaymentDialog.setArguments(args);
+                        approvePaymentDialog.show(MainActivity.this.getFragmentManager(), TAG);
+                    }
+                },
+                new IntentFilter(Constants.PAYMENT_REQUEST));
     }
 
     private void initPeers() {
@@ -661,6 +689,10 @@ public class MainActivity extends AppCompatActivity
                 if (authViewDialog != null && authViewDialog.isAdded()) {
                     authViewDialog.dismiss();
                 }
+
+                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                    approvePaymentDialog.dismiss();
+                }
             }
 
             @Override
@@ -672,6 +704,9 @@ public class MainActivity extends AppCompatActivity
                 stopServers();
                 if (authViewDialog != null && authViewDialog.isAdded()) {
                     authViewDialog.dismiss();
+                }
+                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                    approvePaymentDialog.dismiss();
                 }
             }
         };
