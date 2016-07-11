@@ -48,7 +48,6 @@ public class NFCClientServiceCLTV extends HostApduService {
 
     private ClientSteps nextStep;
     private boolean isProcessing = false;
-    private boolean isClientStarted = false;
 
     private byte[] derRequestPayload = new byte[0];
     private byte[] derResponsePayload = new byte[0];
@@ -85,12 +84,6 @@ public class NFCClientServiceCLTV extends HostApduService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Check if intent has extras
-        if (intent.getExtras() != null) {
-            isClientStarted = intent.getExtras().getBoolean(Constants.CLIENT_STARTED_KEY, false);
-            reset();
-        }
-
         Intent walletServiceIntent = new Intent(this, WalletService.class);
         bound = bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         Log.d(TAG, "onStartCommand");

@@ -86,7 +86,7 @@ public final class Constants {
     public static final String START_CLIENTS_ACTION = "START_CLIENTS_ACTION";
     public static final String STOP_CLIENTS_ACTION = "STOP_CLIENTS_ACTION";
     public static final String START_SERVERS_ACTION = "START_SERVERS_ACTION";
-    public static final String CLIENT_STARTED_KEY = "CLIENT_STARTED_KEY";
+    //public static final String CLIENT_STARTED_KEY = "CLIENT_STARTED_KEY";
 
     public static final String INSTANT_PAYMENT_SUCCESSFUL_ACTION = "INSTANT_PAYMENT_SUCCESSFUL_ACTION";
     public static final String INSTANT_PAYMENT_FAILED_ACTION = "INSTANT_PAYMENT_FAILED_ACTION";
