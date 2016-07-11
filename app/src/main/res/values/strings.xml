@@ -394,5 +394,6 @@
 
     <string name="unknown">unknown</string>
     <string name="estimated_fee">Estimated fee</string>
+    <string name="request_payment">Allow Payment</string>
 
 </resources>

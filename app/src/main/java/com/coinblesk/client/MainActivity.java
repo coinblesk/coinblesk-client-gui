@@ -19,6 +19,7 @@ package com.coinblesk.client;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -34,6 +35,7 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -56,6 +58,7 @@ import android.widget.Toast;
 import com.coinblesk.client.about.AboutActivity;
 import com.coinblesk.client.additionalservices.AdditionalServiceUtils;
 import com.coinblesk.client.additionalservices.AdditionalServicesActivity;
+import com.coinblesk.client.additionalservices.AdditionalServicesUsernameDialog;
 import com.coinblesk.client.addresses.AddressActivity;
 import com.coinblesk.client.backup.BackupActivity;
 import com.coinblesk.client.config.AppConfig;
@@ -68,6 +71,7 @@ import com.coinblesk.client.ui.dialogs.SendDialogFragment;
 import com.coinblesk.client.utils.AppUtils;
 import com.coinblesk.client.utils.PaymentFutureCallback;
 import com.coinblesk.client.utils.SharedPrefUtils;
+import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.utils.upgrade.Multisig2of2ToCltvForwardTask;
 import com.coinblesk.client.utils.upgrade.UpgradeUtils;
 import com.coinblesk.client.wallet.WalletActivity;
@@ -106,6 +110,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * @author ckiller
  * @author Alessandro De Carli
  * @author Andreas Albrecht
+ * @author Thomas Bocek
  */
 
 public class MainActivity extends AppCompatActivity
@@ -133,6 +138,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerPaymentRequestReceiver();
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
         final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
@@ -342,21 +348,13 @@ public class MainActivity extends AppCompatActivity
                     ref.set(new CountDownTimer(30000, 1000) {
                         int i=0;
                         public void onTick(final long millisUntilFinished) {
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    mySwitch.setButtonDrawable((i++ % 2) == 0 ? R.drawable.bluetooth_onon : R.drawable.bluetooth_on);
-                                    mySwitch.setTextOn(""+millisUntilFinished / 1000);
-                                }
-                            });
+                            mySwitch.setButtonDrawable((i++ % 2) == 0 ? R.drawable.bluetooth_onon : R.drawable.bluetooth_on);
+                            mySwitch.setTextOn(""+millisUntilFinished / 1000);
                         }
 
                         public void onFinish() {
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    mySwitch.setChecked(false);
-                                }
-                            });
-
+                            mySwitch.setButtonDrawable(R.drawable.bluetooth_on);
+                            mySwitch.setChecked(false);
                         }
 
                     });
@@ -402,6 +400,15 @@ public class MainActivity extends AppCompatActivity
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
     private WalletService.WalletServiceBinder walletServiceBinder;
 
+    private final BroadcastReceiver instantPaymentSuccessListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                approvePaymentDialog.dismiss();
+            }
+        }
+    };
+
     @Override
     public void onStart() {
         super.onStart();
@@ -413,6 +420,11 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
         broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
         broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
+
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
+        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
 
         startWalletService(true);
 
@@ -435,6 +447,10 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.unregisterReceiver(stopClientsBroadcastReceiver);
         broadcastManager.unregisterReceiver(startServersBroadcastReceiver);
         broadcastManager.unregisterReceiver(walletServiceInitDone);
+
+        broadcastManager.unregisterReceiver(instantPaymentSuccessListener);
+
+
         this.stopServers();
 
         unbindService(serviceConnection);
@@ -568,6 +584,24 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    private ApprovePaymentDialog approvePaymentDialog;
+
+    private void registerPaymentRequestReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        approvePaymentDialog = new ApprovePaymentDialog();
+                        Bundle args = new Bundle();
+                        args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
+                        args.putString(Constants.PAYMENT_REQUEST_AMOUNT, intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT));
+                        approvePaymentDialog.setArguments(args);
+                        approvePaymentDialog.show(MainActivity.this.getFragmentManager(), TAG);
+                    }
+                },
+                new IntentFilter(Constants.PAYMENT_REQUEST));
+    }
+
     private void initPeers() {
         // TODO: init peers should probably be called in onStart? (e.g. if connection settings change -> need to reload)
         // TODO: do we need to stop the servers/clients first before we lose the references?
@@ -597,7 +631,11 @@ public class MainActivity extends AppCompatActivity
 
         for (AbstractClient client : clients) {
             client.setPaymentRequestDelegate(getClientPaymentRequestDelegate());
+            if(client instanceof  NFCClient) {
+                client.start();
+            }
         }
+
     }
 
     private void startClients() {
@@ -651,6 +689,10 @@ public class MainActivity extends AppCompatActivity
                 if (authViewDialog != null && authViewDialog.isAdded()) {
                     authViewDialog.dismiss();
                 }
+
+                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                    approvePaymentDialog.dismiss();
+                }
             }
 
             @Override
@@ -662,6 +704,9 @@ public class MainActivity extends AppCompatActivity
                 stopServers();
                 if (authViewDialog != null && authViewDialog.isAdded()) {
                     authViewDialog.dismiss();
+                }
+                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                    approvePaymentDialog.dismiss();
                 }
             }
         };

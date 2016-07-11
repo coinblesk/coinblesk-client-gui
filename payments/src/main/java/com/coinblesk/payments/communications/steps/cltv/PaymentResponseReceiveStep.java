@@ -122,6 +122,9 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         TxSig payeeSig = serverSignTO.payeeMessageSig();
         serverSignTO.payeeMessageSig(null);
         if (verifyPayeeSig) {
+            if(serverSignTO.payeePublicKey() == null) {
+                Log.e(TAG, "server sig is null: "+serverSignTO.type());
+            }
             ECKey payeeServerPubKey = ECKey.fromPublicOnly(serverSignTO.payeePublicKey());
             if (!Arrays.equals(
                     walletService.getMultisigServerKey().getPubKey(), payeeServerPubKey.getPubKey())) {
@@ -177,6 +180,9 @@ public class PaymentResponseReceiveStep extends AbstractStep {
                 .transaction(serializedTx)
                 .signatures(signatures)
                 .messageSig(messageSig);
+
+        Log.d(TAG, "sign TO: "+currentDate+" / "+publicKey+"/"+serializedTx+"/"+signatures+"/"+messageSig);
+
         return signTO;
     }
 

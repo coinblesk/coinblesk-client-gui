@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.TagLostException;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Bundle;
@@ -184,6 +185,8 @@ public class NFCServerCLTV extends AbstractServer {
                 isoDep.close();
                 long duration = System.currentTimeMillis()-startTime;
                 Log.d(TAG, "Payment done: " + duration + " ms");
+            } catch (TagLostException tle) {
+                Log.d(TAG, "Tag lost");
             } catch (Throwable e) {
                 Log.e(TAG, "Exception in onTagDiscovered", e);
                 getPaymentRequestDelegate().onPaymentError(e.getMessage());

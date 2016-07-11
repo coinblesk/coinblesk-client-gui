@@ -38,7 +38,6 @@ public class ACSTransceiver {
         this.reader = reader;
         this.maxLen = maxLen;
         this.acr122u = acr122u;
-        disableBuzzer();
     }
 
     private void disableBuzzer() throws ReaderException {
@@ -49,9 +48,9 @@ public class ACSTransceiver {
         // immediately after placing a tag resulting in people lifting the tag off before
         // we've had a chance to read the ID.
         byte[] sendBuffer = {(byte) 0xFF, (byte) 0x00, (byte) 0x52, (byte) 0x00, (byte) 0x00};
-        byte[] recvBuffer = new byte[8];
+        byte[] recvBuffer = new byte[2];
         int length = reader.transmit(0, sendBuffer, sendBuffer.length, recvBuffer, recvBuffer.length);
-        if (length != 8) {
+        if (length != 2) {
             throw new RuntimeException("unexpected number of bytes, length=" + length);
         }
     }
@@ -66,9 +65,15 @@ public class ACSTransceiver {
         return new String(recvBuffer);
     }*/
 
+    private boolean buzzerDisabled = false;
+
     public void initCard(final int slotNum) throws ReaderException {
         reader.power(slotNum, Reader.CARD_WARM_RESET);
         reader.setProtocol(slotNum, Reader.PROTOCOL_T0 | Reader.PROTOCOL_T1);
+        if(!buzzerDisabled) {
+            disableBuzzer();
+            buzzerDisabled = true;
+        }
     }
 
     public byte[] write(byte[] input) throws Exception {

@@ -90,36 +90,69 @@ public class BluetoothLEServer extends AbstractServer {
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getContext().getSystemService(Context.BLUETOOTH_SERVICE);
 
-        bluetoothGattServer = bluetoothManager.openGattServer(getContext(), new ServerCallback());
+        synchronized (bluetoothManager) {
 
-        final BluetoothGattCharacteristic writeCharacteristic = new BluetoothGattCharacteristic(
-                Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID,
-                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
-                BluetoothGattCharacteristic.PERMISSION_WRITE);
-        final BluetoothGattCharacteristic readCharacteristic = new BluetoothGattCharacteristic(
-                Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID,
-                BluetoothGattCharacteristic.PROPERTY_READ,
-                BluetoothGattCharacteristic.PERMISSION_READ);
-        final BluetoothGattService bluetoothGattService = new BluetoothGattService(
-                Constants.BLUETOOTH_SERVICE_UUID,
-                BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        bluetoothGattService.addCharacteristic(writeCharacteristic);
-        bluetoothGattService.addCharacteristic(readCharacteristic);
+            bluetoothGattServer = bluetoothManager.openGattServer(getContext(), new ServerCallback());
 
-        final UUID pubKeyUuid = UUID.nameUUIDFromBytes(getWalletServiceBinder().getMultisigClientKey().getPubKey());
-        final BluetoothGattService bluetoothPubKeyGattService = new BluetoothGattService(
-                pubKeyUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        bluetoothPubKeyGattService.addCharacteristic(writeCharacteristic);
-        bluetoothPubKeyGattService.addCharacteristic(readCharacteristic);
+            final BluetoothGattCharacteristic writeCharacteristic1 = new BluetoothGattCharacteristic(
+                    Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE);
+            final BluetoothGattCharacteristic readCharacteristic1 = new BluetoothGattCharacteristic(
+                    Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID,
+                    BluetoothGattCharacteristic.PROPERTY_READ,
+                    BluetoothGattCharacteristic.PERMISSION_READ);
 
-        //bluetoothGattService.addService(bluetoothPubKeyGattService);
+            final BluetoothGattCharacteristic writeCharacteristic2 = new BluetoothGattCharacteristic(
+                    Constants.BLUETOOTH_WRITE_CHARACTERISTIC_UUID,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE);
+            final BluetoothGattCharacteristic readCharacteristic2 = new BluetoothGattCharacteristic(
+                    Constants.BLUETOOTH_READ_CHARACTERISTIC_UUID,
+                    BluetoothGattCharacteristic.PROPERTY_READ,
+                    BluetoothGattCharacteristic.PERMISSION_READ);
 
-        bluetoothGattServer.addService(bluetoothGattService);
-        bluetoothGattServer.addService(bluetoothPubKeyGattService);
-        Log.d(TAG, "Bluetooth LE Default Service UUID: " + Constants.BLUETOOTH_SERVICE_UUID.toString());
-        Log.d(TAG, "Bluetooth LE PubKey Service UUID: " + pubKeyUuid.toString());
-        startAdvertisingService(Constants.BLUETOOTH_SERVICE_UUID);
-        startAdvertisingService(pubKeyUuid);
+            final BluetoothGattService bluetoothGattService = new BluetoothGattService(
+                    Constants.BLUETOOTH_SERVICE_UUID,
+                    BluetoothGattService.SERVICE_TYPE_PRIMARY);
+            bluetoothGattService.addCharacteristic(writeCharacteristic1);
+            bluetoothGattService.addCharacteristic(readCharacteristic1);
+
+            final UUID pubKeyUuid = UUID.nameUUIDFromBytes(getWalletServiceBinder().getMultisigClientKey().getPubKey());
+            Log.d(TAG, "pub key: " + pubKeyUuid);
+            final BluetoothGattService bluetoothPubKeyGattService = new BluetoothGattService(
+                    pubKeyUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+            if (!bluetoothPubKeyGattService.addCharacteristic(writeCharacteristic2)) {
+                Log.d(TAG, "could not add write characteristic: " + writeCharacteristic2);
+            }
+            if (!bluetoothPubKeyGattService.addCharacteristic(readCharacteristic2)) {
+                Log.d(TAG, "could not add read characteristic: " + readCharacteristic2);
+            }
+
+
+            //bluetoothGattService.addService(bluetoothPubKeyGattService);
+
+            if (!bluetoothGattServer.addService(bluetoothGattService)) {
+                Log.d(TAG, "could not add service1: " + bluetoothGattService);
+            }
+
+            //hack, throws null pointer when adding a second service, but only on the nexus 9
+            while(true) {
+                try {
+                    if (!bluetoothGattServer.addService(bluetoothPubKeyGattService)) {
+                        Log.d(TAG, "could not add service2: " + bluetoothGattService);
+                    } else {
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            Log.d(TAG, "Bluetooth LE Default Service UUID: " + Constants.BLUETOOTH_SERVICE_UUID.toString());
+            Log.d(TAG, "Bluetooth LE PubKey Service UUID: " + pubKeyUuid.toString());
+            startAdvertisingService(Constants.BLUETOOTH_SERVICE_UUID);
+            startAdvertisingService(pubKeyUuid);
+        }
     }
 
     private void startAdvertisingService(final UUID uuid) {

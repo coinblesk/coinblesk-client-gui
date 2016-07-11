@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:layout_height="wrap_content">
 
     <com.coinblesk.client.utils.UpdatableSwitch
         android:id="@+id/switchAB"
         android:layout_width="wrap_content"
-        android:layout_weight="1"
         android:button="@drawable/bluetooth_on"
         android:showText="true"
         android:textOff=" "
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_alignParentRight="false" />
-
-</RelativeLayout>
+        android:layout_height="wrap_content" />
+</LinearLayout>
