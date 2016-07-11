@@ -3,7 +3,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -28,6 +28,9 @@
 
         </FrameLayout>
     </LinearLayout>
+
+
+    <include layout="@layout/authview_buttons" />
 
 </LinearLayout>
 

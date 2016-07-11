@@ -18,6 +18,7 @@ import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.WalletService;
@@ -295,8 +296,9 @@ public class NFCClientServiceCLTV extends HostApduService {
         }
 
 
-
-        if(bitcoinURI.getAddress().toString().equals(approveAddress) && bitcoinURI.getAmount().toString().equals(approveAmount)) {
+        boolean isPaymentAutoAccepted = SharedPrefUtils.isPaymentAutoAcceptEnabled(NFCClientServiceCLTV.this) && SharedPrefUtils.getPaymentAutoAcceptValue(NFCClientServiceCLTV.this).isGreaterThan(bitcoinURI.getAmount());
+        boolean isPaymentApproved = bitcoinURI.getAddress().toString().equals(approveAddress) && bitcoinURI.getAmount().toString().equals(approveAmount);
+        if(isPaymentAutoAccepted || isPaymentApproved) {
             Log.d(TAG, "approved!");
             PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
             DERObject result = response.process(DERObject.NULLOBJECT);

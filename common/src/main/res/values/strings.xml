@@ -89,4 +89,9 @@
     <string name="error_invalid_email">Invalid email address.</string>
     <string name="error_password_too_short">Password is too short.</string>
 
+    <string name="pref_payment_auto_accept_enabled">pref_payment_auto_accept_enabled</string>
+    <string name="pref_payment_auto_accept_enabled_default">false</string>
+    <string name="pref_payment_auto_accept_amount">pref_payment_auto_accept_amount</string>
+    <string name="pref_payment_auto_accept_amount_default_value">0.02</string>
+
 </resources>

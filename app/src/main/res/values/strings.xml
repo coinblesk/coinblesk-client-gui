@@ -216,13 +216,15 @@
     <string name="pref_fee_amount_title">Fee Amount in Perecentage (%)</string>
 
 
-    <!--Auto-Accept Payments-->
-    <string name="pref_auto_accept_description">Fee Amount in Perecentage (%)</string>
-    <string name="pref_auto_accept_title">Auto-Accept Payment Requests</string>
 
-    <!--Auto-Accept Payments - Amount-->
-    <string name="pref_auto_accept_amount_default_value">0.1</string>
-    <string name="pref_auto_accept_amount_title">Auto-Accept Payment Limit</string>
+    <string name="pref_auto_accept_description">Fee Amount in Perecentage (%)</string>
+
+
+    <!--Auto-Accept Payments-->
+    <string name="pref_payment_auto_accept_title">Auto-Accept Payment Requests</string>
+    <string name="pref_payment_auto_accept_description">Automatically accept payment requests received over NFC up to defined limit.</string>
+    <string name="pref_payment_auto_accept_amount_title">Auto-Accept Payment Limit (BTC)</string>
+    <string name="pref_payment_auto_accept_amount_description">Auto-accept payments up to this limit in BTC.</string>
 
     <!--Transaction Detail-->
     <string name="txdetail_coin_amount_title">Amount</string>

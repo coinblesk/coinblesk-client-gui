@@ -5,5 +5,7 @@
 
     <include layout="@layout/authview_amount_address" />
 
+    <include layout="@layout/authview_buttons" />
+
 </LinearLayout>
 

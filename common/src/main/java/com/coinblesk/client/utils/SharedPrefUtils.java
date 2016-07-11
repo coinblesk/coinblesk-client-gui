@@ -21,14 +21,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Base64;
+import android.util.Log;
 
 import com.coinblesk.client.common.R;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.AddressBookItem;
 import com.coinblesk.client.models.LockTime;
+import com.coinblesk.util.BitcoinUtils;
 import com.coinblesk.util.SerializeUtils;
 import com.google.gson.reflect.TypeToken;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ExchangeRate;
@@ -48,6 +51,8 @@ import java.util.Set;
  * @author Thomas Bocek
  */
 public final class SharedPrefUtils {
+
+    private static final String TAG = SharedPrefUtils.class.getName();
 
     // prevent instances
     private SharedPrefUtils() {}
@@ -481,6 +486,27 @@ public final class SharedPrefUtils {
         Set<String> instantTx = getStringSet(context, key, new HashSet<String>());
         instantTx.add(txHash);
         setStringSet(context, key, instantTx);
+    }
+
+    public static boolean isPaymentAutoAcceptEnabled(Context context) {
+        String key = context.getString(R.string.pref_payment_auto_accept_enabled);
+        boolean defaultValue = Boolean.valueOf(context.getString(R.string.pref_payment_auto_accept_enabled_default));
+        return getBoolean(context, key, defaultValue);
+    }
+
+    public static Coin getPaymentAutoAcceptValue(Context context) {
+        // Note: do not use getFloat because the value is stored as String (class cast exception)
+        String key = context.getString(R.string.pref_payment_auto_accept_amount);
+        String defaultValue = context.getString(R.string.pref_payment_auto_accept_amount_default_value);
+        String valueBtc = getString(context, key, defaultValue);
+        Coin valueCoin;
+        try {
+            valueCoin = Coin.parseCoin(valueBtc);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Could not parse coin: " + valueBtc, e);
+            valueCoin = Coin.ZERO;
+        }
+        return valueCoin.isPositive() ? valueCoin : Coin.ZERO;
     }
 
 }

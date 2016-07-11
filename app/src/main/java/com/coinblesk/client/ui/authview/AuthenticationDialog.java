@@ -32,7 +32,10 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.coinblesk.client.R;
@@ -160,11 +163,48 @@ public class AuthenticationDialog extends DialogFragment {
         final LinearLayout feeContainer = (LinearLayout) authView.findViewById(R.id.authview_fee_container);
         feeContainer.setVisibility(isPayerMode ? View.VISIBLE : View.GONE);
 
+        final Button cancelButton = (Button) authView.findViewById(R.id.authview_button_cancel);
+        cancelButton.setEnabled(false);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.authViewNegativeResponse();
+                }
+                dismiss();
+            }
+        });
+
+        final Switch cancelSwitch = (Switch) authView.findViewById(R.id.authview_switch_cancel);
+        cancelSwitch.setChecked(false);
+        cancelSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cancelButton.setEnabled(isChecked);
+            }
+        });
+
+        final Button acceptButton = (Button) authView.findViewById(R.id.authview_button_accept);
+        if (isPayerMode) {
+            acceptButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.authViewPositiveResponse();
+                    }
+                    dismiss();
+                }
+            });
+        } else {
+            acceptButton.setVisibility(View.GONE);
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent);
         builder
             .setTitle(R.string.authview_title)
             .setView(authView)
-            .setCancelable(false)
+            .setCancelable(false);
+/*
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -183,6 +223,7 @@ public class AuthenticationDialog extends DialogFragment {
                     }
                 });
             }
+*/
 
         return builder.create();
     }
@@ -235,7 +276,8 @@ public class AuthenticationDialog extends DialogFragment {
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE
+                 );
 
     }
 

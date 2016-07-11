@@ -48,6 +48,20 @@
             android:summary="@string/pref_connection_settings_summary"
             android:title="@string/pref_connection_settings_title" />
 
+        <CheckBoxPreference
+            android:key="@string/pref_payment_auto_accept_enabled"
+            android:title="@string/pref_payment_auto_accept_title"
+            android:summary="@string/pref_payment_auto_accept_description"
+            android:defaultValue="@string/pref_payment_auto_accept_enabled_default" />
+
+        <EditTextPreference
+            android:key="@string/pref_payment_auto_accept_amount"
+            android:title="@string/pref_payment_auto_accept_amount_title"
+            android:summary="@string/pref_payment_auto_accept_amount_description"
+            android:numeric="decimal"
+            android:maxLength="6"
+            android:dependency="@string/pref_payment_auto_accept_enabled" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
