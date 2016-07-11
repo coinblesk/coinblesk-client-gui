@@ -129,6 +129,18 @@ public class AuthenticationDialog extends DialogFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        hideSystemUI();
+    }
+
+    @Override
+    public void onPause() {
+        showSystemUI();
+        super.onPause();
+    }
+
+    @Override
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         address = getArguments().getString(ARG_ADDRESS);
@@ -196,6 +208,47 @@ public class AuthenticationDialog extends DialogFragment {
         } else {
             feeText.setText(R.string.unknown);
         }
+    }
+
+    private View getDecorView() {
+        if (getDialog() == null || getDialog().getWindow() == null
+                || getDialog().getWindow().getDecorView() == null) {
+            return null;
+        }
+
+        return getDialog().getWindow().getDecorView();
+    }
+    // This snippet hides the system bars.
+    private void hideSystemUI() {
+
+        // Set the IMMERSIVE flag.
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
+        View decorView = getDecorView();
+        if (decorView == null)  {
+            return;
+        }
+
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+
+    }
+
+    private void showSystemUI() {
+        View decorView = getDecorView();
+        if (decorView == null)  {
+            return;
+        }
+
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
