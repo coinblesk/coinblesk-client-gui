@@ -82,6 +82,11 @@ public class NFCServerACSCLTV extends AbstractServer {
     }
 
     @Override
+    protected void finalize() throws Throwable {
+        getContext().unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
     public boolean isSupported() {
         return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(reader, getContext());
     }
@@ -106,6 +111,7 @@ public class NFCServerACSCLTV extends AbstractServer {
     @Override
     public void onStop() {
         setPaymentRequestUri(null);
+        //reader.close();
         reader.setOnStateChangeListener(null);
         // TODO: close reader? unregister receiver?
 /*        try {
@@ -182,11 +188,11 @@ public class NFCServerACSCLTV extends AbstractServer {
     private static ACSTransceiver createTransceiver(Reader reader, final Context context) throws IOException {
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 
-
+        UsbDevice externalDevice = externalReaderAttached(manager, reader);
 
         ACSTransceiver transceiver;
         try {
-            UsbDevice externalDevice = externalReaderAttached(manager, reader);
+
 
             if(!reader.isOpened()) {
                 reader.open(externalDevice);
@@ -195,6 +201,9 @@ public class NFCServerACSCLTV extends AbstractServer {
 
             transceiver = createAcsTransceiver(reader, externalDevice);
         } catch (IllegalArgumentException e) {
+            Intent usbIntent = new Intent(ACTION_USB_PERMISSION);
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, usbIntent, 0);
+            manager.requestPermission(externalDevice, permissionIntent);
             Log.d(TAG, "could not access device, no permissions given?", e);
             throw new IOException(e);
         }

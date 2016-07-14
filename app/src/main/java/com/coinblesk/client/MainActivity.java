@@ -107,7 +107,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 /**
- * @author ckiller
+ * @author Christian Killer
  * @author Alessandro De Carli
  * @author Andreas Albrecht
  * @author Thomas Bocek
@@ -591,6 +591,11 @@ public class MainActivity extends AppCompatActivity
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
+
+                        if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                            approvePaymentDialog.dismiss();
+                        }
+
                         approvePaymentDialog = new ApprovePaymentDialog();
                         Bundle args = new Bundle();
                         args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
@@ -663,6 +668,9 @@ public class MainActivity extends AppCompatActivity
     private void stopServers() {
         Log.d(TAG, "Stop servers.");
         for (AbstractServer server : servers) {
+            /*if(server instanceof  NFCServerACSCLTV) {
+                ((NFCServerACSCLTV) server).unregister();
+            }*/
             server.stop();
         }
     }

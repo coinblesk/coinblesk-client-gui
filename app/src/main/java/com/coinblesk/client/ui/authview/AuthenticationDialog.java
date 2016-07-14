@@ -164,7 +164,7 @@ public class AuthenticationDialog extends DialogFragment {
         feeContainer.setVisibility(isPayerMode ? View.VISIBLE : View.GONE);
 
         final Button cancelButton = (Button) authView.findViewById(R.id.authview_button_cancel);
-        cancelButton.setEnabled(false);
+        //cancelButton.setEnabled(false);
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -176,13 +176,14 @@ public class AuthenticationDialog extends DialogFragment {
         });
 
         final Switch cancelSwitch = (Switch) authView.findViewById(R.id.authview_switch_cancel);
-        cancelSwitch.setChecked(false);
+        cancelSwitch.setVisibility(View.GONE);
+        /*cancelSwitch.setChecked(false);
         cancelSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 cancelButton.setEnabled(isChecked);
             }
-        });
+        });*/
 
         final Button acceptButton = (Button) authView.findViewById(R.id.authview_button_accept);
         if (isPayerMode) {

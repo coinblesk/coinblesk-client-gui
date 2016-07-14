@@ -44,13 +44,12 @@ android {
     }
 
 
-    def code = 0
     defaultConfig {
         applicationId "com.coinblesk.client"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode code
-        versionName "2.3."+code
+        versionCode 2417
+        versionName "2.3.2"
     }
 
     buildTypes {

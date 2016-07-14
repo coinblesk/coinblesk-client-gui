@@ -122,7 +122,7 @@ public class SendPaymentFragment extends KeyboardFragment {
     @Override
     protected DialogFragment getDialogFragment() {
         // calculate max amount to spend minus some fee estimate.
-        Coin maxSpendableAmount = getWalletServiceBinder().getMaxSpendableAmount();
+        Coin maxSpendableAmount = getWalletServiceBinder().getBalance();
         boolean notEnoughMoney = maxSpendableAmount.isLessThan(getCoin());
         if (notEnoughMoney) {
             Snackbar.make(
