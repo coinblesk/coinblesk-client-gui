@@ -130,6 +130,8 @@ public class SendPaymentFragment extends KeyboardFragment {
                     UIUtils.toFriendlySnackbarString(getContext(), getString(R.string.insufficient_funds)),
                     Snackbar.LENGTH_LONG)
                     .show();
+            //we need to change to BTC, otherwise the exchange rate may change in the wrong moment
+            btcPrimary();
             coin(maxSpendableAmount);
         } else {
             return SendDialogFragment.newInstance(coin());

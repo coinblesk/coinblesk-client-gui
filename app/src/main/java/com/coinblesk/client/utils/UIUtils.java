@@ -184,6 +184,17 @@ public class UIUtils {
         throw new RuntimeException("unknown format");
     }
 
+    public static MonetaryFormat formater2(Context context) {
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            return MonetaryFormat.BTC;
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            return MonetaryFormat.MBTC;
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            return MonetaryFormat.UBTC;
+        }
+        throw new RuntimeException("unknown format");
+    }
+
     public static String coinToAmount(Context context, Coin coin) {
         // transform a given coin value to the "amount string".
         BigDecimal coinAmount = new BigDecimal(coin.getValue());

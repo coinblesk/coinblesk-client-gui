@@ -360,17 +360,23 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     public Coin coin() {
+        return Coin.valueOf(amountBTC);
+    }
+
+    private Coin coinConvert() {
         if(isBitcoinPrimary) {
             return Coin.valueOf(amountBTC);
         } else {
             //convert first
             String  currency = SharedPrefUtils.getCurrency(getContext());
             Fiat fiat = Fiat.valueOf(currency, amountFiat);
-            return exchangeRate.fiatToCoin(fiat);
+            Coin retVal = exchangeRate.fiatToCoin(fiat);
+            amountBTC = retVal.value;
+            return retVal;
         }
     }
 
-    public Fiat fiat() {
+    private Fiat fiat() {
         if(isBitcoinPrimary) {
             //convert first
             return exchangeRate.coinToFiat(Coin.valueOf(amountBTC));
@@ -383,16 +389,43 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     public KeyboardFragment coin(Coin coin) {
         this.amountBTC = coin.value;
+        //now we need to calculate the digit and dot counter
+        String formatted = UIUtils.formater2(getContext()).decimalMark('.').noCode().minDecimals(0).optionalDecimals(1,1).format(coin).toString();
+        formatted = trimLeadingZeros(formatted);
+        digitCounter = formatted.length();
+        dotAtPos = formatted.indexOf(".");
+        if(dotAtPos >=0) {
+            digitCounter--;
+        }
         this.amountFiat = exchangeRate.coinToFiat(coin).value;
+
         updateAmount();
         return this;
+    }
+
+    public KeyboardFragment btcPrimary() {
+        if(!isBitcoinPrimary) {
+            amountBTC = (long) (amountFiat * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+            this.isBitcoinPrimary = true;
+            updateAmount();
+        }
+        return this;
+    }
+
+    private static String trimLeadingZeros(String source) {
+        for (int i = 0; i < source.length(); ++i) {
+            char c = source.charAt(i);
+            if (c != '0' && !Character.isSpaceChar(c))
+                return source.substring(i);
+        }
+        return source;
     }
 
     private void updateAmount() {
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
 
-        String formattedBTC = UIUtils.formater(getContext()).format(coin(), 0, 1, 1);
+        String formattedBTC = UIUtils.formater(getContext()).format(coinConvert(), 0, 1, 1);
         //convert as it is satoshi to get the same format as for BTC
         long value = (long) (fiat().value * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
         String formattedFiat = UIUtils.formater(getContext()).format(Coin.valueOf(value), 0, 1, 1);
@@ -462,7 +495,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void onEnter() {
-        if (coin().isPositive()) {
+        if (coinConvert().isPositive()) {
             DialogFragment fragment = getDialogFragment();
             if (fragment != null) {
                 fragment.show(this.getFragmentManager(), "keyboard_dialog_fragment");
