@@ -51,7 +51,7 @@ public class ReceivePaymentFragment extends KeyboardFragment {
     @Override
     protected DialogFragment getDialogFragment() {
         try {
-            return ReceiveDialogFragment.newInstance(new BitcoinURI(BitcoinURI.convertToBitcoinURI(walletServiceBinder.getCurrentReceiveAddress(),this.getCoin(),"","")));
+            return ReceiveDialogFragment.newInstance(new BitcoinURI(BitcoinURI.convertToBitcoinURI(walletServiceBinder.getCurrentReceiveAddress(),this.coin(),"","")));
         } catch (BitcoinURIParseException e) {
             return null;
         }

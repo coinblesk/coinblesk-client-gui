@@ -133,6 +133,20 @@ public class UIUtils {
         return toLargeSpannable(context, result, coinDenomination, sizeSpan);
     }
 
+    public static Coin getValue(Context context, long amount) {
+        BigDecimal bdAmount = new BigDecimal(amount);
+        BigDecimal multiplicand = new BigDecimal(Coin.COIN.getValue());
+
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            multiplicand = new BigDecimal(Coin.COIN.getValue());
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            multiplicand = new BigDecimal((Coin.MILLICOIN.getValue()));
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
+        }
+        return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
+    }
+
 
     public static Coin getValue(Context context, String amount) {
         BigDecimal bdAmount = new BigDecimal(amount);
@@ -146,6 +160,28 @@ public class UIUtils {
             multiplicand = new BigDecimal((Coin.MICROCOIN.getValue()));
         }
         return Coin.valueOf((bdAmount.multiply(multiplicand).longValue()));
+    }
+
+    public static int scale(Context context) {
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            return 100000000;
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            return 100000;
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            return 100;
+        }
+        throw new RuntimeException("unknown scale");
+    }
+
+    public static BtcFormat formater(Context context) {
+        if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
+            return BtcFormat.builder().scale(BtcFormat.COIN_SCALE).build();
+        } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {
+            return BtcFormat.builder().scale(BtcFormat.MILLICOIN_SCALE).build();
+        } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
+            return BtcFormat.builder().scale(BtcFormat.MICROCOIN_SCALE).build();
+        }
+        throw new RuntimeException("unknown format");
     }
 
     public static String coinToAmount(Context context, Coin coin) {
@@ -169,6 +205,18 @@ public class UIUtils {
         df.setDecimalFormatSymbols(decFormat);
         String amount = df.format(coinAmount.divide(div));
         return amount;
+    }
+
+    public static int pow(int nr, int exp) {
+        //O(n), but we use it for small numbers only for exp, so don't bother
+        if(exp > 8) {
+            throw new RuntimeException("only for small numbers");
+        }
+        int result = 1;
+        for (int i = 1; i <= exp; i++) {
+            result *= nr;
+        }
+        return result;
     }
 
     public static SpannableString toSmallSpannable(String amount, String currency) {
@@ -561,7 +609,7 @@ public class UIUtils {
         return getMoneyFormat(context).format(coin).toString();
     }
 
-    private static MonetaryFormat getMoneyFormat(Context context) {
+    public static MonetaryFormat getMoneyFormat(Context context) {
         if (SharedPrefUtils.isBitcoinScaleBTC(context)) {
             return MonetaryFormat.BTC.postfixCode();
         } else if (SharedPrefUtils.isBitcoinScaleMilliBTC(context)) {

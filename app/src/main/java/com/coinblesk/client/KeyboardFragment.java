@@ -28,14 +28,11 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.coinblesk.client.ui.OnKeyboardListener;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
@@ -45,29 +42,37 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * Created by ckiller on 24/01/16.
  */
 
-public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, OnKeyboardListener, CustomValueDialog.CustomValueListener {
+public abstract class KeyboardFragment extends Fragment implements View.OnClickListener, CustomValueDialog.CustomValueListener {
     private final static String TAG = KeyboardFragment.class.getSimpleName();
 
     private static final int MAXIMUM_COIN_AMOUNT_LENGTH = 7;
-    private static final int MAXIMUM_FIAT_AMOUNT_LENGTH = 6;
-    private static final int FIAT_DECIMAL_THRESHOLD = 2;
 
-    private final static String KEY_AMOUNT = "amount";
-    private final static String KEY_SUM = "sum";
+    private final static String KEY_AMOUNT_BTC = "amount_btc";
+    private final static String KEY_AMOUNT_FIAT = "amount_fiat";
+
+    //private final static String KEY_SUM = "sum";
     private final static String KEY_IS_BITCOIN_LARGE_AMOUNT = "isBitcoinLargeAmount";
+    private final static String KEY_DIGIT_COUNTER = "digitCounter";
+    private final static String KEY_DOT_AT_POS = "dotAtPos";
 
-    private String amountString = "0";
-    private String sumString = "";
+    private final static int FIAT_SCALE = 10000;
 
-    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "430"));
-    private boolean isBitcoinLargeAmount = true;
+
+    private long amountBTC = 0;
+    private long amountFiat = 0;
+    //private long sumBTC = 0;
+    //private long sumFiat = 0;
+    private int digitCounter = 0;
+    private int dotAtPos = -1;
+
+    private ExchangeRate exchangeRate = new ExchangeRate(Fiat.parseFiat("CHF", "660"));
+    private boolean isBitcoinPrimary = true;
 
     protected abstract DialogFragment getDialogFragment();
 
@@ -75,7 +80,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Log.d(TAG, "onCreate");
-        isBitcoinLargeAmount = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
+        isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
     }
 
     @Override
@@ -95,7 +100,6 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
         UIUtils.refreshConnectionIconStatus(getContext(), view);
 
-        this.onKeyboardListener = this;
         return view;
     }
 
@@ -120,27 +124,31 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         super.onActivityCreated(inState);
 
         if (inState != null) {
-            if (inState.containsKey(KEY_AMOUNT)) {
-                amountString = inState.getString(KEY_AMOUNT, "0");
+            if (inState.containsKey(KEY_AMOUNT_BTC)) {
+                amountBTC = inState.getLong(KEY_AMOUNT_BTC, 0);
             }
-            if (inState.containsKey(KEY_SUM)) {
-                sumString = inState.getString(KEY_SUM, "");
+            if (inState.containsKey(KEY_AMOUNT_FIAT)) {
+                amountFiat = inState.getLong(KEY_AMOUNT_FIAT, 0);
             }
             if (inState.containsKey(KEY_IS_BITCOIN_LARGE_AMOUNT)) {
-                isBitcoinLargeAmount = inState.getBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, true);
+                isBitcoinPrimary = inState.getBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, true);
+            }
+            if (inState.containsKey(KEY_DIGIT_COUNTER)) {
+                digitCounter = inState.getInt(KEY_DIGIT_COUNTER, 0);
+            }
+            if (inState.containsKey(KEY_IS_BITCOIN_LARGE_AMOUNT)) {
+                dotAtPos = inState.getInt(KEY_DOT_AT_POS, -1);
             }
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        if (amountString != null) {
-            outState.putString(KEY_AMOUNT, amountString);
-        }
-        if (sumString != null) {
-            outState.putString(KEY_SUM, sumString);
-        }
-        outState.putBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, isBitcoinLargeAmount);
+        outState.putLong(KEY_AMOUNT_BTC, amountBTC);
+        outState.putLong(KEY_AMOUNT_FIAT, amountFiat);
+        outState.putBoolean(KEY_IS_BITCOIN_LARGE_AMOUNT, isBitcoinPrimary);
+        outState.putInt(KEY_DIGIT_COUNTER, digitCounter);
+        outState.putInt(KEY_DOT_AT_POS, dotAtPos);
     }
 
     private void initStandard(View view) {
@@ -209,252 +217,252 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     }
 
-    private OnKeyboardListener onKeyboardListener;
-
 
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
             case R.id.key_one:
-                onKeyboardListener.onDigit(1);
+                onDigit(1);
                 break;
 
             case R.id.key_two:
-                onKeyboardListener.onDigit(2);
+                onDigit(2);
                 break;
 
             case R.id.key_three:
-                onKeyboardListener.onDigit(3);
+                onDigit(3);
                 break;
 
             case R.id.key_four:
-                onKeyboardListener.onDigit(4);
+                onDigit(4);
                 break;
 
             case R.id.key_five:
-                onKeyboardListener.onDigit(5);
+                onDigit(5);
                 break;
 
             case R.id.key_six:
-                onKeyboardListener.onDigit(6);
+                onDigit(6);
                 break;
 
             case R.id.key_seven:
-                onKeyboardListener.onDigit(7);
+                onDigit(7);
                 break;
 
             case R.id.key_eight:
-                onKeyboardListener.onDigit(8);
+                onDigit(8);
                 break;
 
             case R.id.key_nine:
-                onKeyboardListener.onDigit(9);
-                break;
-
-            case R.id.key_dot:
-                onKeyboardListener.onDot();
+                onDigit(9);
                 break;
 
             case R.id.key_zero:
-                onKeyboardListener.onDigit(0);
+                onDigit(0);
                 break;
 
-            case R.id.amount_backspace_image_view:
-                if (this.amountString.length() == 1) {
-                    this.amountString = "0";
-                } else {
-                    this.amountString = this.amountString.substring(0, this.amountString.length() - 1);
-                }
-                this.updateAmount();
+            case R.id.key_dot:
+                dotAtPos = digitCounter;
                 break;
 
             case R.id.amount_switch_image_view:
-                this.isBitcoinLargeAmount = !this.isBitcoinLargeAmount;
-                this.updateAmount();
+                if(isBitcoinPrimary) {
+                    amountFiat = (long) (amountBTC / (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+                    this.isBitcoinPrimary = false;
+                } else {
+                    amountBTC = (long) (amountFiat * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+                    this.isBitcoinPrimary = true;
+                }
                 break;
 
             case R.id.key_accept:
-                onKeyboardListener.onEnter();
+                onEnter();
                 break;
 
             case R.id.key_plus:
-                onPlus(amountString);
+                //TODO
                 break;
 
             case R.id.key_subtotal:
-                if (this.amountString.equals("0") && this.sumString.length() > 2) {
-                    this.amountString = UIUtils.getSum(sumString);
-                    updateAmount();
-                }
+                //TODO
                 break;
 
+            case R.id.amount_backspace_image_view:
             case R.id.key_backspace:
-                if (this.amountString.length() == 1) {
-                    this.amountString = "0";
-                } else {
-                    this.amountString = this.amountString.substring(0, this.amountString.length() - 1);
+                if(digitCounter == 0) {
+                    break;
                 }
-                this.updateAmount();
+                if(isBitcoinPrimary) {
+                    int scale = UIUtils.scale(getContext());
+                    amountBTC = backspace(amountBTC, scale, digitCounter, dotAtPos);
+                } else {
+                    int scale = FIAT_SCALE;
+                    amountFiat = backspace(amountFiat, scale, digitCounter, dotAtPos);
+                }
+                this.digitCounter--;
+                //remove the dot
+                if(digitCounter <= dotAtPos) {
+                    dotAtPos = -1;
+                }
                 break;
 
             case R.id.key_clear:
-                this.sumString = "";
-                this.amountString = "0";
-                updateAmount();
-                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText("");
-
+                this.amountBTC = 0;
+                this.amountFiat = 0;
+                this.digitCounter = 0;
+                this.dotAtPos = -1;
                 break;
 
             case R.id.key_custom_one:
-                onKeyboardListener.onCustom(1);
+                onCustom(1);
                 break;
             case R.id.key_custom_two:
-                onKeyboardListener.onCustom(2);
+                onCustom(2);
                 break;
             case R.id.key_custom_three:
-                onKeyboardListener.onCustom(3);
+                onCustom(3);
                 break;
             case R.id.key_custom_four:
-                onKeyboardListener.onCustom(4);
+                onCustom(4);
                 break;
             case R.id.key_custom_five:
-                onKeyboardListener.onCustom(5);
+                onCustom(5);
                 break;
             case R.id.key_custom_six:
-                onKeyboardListener.onCustom(6);
+                onCustom(6);
                 break;
             case R.id.key_custom_seven:
-                onKeyboardListener.onCustom(7);
+                onCustom(7);
                 break;
             case R.id.key_custom_eight:
-                onKeyboardListener.onCustom(8);
+                onCustom(8);
                 break;
         }
+        updateAmount();
 
     }
 
-    protected Coin getCoin() {
-        if (isBitcoinLargeAmount) {
-            return UIUtils.getValue(getContext(), amountString);
+    private static long backspace(long amount, int scale, int digitCounter, int dotAtPos) {
+        if(digitCounter == 1) {
+            amount = 0;
         } else {
-            return exchangeRate.fiatToCoin(getFiat());
+            if(dotAtPos < 0 || digitCounter - dotAtPos <= 0) {
+                //before the dot
+                amount = (amount / (scale *10) ) * scale;
+            } else {
+                //after the dot
+                scale /= UIUtils.pow(10, digitCounter - dotAtPos - 1);
+                amount = (amount / (scale) ) * scale;
+            }
+        }
+        return amount;
+    }
+
+    public Coin coin() {
+        if(isBitcoinPrimary) {
+            return Coin.valueOf(amountBTC);
+        } else {
+            //convert first
+            String  currency = SharedPrefUtils.getCurrency(getContext());
+            Fiat fiat = Fiat.valueOf(currency, amountFiat);
+            return exchangeRate.fiatToCoin(fiat);
         }
     }
 
-    protected Fiat getFiat() {
-        if (!isBitcoinLargeAmount) {
-            return Fiat.parseFiat(exchangeRate.fiat.currencyCode, this.amountString);
+    public Fiat fiat() {
+        if(isBitcoinPrimary) {
+            //convert first
+            return exchangeRate.coinToFiat(Coin.valueOf(amountBTC));
         } else {
-            return exchangeRate.coinToFiat(UIUtils.getValue(getContext(), amountString));
+            String  currency = SharedPrefUtils.getCurrency(getContext());
+            Fiat fiat = Fiat.valueOf(currency, amountFiat);
+            return fiat;
         }
+    }
+
+    public KeyboardFragment coin(Coin coin) {
+        this.amountBTC = coin.value;
+        this.amountFiat = exchangeRate.coinToFiat(coin).value;
+        updateAmount();
+        return this;
     }
 
     private void updateAmount() {
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
 
-        largeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSize(this.getContext(), amountString.length()));
+        String formattedBTC = UIUtils.formater(getContext()).format(coin(), 0, 1, 1);
+        //convert as it is satoshi to get the same format as for BTC
+        long value = (long) (fiat().value * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+        String formattedFiat = UIUtils.formater(getContext()).format(Coin.valueOf(value), 0, 1, 1);
 
-        final Coin coin = this.getCoin();
-        final Fiat fiat = this.getFiat();
-
-        String coinDenomination = SharedPrefUtils.getBitcoinScalePrefix(getContext());
-        if (isBitcoinLargeAmount) {
-            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), amountString, coinDenomination));
-            smallTextView.setText(UIUtils.toSmallSpannable(fiat.toPlainString(), exchangeRate.fiat.getCurrencyCode()));
+        if (isBitcoinPrimary) {
+            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), formattedBTC, UIUtils.getMoneyFormat(getContext()).code()));
+            smallTextView.setText(UIUtils.toSmallSpannable(formattedFiat, exchangeRate.fiat.getCurrencyCode()));
         } else {
-            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), amountString, exchangeRate.fiat.getCurrencyCode()));
-            smallTextView.setText(UIUtils.toSmallSpannable(UIUtils.scaleCoin(getContext(), coin), coinDenomination));
+            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), formattedFiat, exchangeRate.fiat.getCurrencyCode()));
+            smallTextView.setText(UIUtils.toSmallSpannable(formattedBTC, UIUtils.getMoneyFormat(getContext()).code()));
         }
     }
 
-    protected void setAmountByCoin(Coin newAmount) {
-        if (isBitcoinLargeAmount) {
-            amountString = UIUtils.coinToAmount(getContext(), newAmount);
-        } else {
-            amountString = exchangeRate.coinToFiat(newAmount).toPlainString();
-        }
-        updateAmount();
-    }
+
 
     @Override
     public void onStart() {
         super.onStart();
         Intent intent = new Intent(this.getActivity(), WalletService.class);
         this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        //this.updateAmount();
     }
 
-    @Override
-    public void onDigit(int digit) {
 
-        if (isBitcoinLargeAmount) {
-            this.onCoinDigit(digit);
+    private void onDigit(int digit) {
+        if(digitCounter > MAXIMUM_COIN_AMOUNT_LENGTH) {
+            return;
+        }
+        if (isBitcoinPrimary) {
+            int scale = UIUtils.scale(getContext());
+            long amount = digit(amountBTC, digit, scale, digitCounter, dotAtPos);
+            if(amount < 0) {
+                return;
+            }
+            amountBTC = amount;
+        }  else {
+            int scale = FIAT_SCALE;
+            long amount = digit(amountFiat, digit, scale, digitCounter, dotAtPos);
+            if(amount < 0) {
+                return;
+            }
+            amountFiat = amount;
+        }
+        digitCounter++;
+    }
+
+    private static long digit(long amount, int digit, int scale, int digitCounter, int dotAtPos) {
+        if(dotAtPos < 0) {
+            //before the dot
+
+            //first number has to have the right scale
+            if (digitCounter == 0) {
+                amount *= scale;
+            } else {
+                //subsequent numbers, scale by 10
+                amount *= 10;
+            }
         } else {
-            this.onFiatDigit(digit);
+            //after the dot
+            int pos = digitCounter - dotAtPos;
+            if(pos >= 2) {
+                return -1;
+            }
+            scale /= UIUtils.pow(10, pos + 1);
         }
-
+        amount += digit * scale;
+        return amount;
     }
 
-    public void onFiatDigit(int digit) {
-        final int fractionalLength = UIUtils.getFractionalLengthFromString(this.amountString);
-        final int integerLength = UIUtils.getIntegerLengthFromString(this.amountString);
-        final boolean isDecimal = UIUtils.isDecimal(this.amountString);
-
-        if (isDecimal) {
-            if (fractionalLength < FIAT_DECIMAL_THRESHOLD) {
-                this.amountString += digit;
-                this.amountString = new BigDecimal(amountString).toString();
-                this.updateAmount();
-            }
-        }
-
-        if (!isDecimal) {
-            if (integerLength < MAXIMUM_FIAT_AMOUNT_LENGTH) {
-                this.amountString += digit;
-                this.amountString = new BigDecimal(amountString).toString();
-                this.updateAmount();
-            }
-        }
-    }
-
-    public void onCoinDigit(int digit) {
-        final int decimalThreshold = UIUtils.getDecimalThreshold(getContext());
-        final int fractionalLength = UIUtils.getFractionalLengthFromString(amountString);
-        final int integerLength = UIUtils.getIntegerLengthFromString(amountString);
-
-        final boolean isDecimal = UIUtils.isDecimal(amountString);
-
-        if (isDecimal) {
-            if (fractionalLength < decimalThreshold) {
-                this.amountString += digit;
-                this.amountString = new BigDecimal(amountString).toString();
-                this.updateAmount();
-            }
-        }
-
-        if (!isDecimal) {
-            if (integerLength < MAXIMUM_COIN_AMOUNT_LENGTH) {
-                this.amountString += digit;
-                this.amountString = new BigDecimal(amountString).toString();
-                this.updateAmount();
-            }
-        }
-    }
-
-
-    @Override
-    public void onDot() {
-        if (!this.amountString.contains(".")) {
-            this.amountString += ".";
-        }
-        this.updateAmount();
-    }
-
-    @Override
-    public void onEnter() {
-        if (getCoin().isPositive()) {
+    private void onEnter() {
+        if (coin().isPositive()) {
             DialogFragment fragment = getDialogFragment();
             if (fragment != null) {
                 fragment.show(this.getFragmentManager(), "keyboard_dialog_fragment");
@@ -463,26 +471,8 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
 
-    @Override
-    public void onPlus(String value) {
-        if (UIUtils.stringIsNotZero(this.amountString)) {
-            // check if it's the first summand
-            if (this.sumString.length() == 0) {
-                this.sumString += value;
-                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString));
-            } else {
-                this.sumString += ("+" + value);
-                ((TextView) this.getView().findViewById(R.id.sum_values_text_view)).setText((sumString + "=" + UIUtils.getSum(sumString)));
-            }
-        }
-
-        this.amountString = "0";
-        updateAmount();
-    }
-
-    @Override
     public void onCustom(int customKey) {
-        if (!SharedPrefUtils.isCustomButtonEmpty(getContext(), Integer.toString(customKey))) {
+        /*if (!SharedPrefUtils.isCustomButtonEmpty(getContext(), Integer.toString(customKey))) {
             try {
                 String price = null;
 
@@ -506,11 +496,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             } catch (Exception e) {
                 Log.e(TAG, "Error onCustom " + customKey + ": ", e);
             }
-        }
-    }
-
-    private TextView getSumValuesTextView() {
-        return ((TextView) getView().findViewById(R.id.sum_values_text_view));
+        }*/
     }
 
     private final View.OnLongClickListener onCustomLongClickListener = new View.OnLongClickListener() {
@@ -518,28 +504,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         public boolean onLongClick(View v) {
             switch (v.getId()) {
                 case R.id.key_custom_one:
-                    onKeyboardListener.onCustomLong(1);
+                    onCustomLong(1);
                     return true;
                 case R.id.key_custom_two:
-                    onKeyboardListener.onCustomLong(2);
+                    onCustomLong(2);
                     return true;
                 case R.id.key_custom_three:
-                    onKeyboardListener.onCustomLong(3);
+                    onCustomLong(3);
                     return true;
                 case R.id.key_custom_four:
-                    onKeyboardListener.onCustomLong(4);
+                    onCustomLong(4);
                     return true;
                 case R.id.key_custom_five:
-                    onKeyboardListener.onCustomLong(5);
+                    onCustomLong(5);
                     return true;
                 case R.id.key_custom_six:
-                    onKeyboardListener.onCustomLong(6);
+                    onCustomLong(6);
                     return true;
                 case R.id.key_custom_seven:
-                    onKeyboardListener.onCustomLong(7);
+                    onCustomLong(7);
                     return true;
                 case R.id.key_custom_eight:
-                    onKeyboardListener.onCustomLong(8);
+                    onCustomLong(8);
                     return true;
                 default:
                     return false;
@@ -547,8 +533,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         }
     };
 
-    @Override
-    public void onCustomLong(int customKey) {
+    private void onCustomLong(int customKey) {
         CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
         cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
             @Override
