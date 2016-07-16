@@ -214,6 +214,7 @@ public class BluetoothLEServer extends AbstractServer {
         byte[] derRequestPayload = new byte[0];
         byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
         int stepCounter = 0;
+        long startTime = 0;
 
         private byte[] getNextFragment() {
             int fragLen = Math.min(derResponsePayload.length, BluetoothLE.MAX_FRAGMENT_SIZE);
@@ -236,9 +237,7 @@ public class BluetoothLEServer extends AbstractServer {
                     break;
                 case BluetoothGatt.STATE_CONNECTED:
                     newStateStr = "CONNECTED";
-                    if (hasPaymentRequestUri()) {
-                        paymentRequestSend(device);
-                    }
+                    paymentRequestSend(device);
                     break;
                 case BluetoothGatt.STATE_DISCONNECTING:
                     newStateStr = "DISCONNECTING";
@@ -260,7 +259,12 @@ public class BluetoothLEServer extends AbstractServer {
         }
 
         private void paymentRequestSend(BluetoothDevice device) {
+            if (!hasPaymentRequestUri()) {
+                return;
+            }
+
             PaymentState paymentState = new PaymentState();
+            paymentState.startTime = System.currentTimeMillis();
             connectedDevices.put(device.getAddress(), paymentState);
 
             PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
@@ -280,14 +284,14 @@ public class BluetoothLEServer extends AbstractServer {
 
             PaymentState paymentState = connectedDevices.get(device.getAddress());
             byte[] fragment = paymentState.getNextFragment();
-            Log.d(TAG, String.format("%s - onCharacteristicReadRequest (fragment length=%d bytes)",
-                    device.getAddress(), fragment.length));
+            Log.d(TAG, String.format("%s - onCharacteristicReadRequest - fragment length=%d bytes, duration=%d ms",
+                    device.getAddress(), fragment.length, (System.currentTimeMillis()-paymentState.startTime)));
 
             bluetoothGattServer.sendResponse(
                     device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
-                    0,
+                    0, /* offset */
                     fragment);
 
             if (paymentState.derResponsePayload.length == 0) {
@@ -303,10 +307,11 @@ public class BluetoothLEServer extends AbstractServer {
                                                             int offset,
                                                             byte[] value) {
             try {
-
-                Log.d(TAG, String.format("%s - onCharacteristicWriteRequest (length=%d bytes)",
-                        device.getAddress(), value.length));
                 PaymentState paymentState = connectedDevices.get(device.getAddress());
+
+                Log.d(TAG, String.format("%s - onCharacteristicWriteRequest - length=%d bytes, duration=%d ms",
+                        device.getAddress(), value.length, (System.currentTimeMillis()-paymentState.startTime)));
+
                 paymentState.derRequestPayload = ClientUtils.concatBytes(paymentState.derRequestPayload, value);
                 int responseLength = DERParser.extractPayloadEndIndex(paymentState.derRequestPayload);
 
@@ -323,7 +328,8 @@ public class BluetoothLEServer extends AbstractServer {
                             paymentState.derResponsePayload = serverSignatures.serializeToDER();
                             break;
                         case 1:
-                            Log.d(TAG, device.getAddress() + " - payment finished.");
+                            long duration = System.currentTimeMillis() - paymentState.startTime;
+                            Log.d(TAG, device.getAddress() + " - payment finished - total duration: " + duration + " ms");
                             getPaymentRequestDelegate().onPaymentSuccess();
                             break;
                     }

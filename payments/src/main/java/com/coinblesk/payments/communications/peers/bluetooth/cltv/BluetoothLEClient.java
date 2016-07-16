@@ -59,6 +59,8 @@ import java.util.UUID;
 public class BluetoothLEClient extends AbstractClient {
     private final static String TAG = BluetoothLEClient.class.getName();
 
+    private long startTime;
+
     private final BluetoothAdapter bluetoothAdapter;
     private final List<ClientCallback> clientCallbacks;
 
@@ -75,6 +77,9 @@ public class BluetoothLEClient extends AbstractClient {
 
     @Override
     protected void onStart() {
+        startTime = System.currentTimeMillis();
+        Log.d(TAG, "startLeScan: uuid=" + Constants.BLUETOOTH_SERVICE_UUID.toString()
+                + ", currentTime="+startTime);
         bluetoothAdapter.startLeScan(new UUID[]{Constants.BLUETOOTH_SERVICE_UUID}, leScanCallback);
     }
 
@@ -99,6 +104,9 @@ public class BluetoothLEClient extends AbstractClient {
             bluetoothAdapter.stopLeScan(this);
             ClientCallback callback = new ClientCallback();
             clientCallbacks.add(callback);
+            Log.d(TAG, "onLeScan -"
+                    + " device=" + device.getAddress()
+                    + " (duration: "+(System.currentTimeMillis()-startTime)+" ms)");
             device.connectGatt(getContext(), false, callback);
         }
     };
@@ -140,14 +148,16 @@ public class BluetoothLEClient extends AbstractClient {
                         close();
                         clientCallbacks.remove(this);
                         getPaymentRequestDelegate().onPaymentSuccess();
+                        long duration = System.currentTimeMillis()-startTime;
+                        Log.d(TAG, "Payment completed - total duration: " + duration + " ms");
                     }
                     break;
                 default:
                     newStateStr = "STATE_" + status;
                     break;
             }
-            Log.d(TAG, String.format("%s - changed connection state to %s (%d)",
-                    gatt.getDevice().getAddress(), newStateStr, status));
+            Log.d(TAG, String.format("%s - changed connection state to %s (%d) (duration: %d ms)",
+                    gatt.getDevice().getAddress(), newStateStr, status, (System.currentTimeMillis()-startTime)));
         }
 
         @Override
@@ -160,8 +170,9 @@ public class BluetoothLEClient extends AbstractClient {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
-            Log.d(TAG, String.format("onServicesDiscovered - status=%d, deviceAddress=%s",
-                    status, gatt.getDevice().getAddress()));
+            Log.d(TAG, String.format(
+                    "onServicesDiscovered - status=%d, deviceAddress=%s, duration=%d ms",
+                    status, gatt.getDevice().getAddress(), (System.currentTimeMillis()-startTime)));
 
             bluetoothGatt = gatt;
             stepCounter = 0;
@@ -173,8 +184,8 @@ public class BluetoothLEClient extends AbstractClient {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             try {
-                Log.d(TAG, String.format("%s - onCharacteristicRead - status=%d, length=%d bytes",
-                        gatt.getDevice().getAddress(), status, characteristic.getValue().length));
+                Log.d(TAG, String.format("%s - onCharacteristicRead - status=%d, length=%d bytes, duration=%d ms",
+                        gatt.getDevice().getAddress(), status, characteristic.getValue().length, (System.currentTimeMillis()-startTime)));
 
                 derRequestPayload = ClientUtils.concatBytes(derRequestPayload, characteristic.getValue());
                 int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
@@ -245,8 +256,8 @@ public class BluetoothLEClient extends AbstractClient {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            Log.d(TAG, String.format("%s - onCharacteristicWrite - status=%d, length=%d bytes",
-                    gatt.getDevice().getAddress(), status, characteristic.getValue().length));
+            Log.d(TAG, String.format("%s - onCharacteristicWrite - status=%d, length=%d bytes, duration=%d ms",
+                    gatt.getDevice().getAddress(), status, characteristic.getValue().length, (System.currentTimeMillis()-startTime)));
 
             if (byteCounter < derResponsePayload.length) {
                 writeNextFragment(gatt);
