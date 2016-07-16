@@ -20,6 +20,8 @@ package com.coinblesk.payments.communications.steps.cltv;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.v1.TxSig;
 import com.coinblesk.json.v1.Type;
 import com.coinblesk.der.DERObject;
@@ -52,6 +54,7 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
     @Override
     @Nullable
     public DERObject process(@NonNull DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         final Type responseType;
         final List<TxSig> serializedServerSigs;
         try {
@@ -69,6 +72,8 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
         }
 
         serverTransactionSignatures = SerializeUtils.deserializeSignatures(serializedServerSigs);
+
+        logStepProcess(startTime, input, null);
         return null;
     }
 }

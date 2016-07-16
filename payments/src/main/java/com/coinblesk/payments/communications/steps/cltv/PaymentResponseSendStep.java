@@ -69,11 +69,13 @@ public class PaymentResponseSendStep extends AbstractStep {
     @Override
     @NonNull
     public DERObject process(@Nullable DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         checkState(getBitcoinURI() != null, "BitcoinURI not provided.");
 
         // input is the bitcoinURI (constructor)
         createTxAndSign(getBitcoinURI().getAddress(), getBitcoinURI().getAmount());
         DERObject response = createDERResponse();
+        logStepProcess(startTime, input, response);
         return response;
     }
 

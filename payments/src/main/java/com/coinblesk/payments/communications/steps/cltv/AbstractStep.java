@@ -17,12 +17,16 @@
 
 package com.coinblesk.payments.communications.steps.cltv;
 
+import android.util.Log;
+
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.Step;
 
 import org.bitcoinj.uri.BitcoinURI;
+
+import java.util.Locale;
 
 /**
  * @author Andreas Albrecht
@@ -63,4 +67,14 @@ abstract class AbstractStep implements Step {
         return Constants.CLIENT_COMMUNICATION_PROTOCOL_VERSION;
     }
 
+    protected void logStepProcess(long startTime, DERObject input, DERObject output) {
+        long duration = System.currentTimeMillis() - startTime;
+        Log.d("logStepProcess", String.format(Locale.US,
+                "%s - input: %d byte, output: %d byte, time: %d ms",
+                getClass().getSimpleName(),
+                (input != null && input.getPayload() != null) ? input.getPayload().length : 0,
+                (output != null && output.getPayload() != null) ? output.getPayload().length : 0,
+                duration)
+        );
+    }
 }

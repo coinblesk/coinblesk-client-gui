@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.client.utils.DERPayloadBuilder;
 import com.coinblesk.json.v1.PaymentRequestTO;
@@ -49,6 +50,7 @@ public class PaymentRequestSendStep extends AbstractStep {
     @Override
     @NonNull
     public DERObject process(@Nullable DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         checkState(getBitcoinURI() != null && getBitcoinURI().getAddress() != null,
                 "No Bitcoin request URI provided.");
 
@@ -57,6 +59,8 @@ public class PaymentRequestSendStep extends AbstractStep {
             Log.d(TAG, String.format(
                     "Payment request - sending payment request: %s, (length=%d bytes)",
                     getBitcoinURI(), payload.serializeToDER().length));
+
+            logStepProcess(startTime, input, payload);
             return payload;
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);

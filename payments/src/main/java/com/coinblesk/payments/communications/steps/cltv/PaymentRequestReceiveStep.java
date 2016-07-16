@@ -22,6 +22,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
@@ -56,6 +57,7 @@ public class PaymentRequestReceiveStep extends AbstractStep {
     @Override
     @Nullable
     public DERObject process(@NonNull DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         /* deserialize payment request */
         PaymentRequestTO request = null;
         try {
@@ -112,6 +114,7 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         }
 
         Log.i(TAG, "Received payment request: " + getBitcoinURI());
+        logStepProcess(startTime, input, null);
         return null;
     }
 }

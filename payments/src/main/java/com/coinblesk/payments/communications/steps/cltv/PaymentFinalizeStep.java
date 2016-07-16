@@ -63,12 +63,14 @@ public class PaymentFinalizeStep extends AbstractStep {
     @Override
     @Nullable
     public DERObject process(@Nullable DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         checkState(transaction != null, "No transaction provided.");
         checkState(clientTxSignatures != null, "Client signatures not provided.");
         checkState(serverTxSignatures != null, "Server signatures not provided.");
 
         assembleTransaction();
 
+        logStepProcess(startTime, input, null);
         return null;
     }
 

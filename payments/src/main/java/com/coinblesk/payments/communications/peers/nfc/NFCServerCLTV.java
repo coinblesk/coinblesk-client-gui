@@ -67,15 +67,20 @@ public class NFCServerCLTV extends AbstractServer {
     }
 
     private DERObject transceiveDER(IsoDep isoDep, DERObject input, boolean needsSelectAidApdu) throws IOException {
-        byte[] derPayload = input.serializeToDER();
-        Log.d(TAG, "transceiveDER - derPayload length=" + derPayload.length);
-
+        final long startTimeTransceive = System.currentTimeMillis();
+        final byte[] derPayload = input.serializeToDER();
         byte[] derResponse;
+        Log.d(TAG, "transceiveDER - start - send derPayload length=" + derPayload.length + " byte");
+
         derResponse = assembleFragment(isoDep, derPayload, needsSelectAidApdu);
         derResponse = keepAliveLoop(isoDep, derResponse);
         derResponse = concatNextResponseBytes(isoDep, derResponse);
-        Log.d(TAG, "transceiveDER - end transceive");
-        DERObject result = DERParser.parseDER(derResponse);;
+        DERObject result = DERParser.parseDER(derResponse);
+
+        long duration = System.currentTimeMillis() - startTimeTransceive;
+        Log.d(TAG, "transceiveDER - end - " +
+                            "took " + duration + " ms - " +
+                            "received length=" + result.getPayload().length + " byte");
         return result;
     }
 
@@ -136,18 +141,21 @@ public class NFCServerCLTV extends AbstractServer {
         public void onTagDiscovered(Tag tag) {
             Log.d(TAG, "onTagDiscovered: " + tag);
             final long startTime = System.currentTimeMillis();
+            long duration;
+
             try {
                 IsoDep isoDep = IsoDep.get(tag);
                 isoDep.connect();
                 boolean done = false;
-                Log.d(TAG, "first transmit: payment request, currentTime=" + startTime);
                 final AtomicReference<DERObject> outputPaymentRequestSend = new AtomicReference<>();
                 final AtomicReference<DERObject> outputPaymentResponseReceive = new AtomicReference<>();
                 final AtomicReference<DERObject> paymentAck = new AtomicReference<>();
                 Thread authorization = null;
 
+                Log.d(TAG, "first transmit: payment request, currentTimeMs=" + startTime);
                 PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(
-                        getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
+                        getPaymentRequestUri(),
+                        getWalletServiceBinder().getMultisigClientKey());
                 DERObject derPaymentRequest = paymentRequestSendStep.process(DERObject.NULLOBJECT);
                 outputPaymentRequestSend.set(derPaymentRequest);
                 Log.d(TAG, "transceive outputPaymentRequestSend");
@@ -162,7 +170,8 @@ public class NFCServerCLTV extends AbstractServer {
                     }
 
                     if (outputPaymentResponseReceive.get() != null && paymentAck.get() == null) {
-                        Log.d(TAG, "got response, tx from client and signatures from server.");
+                        duration = System.currentTimeMillis() - startTime;
+                        Log.d(TAG, "got response, tx from client and signatures from server (duration: "+duration+" ms)");
                         DERObject toSend = outputPaymentResponseReceive.get();
                         DERObject ackResponse = transceiveDER(isoDep, toSend);
                         paymentAck.set(ackResponse);
@@ -170,7 +179,8 @@ public class NFCServerCLTV extends AbstractServer {
                     }
 
                     if (paymentAck.get() != null) {
-                        Log.d(TAG, "Send final ACK.");
+                        duration = System.currentTimeMillis() - startTime;
+                        Log.d(TAG, "Send final ACK (duration: "+duration+" ms)");
                         isoDep.transceive(DERObject.NULLOBJECT.serializeToDER());
                         done = true;
                         continue;
@@ -183,8 +193,9 @@ public class NFCServerCLTV extends AbstractServer {
 
                 getPaymentRequestDelegate().onPaymentSuccess();
                 isoDep.close();
-                long duration = System.currentTimeMillis()-startTime;
-                Log.d(TAG, "Payment done: " + duration + " ms");
+                duration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "Payment done - total duration: " + duration + " ms");
+                
             } catch (TagLostException tle) {
                 Log.d(TAG, "Tag lost");
             } catch (Throwable e) {

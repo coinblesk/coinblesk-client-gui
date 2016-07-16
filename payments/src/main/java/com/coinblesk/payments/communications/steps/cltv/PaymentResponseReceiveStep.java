@@ -59,6 +59,7 @@ public class PaymentResponseReceiveStep extends AbstractStep {
     @Override
     @NonNull
     public DERObject process(@NonNull DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         final SignVerifyTO signTO;
         final ECKey clientPublicKey;
         final ECKey myClientKey = walletService.getMultisigClientKey();
@@ -89,6 +90,7 @@ public class PaymentResponseReceiveStep extends AbstractStep {
             DERPayloadBuilder builder = new DERPayloadBuilder();
             appendSignTO(builder, serverSignTO);
             DERObject response = builder.getAsDERSequence();
+            logStepProcess(startTime, input, response);
             return response;
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);

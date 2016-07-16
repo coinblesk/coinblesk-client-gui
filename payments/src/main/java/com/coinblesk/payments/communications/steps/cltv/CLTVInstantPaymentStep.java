@@ -50,6 +50,7 @@ public class CLTVInstantPaymentStep extends AbstractStep {
     @Override
     @Nullable
     public DERObject process(@Nullable DERObject input) throws PaymentException {
+        final long startTime = System.currentTimeMillis();
         try {
             checkState(walletServiceBinder != null, "WalletService not provided.");
             checkState(getBitcoinURI() != null, "Payment request (bitcoinURI) not provided.");
@@ -97,6 +98,8 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             Log.e(TAG, "Exception: ", e);
             throw new PaymentException(PaymentError.ERROR, e);
         }
+
+        logStepProcess(startTime, input, null);
         return null;
     }
 }

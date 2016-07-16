@@ -141,7 +141,7 @@ public class NFCClientServiceCLTV extends HostApduService {
                 return NFCUtils.KEEPALIVE;
             }
 
-            if(nextStep == ClientSteps.PAYMENT_REQUEST_RECEIVE && approveAmount!=null && bitcoinURI!=null) {
+            if(nextStep == ClientSteps.PAYMENT_REQUEST_RECEIVE && approveAmount != null && bitcoinURI != null) {
                 isProcessing = true;
                 derResponsePayload = new byte[0];
                 Thread processCommand = new Thread(new ProcessCommand(), "NFCClient.ProcessCommand");
@@ -231,7 +231,7 @@ public class NFCClientServiceCLTV extends HostApduService {
 
         @Override
         public void run() {
-            long startTime = System.currentTimeMillis();
+            long processStartTime = System.currentTimeMillis();
             ClientSteps currentStep = nextStep;
             final byte[] requestPayload = derRequestPayload;
             try {
@@ -260,14 +260,14 @@ public class NFCClientServiceCLTV extends HostApduService {
                 approveAddress = null;
                 approveAmount = null;
                 broadcastInsufficientBalance();
-                long duration = System.currentTimeMillis() - startTime;
+                long duration = System.currentTimeMillis() - processStartTime;
                 Log.d(TAG, "Payment not completed: " + duration + "ms");
                 pe.printStackTrace();
             }
             catch (Exception e) {
                 Log.w(TAG, "Exception in processing thread: ", e);
             } finally {
-                long duration = System.currentTimeMillis() - startTime;
+                long duration = System.currentTimeMillis() - processStartTime;
                 Log.d(TAG, String.format(
                                 "ProcessCommand - %s (%d ms): bitcoinURI=%s, " +
                                 "request length=%d bytes, response length=%d bytes",
@@ -283,7 +283,7 @@ public class NFCClientServiceCLTV extends HostApduService {
         walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
         broadcastInstantPaymentSuccess();
         long duration = System.currentTimeMillis() - startTime;
-        Log.d(TAG, "Payment completed: " + duration + "ms");
+        Log.d(TAG, "Payment completed: total duration " + duration + "ms");
     }
 
     private boolean handlePaymentRequestReceive(byte[] requestPayload, boolean resume) throws PaymentException, BitcoinURIParseException {
@@ -299,7 +299,7 @@ public class NFCClientServiceCLTV extends HostApduService {
         boolean isPaymentAutoAccepted = SharedPrefUtils.isPaymentAutoAcceptEnabled(NFCClientServiceCLTV.this) && SharedPrefUtils.getPaymentAutoAcceptValue(NFCClientServiceCLTV.this).isGreaterThan(bitcoinURI.getAmount());
         boolean isPaymentApproved = bitcoinURI.getAddress().toString().equals(approveAddress) && bitcoinURI.getAmount().toString().equals(approveAmount);
         if(isPaymentAutoAccepted || isPaymentApproved) {
-            Log.d(TAG, "approved!");
+            Log.d(TAG, "payment approved - isAutoAccepted: " + isPaymentAutoAccepted + ", isApproved: " + isPaymentApproved);
             PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
             DERObject result = response.process(DERObject.NULLOBJECT);
             derResponsePayload = result.serializeToDER();
