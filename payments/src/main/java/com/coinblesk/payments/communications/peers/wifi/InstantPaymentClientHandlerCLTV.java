@@ -42,6 +42,8 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private final PaymentRequestDelegate paymentRequestDelegate;
 
+    private long startTime;
+
     public InstantPaymentClientHandlerCLTV(InputStream inputStream, OutputStream outputStream,
                                            WalletService.WalletServiceBinder walletServiceBinder,
                                            PaymentRequestDelegate paymentRequestDelegate) {
@@ -52,7 +54,8 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
     @Override
     public void run() {
-        Log.d(TAG, "run: kick off");
+        startTime = System.currentTimeMillis();
+        Log.d(TAG, "run: kick off,currentTime=" + startTime);
         try {
             writeDERObject(DERObject.NULLOBJECT); // kick off the process
 
@@ -101,6 +104,8 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
             Log.d(TAG, "payment successful!");
             paymentRequestDelegate.onPaymentSuccess();
+            long duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "Payment completed in "+duration+" ms (without wifi setup)");
 
         } catch (Exception e) {
             Log.e(TAG, "Payment failed due to exception: ", e);

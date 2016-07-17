@@ -47,12 +47,16 @@ public class WiFiServer extends AbstractServer {
     private static final String SERVICE_INSTANCE = "_wifidemotest";
     private static final String SERVICE_REG_TYPE = "_presence._tcp";
 
+    private long startTime;
+    private long duration;
+
     public WiFiServer(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
     }
 
     @Override
     public void onStart() {
+        Log.d(TAG, "onStart");
         WifiManager wifiManager = (WifiManager) this.getContext().getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
         this.makeDiscoverable();
@@ -126,6 +130,7 @@ public class WiFiServer extends AbstractServer {
                     serverSocket = new ServerSocket(Constants.WIFI_SERVICE_PORT);
                     Socket socket;
                     while ((socket = serverSocket.accept()) != null && isRunning()) {
+                        final long startTime = System.currentTimeMillis();
                         Log.d(TAG, "new socket just connected");
                         // TODO: close socket and streams!
                         final Socket clientSocket = socket;
@@ -134,7 +139,8 @@ public class WiFiServer extends AbstractServer {
                                                                 new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
-
+                                long duration = System.currentTimeMillis() - startTime;
+                                Log.d(TAG, "Key exchange finished in " + duration + " ms");
                                 try {
                                     final byte[] iv = new byte[16];
                                     Arrays.fill(iv, (byte) 0x00);

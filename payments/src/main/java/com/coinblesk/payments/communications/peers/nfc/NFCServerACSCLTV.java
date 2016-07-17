@@ -133,6 +133,7 @@ public class NFCServerACSCLTV extends AbstractServer {
     public DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input,
                                    boolean needsSelectAidApdu)
             throws Exception {
+        final long startTime = System.currentTimeMillis();
         byte[] derPayload = input.serializeToDER();
         byte[] derResponse = new byte[0];
         int fragmentByte = 0;
@@ -168,8 +169,11 @@ public class NFCServerACSCLTV extends AbstractServer {
             derResponse = ClientUtils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
             Log.d(TAG, "transceiveDER - had to ask for next bytes: " + derResponse.length);
         }
-        Log.d(TAG, "transceiveDER - end transceive");
-        return DERParser.parseDER(derResponse);
+
+        DERObject response = DERParser.parseDER(derResponse);
+        long duration = System.currentTimeMillis() - startTime;
+        Log.d(TAG, "transceiveDER - end transceive - done in " + duration + " ms");
+        return response;
     }
 
     private DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input) throws Exception {
@@ -321,22 +325,34 @@ public class NFCServerACSCLTV extends AbstractServer {
         private static final String TAG = "NFCServerACSCallback";
         @Override
         public void tagDiscovered(ACSTransceiver transceiver) {
+            final long startTime = System.currentTimeMillis();
+            long duration;
             try {
                 if (getPaymentRequestUri() == null) {
                     return;
                 }
+
                 PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
                         getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 DERObject paymentResponse = transceiveDER(transceiver, paymentRequest, true);
+
+                duration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "payment request sent - duration: " + duration + " ms");
 
                 PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveCompactStep(
                         getPaymentRequestUri(), getWalletServiceBinder());
                 DERObject serverSignatures = receiveResponse.process(paymentResponse);
                 transceiveDER(transceiver, serverSignatures);
 
+                duration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "Server signatures sent - duration: " + duration + " ms");
+
                 getPaymentRequestDelegate().onPaymentSuccess();
                 transceiver.write(DERObject.NULLOBJECT.serializeToDER());
+
+                duration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "Payment completed - total duration: " + duration + " ms");
             } catch (Exception e) {
                 Log.e(TAG, "tagDiscovered - Exception: ", e);
             }
