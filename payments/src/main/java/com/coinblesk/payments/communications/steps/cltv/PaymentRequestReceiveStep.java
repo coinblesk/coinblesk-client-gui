@@ -49,6 +49,8 @@ public class PaymentRequestReceiveStep extends AbstractStep {
 
     private final NetworkParameters networkParameters;
 
+    private PaymentRequestTO paymentRequest;
+
     public PaymentRequestReceiveStep(NetworkParameters networkParameters) {
         super();
         this.networkParameters = networkParameters;
@@ -59,11 +61,11 @@ public class PaymentRequestReceiveStep extends AbstractStep {
     public DERObject process(@NonNull DERObject input) throws PaymentException {
         final long startTime = System.currentTimeMillis();
         /* deserialize payment request */
-        PaymentRequestTO request = null;
+        paymentRequest = null;
         try {
             DERSequence derSequence = (DERSequence) input;
             DERPayloadParser parser = new DERPayloadParser(derSequence);
-            request = new PaymentRequestTO()
+            paymentRequest = new PaymentRequestTO()
                     .publicKey(parser.getBytes())
                     .version(parser.getInt())
                     .address(parser.getString())
@@ -73,24 +75,24 @@ public class PaymentRequestReceiveStep extends AbstractStep {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
         }
 
-        /* message sig */
-        final ECKey payeeKey = ECKey.fromPublicOnly(request.publicKey());
-        if (!SerializeUtils.verifyJSONSignature(request, payeeKey)) {
-            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
-        }
-
-        /* protocol version */
-        if (!isProtocolVersionSupported(request.version())) {
+        /* protocol version - must check before sig verify because of new/removed properties */
+        if (!isProtocolVersionSupported(paymentRequest.version())) {
             Log.w(TAG, String.format(
                     "Protocol version not supported. ours: %d - theirs: %d",
-                    getProtocolVersion(), request.version()));
+                    getProtocolVersion(), paymentRequest.version()));
             throw new PaymentException(PaymentError.PROTOCOL_VERSION_NOT_SUPPORTED);
+        }
+
+        /* message sig */
+        final ECKey payeeKey = ECKey.fromPublicOnly(paymentRequest.publicKey());
+        if (!SerializeUtils.verifyJSONSignature(paymentRequest, payeeKey)) {
+            throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
         }
 
         /* payment address */
         final Address addressTo;
         try {
-            addressTo = Address.fromBase58(networkParameters, request.address());
+            addressTo = Address.fromBase58(networkParameters, paymentRequest.address());
             Log.d(TAG, "Received address: " + addressTo);
         } catch (WrongNetworkException e) {
             throw new PaymentException(PaymentError.WRONG_BITCOIN_NETWORK);
@@ -99,7 +101,7 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         }
 
         /* payment amount */
-        final Coin amount = Coin.valueOf(request.amount());
+        final Coin amount = Coin.valueOf(paymentRequest.amount());
         Log.d(TAG, "Received amount: " + amount);
         if (amount.isNegative() || amount.isLessThan(Constants.MIN_PAYMENT_REQUEST_AMOUNT)) {
             throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);
@@ -108,7 +110,7 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         /* output: payment request as bitcoin URI */
         try {
             String bitcoinURIStr = BitcoinURI.convertToBitcoinURI(addressTo, amount, "", "");
-            setBitcoinURI(new BitcoinURI(bitcoinURIStr));
+            setBitcoinURI(new BitcoinURI(networkParameters, bitcoinURIStr));
         } catch (BitcoinURIParseException e) {
             throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST, e);
         }
@@ -116,5 +118,9 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         Log.i(TAG, "Received payment request: " + getBitcoinURI());
         logStepProcess(startTime, input, null);
         return null;
+    }
+
+    public PaymentRequestTO paymentRequest() {
+        return paymentRequest;
     }
 }

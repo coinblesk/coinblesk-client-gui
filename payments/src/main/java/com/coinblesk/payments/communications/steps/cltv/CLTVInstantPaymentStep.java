@@ -20,14 +20,34 @@ package com.coinblesk.payments.communications.steps.cltv;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.coinblesk.client.CoinbleskWebService;
+import com.coinblesk.client.config.Constants;
 import com.coinblesk.der.DERObject;
+import com.coinblesk.json.v1.SignVerifyTO;
+import com.coinblesk.json.v1.TxSig;
+import com.coinblesk.json.v1.Type;
 import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
+import com.coinblesk.util.CoinbleskException;
+import com.coinblesk.util.InsufficientFunds;
+import com.coinblesk.util.SerializeUtils;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.WrongNetworkException;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.uri.BitcoinURI;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+import retrofit2.Response;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -37,6 +57,8 @@ public class CLTVInstantPaymentStep extends AbstractStep {
 
     private final WalletService.WalletServiceBinder walletServiceBinder;
     private Transaction transaction;
+    private List<TransactionSignature> clientTransactionSignatures;
+    private List<TransactionSignature> serverTransactionSignatures;
 
     public CLTVInstantPaymentStep(WalletService.WalletServiceBinder walletServiceBinder, BitcoinURI paymentRequest) {
         super(paymentRequest);
@@ -55,41 +77,86 @@ public class CLTVInstantPaymentStep extends AbstractStep {
             checkState(walletServiceBinder != null, "WalletService not provided.");
             checkState(getBitcoinURI() != null, "Payment request (bitcoinURI) not provided.");
 
-            /* Payment Request */
             NetworkParameters params = walletServiceBinder.getNetworkParameters();
-            PaymentRequestSendStep sendRequest = new PaymentRequestSendStep(getBitcoinURI(), walletServiceBinder.getMultisigClientKey());
-            DERObject requestOutput = sendRequest.process(null);
-            PaymentRequestReceiveStep receiveRequest = new PaymentRequestReceiveStep(params);
-            receiveRequest.process(requestOutput);
 
-            /* Payment Response */
-            PaymentResponseSendStep sendResponse = new PaymentResponseSendStep(
-                    receiveRequest.getBitcoinURI(), walletServiceBinder);
-            DERObject responseOutput = sendResponse.process(null);
+            /* payment address */
+            final Address addressTo = getBitcoinURI().getAddress();
+            /* payment amount */
+            final Coin amount = getBitcoinURI().getAmount();
+            if (amount.isNegative() || amount.isLessThan(Constants.MIN_PAYMENT_REQUEST_AMOUNT)) {
+                throw new PaymentException(PaymentError.INVALID_PAYMENT_REQUEST);
+            }
 
-            Log.i(TAG, "PaymentResponseSend: " + responseOutput.serializeToDER().length);
-            Log.i(TAG, "Transaction size: " + sendResponse.getTransaction().unsafeBitcoinSerialize().length);
+            /* create Tx and client signatures */
+            final ECKey clientKey = walletServiceBinder.getMultisigClientKey();
+            try {
+                transaction = walletServiceBinder.createTransaction(addressTo, amount);
+                clientTransactionSignatures = walletServiceBinder.signTransaction(transaction);
+            } catch (CoinbleskException e) {
+                throw new PaymentException(PaymentError.TRANSACTION_ERROR, e);
+            } catch (InsufficientFunds e) {
+                throw new PaymentException(PaymentError.INSUFFICIENT_FUNDS, e);
+            }
 
-            PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveStep(
-                    getBitcoinURI(), walletServiceBinder);
-            receiveResponse.verifyPayeeSig(false); // since not user-to-user payment
-            DERObject serverOutput = receiveResponse.process(responseOutput);
+            /* prepare server request */
+            final SignVerifyTO signTO = new SignVerifyTO()
+                    .currentDate(System.currentTimeMillis())
+                    .publicKey(clientKey.getPubKey())
+                    .transaction(transaction.unsafeBitcoinSerialize())
+                    .signatures(SerializeUtils.serializeSignatures(clientTransactionSignatures));
+            SerializeUtils.signJSON(signTO, clientKey);
 
-            /* Server Signatures */
-            PaymentServerSignatureReceiveStep receiveSignatures = new PaymentServerSignatureReceiveStep();
-            receiveSignatures.process(serverOutput);
+            Log.i(TAG, "Transaction size: " + signTO.transaction().length);
+
+
+            /* execute server request and handle response */
+            final Response<SignVerifyTO> serverResponse;
+            try {
+                final CoinbleskWebService service = walletServiceBinder.getCoinbleskService();
+                serverResponse = service.signVerify(signTO).execute();
+            } catch (IOException e) {
+                throw new PaymentException(PaymentError.SERVER_ERROR, e.getMessage());
+            }
+
+            if (!serverResponse.isSuccessful()) {
+                throw new PaymentException(PaymentError.SERVER_ERROR,
+                        "HTTP code: " + serverResponse.code());
+            }
+
+            final SignVerifyTO serverSignTO = serverResponse.body();
+            if (!serverSignTO.isSuccess()) {
+                throw new PaymentException(PaymentError.SERVER_ERROR,
+                        "Code: " + serverSignTO.type().toString());
+            }
+
+            /* verify signature */
+            final ECKey serverKey = walletServiceBinder.getMultisigServerKey();
+            if (!Arrays.equals(
+                    serverKey.getPubKey(), serverSignTO.publicKey())) {
+                throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+            }
+            if (!SerializeUtils.verifyJSONSignature(serverSignTO, serverKey)) {
+                throw new PaymentException(PaymentError.MESSAGE_SIGNATURE_ERROR);
+            }
+
+            serverTransactionSignatures = SerializeUtils.deserializeSignatures(serverSignTO.signatures());
 
             /* Payment Finalize */
+            // note: We could access serverSignTO.transaction(), but this step does additional checks.
             PaymentFinalizeStep finalizeStep = new PaymentFinalizeStep(
-                    receiveRequest.getBitcoinURI(),
-                    sendResponse.getTransaction(),
-                    sendResponse.getClientTransactionSignatures(),
-                    receiveSignatures.getServerTransactionSignatures(),
+                    getBitcoinURI(),
+                    transaction,
+                    clientTransactionSignatures,
+                    serverTransactionSignatures,
                     walletServiceBinder);
             finalizeStep.process(null);
 
             transaction = finalizeStep.getTransaction();
 
+            if (serverSignTO.type() == Type.SUCCESS_INSTANT) {
+                String txHash = transaction.getHashAsString();
+                walletServiceBinder.markTransactionInstant(txHash);
+            }
 
         } catch (PaymentException pex) {
             Log.e(TAG, "Exception: ", pex);

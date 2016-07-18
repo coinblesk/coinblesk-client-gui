@@ -67,6 +67,8 @@ public class PaymentResponseReceiveStep extends AbstractStep {
             DERSequence inputSequence = (DERSequence) input;
             DERPayloadParser parser = new DERPayloadParser(inputSequence);
             signTO = extractSignTO(parser);
+            // TODO: check (1) address correct, (2) amount correct, (3) payee PubKey is mine.
+            // add our public key and signature
             signSignTO(signTO, myClientKey);
             clientPublicKey = ECKey.fromPublicOnly(signTO.publicKey());
         } catch (Exception e) {
@@ -97,20 +99,24 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         }
     }
 
-    private void signSignTO(SignVerifyTO signTO, ECKey clientKey) {
-        signTO.payeePublicKey(clientKey.getPubKey());
-        TxSig payeeSig = SerializeUtils.signJSONRaw(signTO, clientKey);
+    private void signSignTO(SignVerifyTO signTO, ECKey signKey) {
+        signTO.payeePublicKey(signKey.getPubKey());
+        TxSig payeeSig = SerializeUtils.signJSONRaw(signTO, signKey);
         signTO.payeeMessageSig(payeeSig);
     }
 
     @NonNull
     private SignVerifyTO serverSignVerify(SignVerifyTO signTO) throws PaymentException {
         final Response<SignVerifyTO> serverResponse;
+        long serverCallStart = System.currentTimeMillis();
         try {
             final CoinbleskWebService service = walletService.getCoinbleskService();
             serverResponse = service.signVerify(signTO).execute();
         } catch (IOException e) {
             throw new PaymentException(PaymentError.SERVER_ERROR, e.getMessage());
+        } finally {
+            long serverCallDuration = System.currentTimeMillis() - serverCallStart;
+            Log.d(TAG, "Server call done in " + serverCallDuration + " ms");
         }
 
         if (!serverResponse.isSuccessful()) {
@@ -155,9 +161,9 @@ public class PaymentResponseReceiveStep extends AbstractStep {
     }
 
     private void appendSignTO(DERPayloadBuilder builder, SignVerifyTO signTO) {
-        builder
-            .add(signTO.type().nr())
-            .add(signTO.signatures());
+        builder.add(signTO.type().nr())
+                .add(signTO.signatures())
+                .add(signTO.messageSig());
     }
 
     protected SignVerifyTO extractSignTO(DERPayloadParser parser) {
@@ -166,16 +172,7 @@ public class PaymentResponseReceiveStep extends AbstractStep {
         byte[] serializedTx = parser.getBytes();
         List<TxSig> signatures = parser.getTxSigList();
         TxSig messageSig = parser.getTxSig();
-
-        // TODO: check that (1) payment is sent to my address and (2) amount is correct.
-        // maybe do it after receiving request from server.
-        // Transaction tx;
-        // TransactioOutput = txOut;
-        // if (txOut.getValue() != getBitcoinURI().getAmount().longValue() || !txOut.get...equals(getBitcoinURI().getAddress()) {
-        //      fail!
-        // }
-
-
+        
         SignVerifyTO signTO = new SignVerifyTO()
                 .currentDate(currentDate)
                 .publicKey(publicKey)

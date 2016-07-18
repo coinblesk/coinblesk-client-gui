@@ -321,7 +321,7 @@ public class NFCClientServiceCLTV extends HostApduService {
     }
 
     private void handlePaymentFinalize(byte[] payload) throws PaymentException {
-        PaymentServerSignatureReceiveStep step = new PaymentServerSignatureReceiveStep();
+        PaymentServerSignatureReceiveStep step = new PaymentServerSignatureReceiveStep(walletServiceBinder);
         DERObject input = DERParser.parseDER(payload);
         step.process(input);
 

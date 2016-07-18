@@ -140,6 +140,7 @@ public class NFCServerCLTV extends AbstractServer {
         @Override
         public void onTagDiscovered(Tag tag) {
             Log.d(TAG, "onTagDiscovered: " + tag);
+
             final long startTime = System.currentTimeMillis();
             long duration;
 
@@ -152,7 +153,7 @@ public class NFCServerCLTV extends AbstractServer {
                 final AtomicReference<DERObject> paymentAck = new AtomicReference<>();
                 Thread authorization = null;
 
-                Log.d(TAG, "first transmit: payment request, currentTimeMs=" + startTime);
+                Log.d(TAG, "first transmit: payment request, startTime(ms)=" + startTime);
                 PaymentRequestSendStep paymentRequestSendStep = new PaymentRequestSendStep(
                         getPaymentRequestUri(),
                         getWalletServiceBinder().getMultisigClientKey());
@@ -163,6 +164,8 @@ public class NFCServerCLTV extends AbstractServer {
 
                 while (!done) {
                     if (paymentRequestOutput != null && authorization == null && outputPaymentResponseReceive.get() == null) {
+                        duration = System.currentTimeMillis() - startTime;
+                        Log.d(TAG, "handle payment request response (duration: "+duration+" ms)");
                         Runnable runnable = new PaymentResponseReceiveRunnable(paymentRequestOutput, outputPaymentResponseReceive);
                         authorization = new Thread(runnable, "NFCServer.PaymentResponseReceive");
                         authorization.start();

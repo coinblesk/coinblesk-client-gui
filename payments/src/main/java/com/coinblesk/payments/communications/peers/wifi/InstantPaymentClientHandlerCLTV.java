@@ -82,7 +82,7 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
             /* 4. RECEIVE SIGANTURES */
             DERObject serverSignatures = readDERObject();
-            PaymentServerSignatureReceiveStep paymentServerSignatures = new PaymentServerSignatureReceiveStep();
+            PaymentServerSignatureReceiveStep paymentServerSignatures = new PaymentServerSignatureReceiveStep(walletServiceBinder);
             paymentServerSignatures.process(serverSignatures);
 
             /* 5. FINALIZE PAYMENT (TX) */

@@ -21,16 +21,19 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.coinblesk.client.utils.ClientUtils;
-import com.coinblesk.json.v1.TxSig;
-import com.coinblesk.json.v1.Type;
+import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERSequence;
+import com.coinblesk.json.v1.SignVerifyTO;
+import com.coinblesk.json.v1.TxSig;
+import com.coinblesk.json.v1.Type;
+import com.coinblesk.payments.WalletService;
 import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
-import com.coinblesk.client.utils.DERPayloadParser;
 import com.coinblesk.util.SerializeUtils;
 
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
 
 import java.util.List;
@@ -41,10 +44,13 @@ import java.util.List;
 public class PaymentServerSignatureReceiveStep extends AbstractStep {
     private final static String TAG = PaymentServerSignatureReceiveStep.class.getName();
 
+    private final WalletService.WalletServiceBinder walletService;
+    private SignVerifyTO serverResponse;
     private List<TransactionSignature> serverTransactionSignatures;
 
-    public PaymentServerSignatureReceiveStep() {
+    public PaymentServerSignatureReceiveStep(WalletService.WalletServiceBinder walletService) {
         super();
+        this.walletService = walletService;
     }
 
     public List<TransactionSignature> getServerTransactionSignatures() {
@@ -57,23 +63,50 @@ public class PaymentServerSignatureReceiveStep extends AbstractStep {
         final long startTime = System.currentTimeMillis();
         final Type responseType;
         final List<TxSig> serializedServerSigs;
+        final TxSig messageSig;
         try {
             DERSequence derSequence = (DERSequence) input;
             DERPayloadParser parser = new DERPayloadParser(derSequence);
+
             responseType = Type.get(parser.getInt());
             serializedServerSigs = parser.getTxSigList();
+            messageSig = parser.getTxSig();
         } catch (Exception e) {
             throw new PaymentException(PaymentError.DER_SERIALIZE_ERROR, e);
         }
 
-        if (responseType.isError()) {
+        final ECKey serverKey = walletService.getMultisigServerKey();
+
+        serverResponse = new SignVerifyTO()
+                .publicKey(serverKey.getPubKey())
+                .type(responseType)
+                .signatures(serializedServerSigs)
+                .messageSig(messageSig);
+
+        if (responseType.isSuccess()) {
+            Log.d(TAG, "Server responded with success: " + responseType);
+        } else {
             Log.w(TAG, "Server responded with an error: " + responseType);
             throw new PaymentException(PaymentError.SERVER_ERROR, "Code: " + responseType.toString());
         }
 
         serverTransactionSignatures = SerializeUtils.deserializeSignatures(serializedServerSigs);
 
+        /*
+        if (serverResponse.type() == Type.SUCCESS_INSTANT) {
+            String txHash = new Transaction(
+                    walletService.getNetworkParameters(),
+                    serverResponse.transaction())
+                    .getHashAsString();
+            walletService.markTransactionInstant(txHash);
+        }
+        */
+
         logStepProcess(startTime, input, null);
         return null;
+    }
+
+    public SignVerifyTO serverResponse() {
+        return serverResponse;
     }
 }

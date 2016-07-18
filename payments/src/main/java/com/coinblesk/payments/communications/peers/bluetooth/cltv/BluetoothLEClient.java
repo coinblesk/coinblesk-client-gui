@@ -220,7 +220,7 @@ public class BluetoothLEClient extends AbstractClient {
                         case 1:
                         /* 4. RECEIVE SIGANTURES */
                             DERObject serverSignatures = DERParser.parseDER(derRequestPayload);
-                            paymentServerSignatures = new PaymentServerSignatureReceiveStep();
+                            paymentServerSignatures = new PaymentServerSignatureReceiveStep(getWalletServiceBinder());
                             paymentServerSignatures.process(serverSignatures);
 
                         /* 5. FINALIZE PAYMENT (TX) */
