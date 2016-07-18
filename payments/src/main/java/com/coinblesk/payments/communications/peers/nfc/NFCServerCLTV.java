@@ -165,7 +165,7 @@ public class NFCServerCLTV extends AbstractServer {
                 while (!done) {
                     if (paymentRequestOutput != null && authorization == null && outputPaymentResponseReceive.get() == null) {
                         duration = System.currentTimeMillis() - startTime;
-                        Log.d(TAG, "handle payment request response (duration: "+duration+" ms)");
+                        Log.d(TAG, "got payment response ("+duration+" ms since startTime)");
                         Runnable runnable = new PaymentResponseReceiveRunnable(paymentRequestOutput, outputPaymentResponseReceive);
                         authorization = new Thread(runnable, "NFCServer.PaymentResponseReceive");
                         authorization.start();
@@ -174,7 +174,7 @@ public class NFCServerCLTV extends AbstractServer {
 
                     if (outputPaymentResponseReceive.get() != null && paymentAck.get() == null) {
                         duration = System.currentTimeMillis() - startTime;
-                        Log.d(TAG, "got response, tx from client and signatures from server (duration: "+duration+" ms)");
+                        Log.d(TAG, "send server response ("+duration+" ms since startTime)");
                         DERObject toSend = outputPaymentResponseReceive.get();
                         DERObject ackResponse = transceiveDER(isoDep, toSend);
                         paymentAck.set(ackResponse);
@@ -183,7 +183,7 @@ public class NFCServerCLTV extends AbstractServer {
 
                     if (paymentAck.get() != null) {
                         duration = System.currentTimeMillis() - startTime;
-                        Log.d(TAG, "Send final ACK (duration: "+duration+" ms)");
+                        Log.d(TAG, "Send final ACK ("+duration+" ms since startTime)");
                         isoDep.transceive(DERObject.NULLOBJECT.serializeToDER());
                         done = true;
                         continue;
@@ -197,7 +197,7 @@ public class NFCServerCLTV extends AbstractServer {
                 getPaymentRequestDelegate().onPaymentSuccess();
                 isoDep.close();
                 duration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, "Payment done - total duration: " + duration + " ms");
+                Log.d(TAG, "Payment finished - total duration: " + duration + " ms");
                 
             } catch (TagLostException tle) {
                 Log.d(TAG, "Tag lost");

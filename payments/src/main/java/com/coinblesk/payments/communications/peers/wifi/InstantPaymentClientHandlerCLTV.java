@@ -54,8 +54,9 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
     @Override
     public void run() {
+        long duration;
         startTime = System.currentTimeMillis();
-        Log.d(TAG, "run: kick off,currentTime=" + startTime);
+        Log.d(TAG, "run: kick off, startTime=" + startTime);
         try {
             writeDERObject(DERObject.NULLOBJECT); // kick off the process
 
@@ -80,8 +81,14 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
             DERObject paymentResponse = paymentResponseSend.process(DERObject.NULLOBJECT);
             writeDERObject(paymentResponse);
 
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "Sent payment response - duration "+duration+" ms since startTime");
+
             /* 4. RECEIVE SIGANTURES */
             DERObject serverSignatures = readDERObject();
+
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "Got response with signatures - duration " + duration + " ms since startTime");
             PaymentServerSignatureReceiveStep paymentServerSignatures = new PaymentServerSignatureReceiveStep(walletServiceBinder);
             paymentServerSignatures.process(serverSignatures);
 
@@ -102,11 +109,10 @@ public class InstantPaymentClientHandlerCLTV extends DERObjectStreamHandler {
 
             walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
 
-            Log.d(TAG, "payment successful!");
-            paymentRequestDelegate.onPaymentSuccess();
-            long duration = System.currentTimeMillis() - startTime;
-            Log.d(TAG, "Payment completed in "+duration+" ms (without wifi setup)");
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "Payment finished - total duration: "+duration+" ms (without wifi setup / key exchange)");
 
+            paymentRequestDelegate.onPaymentSuccess();
         } catch (Exception e) {
             Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());

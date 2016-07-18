@@ -332,27 +332,31 @@ public class NFCServerACSCLTV extends AbstractServer {
                     return;
                 }
 
+                Log.d(TAG, "Send payment request - startTime(ms)=" + startTime);
                 PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
                         getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
                 DERObject paymentRequest = paymentRequestSend.process(DERObject.NULLOBJECT);
                 DERObject paymentResponse = transceiveDER(transceiver, paymentRequest, true);
 
                 duration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, "payment request sent - duration: " + duration + " ms");
+                Log.d(TAG, "got payment response (" + duration + " ms since startTime)");
 
                 PaymentResponseReceiveStep receiveResponse = new PaymentResponseReceiveCompactStep(
                         getPaymentRequestUri(), getWalletServiceBinder());
                 DERObject serverSignatures = receiveResponse.process(paymentResponse);
+
+                duration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "send server response (" + duration + " ms since startTime)");
                 transceiveDER(transceiver, serverSignatures);
 
                 duration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, "Server signatures sent - duration: " + duration + " ms");
+                Log.d(TAG, "Server signatures sent (" + duration + " ms since startTime)");
 
                 getPaymentRequestDelegate().onPaymentSuccess();
                 transceiver.write(DERObject.NULLOBJECT.serializeToDER());
 
                 duration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, "Payment completed - total duration: " + duration + " ms");
+                Log.d(TAG, "Payment finished - total duration: " + duration + " ms");
             } catch (Exception e) {
                 Log.e(TAG, "tagDiscovered - Exception: ", e);
             }

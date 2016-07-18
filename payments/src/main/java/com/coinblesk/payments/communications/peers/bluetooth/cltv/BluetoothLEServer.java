@@ -214,7 +214,7 @@ public class BluetoothLEServer extends AbstractServer {
         byte[] derRequestPayload = new byte[0];
         byte[] derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
         int stepCounter = 0;
-        long startTime = 0;
+        long startTime;
 
         private byte[] getNextFragment() {
             int fragLen = Math.min(derResponsePayload.length, BluetoothLE.MAX_FRAGMENT_SIZE);
@@ -265,7 +265,11 @@ public class BluetoothLEServer extends AbstractServer {
 
             PaymentState paymentState = new PaymentState();
             paymentState.startTime = System.currentTimeMillis();
+
             connectedDevices.put(device.getAddress(), paymentState);
+
+            Log.d(TAG, String.format("Send payment request to device=%s, startTime(ms)=%d",
+                    device.getAddress(), paymentState.startTime));
 
             PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(
                     getPaymentRequestUri(), getWalletServiceBinder().getMultisigClientKey());
@@ -308,6 +312,7 @@ public class BluetoothLEServer extends AbstractServer {
                                                             byte[] value) {
             try {
                 PaymentState paymentState = connectedDevices.get(device.getAddress());
+                long duration;
 
                 Log.d(TAG, String.format("%s - onCharacteristicWriteRequest - length=%d bytes, duration=%d ms",
                         device.getAddress(), value.length, (System.currentTimeMillis()-paymentState.startTime)));
@@ -319,17 +324,28 @@ public class BluetoothLEServer extends AbstractServer {
                     final byte[] requestPayload = paymentState.derRequestPayload;
                     paymentState.derRequestPayload = new byte[0];
                     switch (paymentState.stepCounter++) {
+
                         case 0:
-                            Log.d(TAG, device.getAddress() + " - process payment response.");
+                            duration = System.currentTimeMillis() - paymentState.startTime;
+                            Log.d(TAG, String.format("%s - got payment response (%d ms since startTime)",
+                                    device.getAddress(), duration));
+
                             DERObject paymentResponse = DERParser.parseDER(requestPayload);
                             PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(
                                     getPaymentRequestUri(), getWalletServiceBinder());
                             DERObject serverSignatures = paymentResponseReceive.process(paymentResponse);
                             paymentState.derResponsePayload = serverSignatures.serializeToDER();
+
+                            duration = System.currentTimeMillis() - paymentState.startTime;
+                            Log.d(TAG, String.format("%s - send server response (%d ms since startTime)",
+                                    device.getAddress(), duration));
                             break;
+
                         case 1:
-                            long duration = System.currentTimeMillis() - paymentState.startTime;
-                            Log.d(TAG, device.getAddress() + " - payment finished - total duration: " + duration + " ms");
+                            duration = System.currentTimeMillis() - paymentState.startTime;
+                            Log.d(TAG,  String.format("%s - payment finished - total duration: %d",
+                                    device.getAddress(), duration));
+
                             getPaymentRequestDelegate().onPaymentSuccess();
                             break;
                     }

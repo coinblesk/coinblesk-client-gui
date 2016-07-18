@@ -139,8 +139,6 @@ public class WiFiServer extends AbstractServer {
                                                                 new OnResultListener<SecretKeySpec>() {
                             @Override
                             public void onSuccess(SecretKeySpec secretKeySpec) {
-                                long duration = System.currentTimeMillis() - startTime;
-                                Log.d(TAG, "Key exchange finished in " + duration + " ms");
                                 try {
                                     final byte[] iv = new byte[16];
                                     Arrays.fill(iv, (byte) 0x00);
@@ -154,6 +152,10 @@ public class WiFiServer extends AbstractServer {
 
                                     final OutputStream encrytpedOutputStream = new CipherOutputStream(clientSocket.getOutputStream(), writeCipher);
                                     final InputStream encryptedInputStream = new CipherInputStream(clientSocket.getInputStream(), readCipher);
+
+                                    long duration = System.currentTimeMillis() - startTime;
+                                    Log.d(TAG, "Key exchange finished in " + duration + " ms");
+
                                     new Thread(new InstantPaymentServerHandlerCLTV(
                                             encryptedInputStream,
                                             encrytpedOutputStream,

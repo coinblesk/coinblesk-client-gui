@@ -90,8 +90,8 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
     @Override
     public void onStart() {
-        Log.d(TAG, "onStart");
         startTime = System.currentTimeMillis();
+        Log.d(TAG, "onStart - startTime = " + startTime);
         singleThreadExecutor = Executors.newSingleThreadExecutor();
 
         WifiManager wifiManager = (WifiManager) this.getContext().getSystemService(Context.WIFI_SERVICE);
@@ -201,8 +201,6 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
         private class OnKeyExchange implements OnResultListener<SecretKeySpec> {
             @Override
             public void onSuccess(SecretKeySpec secretKeySpec) {
-                duration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, "OnKeyExchange: exchange successful (duration "+duration+" ms)");
                 try {
                     final byte[] iv = new byte[16];
                     Arrays.fill(iv, (byte) 0x00);
@@ -216,6 +214,9 @@ public class WiFiClient extends AbstractClient implements WifiP2pManager.Connect
 
                     final InputStream encryptedInputStream = new CipherInputStream(socket.getInputStream(), readCipher);
                     final OutputStream encrytpedOutputStream = new CipherOutputStream(socket.getOutputStream(), writeCipher);
+
+                    duration = System.currentTimeMillis() - startTime;
+                    Log.d(TAG, "OnKeyExchange: key exchange successful ("+duration+" ms since startTime)");
 
                     Log.d(TAG, "Start WifiDirect payment handler");
                     Thread t = new Thread(

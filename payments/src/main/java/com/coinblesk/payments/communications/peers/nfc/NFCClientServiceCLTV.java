@@ -268,10 +268,11 @@ public class NFCClientServiceCLTV extends HostApduService {
                 Log.w(TAG, "Exception in processing thread: ", e);
             } finally {
                 long duration = System.currentTimeMillis() - processStartTime;
+                long totalDuration = System.currentTimeMillis() - startTime;
                 Log.d(TAG, String.format(
-                                "ProcessCommand - %s (%d ms): bitcoinURI=%s, " +
+                                "ProcessCommand - %s (%d ms, %d since startTime): bitcoinURI=%s, " +
                                 "request length=%d bytes, response length=%d bytes",
-                                currentStep.toString(), duration, bitcoinURI,
+                                currentStep.toString(), duration, totalDuration, bitcoinURI,
                                 requestPayload.length, derResponsePayload.length));
             }
         }

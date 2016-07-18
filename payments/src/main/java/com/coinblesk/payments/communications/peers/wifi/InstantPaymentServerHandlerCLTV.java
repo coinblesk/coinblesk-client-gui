@@ -53,6 +53,8 @@ public class InstantPaymentServerHandlerCLTV extends DERObjectStreamHandler {
     @Override
     public void run() {
         final long startTime = System.currentTimeMillis();
+        long duration;
+        Log.d(TAG, "Send payment request - startTime=" + startTime);
         try {
 
             final PaymentRequestSendStep paymentRequestSend = new PaymentRequestSendStep(paymentRequestURI, walletServiceBinder.getMultisigClientKey());
@@ -61,26 +63,26 @@ public class InstantPaymentServerHandlerCLTV extends DERObjectStreamHandler {
             writeDERObject(paymentRequest);
 
             DERObject paymentResponse = readDERObject();
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "got payment response (" + duration + " ms since startTime)");
+
             PaymentResponseReceiveStep paymentResponseReceive = new PaymentResponseReceiveStep(
                     paymentRequestURI, walletServiceBinder);
             DERObject serverSignatures = paymentResponseReceive.process(paymentResponse);
-            writeDERObject(serverSignatures);
 
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "send server response (" + duration + " ms since startTime)");
+
+            writeDERObject(serverSignatures);
             DERObject finalAck = readDERObject();
             closeStreams();
-            /*
-            // TODO: assemble tx? should we get the tx full tx and broadcast it?
-            Transaction transaction;
-            walletServiceBinder.commitAndBroadcastTransaction(transaction);
-            */
-            Log.d(TAG, "payment was successful!");
+
+            duration = System.currentTimeMillis() - startTime;
+            Log.d(TAG, "Payment finished - total duration: " + duration + " ms (without wifi setup / key exchange)");
             paymentRequestDelegate.onPaymentSuccess();
         } catch (Exception e) {
             Log.e(TAG, "Payment failed due to exception: ", e);
             paymentRequestDelegate.onPaymentError(e.getMessage());
-        } finally {
-            long duration = System.currentTimeMillis() - startTime;
-            Log.d(TAG, "InstantPaymentServerHandlerCLTV completed in " + duration + "ms");
         }
     }
 }
