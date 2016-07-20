@@ -11,6 +11,7 @@ import com.coinblesk.client.CoinbleskWebService;
 import com.coinblesk.util.SerializeUtils;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -36,20 +37,36 @@ public class AdditionalServiceUtils {
         if("".equals(cookie)) {
             RETROFIT_SESSION = new Retrofit.Builder()
                     .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
+                    .client(new OkHttpClient()
+                            .newBuilder()
+                            .addInterceptor(new LanguageInterceptor())
+                            .build())
                     .baseUrl(appConfig.getCoinbleskServerUrl()).build();
         } else {
             RETROFIT_SESSION = new Retrofit.Builder()
                     .addConverterFactory(GsonConverterFactory.create(SerializeUtils.GSON))
-                    .client(jsessionClient(activity))
+                    .client(new OkHttpClient()
+                            .newBuilder()
+                            .addInterceptor(new HeaderInterceptor(SharedPrefUtils.getJSessionID(activity)))
+                            .addInterceptor(new LanguageInterceptor())
+                            .build())
                     .baseUrl(appConfig.getCoinbleskServerUrl()).build();
         }
     }
 
-    private static final OkHttpClient jsessionClient(Context context) {
-        final OkHttpClient okHttpClient = new OkHttpClient();
-        String jSessionID = SharedPrefUtils.getJSessionID(context);
-        return okHttpClient.newBuilder().addInterceptor(new HeaderInterceptor(jSessionID)).build();
-    };
+    private static class LanguageInterceptor implements Interceptor {
+        private final String lang = Locale.getDefault().getLanguage();
+        @Override
+        public okhttp3.Response intercept(Chain chain)
+                throws IOException {
+            Request request = chain.request();
+            request = request.newBuilder()
+                    .addHeader("Accept-Language", lang)
+                    .build();
+            okhttp3.Response response = chain.proceed(request);
+            return response;
+        }
+    }
 
     private static class HeaderInterceptor implements Interceptor {
         final private String jSessionID;

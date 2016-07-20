@@ -68,7 +68,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     @Override
                     public void onTaskCompleted(boolean success, String message) {
                         if (success) {
-                            toast(R.string.additional_services_login_success);
+                            toastAndQuit(R.string.additional_services_login_success, d);
                         } else {
                             if (message == null) {
                                 toast(R.string.additional_services_login_user_password_incorrect);
@@ -76,7 +76,6 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 toast(R.string.additional_services_login_error, message);
                             }
                         }
-                        d.dismiss();
                     }
                 }).execute(new Pair<String, String>(
                         usernameText.getText().toString(), passwordText.getText().toString()));
@@ -88,7 +87,6 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             d.setOnShowListener(new DialogInterface.OnShowListener() {
                 @Override
                 public void onShow(DialogInterface dialog) {
-
                     Button b = d.getButton(AlertDialog.BUTTON_NEUTRAL);
                     b.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -97,11 +95,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
                                     if (success) {
-                                        toast(R.string.additional_services_logout_success);
+                                        toastAndQuit(R.string.additional_services_logout_success, d);
                                     } else {
                                         toast(R.string.additional_services_logout_error, message);
                                     }
-                                    d.dismiss();
                                 }
                             }).execute();
 
@@ -125,11 +122,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
                                     if (success) {
-                                        toast(R.string.additional_services_signup_success);
+                                        toastAndQuit(R.string.additional_services_signup_success, d);
                                     } else {
                                         toast(R.string.additional_services_signup_error, message);
                                     }
-                                    d.dismiss();
                                 }
                             }).execute(new Pair<String, String>(
                                     usernameText.getText().toString(), passwordText.getText().toString()));
@@ -138,11 +134,21 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     });
                     Button b1 = d.getButton(AlertDialog.BUTTON_POSITIVE);
                     b1.setOnClickListener(okClickListener);
-
                 }
             });
             return d;
         }
+    }
+
+    private void toastAndQuit(final int text, final AlertDialog d) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String resolved = getActivity().getResources().getString(text);
+                Toast.makeText(getActivity(), resolved, Toast.LENGTH_LONG).show();
+                d.dismiss();
+            }
+        });
     }
 
     private void toast(final int text) {
@@ -151,6 +157,17 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             public void run() {
                 String resolved = getActivity().getResources().getString(text);
                 Toast.makeText(getActivity(), resolved, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void toastAndQuit(final int text, final String msg, final AlertDialog d) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String resolved = getActivity().getResources().getString(text);
+                Toast.makeText(getActivity(), resolved + msg, Toast.LENGTH_LONG).show();
+                d.dismiss();
             }
         });
     }
