@@ -6,14 +6,20 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
+import com.coinblesk.json.v1.UserAccountTO;
 import com.coinblesk.util.Pair;
 
 /**
@@ -23,33 +29,68 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
 
     private static final String TAG = AdditionalServicesUsernameDialog.class.getName();
 
-    private AdditionalServicesActivity.AdditionalServiceGUIState listener;
-    private Activity parent;
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+    }
 
-    public AdditionalServicesUsernameDialog setData(AdditionalServicesActivity.AdditionalServiceGUIState listener) {
-        this.listener = listener;
-        return this;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        new AdditionalServicesTasks.GetAccountTask(listener).execute();
+        new AdditionalServicesTasks.GetAccountTask(getActivity()).execute();
     }
 
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    public Dialog onCreateDialog(final Bundle savedInstanceState) {
 
+        UserAccountTO userAccountTO = (UserAccountTO) getArguments().getSerializable("");
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.additional_services_username_password, null);
         final EditText usernameText = (EditText) view.findViewById(R.id.additional_services_username);
         final EditText passwordText = (EditText) view.findViewById(R.id.additional_services_password);
-        final boolean isLoggedin = listener != null && listener.userAccountTO() != null && listener.userAccountTO().isSuccess();
+        final EditText passwordText2 = (EditText) view.findViewById(R.id.additional_services_second_password);
+        final TextInputLayout layout = (TextInputLayout) view.findViewById(R.id.additional_services_second_password_layout);
+        final boolean isLoggedin = userAccountTO != null && userAccountTO.isSuccess();
         if (isLoggedin) {
-            usernameText.setText(listener.userAccountTO().email());
+            usernameText.setText(userAccountTO.email());
             passwordText.setText("******");
         }
 
+        final CheckBox checkBoxSingle = (CheckBox) view.findViewById(R.id.additional_services_checkBox1);
+        checkBoxSingle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // checkbox status is changed from uncheck to checked.
+                if (!isChecked) {
+                    // show password
+                    passwordText.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else {
+                    // hide password
+                    passwordText.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                }
+            }
+        });
+
+        final CheckBox checkBoxBoth = (CheckBox) view.findViewById(R.id.additional_services_checkBox2);
+        checkBoxBoth.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // checkbox status is changed from uncheck to checked.
+                if (!isChecked) {
+                    // show password
+                    passwordText.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                    passwordText2.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else {
+                    // hide password
+                    passwordText.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                    passwordText2.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                }
+            }
+        });
+        final CheckBox checkBoxForgot = (CheckBox) view.findViewById(R.id.additional_services_button);
 
         Log.d(TAG, "onCreateDialog with address=" + usernameText.getText().toString());
 
@@ -64,21 +105,34 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
         final View.OnClickListener okClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
-                    @Override
-                    public void onTaskCompleted(boolean success, String message) {
-                        if (success) {
-                            toastAndQuit(R.string.additional_services_login_success, d);
-                        } else {
-                            if (message == null) {
-                                toast(R.string.additional_services_login_user_password_incorrect);
+                if(checkBoxForgot.isChecked()) {
+                    new AdditionalServicesTasks.ForgotTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
+                        @Override
+                        public void onTaskCompleted(boolean success, String message) {
+                            if (success) {
+                                toastAndQuit(R.string.additional_services_forgot_success, d);
                             } else {
-                                toast(R.string.additional_services_login_error, message);
+                                toast(R.string.additional_services_forgot_error, message);
                             }
                         }
-                    }
-                }).execute(new Pair<String, String>(
-                        usernameText.getText().toString(), passwordText.getText().toString()));
+                    }).execute(usernameText.getText().toString());
+                } else {
+                    new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
+                        @Override
+                        public void onTaskCompleted(boolean success, String message) {
+                            if (success) {
+                                toastAndQuit(R.string.additional_services_login_success, d);
+                            } else {
+                                if (message == null) {
+                                    toast(R.string.additional_services_login_user_password_incorrect);
+                                } else {
+                                    toast(R.string.additional_services_login_error, message);
+                                }
+                            }
+                        }
+                    }).execute(new Pair<String, String>(
+                            usernameText.getText().toString(), passwordText.getText().toString()));
+                }
             }
         };
 
@@ -95,6 +149,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
                                     if (success) {
+                                        getArguments().putSerializable("", null);
                                         toastAndQuit(R.string.additional_services_logout_success, d);
                                     } else {
                                         toast(R.string.additional_services_logout_error, message);
@@ -118,17 +173,26 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     b.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            new AdditionalServicesTasks.SignupTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
-                                @Override
-                                public void onTaskCompleted(boolean success, String message) {
-                                    if (success) {
-                                        toastAndQuit(R.string.additional_services_signup_success, d);
-                                    } else {
-                                        toast(R.string.additional_services_signup_error, message);
+
+                            if(layout.getVisibility() == View.GONE) {
+                                layout.setVisibility(View.VISIBLE);
+                                checkBoxSingle.setVisibility(View.GONE);
+                            } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
+                                toast(R.string.additional_services_password_mismatch);
+                            }
+                            else {
+                                new AdditionalServicesTasks.SignupTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
+                                    @Override
+                                    public void onTaskCompleted(boolean success, String message) {
+                                        if (success) {
+                                            toastAndQuit(R.string.additional_services_signup_success, d);
+                                        } else {
+                                            toast(R.string.additional_services_signup_error, message);
+                                        }
                                     }
-                                }
-                            }).execute(new Pair<String, String>(
-                                    usernameText.getText().toString(), passwordText.getText().toString()));
+                                }).execute(new Pair<String, String>(
+                                        usernameText.getText().toString(), passwordText.getText().toString()));
+                            }
 
                         }
                     });
@@ -181,4 +245,5 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             }
         });
     }
+
 }

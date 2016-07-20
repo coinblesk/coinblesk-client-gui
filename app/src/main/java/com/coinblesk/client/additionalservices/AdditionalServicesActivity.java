@@ -1,7 +1,6 @@
 package com.coinblesk.client.additionalservices;
 
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,19 +10,10 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.CheckBox;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.coinblesk.client.R;
-import com.coinblesk.json.v1.UserAccountTO;
 import com.coinblesk.payments.WalletService;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.BtcFormat;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class AdditionalServicesActivity extends AppCompatActivity {
     private final static String TAG = AdditionalServicesActivity.class.getName();
@@ -55,19 +45,20 @@ public class AdditionalServicesActivity extends AppCompatActivity {
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
+        private AdditionalServicesAdapter adapter;
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
             Log.d(TAG, "onServiceConnected");
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            AdditionalServiceGUIState state = new AdditionalServiceGUIState(AdditionalServicesActivity.this);
-            new AdditionalServicesTasks.GetAccountTask(state).execute();
-            AdditionalServicesAdapter adapter = new AdditionalServicesAdapter(AdditionalServicesActivity.this, walletServiceBinder, state);
+            new AdditionalServicesTasks.GetAccountTask(AdditionalServicesActivity.this).execute();
+            adapter = new AdditionalServicesAdapter(AdditionalServicesActivity.this, walletServiceBinder);
             ListView listView = (ListView) findViewById(R.id.additional_services_list);
             listView.setAdapter(adapter);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName className) {
+            adapter.onStop();
             walletServiceBinder = null;
         }
     };
@@ -77,78 +68,5 @@ public class AdditionalServicesActivity extends AppCompatActivity {
         Log.d(TAG, "onStop");
         super.onStop();
         this.unbindService(serviceConnection);
-    }
-
-    static class AdditionalServiceGUIState {
-
-        final private Activity activity;
-
-        private List<CheckBox> checkBoxes = new ArrayList<>(2);
-        private UserAccountTO userAccountTO;
-        private List<TextView> balances  = new ArrayList<>(2);
-        private List<TextView> textViews  = new ArrayList<>(2);
-
-        public AdditionalServiceGUIState(Activity activity) {
-            this.activity = activity;
-        }
-
-        public AdditionalServiceGUIState addCheckBox(CheckBox checkBox) {
-            checkBoxes.add(checkBox);
-            updateState();
-            return this;
-        }
-
-        public AdditionalServiceGUIState addBalance(TextView balance) {
-            balances.add(balance);
-            updateState();
-            return this;
-        }
-
-        public AdditionalServiceGUIState addTextView(TextView balance) {
-            textViews.add(balance);
-            updateState();
-            return this;
-        }
-
-        public UserAccountTO userAccountTO() {
-            return userAccountTO;
-        }
-
-        public AdditionalServiceGUIState userAccountTO(UserAccountTO userAccountTO) {
-            this.userAccountTO = userAccountTO;
-            updateState();
-            return this;
-        }
-
-        private void updateState() {
-            activity.runOnUiThread(new Runnable() {
-                public void run() {
-                    boolean success = false;
-                    for(CheckBox checkBox:checkBoxes) {
-                        if (userAccountTO != null && checkBox != null) {
-                            checkBox.setEnabled(true);
-                            checkBox.setChecked(userAccountTO.isSuccess());
-                            success = true;
-                        } else if (checkBox != null) {
-                            checkBox.setEnabled(false);
-                            checkBox.setChecked(false);
-                        }
-                    }
-
-                    for(TextView textView:textViews) {
-                        textView.setText(success? R.string.additional_services_titel_logout : R.string.additional_services_titel);
-                    }
-
-                    for(TextView balance:balances) {
-                        if (userAccountTO != null && balance != null) {
-                            Coin coin = Coin.valueOf(userAccountTO.balance());
-                            balance.setText(coin.toFriendlyString());
-                        } else if (balance != null) {
-                            balance.setText( R.string.additional_services_no_balance);
-                        }
-                    }
-                }
-            });
-        }
     }
 }

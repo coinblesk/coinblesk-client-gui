@@ -25,10 +25,12 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 /**
  * @author Andreas Albrecht
  * @author Alessandro De Carli
+ * @author Thomas Bocek
  *
  */
 public interface CoinbleskWebService {
@@ -77,4 +79,6 @@ public interface CoinbleskWebService {
     @GET("v1/user/auth/logout")
     Call<UserAccountStatusTO> logout();
 
+    @GET("v1/user/forgot/{email}")
+    Call<UserAccountStatusTO> forgot(@Path("email") String email);
 }

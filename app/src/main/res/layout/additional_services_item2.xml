@@ -8,7 +8,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-
         android:text="@string/additional_services_balance"
         android:textSize="18sp"
         android:singleLine="true"
@@ -17,21 +16,18 @@
 
     <TextView
         android:id="@+id/additional_services_balance"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-
         android:gravity="center_vertical"
         android:text="@string/additional_services_balance_default"
-
         android:textSize="18sp"
-        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
         android:layout_alignParentRight="true" />
 
     <TextView
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:layout_alignParentLeft="false"
-
         android:ellipsize="marquee"
         android:singleLine="true"
         android:text="@string/additional_services_description_2"
@@ -41,7 +37,8 @@
         android:layout_alignParentStart="false"
         android:layout_below="@+id/additional_services_label"
         android:layout_alignParentBottom="true"
-        android:gravity="left|bottom" />
+        android:gravity="left|bottom"
+        android:layout_alignParentRight="false" />
 
 
 

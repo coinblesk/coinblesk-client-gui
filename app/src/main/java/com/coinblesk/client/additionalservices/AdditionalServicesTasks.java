@@ -1,7 +1,10 @@
 package com.coinblesk.client.additionalservices;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.json.v1.BaseTO;
@@ -14,6 +17,7 @@ import org.bitcoinj.core.ECKey;
 
 import java.io.IOException;
 
+import okhttp3.Interceptor;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -25,26 +29,29 @@ public class AdditionalServicesTasks {
 
     public static class GetAccountTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final AdditionalServicesActivity.AdditionalServiceGUIState listener;
+        private final Context context;
 
-        public GetAccountTask(AdditionalServicesActivity.AdditionalServiceGUIState listener) {
-            this.listener = listener;
+        public GetAccountTask(Context context) {
+            this.context = context;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService();
             Call<UserAccountTO> res = coinbleskWebService.getAccount();
+            Intent i = new Intent(AdditionalServicesAdapter.BROADCAST_UI);
             try {
                 Response<UserAccountTO> resp = res.execute();
+
                 if(resp.isSuccessful()) {
                     UserAccountTO to = resp.body();
-                    listener.userAccountTO(to);
+                    i.putExtra("", to);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(i);
                 } else {
-                    listener.userAccountTO(null);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(i);
                 }
             } catch (IOException e) {
-                listener.userAccountTO(null);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(i);
             }
             return true;
         }
@@ -52,11 +59,11 @@ public class AdditionalServicesTasks {
 
     public static class TransferP2SHTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final AdditionalServicesActivity.AdditionalServiceGUIState listener;
+        private final Context context;
         private final ECKey clientKey;
-        public TransferP2SHTask(ECKey clientKey, AdditionalServicesActivity.AdditionalServiceGUIState listener) {
+        public TransferP2SHTask(ECKey clientKey, Context context) {
             this.clientKey = clientKey;
-            this.listener = listener;
+            this.context = context;
         }
 
         @Override
@@ -65,17 +72,18 @@ public class AdditionalServicesTasks {
             BaseTO b = new BaseTO();
             b.publicKey(clientKey.getPubKey());
             Call<UserAccountTO> res = coinbleskWebService.transferToP2SH(b);
-
+            Intent i = new Intent(AdditionalServicesAdapter.BROADCAST_UI);
             try {
                 UserAccountTO to = res.execute().body();
                 if (to.isSuccess()) {
-                    listener.userAccountTO(to);
+                    i.putExtra("", to);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(i);
 
                 } else {
-                    listener.userAccountTO(null);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(i);
                 }
             } catch (IOException e) {
-                listener.userAccountTO(null);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(i);
             }
             return true;
         }
@@ -102,6 +110,38 @@ public class AdditionalServicesTasks {
                         .email(pair.element0())
                         .password(pair.element1());
                 Call<UserAccountStatusTO> result = coinbleskService.signUp(to);
+                try {
+                    Response<UserAccountStatusTO> res =result.execute();
+                    if(res.body().isSuccess()) {
+                        callback.onTaskCompleted(true, null);
+                    } else {
+                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        callback.onTaskCompleted(false, msg);
+                    }
+
+                } catch (IOException e) {
+                    callback.onTaskCompleted(false, e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    }
+
+    public static class ForgotTask extends AsyncTask<String, Void, Boolean> {
+
+        final private Activity activity;
+        final private OnTaskCompleted callback;
+        public ForgotTask(Activity activity, OnTaskCompleted callback) {
+            this.activity = activity;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(String... emails) {
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
+            for(String email:emails) {
+                Call<UserAccountStatusTO> result = coinbleskService.forgot(email);
                 try {
                     Response<UserAccountStatusTO> res =result.execute();
                     if(res.body().isSuccess()) {

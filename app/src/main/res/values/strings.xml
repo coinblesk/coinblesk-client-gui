@@ -377,7 +377,7 @@
     <string name="additional_services_balance_default">0 BTC</string>
     <string name="logout">Logout</string>
     <string name="additional_services_titel_logout">Logged in. Tap to Logout</string>
-    <string name="additional_services_description_2">Transfer your BTC from coinblesk 1 to current version</string>
+    <string name="additional_services_description_2">Transfer BTC from old coinblesk to current version</string>
     <string name="additional_services_login_success">Login success</string>
     <string name="additional_services_login_user_password_incorrect">Password/username incorrect</string>
     <string name="additional_services_login_error">Login Error:</string>
@@ -386,7 +386,7 @@
     <string name="additional_services_signup_error">Signup Error: </string>
     <string name="additional_services_signup_success">Confirmation email sent</string>
     <string name="additional_services_curr">BTC</string>
-    <string name="additional_services_no_balance">no balance</string>
+    <string name="additional_services_no_balance">not logged in</string>
 
     <string name="testnet_warning">Connected to: %1$s</string>
     <string name="additional_services_description_3">Transfer Balance</string>
@@ -397,5 +397,11 @@
     <string name="unknown">unknown</string>
     <string name="estimated_fee">Estimated fee</string>
     <string name="request_payment">Allow Payment</string>
+    <string name="additional_services_second_password">Confirm password</string>
+    <string name="additional_services_show_password">Show password</string>
+    <string name="additional_services_password_mismatch">Passwords do not match</string>
+    <string name="additional_services_forgot_password">Forgot password?</string>
+    <string name="additional_services_forgot_error">Password reset did not succeed</string>
+    <string name="additional_services_forgot_success">Password reset mail sent</string>
 
 </resources>
