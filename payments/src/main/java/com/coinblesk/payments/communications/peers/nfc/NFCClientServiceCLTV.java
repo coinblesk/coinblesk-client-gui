@@ -284,7 +284,7 @@ public class NFCClientServiceCLTV extends HostApduService {
         walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
         broadcastInstantPaymentSuccess();
         long duration = System.currentTimeMillis() - startTime;
-        Log.d(TAG, "Payment completed: total duration " + duration + "ms");
+        Log.d(TAG, "Payment completed: total duration " + duration + " ms");
     }
 
     private boolean handlePaymentRequestReceive(byte[] requestPayload, boolean resume) throws PaymentException, BitcoinURIParseException {
