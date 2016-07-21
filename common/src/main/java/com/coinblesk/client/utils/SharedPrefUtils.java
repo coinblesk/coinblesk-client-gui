@@ -268,6 +268,20 @@ public final class SharedPrefUtils {
         return getPrimaryBalance(context).equals(context.getString(R.string.pref_balance_bitcoin));
     }
 
+    public static boolean setBitcoinPrimaryBalance(Context context) {
+        setString(context,
+                context.getString(R.string.pref_balance_list),
+                context.getString(R.string.pref_balance_bitcoin));
+        return true;
+    }
+
+    public static boolean setFiatPrimaryBalance(Context context) {
+        setString(context,
+                context.getString(R.string.pref_balance_list),
+                context.getString(R.string.pref_balance_fiat));
+        return true;
+    }
+
     public static boolean isFiatPrimaryBalance(Context context) {
         return !isBitcoinPrimaryBalance(context);
     }

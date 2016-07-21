@@ -47,8 +47,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:id="@+id/balance_switch_image_view"
-                            style="@style/balance_switch_image_view"
+                            android:id="@+id/amount_switch_image_view"
+                            style="@style/amount_switch_image_view"
                             android:layout_width="match_parent"
                             android:layout_height="30dp"
                             android:layout_gravity="center_vertical"
@@ -58,8 +58,9 @@
                             android:duplicateParentState="true"/>
 
                         <TextView
-                            android:id="@+id/balance_large"
+                            android:id="@+id/amount_large_text_view"
                             style="@style/card_view_large_text_view"
+                            android:textSize="@dimen/text_size_large"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_toRightOf="@+id/balance_switch_image_view"
@@ -67,8 +68,8 @@
                             android:singleLine="true"
                             android:text="0.00 BTC" />
 
-                        <Space
-                            android:id="@+id/balance_switch_image_view1"
+                        <ImageView
+                            android:id="@+id/amount_backspace_image_view"
                             style="@style/amount_backspace_image_view"
                             android:layout_width="match_parent"
                             android:layout_height="25dp"
@@ -83,8 +84,9 @@
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/balance_small"
+                    android:id="@+id/amount_small_text_view"
                     style="@style/card_view_small_textview"
+                    android:layout_below="@+id/amount_large_text_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1.75"
@@ -107,4 +109,5 @@
         android:layout_margin="8dp"
         android:indeterminate="false"
         android:visibility="gone" />
+
 </LinearLayout>

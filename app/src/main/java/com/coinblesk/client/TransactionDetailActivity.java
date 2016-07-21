@@ -101,7 +101,6 @@ public class TransactionDetailActivity extends AppCompatActivity {
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         IntentFilter filter = new IntentFilter(Constants.WALLET_TRANSACTION_CONFIDENCE_CHANGED_ACTION);
-        filter.addAction(Constants.WALLET_INIT_DONE_ACTION);
         filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(walletBalanceChangeBroadcastReceiver, filter);
     }

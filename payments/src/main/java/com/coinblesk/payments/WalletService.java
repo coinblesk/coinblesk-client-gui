@@ -200,7 +200,6 @@ public class WalletService extends Service {
                     initAddresses();
 
                     appKitInitDone = true;
-                    broadcastWalletServiceInitDone();
                     broadcastBalanceChanged();
                 } catch (Exception e) {
                     String errorMessage = "Error during wallet initialization: " + e.getMessage();
@@ -827,11 +826,6 @@ public class WalletService extends Service {
 
     private CoinbleskWebService getCoinbleskService() {
         return appConfig.getCoinbleskService();
-    }
-
-    private void broadcastWalletServiceInitDone() {
-        Intent initDone = new Intent(Constants.WALLET_INIT_DONE_ACTION);
-        getLocalBroadcaster().sendBroadcast(initDone);
     }
 
     private void broadcastWalletError(String errorMessage) {

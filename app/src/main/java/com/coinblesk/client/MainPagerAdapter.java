@@ -42,13 +42,13 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return BalanceFragment.newInstance();
+                return SimpleFragment.newInstance(R.layout.fragment_balance);
             case 1:
                 return SendPaymentFragment.newInstance();
             case 2:
                 return ReceivePaymentFragment.newInstance();
             default:
-                return BalanceFragment.newInstance();
+                return SimpleFragment.newInstance(R.layout.fragment_balance);
         }
     }
 

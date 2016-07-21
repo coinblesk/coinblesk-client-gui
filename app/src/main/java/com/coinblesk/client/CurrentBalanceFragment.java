@@ -31,11 +31,13 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.utils.ClientUtils;
+import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.payments.WalletService;
 
@@ -91,6 +93,19 @@ public class CurrentBalanceFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_balance_current, container, false);
+
+        ImageView switcher  = (ImageView) view.findViewById(R.id.balance_switch_image_view);
+        switcher.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(SharedPrefUtils.isBitcoinPrimaryBalance(getContext())) {
+                    SharedPrefUtils.setFiatPrimaryBalance(getContext());
+                } else {
+                    SharedPrefUtils.setBitcoinPrimaryBalance(getContext());
+                }
+                refreshBalance();
+            }
+        });
         return view;
     }
 

@@ -418,7 +418,6 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(startClientsBroadcastReceiver, new IntentFilter(Constants.START_CLIENTS_ACTION));
         broadcastManager.registerReceiver(stopClientsBroadcastReceiver, new IntentFilter(Constants.STOP_CLIENTS_ACTION));
         broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
-        broadcastManager.registerReceiver(walletServiceInitDone, new IntentFilter(Constants.WALLET_INIT_DONE_ACTION));
         broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
 
         broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
@@ -446,7 +445,6 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.unregisterReceiver(startClientsBroadcastReceiver);
         broadcastManager.unregisterReceiver(stopClientsBroadcastReceiver);
         broadcastManager.unregisterReceiver(startServersBroadcastReceiver);
-        broadcastManager.unregisterReceiver(walletServiceInitDone);
 
         broadcastManager.unregisterReceiver(instantPaymentSuccessListener);
 
@@ -468,6 +466,15 @@ public class MainActivity extends AppCompatActivity
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             initPeers();
+
+            if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
+                new Multisig2of2ToCltvForwardTask(MainActivity.this,
+                        walletServiceBinder,
+                        walletServiceBinder.getMultisigClientKey(),
+                        walletServiceBinder.getMultisigServerKey())
+                        .execute();
+            }
+
         }
 
         @Override
@@ -518,19 +525,6 @@ public class MainActivity extends AppCompatActivity
     /**
      * Communication part starts here
      */
-
-    private final BroadcastReceiver walletServiceInitDone = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
-                new Multisig2of2ToCltvForwardTask(MainActivity.this,
-                        walletServiceBinder,
-                        walletServiceBinder.getMultisigClientKey(),
-                        walletServiceBinder.getMultisigServerKey())
-                    .execute();
-            }
-        }
-    };
 
     private final BroadcastReceiver walletServiceError = new BroadcastReceiver() {
         @Override

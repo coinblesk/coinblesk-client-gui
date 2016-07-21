@@ -6,8 +6,14 @@
     android:clickable="true"
     android:orientation="vertical">
 
-    <include layout="@layout/amount" />
+    <include layout="@layout/fragment_balance_keyboard"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1.3" />
 
-    <include layout="@layout/keyboard" />
+    <include layout="@layout/keyboard"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
 
 </LinearLayout>

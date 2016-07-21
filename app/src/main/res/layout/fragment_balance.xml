@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <FrameLayout
-        android:id="@+id/current_balance_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="0px"
-        android:layout_weight="1" />
+    <fragment
+        android:id="@+id/fragment_balance1"
+        android:name="com.coinblesk.client.CurrentBalanceFragment"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1.3"
+        tools:layout="@layout/fragment_balance_current" />
+    <fragment
+        android:id="@+id/fragment_balance2"
+        android:name="com.coinblesk.client.HistoryFragment"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        tools:layout="@layout/fragment_history" />-->
 
-    <FrameLayout
-        android:id="@+id/history_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="0px"
-        android:layout_weight="1.2857" />
 
 </LinearLayout>
 

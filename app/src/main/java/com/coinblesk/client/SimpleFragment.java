@@ -17,40 +17,42 @@
 package com.coinblesk.client;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Created by ckiller on 10/01/16.
+ * http://stackoverflow.com/questions/14083950/duplicate-id-tag-null-or-parent-id-with-another-fragment-for-com-google-androi
  */
-public class BalanceFragment extends Fragment {
+public class SimpleFragment extends Fragment {
 
-    public static BalanceFragment newInstance() {
-        return new BalanceFragment();
+    private View view;
+
+    public static Fragment newInstance(int layout) {
+        SimpleFragment simpleFragment = new SimpleFragment();
+        Bundle args = new Bundle();
+        args.putInt("", layout);
+        simpleFragment.setArguments(args);
+        return simpleFragment;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_balance, container, false);
+        int layout = getArguments().getInt("");
+        if (view != null) {
+            ViewGroup parent = (ViewGroup) view.getParent();
+            if (parent != null)
+                parent.removeView(view);
+        }
+        try {
+            view = inflater.inflate(layout, container, false);
+        } catch (InflateException e) {
+        /* map is already there, just return view as it is */
+        }
         return view;
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        insertNestedFragment();
-    }
-
-    // Embeds the child fragment dynamically
-    private void insertNestedFragment() {
-        Fragment balanceCurrent_childFragment = CurrentBalanceFragment.newInstance();
-        Fragment history_childFragment = new HistoryFragment();
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction
-                .replace(R.id.current_balance_fragment, balanceCurrent_childFragment)
-                .replace(R.id.history_fragment, history_childFragment)
-                .commit();
     }
 }
