@@ -16,6 +16,8 @@ import com.coinblesk.util.Pair;
 import org.bitcoinj.core.ECKey;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 import okhttp3.Interceptor;
 import okhttp3.ResponseBody;
@@ -140,11 +142,11 @@ public class AdditionalServicesTasks {
         @Override
         protected Boolean doInBackground(String... emails) {
             CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
-            for(String email:emails) {
+            for (String email : emails) {
                 Call<UserAccountStatusTO> result = coinbleskService.forgot(email);
                 try {
-                    Response<UserAccountStatusTO> res =result.execute();
-                    if(res.body().isSuccess()) {
+                    Response<UserAccountStatusTO> res = result.execute();
+                    if (res.body().isSuccess()) {
                         callback.onTaskCompleted(true, null);
                     } else {
                         String msg = ClientUtils.getMessageByType(activity, res.body());

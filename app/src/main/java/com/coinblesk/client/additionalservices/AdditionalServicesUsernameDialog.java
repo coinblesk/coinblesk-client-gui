@@ -95,6 +95,8 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             checkBoxForgot.setVisibility(View.INVISIBLE);
         }
 
+
+
         Log.d(TAG, "onCreateDialog with address=" + usernameText.getText().toString());
 
         final AlertDialog d = new AlertDialog.Builder(getActivity())
@@ -104,6 +106,23 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setNeutralButton(isLoggedin? R.string.logout : R.string.signup, null)
                 .create();
+
+        checkBoxForgot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                if(checked) {
+                    passwordText.setVisibility(View.INVISIBLE);
+                    checkBoxSingle.setVisibility(View.INVISIBLE);
+                    //TODO remove PW text
+                } else {
+                    passwordText.setVisibility(View.VISIBLE);
+                    checkBoxSingle.setVisibility(View.VISIBLE);
+
+                }
+
+                d.getButton(AlertDialog.BUTTON_NEUTRAL).setVisibility(checked ? View.INVISIBLE: View.VISIBLE);
+            }
+        });
 
         final View.OnClickListener okClickListener = new View.OnClickListener() {
             @Override
@@ -123,18 +142,29 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     }).execute(usernameText.getText().toString());
                 } else if (isLoggedin) {
                     //change password
-                    new AdditionalServicesTasks.ChangePassword(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
-                        @Override
-                        public void onTaskCompleted(boolean success, String message) {
-                            if (success) {
-                                toastAndQuit(R.string.additional_services_change_success, d);
-                            } else {
-                                toast(R.string.additional_services_change_error, message);
+                    if(layout.getVisibility() == View.GONE) {
+                        layout.setVisibility(View.VISIBLE);
+                        checkBoxSingle.setVisibility(View.GONE);
+                        checkBoxForgot.setVisibility(View.GONE);
+                        d.getButton(AlertDialog.BUTTON_NEUTRAL).setVisibility(View.INVISIBLE);
+                    } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
+                        toast(R.string.additional_services_password_mismatch);
+                    }
+                    else {
+                        new AdditionalServicesTasks.ChangePassword(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
+                            @Override
+                            public void onTaskCompleted(boolean success, String message) {
+                                if (success) {
+                                    toastAndQuit(R.string.additional_services_change_success, d);
+                                } else {
+                                    toast(R.string.additional_services_change_error, message);
+                                }
                             }
-                        }
-                    }).execute(new Pair<String, String>(usernameText.getText().toString(), passwordText.getText().toString()));
+                        }).execute(new Pair<String, String>(usernameText.getText().toString(), passwordText.getText().toString()));
+                    }
                 }
                 else {
+                    //login
                     new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
                         public void onTaskCompleted(boolean success, String message) {
@@ -195,6 +225,8 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                             if(layout.getVisibility() == View.GONE) {
                                 layout.setVisibility(View.VISIBLE);
                                 checkBoxSingle.setVisibility(View.GONE);
+                                checkBoxForgot.setVisibility(View.GONE);
+                                d.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.INVISIBLE);
                             } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
                                 toast(R.string.additional_services_password_mismatch);
                             }
