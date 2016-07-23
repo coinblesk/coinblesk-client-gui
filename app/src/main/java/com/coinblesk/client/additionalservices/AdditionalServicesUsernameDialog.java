@@ -58,7 +58,6 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
         final boolean isLoggedin = userAccountTO != null && userAccountTO.isSuccess();
         if (isLoggedin) {
             usernameText.setText(userAccountTO.email());
-            passwordText.setText("******");
         }
 
         final CheckBox checkBoxSingle = (CheckBox) view.findViewById(R.id.additional_services_checkBox1);
@@ -91,13 +90,17 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             }
         });
         final CheckBox checkBoxForgot = (CheckBox) view.findViewById(R.id.additional_services_button);
+        if (isLoggedin) {
+            usernameText.setText(userAccountTO.email());
+            checkBoxForgot.setVisibility(View.INVISIBLE);
+        }
 
         Log.d(TAG, "onCreateDialog with address=" + usernameText.getText().toString());
 
         final AlertDialog d = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.login_signup)
                 .setView(view)
-                .setPositiveButton(R.string.ok, null)
+                .setPositiveButton(isLoggedin? R.string.additional_services_change : R.string.ok, null)
                 .setNegativeButton(R.string.cancel, null)
                 .setNeutralButton(isLoggedin? R.string.logout : R.string.signup, null)
                 .create();
@@ -105,7 +108,9 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
         final View.OnClickListener okClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if(checkBoxForgot.isChecked()) {
+                    //send new password
                     new AdditionalServicesTasks.ForgotTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
                         public void onTaskCompleted(boolean success, String message) {
@@ -116,7 +121,20 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                             }
                         }
                     }).execute(usernameText.getText().toString());
-                } else {
+                } else if (isLoggedin) {
+                    //change password
+                    new AdditionalServicesTasks.ChangePassword(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
+                        @Override
+                        public void onTaskCompleted(boolean success, String message) {
+                            if (success) {
+                                toastAndQuit(R.string.additional_services_change_success, d);
+                            } else {
+                                toast(R.string.additional_services_change_error, message);
+                            }
+                        }
+                    }).execute(new Pair<String, String>(usernameText.getText().toString(), passwordText.getText().toString()));
+                }
+                else {
                     new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
                         public void onTaskCompleted(boolean success, String message) {

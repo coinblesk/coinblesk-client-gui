@@ -403,5 +403,8 @@
     <string name="additional_services_forgot_password">Forgot password?</string>
     <string name="additional_services_forgot_error">Password reset did not succeed</string>
     <string name="additional_services_forgot_success">Password reset mail sent</string>
+    <string name="additional_services_change">Change PW</string>
+    <string name="additional_services_change_success">Password changed success</string>
+    <string name="additional_services_change_error">Password change failed</string>
 
 </resources>

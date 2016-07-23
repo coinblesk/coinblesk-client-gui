@@ -81,4 +81,7 @@ public interface CoinbleskWebService {
 
     @GET("v1/user/forgot/{email}")
     Call<UserAccountStatusTO> forgot(@Path("email") String email);
+
+    @POST("v1/user/auth/change-password")
+    Call<UserAccountStatusTO> changePassword(@Body UserAccountTO request);
 }

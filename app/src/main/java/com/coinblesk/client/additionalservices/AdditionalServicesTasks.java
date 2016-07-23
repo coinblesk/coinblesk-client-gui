@@ -160,6 +160,42 @@ public class AdditionalServicesTasks {
         }
     }
 
+    public static class ChangePassword extends AsyncTask<Pair<String,String>, Void, Boolean> {
+
+        final private Activity activity;
+        final private OnTaskCompleted callback;
+        public ChangePassword(Activity activity, OnTaskCompleted callback) {
+            this.activity = activity;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Pair<String,String>... pairs) {
+            CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
+            for(Pair<String,String> pair:pairs) {
+                UserAccountTO to = new UserAccountTO()
+                        .email(pair.element0())
+                        .password(pair.element1());
+                Call<UserAccountStatusTO> result = coinbleskService.changePassword(to);
+                try {
+                    Response<UserAccountStatusTO> res =result.execute();
+                    if(res.body().isSuccess()) {
+                        callback.onTaskCompleted(true, null);
+                    } else {
+                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        callback.onTaskCompleted(false, msg);
+                    }
+
+                } catch (IOException e) {
+                    callback.onTaskCompleted(false, e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+
+    }
+
     public static class LogoutTask extends AsyncTask<Void, Void, Boolean> {
 
         final private Activity activity;
@@ -224,6 +260,7 @@ public class AdditionalServicesTasks {
             return true;
         }
     }
+
 
 
 }
