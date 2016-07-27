@@ -69,25 +69,12 @@ public class NFCServerACSCLTV extends AbstractServer {
 
     public NFCServerACSCLTV(Context context, WalletService.WalletServiceBinder walletServiceBinder) {
         super(context, walletServiceBinder);
-
-        UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-        reader = new Reader(manager);
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_USB_PERMISSION);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        broadcastReceiver = new USBBroadcastReceiver();
-        getContext().registerReceiver(broadcastReceiver, filter);
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        getContext().unregisterReceiver(broadcastReceiver);
     }
 
     @Override
     public boolean isSupported() {
+        UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
+        Reader reader = new Reader(manager);
         return hasClass("com.acs.smartcard.Reader") && isExternalReaderAttached(reader, getContext());
     }
 
@@ -100,8 +87,21 @@ public class NFCServerACSCLTV extends AbstractServer {
         try {
             Log.d(TAG, "Starting ACS now");
 
+            UsbManager manager = (UsbManager) getContext().getSystemService(Context.USB_SERVICE);
+            reader = new Reader(manager);
+
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ACTION_USB_PERMISSION);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+            broadcastReceiver = new USBBroadcastReceiver();
+            getContext().registerReceiver(broadcastReceiver, filter);
+
+            Log.d(TAG, "Starting ACS, create transceiver");
+
             ACSTransceiver  transceiver = createTransceiver(reader, getContext());
             NFCServerACSCallback callback = new NFCServerACSCallbackImpl();
+            setRunning(true);
             reader.setOnStateChangeListener(new ReaderStateChangeListener(transceiver, callback));
         } catch (IOException e) {
             Log.e(TAG, "Exception ", e);
@@ -110,24 +110,20 @@ public class NFCServerACSCLTV extends AbstractServer {
 
     @Override
     public void onStop() {
+        Log.d(TAG, "stopping ACS transceiver");
+
         setPaymentRequestUri(null);
-        //reader.close();
         reader.setOnStateChangeListener(null);
-        // TODO: close reader? unregister receiver?
-/*        try {
-            if (!this.isRunning()) {
-                Log.d(TAG, "Already turned off ACS");
-            }
-            Log.d(TAG, "Turn off ACS");
-            if (reader != null && reader.isOpened()) {
+        if (reader != null) {
+            try {
                 reader.close();
-                reader = null;
-                Log.d(TAG, "Reader closed");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            getContext().unregisterReceiver(broadcastReceiver);
-            this.setRunning(false);
-        } catch (Exception e) {
-        }*/
+        }
+        getContext().unregisterReceiver(broadcastReceiver);
+        setRunning(false);
+
     }
 
     public DERObject transceiveDER(ACSTransceiver acsTransceiver, DERObject input,
@@ -140,35 +136,39 @@ public class NFCServerACSCLTV extends AbstractServer {
 
         Log.d(TAG, "transceiveDER - start transceive, needsSelectAidApdu=" + needsSelectAidApdu +
                 ", payload=" + derPayload.length + " bytes");
-        while (fragmentByte < derPayload.length) {
-            byte[] fragment = new byte[0];
-            if (needsSelectAidApdu) {
-                acsTransceiver.write(createSelectAidApdu(AID_ANDROID_ACS));
-                needsSelectAidApdu = false;
+
+
+        //if (isRunning()) {
+            while (fragmentByte < derPayload.length) {
+                byte[] fragment = new byte[0];
+                if (needsSelectAidApdu) {
+                    acsTransceiver.write(createSelectAidApdu(AID_ANDROID_ACS));
+                    needsSelectAidApdu = false;
+                }
+
+                int end = Math.min(derPayload.length, fragmentByte + ACS_MAX_FRAGMENT_SIZE);
+                byte[] data = Arrays.copyOfRange(derPayload, fragmentByte, end);
+                fragment = ClientUtils.concatBytes(fragment, data);
+
+                Log.d(TAG, "transceiveDER - about to send fragment size: " + fragment.length);
+                derResponse = acsTransceiver.write(fragment);
+                Log.d(TAG, "transceiveDER - my client received payload: " + Arrays.toString(derResponse));
+                fragmentByte += fragment.length;
             }
 
-            int end = Math.min(derPayload.length, fragmentByte + ACS_MAX_FRAGMENT_SIZE);
-            byte[] data = Arrays.copyOfRange(derPayload, fragmentByte, end);
-            fragment = ClientUtils.concatBytes(fragment, data);
+            while (Arrays.equals(derResponse, KEEPALIVE)) {
+                derResponse = acsTransceiver.write(KEEPALIVE);
+            }
 
-            Log.d(TAG, "transceiveDER - about to send fragment size: " + fragment.length);
-            derResponse = acsTransceiver.write(fragment);
-            Log.d(TAG, "transceiveDER - my client received payload: " + Arrays.toString(derResponse));
-            fragmentByte += fragment.length;
-        }
+            int responseLength = DERParser.extractPayloadEndIndex(derResponse);
+            Log.d(TAG, "transceiveDER - expected response lenght: " + responseLength);
+            Log.d(TAG, "transceiveDER - actual response lenght: " + derResponse.length);
 
-        while (Arrays.equals(derResponse, KEEPALIVE)) {
-            derResponse = acsTransceiver.write(KEEPALIVE);
-        }
-
-        int responseLength = DERParser.extractPayloadEndIndex(derResponse);
-        Log.d(TAG, "transceiveDER - expected response lenght: " + responseLength);
-        Log.d(TAG, "transceiveDER - actual response lenght: " + derResponse.length);
-
-        while (derResponse.length < responseLength) {
-            derResponse = ClientUtils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
-            Log.d(TAG, "transceiveDER - had to ask for next bytes: " + derResponse.length);
-        }
+            while (derResponse.length < responseLength) {
+                derResponse = ClientUtils.concatBytes(derResponse, acsTransceiver.write(KEEPALIVE));
+                Log.d(TAG, "transceiveDER - had to ask for next bytes: " + derResponse.length);
+            }
+        //}
 
         DERObject response = DERParser.parseDER(derResponse);
         long duration = System.currentTimeMillis() - startTime;
@@ -279,7 +279,7 @@ public class NFCServerACSCLTV extends AbstractServer {
         return null;
     }
 
-    private static class ReaderStateChangeListener implements Reader.OnStateChangeListener {
+    private class ReaderStateChangeListener implements Reader.OnStateChangeListener {
         private final ACSTransceiver transceiver;
         private final NFCServerACSCallback callback;
 
@@ -294,6 +294,7 @@ public class NFCServerACSCLTV extends AbstractServer {
                         @Override
                         public void run() {
                             callback.tagDiscovered(transceiver);
+                            Log.d(TAG, "Callback done1");
                         }
                     }).start();
 
@@ -304,6 +305,7 @@ public class NFCServerACSCLTV extends AbstractServer {
             }
         }
 
+        @Override
         public void onStateChange(int slotNum, int prevState, int currState) {
             Log.d(TAG, "statechange from: " + prevState + " to: " + currState);
 
@@ -311,6 +313,7 @@ public class NFCServerACSCLTV extends AbstractServer {
                 try {
                     transceiver.initCard(slotNum);
                     callback.tagDiscovered(transceiver);
+                    Log.d(TAG, "Callback done2");
                 } catch (ReaderException e) {
                     Log.e(TAG, "Could not connnect reader (ReaderException): ", e);
                     callback.tagFailed();
@@ -353,7 +356,6 @@ public class NFCServerACSCLTV extends AbstractServer {
                 Log.d(TAG, "Server signatures sent (" + duration + " ms since startTime)");
 
                 getPaymentRequestDelegate().onPaymentSuccess();
-                transceiver.write(DERObject.NULLOBJECT.serializeToDER());
 
                 duration = System.currentTimeMillis() - startTime;
                 Log.d(TAG, "Payment finished - total duration: " + duration + " ms");

@@ -51,7 +51,7 @@ public class SimpleFragment extends Fragment {
         try {
             view = inflater.inflate(layout, container, false);
         } catch (InflateException e) {
-        /* map is already there, just return view as it is */
+         // map is already there, just return view as it is
         }
         return view;
     }

@@ -44,6 +44,7 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class NFCClientServiceCLTV extends HostApduService {
     private final static String TAG = NFCClientServiceCLTV.class.getName();
+    private final static Object LOCK = new Object();
 
     private long startTime;
 
@@ -67,20 +68,33 @@ public class NFCClientServiceCLTV extends HostApduService {
 
     private boolean bound = false;
 
+    private BroadcastReceiver approvedReceiver =  new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "got approved, set local variables");
+            approveAddress = intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS);
+            approveAmount = intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT);
+            isProcessing = false;
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
         LocalBroadcastManager.getInstance(this).registerReceiver(
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        Log.d(TAG, "got approved, set local variables");
-                        approveAddress = intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS);
-                        approveAmount = intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT);
-                        isProcessing = false;
-                    }
-                },
-                new IntentFilter(Constants.PAYMENT_REQUEST_APPROVED));
+                approvedReceiver, new IntentFilter(Constants.PAYMENT_REQUEST_APPROVED));
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(approvedReceiver);
+        Log.d(TAG, "onDestroy");
+        if(bound) {
+            unbindService(serviceConnection);
+            bound = false;
+        }
     }
 
     @Override
@@ -89,16 +103,6 @@ public class NFCClientServiceCLTV extends HostApduService {
         bound = bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         Log.d(TAG, "onStartCommand");
         return START_NOT_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
-        if(bound) {
-            unbindService(serviceConnection);
-            bound = false;
-        }
     }
 
     @Override
@@ -158,10 +162,7 @@ public class NFCClientServiceCLTV extends HostApduService {
             /* PROCESS PAYLOAD */
             final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
             if (NFCUtils.isKeepAlive(payload)) {
-                return NFCUtils.KEEPALIVE;
-            }
-
-            if (walletServiceBinder == null ) {
+                Log.d(TAG, "got keep alive, sending it back");
                 return NFCUtils.KEEPALIVE;
             }
 
@@ -232,6 +233,17 @@ public class NFCClientServiceCLTV extends HostApduService {
         @Override
         public void run() {
             long processStartTime = System.currentTimeMillis();
+            synchronized (LOCK) {
+                while (walletServiceBinder == null) {
+                    //wait until ready
+                    try {
+                        LOCK.wait();
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "interrupted", e);
+                        return;
+                    }
+                }
+            }
             ClientSteps currentStep = nextStep;
             final byte[] requestPayload = derRequestPayload;
             try {
@@ -246,13 +258,15 @@ public class NFCClientServiceCLTV extends HostApduService {
                     case SIGNATURES_RECEIVE:
                         Log.d(TAG, "handle SIGNATURES_RECEIVE");
                         handlePaymentFinalize(requestPayload);
-                        nextStep = ClientSteps.PAYMENT_COMPLETED;
-                        break;
-                    case PAYMENT_COMPLETED:
                         Log.d(TAG, "handle PAYMENT_COMPLETED");
                         handlePaymentCompleted();
                         nextStep = ClientSteps.NULL;
                         break;
+                    /*case PAYMENT_COMPLETED:
+                        Log.d(TAG, "handle PAYMENT_COMPLETED");
+                        handlePaymentCompleted();
+                        nextStep = ClientSteps.NULL;
+                        break;*/
                     default:
                         Log.w(TAG, "ProcessCommand does not know how to handle current step: " + currentStep);
                 }
@@ -345,7 +359,10 @@ public class NFCClientServiceCLTV extends HostApduService {
 
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
-            walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+            synchronized (LOCK) {
+                walletServiceBinder = (WalletService.WalletServiceBinder) binder;
+                LOCK.notifyAll();
+            }
         }
 
         @Override
@@ -370,16 +387,8 @@ public class NFCClientServiceCLTV extends HostApduService {
     }
 
     private enum ClientSteps {
-        NULL(-1),
-        PAYMENT_REQUEST_RECEIVE(0),
-        PAYMENT_REFUND_SEND(1),
-        PAYMENT_FINAL_SIGNATURE_OUTPOINTS_SEND(2),
-        PAYMENT_COMPLETED(3),
-        SIGNATURES_RECEIVE(4);
-
-        private final int step;
-        ClientSteps(int step) {
-            this.step = step;
-        }
+        NULL(),
+        PAYMENT_REQUEST_RECEIVE(),
+        SIGNATURES_RECEIVE();
     }
 }

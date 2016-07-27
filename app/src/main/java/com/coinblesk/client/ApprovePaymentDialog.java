@@ -124,6 +124,7 @@ public class ApprovePaymentDialog extends DialogFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "destroyed approve Dialog");
         getActivity().setRequestedOrientation(
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 

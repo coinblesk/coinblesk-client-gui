@@ -7,15 +7,6 @@
         android:title="@string/pref_general_settings_category_title">
 
         <ListPreference
-            android:key="@string/pref_balance_list"
-            android:title="@string/pref_balance_title"
-            android:summary="@string/pref_balance_description"
-            android:defaultValue="@string/pref_balance_default_value"
-            android:dialogTitle="@string/pref_balance_title"
-            android:entries="@array/pref_balance_entries"
-            android:entryValues="@array/pref_balance_values" />
-
-        <ListPreference
             android:key="@string/pref_currency_list"
             android:title="@string/pref_currency_title"
             android:summary="@string/pref_currency_description"

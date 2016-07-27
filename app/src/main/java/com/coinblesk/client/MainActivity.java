@@ -133,12 +133,19 @@ public class MainActivity extends AppCompatActivity
         if (NfcAdapter.getDefaultAdapter(this) != null) {
             NfcAdapter.getDefaultAdapter(this).setNdefPushMessage(null, this);
         }
+        registerPaymentRequestReceiver();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterPaymentRequestReceiver();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        registerPaymentRequestReceiver();
+
         SharedPrefUtils.initDefaults(this, R.xml.settings_pref, false);
         final AppConfig appConfig = ((CoinbleskApp) getApplication()).getAppConfig();
 
@@ -420,7 +427,6 @@ public class MainActivity extends AppCompatActivity
         broadcastManager.registerReceiver(startServersBroadcastReceiver, new IntentFilter(Constants.START_SERVERS_ACTION));
         broadcastManager.registerReceiver(walletServiceError, new IntentFilter(Constants.WALLET_ERROR_ACTION));
 
-        broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
         broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));
         broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_FAILED_ACTION));
         broadcastManager.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.WALLET_INSUFFICIENT_BALANCE_ACTION));
@@ -482,6 +488,12 @@ public class MainActivity extends AppCompatActivity
             walletServiceBinder = null;
         }
     };
+
+    //http://stackoverflow.com/questions/7575921/illegalstateexception-can-not-perform-this-action-after-onsaveinstancestate-wit
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //No call for super(). Bug on API Level > 11.
+    }
     /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
 
 
@@ -580,25 +592,33 @@ public class MainActivity extends AppCompatActivity
 
     private ApprovePaymentDialog approvePaymentDialog;
 
+    final private BroadcastReceiver approveView = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                Log.d(TAG, "dismiss old approve dialog");
+                approvePaymentDialog.dismiss();
+            }
+
+            approvePaymentDialog = new ApprovePaymentDialog();
+            Bundle args = new Bundle();
+            args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
+            args.putString(Constants.PAYMENT_REQUEST_AMOUNT, intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT));
+            approvePaymentDialog.setArguments(args);
+            approvePaymentDialog.show(getFragmentManager(), TAG);
+            Log.d(TAG, "show new approve dialog");
+        }
+    };
+
     private void registerPaymentRequestReceiver() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-
-                        if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
-                            approvePaymentDialog.dismiss();
-                        }
-
-                        approvePaymentDialog = new ApprovePaymentDialog();
-                        Bundle args = new Bundle();
-                        args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
-                        args.putString(Constants.PAYMENT_REQUEST_AMOUNT, intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT));
-                        approvePaymentDialog.setArguments(args);
-                        approvePaymentDialog.show(MainActivity.this.getFragmentManager(), TAG);
-                    }
-                },
+        LocalBroadcastManager.getInstance(this).registerReceiver(approveView,
                 new IntentFilter(Constants.PAYMENT_REQUEST));
+    }
+
+    private void unregisterPaymentRequestReceiver() {
+        Log.d(TAG, "unregister payment request receiver");
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(approveView);
     }
 
     private void initPeers() {
@@ -684,32 +704,46 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onPaymentSuccess() {
-                final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
-                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentSucess);
-                stopClients();
-                stopServers();
-                if (authViewDialog != null && authViewDialog.isAdded()) {
-                    authViewDialog.dismiss();
-                }
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "payment success");
+                        final Intent instantPaymentSucess = new Intent(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION);
+                        LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentSucess);
+                        //ACS requires this to run in a different thread!
+                        stopClients();
+                        stopServers();
+                        if (authViewDialog != null && authViewDialog.isAdded()) {
+                            authViewDialog.dismiss();
+                        }
 
-                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
-                    approvePaymentDialog.dismiss();
-                }
+                        if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                            approvePaymentDialog.dismiss();
+                        }
+                    }
+                });
+
             }
 
             @Override
-            public void onPaymentError(String errorMessage) {
-                final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
-                instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
-                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentFailed);
-                stopClients();
-                stopServers();
-                if (authViewDialog != null && authViewDialog.isAdded()) {
-                    authViewDialog.dismiss();
-                }
-                if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
-                    approvePaymentDialog.dismiss();
-                }
+            public void onPaymentError(final String errorMessage) {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "payment error");
+                        final Intent instantPaymentFailed = new Intent(Constants.INSTANT_PAYMENT_FAILED_ACTION);
+                        instantPaymentFailed.putExtra(Constants.ERROR_MESSAGE_KEY, errorMessage);
+                        LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(instantPaymentFailed);
+                        stopClients();
+                        stopServers();
+                        if (authViewDialog != null && authViewDialog.isAdded()) {
+                            authViewDialog.dismiss();
+                        }
+                        if (approvePaymentDialog != null && approvePaymentDialog.isAdded()) {
+                            approvePaymentDialog.dismiss();
+                        }
+                    }
+                });
             }
         };
     }

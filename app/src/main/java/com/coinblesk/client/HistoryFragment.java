@@ -16,6 +16,7 @@
 
 package com.coinblesk.client;
 
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,7 +25,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
@@ -45,7 +45,7 @@ import java.util.List;
  * @author Andreas Albrecht
  */
 
-public class HistoryFragment extends android.support.v4.app.Fragment {
+public class HistoryFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private TransactionWrapperRecyclerViewAdapter transactionAdapter;
@@ -53,7 +53,6 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
 
     private int walletProgressLastRefresh = 0;
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_history, container, false);
@@ -109,14 +108,14 @@ public class HistoryFragment extends android.support.v4.app.Fragment {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Constants.WALLET_CHANGED_ACTION);
         filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(walletChangedBroadcastReceiver, filter);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(walletChangedBroadcastReceiver, filter);
     }
 
     @Override
     public void onStop() {
         super.onStop();
         getActivity().unbindService(serviceConnection);
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(walletChangedBroadcastReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(walletChangedBroadcastReceiver);
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {

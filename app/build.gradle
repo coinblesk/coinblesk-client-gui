@@ -48,7 +48,7 @@ android {
         applicationId "com.coinblesk.client"
         minSdkVersion 16
         targetSdkVersion 23
-        version = 3
+        version = 4
         //compatibility reasons, this was the previous build number
         versionCode 2420 + version
         versionName "2.3." + version

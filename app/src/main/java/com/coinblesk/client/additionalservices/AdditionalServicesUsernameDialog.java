@@ -27,16 +27,14 @@ import com.coinblesk.util.Pair;
  */
 public class AdditionalServicesUsernameDialog extends DialogFragment {
 
-    private static final String TAG = AdditionalServicesUsernameDialog.class.getName();
+    private boolean isSignup = false;
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
+    private static final String TAG = AdditionalServicesUsernameDialog.class.getName();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        isSignup = false;
     }
 
     @Override
@@ -47,7 +45,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(final Bundle savedInstanceState) {
-
+        isSignup = false;
         UserAccountTO userAccountTO = (UserAccountTO) getArguments().getSerializable("");
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.additional_services_username_password, null);
@@ -163,7 +161,11 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                         }).execute(new Pair<String, String>(usernameText.getText().toString(), passwordText.getText().toString()));
                     }
                 }
-                else {
+                else if (isSignup) {
+                    //signup
+                    Button b = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+                    b.callOnClick();
+                } else {
                     //login
                     new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
@@ -221,12 +223,11 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     b.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-
+                            isSignup = true;
                             if(layout.getVisibility() == View.GONE) {
                                 layout.setVisibility(View.VISIBLE);
                                 checkBoxSingle.setVisibility(View.GONE);
                                 checkBoxForgot.setVisibility(View.GONE);
-                                d.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.INVISIBLE);
                             } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
                                 toast(R.string.additional_services_password_mismatch);
                             }

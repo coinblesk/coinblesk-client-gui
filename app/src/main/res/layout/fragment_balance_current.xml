@@ -87,7 +87,7 @@
                     style="@style/card_view_small_textview"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1.75"
+                    android:layout_weight="1.25"
                     android:gravity="top|center"
                     android:singleLine="true"
                     android:text="0.00 EUR" />

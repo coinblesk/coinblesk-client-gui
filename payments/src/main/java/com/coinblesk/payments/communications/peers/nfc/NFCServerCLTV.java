@@ -48,11 +48,11 @@ public class NFCServerCLTV extends AbstractServer {
 
     @Override
     public void onStart() {
+        Log.d(TAG, "onStart - enable reader for NFC");
         if (!nfcAdapter.isEnabled()) {
             activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
         }
 
-        Log.d(TAG, "onStart - enable reader for NFC");
         nfcAdapter.enableReaderMode(
                 activity,
                 new NFCPaymentCallback(),
@@ -91,8 +91,11 @@ public class NFCServerCLTV extends AbstractServer {
             byte[] fragment = new byte[0];
             if (needsSelectAidApdu) {
                 Log.d(TAG, "transceiveDER - select Aid Apdu");
-                isoDep.transceive(NFCUtils.createSelectAidApdu(NFCUtils.AID_ANDROID));
-                needsSelectAidApdu = false;
+                byte[] retval = isoDep.transceive(NFCUtils.createSelectAidApdu(NFCUtils.AID_ANDROID));
+                Log.d(TAG, "transceiveDER - select Aid Apdu OK! "+retval.length);
+                if(NFCUtils.isKeepAlive(retval)) {
+                    needsSelectAidApdu = false;
+                }
             }
 
             int endLength = Math.min(derPayload.length, fragmentByte + NFCUtils.DEFAULT_MAX_FRAGMENT_SIZE);
@@ -118,7 +121,7 @@ public class NFCServerCLTV extends AbstractServer {
     }
 
     private byte[] keepAliveLoop(IsoDep isoDep, byte[] derResponse) throws IOException {
-        while (NFCUtils.isKeepAlive(derResponse)) {
+        while (NFCUtils.isKeepAlive(derResponse) ) {
             Log.d(TAG, "transceiveDER - keep alive...");
             derResponse = transceiveKeepAlive(isoDep);
             Log.d(TAG, "transceiveDER - keep alive done, got response, length=" + derResponse.length);
@@ -147,6 +150,21 @@ public class NFCServerCLTV extends AbstractServer {
             try {
                 IsoDep isoDep = IsoDep.get(tag);
                 isoDep.connect();
+                onTagDiscovered(tag, isoDep, true);
+            } catch (Throwable e) {
+                Log.e(TAG, "Exception in onTagDiscovered", e);
+                getPaymentRequestDelegate().onPaymentError(e.getMessage());
+            }
+        }
+
+
+        private void onTagDiscovered(Tag tag, IsoDep isoDep, boolean trySoftReset) {
+            Log.d(TAG, "onTagDiscovered: " + tag);
+
+            final long startTime = System.currentTimeMillis();
+            long duration;
+
+            try {
                 boolean done = false;
                 final AtomicReference<DERObject> outputPaymentRequestSend = new AtomicReference<>();
                 final AtomicReference<DERObject> outputPaymentResponseReceive = new AtomicReference<>();
@@ -193,20 +211,41 @@ public class NFCServerCLTV extends AbstractServer {
                     byte[] response = transceiveKeepAlive(isoDep);
                     Log.d(TAG, "transceive keep alive, response length=" + response.length);
                 }
-
-                getPaymentRequestDelegate().onPaymentSuccess();
+                trySoftReset = false;
                 isoDep.close();
+                getPaymentRequestDelegate().onPaymentSuccess();
+
                 duration = System.currentTimeMillis() - startTime;
                 Log.d(TAG, "Payment finished - total duration: " + duration + " ms");
                 
             } catch (TagLostException tle) {
                 Log.d(TAG, "Tag lost");
+
+                if(trySoftReset) {
+                    softResetNFC(tag);
+                }
+
             } catch (Throwable e) {
                 Log.e(TAG, "Exception in onTagDiscovered", e);
                 getPaymentRequestDelegate().onPaymentError(e.getMessage());
             }
         }
+
+        private void softResetNFC(final Tag tag) {
+            try {
+                Log.d(TAG, "try soft reset");
+                IsoDep isoDep = IsoDep.get(tag);
+                isoDep.close();
+                isoDep.connect();
+                Log.d(TAG, "soft reset successful");
+                onTagDiscovered(tag, isoDep, false);
+            } catch (Throwable e) {
+                Log.d(TAG, "Soft reset failed", e);
+            }
+        }
     }
+
+
 
     private class PaymentResponseReceiveRunnable implements Runnable {
         private final DERObject input;
