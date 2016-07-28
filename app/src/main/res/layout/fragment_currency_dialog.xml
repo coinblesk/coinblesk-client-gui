@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+
+
+    <TableLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*"
+        android:showDividers="middle|beginning|end">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:showDividers="middle|beginning|end"
+            android:padding="5dp">
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="BTC"
+                android:id="@+id/btc"
+                android:layout_column="0"
+                android:background="@drawable/cell_shape"
+                android:gravity="center_horizontal"
+                android:padding="5dp"
+                android:layout_margin="5dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="mBTC"
+                android:id="@+id/mbtc"
+                android:layout_column="1"
+                android:background="@drawable/cell_shape"
+                android:gravity="center_horizontal"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="uBTC"
+                android:id="@+id/ubtc"
+                android:layout_column="2"
+                android:background="@drawable/cell_shape"
+                android:gravity="center_horizontal"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:layout_weight="1" />
+
+
+        </TableRow>
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="5dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="USD"
+            android:id="@+id/usd"
+            android:layout_column="0"
+            android:background="@drawable/cell_shape"
+            android:gravity="center_horizontal"
+            android:padding="5dp"
+            android:layout_margin="5dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="EUR"
+            android:id="@+id/eur"
+            android:layout_column="1"
+            android:background="@drawable/cell_shape"
+            android:gravity="center_horizontal"
+            android:padding="5dp"
+            android:layout_margin="5dp"
+            android:layout_weight="1" />
+
+        <Spinner
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="CHF"
+            android:id="@+id/currency_spinner"
+            android:layout_column="2"
+            android:background="@drawable/cell_shape"
+            android:padding="5dp"
+            android:layout_margin="5dp"
+            android:gravity="center_horizontal"
+            android:layout_weight="1" />
+
+
+    </TableRow>
+
+    </TableLayout>
+

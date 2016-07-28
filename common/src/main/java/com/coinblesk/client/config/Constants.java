@@ -120,4 +120,18 @@ public final class Constants {
     public static final String PAYMENT_REQUEST_ADDRESS = "com.coinblesk.client.PAYMENT_REQUEST_ADDRESS";
     public static final String PAYMENT_REQUEST_AMOUNT = "com.coinblesk.client.PAYMENT_REQUEST_AMOUNT";
     public static final String PAYMENT_REQUEST_APPROVED = "com.coinblesk.client.PAYMENT_REQUEST_APPROVED";
+
+    //curl "http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json" | grep USD/ | cut -d'/' -f2 | cut -c1-3 | sort
+
+    //for x in `curl "http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json" \
+    // | grep USD/ | cut -d'/' -f2 | cut -c1-3 | sort`; do echo -n \"$x\",; done
+    public static final String[] CURRENCIES = {"AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF",
+            "BMD","BND","BOB","BRL","BRX","BSD","BTN","BWP","BYN","BYR","BZD","CAD","CAX","CDF","CHF","CLF","CLP","CNH","CNY","COP","CRC","CUC",
+            "CUP","CVE","CYP","CZK","CZX","DEM","DJF","DKK","DKX","DOP","DZD","ECS","EGP","ERN","ETB","EUR","FJD","FKP","FRF","GBP","GEL","GHS",
+            "GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HRX","HTG","HUF","HUX","IDR","IEP","ILA","ILS","INR","INX","IQD","IRR","ISK","ISX",
+            "ITL","JMD","JOD","JPY","KES","KGS","KHR","KMF","KPW","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LTL","LVL","LYD","MAD",
+            "MDL","MGA","MKD","MMK","MNT","MOP","MRO","MUR","MVR","MWK","MXN","MXV","MYR","MYX","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR",
+            "PAB","PEN","PGK","PHP","PKR","PLN","PLX","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SHP","SIT","SLL",
+            "SOS","SRD","STD","SVC","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TWD","TZS","UAH","UGX","UYU","UZS","VEF","VND","VUV",
+            "WST","XAF","XCD","XCU","XDR","XOF","XPF","YER","ZAC","ZAR","ZMW","ZWL"};
 }

@@ -107,7 +107,7 @@ public class SettingsActivity extends AppCompatActivity {
         private void initOnFiatCurrencyChanged() {
             final String key = getString(R.string.pref_currency_list);
             Preference pref = findPreference(key);
-            pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            /*pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     if (walletService != null) {
@@ -115,7 +115,7 @@ public class SettingsActivity extends AppCompatActivity {
                     }
                     return true;
                 }
-            });
+            });*/
         }
 
         private void initRestartAfterNetworkChange() {

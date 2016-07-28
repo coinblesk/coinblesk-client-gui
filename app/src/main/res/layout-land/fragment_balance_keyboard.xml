@@ -30,92 +30,90 @@
                     android:textSize="@dimen/text_size_xsmall"
                     android:visibility="gone" />
 
+                <ImageView
+                    android:id="@+id/amount_switch_image_view"
+                    style="@style/amount_switch_image_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:longClickable="false"
+                    android:duplicateParentState="false"
+                    android:layout_weight="1" />
+
                 <LinearLayout
                     android:layout_width="fill_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="fill_parent"
                     android:layout_centerInParent="true"
-                    android:layout_weight="1"
                     android:gravity="bottom"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_weight="1">
 
                     <LinearLayout
                         android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="fill_parent"
                         android:layout_centerInParent="true"
                         android:layout_weight="1"
                         android:gravity="bottom"
                         android:orientation="horizontal">
 
-                        <ImageView
-                            android:id="@+id/balance_switch_image_view"
-                            style="@style/balance_switch_image_view"
-                            android:layout_width="match_parent"
-                            android:layout_height="30dp"
-                            android:layout_gravity="center_vertical"
-                            android:layout_weight="1"
-                            android:longClickable="false"
-                            android:scaleType="centerInside"
-                            android:duplicateParentState="true"/>
+                        <Space
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
 
                         <TextView
-                            android:id="@+id/balance_large"
-                            android:textSize="@dimen/text_size_xxxlarge"
+                            android:id="@+id/amount_large_text_view"
                             style="@style/card_view_large_text_view"
+                            android:textSize="@dimen/text_size_xxxlarge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="bottom|center"
                             android:singleLine="true"
                             android:text="0.00"
-                            android:longClickable="false" />
+                            android:gravity="bottom|right"
+                            android:layout_gravity="bottom" />
 
                         <TextView
-                            android:id="@+id/balance_large_currency"
+                            android:id="@+id/amount_large_text_currency"
                             android:textSize="@dimen/text_size_medium"
                             android:textColor="@color/colorAccent"
                             style="@style/card_view_large_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="bottom|center"
                             android:singleLine="true"
-                            android:text="BTC"
                             android:paddingLeft="5dp"
-                            android:longClickable="false" />
+                            android:text="BTC"
+                            android:gravity="left|bottom"
+                            android:layout_gravity="bottom" />
 
                         <Space
-                            android:id="@+id/balance_switch_image_view1"
-                            style="@style/amount_backspace_image_view"
-                            android:layout_width="match_parent"
-                            android:layout_height="25dp"
-                            android:layout_gravity="center_vertical"
-                            android:layout_weight="1.15"
-                            android:longClickable="false"
-                            android:scaleType="centerInside"
-                            android:duplicateParentState="true" />
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
 
-
-                    </LinearLayout>
+                  </LinearLayout>
                 </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="fill_parent"
                 android:layout_centerInParent="true"
-                android:layout_weight="1.25"
                 android:gravity="top"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_weight="1">
 
                 <TextView
-                    android:id="@+id/balance_small"
+                    android:id="@+id/amount_small_text_view"
                     style="@style/card_view_small_textview"
+                    android:layout_below="@+id/amount_large_text_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="top|right"
                     android:singleLine="true"
-                    android:text="0.00"
-                    android:layout_weight="1"
-                    android:longClickable="false" />
+                    android:text="0.00" />
+
                 <TextView
-                    android:id="@+id/balance_small_currency"
+                    android:id="@+id/amount_small_text_currency"
                     style="@style/card_view_small_textview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -123,11 +121,21 @@
                     android:singleLine="true"
                     android:text="EUR"
                     android:paddingLeft="5dp"
-                    android:layout_weight="1"
-                    android:longClickable="false" />
-            </LinearLayout>
-                <include layout="@layout/connections" />
+                    android:layout_weight="1" />
 
+            </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/amount_backspace_image_view"
+                    style="@style/amount_backspace_image_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:longClickable="false"
+                    android:duplicateParentState="false"
+                    android:layout_weight="1" />
+
+                <include layout="@layout/connections" />
 
             </LinearLayout>
 
@@ -142,4 +150,5 @@
         android:layout_margin="8dp"
         android:indeterminate="false"
         android:visibility="gone" />
+
 </LinearLayout>

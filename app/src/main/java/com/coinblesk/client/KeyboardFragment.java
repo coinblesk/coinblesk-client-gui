@@ -423,19 +423,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private void updateAmount() {
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
+        final TextView smallTextCurrency = (TextView) this.getView().findViewById(R.id.amount_small_text_currency);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
+        final TextView largeTextCurrency = (TextView) this.getView().findViewById(R.id.amount_large_text_currency);
 
         String formattedBTC = UIUtils.formater(getContext()).format(coinConvert(), 0, 1, 1);
         //convert as it is satoshi to get the same format as for BTC
         long value = (long) (fiat().value * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
         String formattedFiat = UIUtils.formater(getContext()).format(Coin.valueOf(value), 0, 1, 1);
 
-        if (isBitcoinPrimary) {
-            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), formattedBTC, UIUtils.getMoneyFormat(getContext()).code()));
-            smallTextView.setText(UIUtils.toSmallSpannable(formattedFiat, exchangeRate.fiat.getCurrencyCode()));
-        } else {
-            largeTextView.setText(UIUtils.toLargeSpannable(getContext(), formattedFiat, exchangeRate.fiat.getCurrencyCode()));
-            smallTextView.setText(UIUtils.toSmallSpannable(formattedBTC, UIUtils.getMoneyFormat(getContext()).code()));
+        if (largeTextView != null && largeTextCurrency!= null && smallTextView!=null && smallTextCurrency!=null) {
+
+            if (isBitcoinPrimary) {
+                largeTextView.setText(formattedBTC);
+                largeTextCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                smallTextView.setText(formattedFiat);
+                smallTextCurrency.setText(exchangeRate.fiat.getCurrencyCode());
+            } else {
+                largeTextView.setText(formattedFiat);
+                largeTextCurrency.setText(exchangeRate.fiat.getCurrencyCode());
+                smallTextView.setText(formattedBTC);
+                smallTextCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+            }
         }
     }
 

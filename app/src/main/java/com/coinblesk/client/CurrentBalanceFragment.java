@@ -24,11 +24,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -36,6 +39,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.ui.dialogs.CurrencyDialogFragment;
+import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
@@ -43,6 +48,8 @@ import com.coinblesk.payments.WalletService;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.Fiat;
 
 /**
@@ -106,6 +113,38 @@ public class CurrentBalanceFragment extends Fragment {
                 refreshBalance();
             }
         });
+
+
+
+        /*TextView t1 = (TextView) view.findViewById(R.id.amount_large_text_view);
+        TextView t2 = (TextView) view.findViewById(R.id.amount_large_text_currency);
+        TextView t3 = (TextView) view.findViewById(R.id.amount_small_text_view);
+        TextView t4 = (TextView) view.findViewById(R.id.amount_small_text_currency);*/
+
+        TextView t1 = (TextView) view.findViewById(R.id.balance_large);
+        TextView t2 = (TextView) view.findViewById(R.id.balance_large_currency);
+        TextView t3 = (TextView) view.findViewById(R.id.balance_small);
+        TextView t4 = (TextView) view.findViewById(R.id.balance_small_currency);
+
+
+        View.OnLongClickListener listener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                DialogFragment fragment = CurrencyDialogFragment.newInstance();
+                if (fragment != null) {
+                    fragment.show(getFragmentManager(), "keyboard_dialog_fragment");
+                }
+
+                Log.d(TAG, "Longpress detected1");
+                return true;
+            }
+        };
+
+        t1.setOnLongClickListener(listener);
+        t2.setOnLongClickListener(listener);
+        t3.setOnLongClickListener(listener);
+        t4.setOnLongClickListener(listener);
         return view;
     }
 
@@ -151,16 +190,24 @@ public class CurrentBalanceFragment extends Fragment {
             return;
         }
 
-        final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
-        if (largeBalance != null) {
-            largeBalance.setText(UIUtils.getLargeBalance(getContext(), coinBalance, fiatBalance));
-            int len = largeBalance.getText().length();
-            largeBalance.setTextSize(TypedValue.COMPLEX_UNIT_SP, UIUtils.getLargeTextSizeForBalance(getContext(), len));
-        }
+        boolean isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
 
+        final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
+        final TextView largeBalanceCurrency = (TextView) getView().findViewById(R.id.balance_large_currency);
         final TextView smallBalance = (TextView) getView().findViewById(R.id.balance_small);
-        if (smallBalance != null) {
-            smallBalance.setText(UIUtils.getSmallBalance(getContext(), coinBalance, fiatBalance));
+        final TextView smallBalanceCurrency = (TextView) getView().findViewById(R.id.balance_small_currency);
+        if (largeBalance != null && largeBalanceCurrency!= null && smallBalance!=null && smallBalanceCurrency!=null) {
+            if(isBitcoinPrimary) {
+                largeBalance.setText(UIUtils.scaleCoin(getContext(), coinBalance));
+                largeBalanceCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                smallBalance.setText(fiatBalance.toPlainString());
+                smallBalanceCurrency.setText(fiatBalance.getCurrencyCode());
+            } else {
+                largeBalance.setText(fiatBalance.toPlainString());
+                largeBalanceCurrency.setText(fiatBalance.getCurrencyCode());
+                smallBalance.setText(UIUtils.scaleCoin(getContext(), coinBalance));
+                smallBalanceCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+            }
         }
 
         Log.d(TAG, "refresh balance: coin=" + coinBalance.toFriendlyString() + ", fiat=" + fiatBalance.toFriendlyString());

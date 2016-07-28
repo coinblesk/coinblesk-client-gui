@@ -3,30 +3,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:key="pref_general_settings"
-        android:title="@string/pref_general_settings_category_title">
-
-        <ListPreference
-            android:key="@string/pref_currency_list"
-            android:title="@string/pref_currency_title"
-            android:summary="@string/pref_currency_description"
-            android:defaultValue="@string/pref_currency_default_value"
-            android:dialogTitle="@string/pref_currency_title"
-            android:entries="@array/pref_currency_entries"
-            android:entryValues="@array/pref_currency_values" />
-
-        <ListPreference
-            android:key="@string/pref_bitcoin_rep_list"
-            android:title="@string/pref_bitcoin_rep_title"
-            android:summary="@string/pref_bitcoin_rep_description"
-            android:defaultValue="@string/pref_bitcoin_rep_default_value"
-            android:dialogTitle="@string/pref_bitcoin_rep_title"
-            android:entries="@array/pref_bitcoin_rep_entries"
-            android:entryValues="@array/pref_bitcoin_rep_values" />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
         android:key="pref_payment_settings"
         android:title="@string/pref_payment_settings_category_title">
 
