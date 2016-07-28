@@ -135,10 +135,7 @@ public class NFCClientServiceCLTV extends HostApduService {
 
             /* HANDSHAKE */
             if (NFCUtils.selectAidApdu(commandApdu)) {
-                Intent intent = new Intent(Constants.START_COINBLESK);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
+                startAppIfNotRunning();
                 derPayloadStartIndex = 6 + commandApdu[4];
                 Log.d(TAG, "processCommandApdu - handshake (derPayloadStartIndex="+derPayloadStartIndex+")");
                 executeHandshake(commandApdu, derPayloadStartIndex);
@@ -188,6 +185,12 @@ public class NFCClientServiceCLTV extends HostApduService {
             Log.e(TAG, "processCommandApdu - catched throwable: ", t);
             return null;
         }
+    }
+
+    private void startAppIfNotRunning() {
+        Intent intent2 = new Intent(Constants.START_COINBLESK);
+        intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent2);
     }
 
     private void reset() {

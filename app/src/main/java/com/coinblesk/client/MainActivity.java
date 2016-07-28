@@ -600,7 +600,13 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "dismiss old approve dialog");
                 approvePaymentDialog.dismiss();
             }
+            showApproveDialogIfRequired(intent);
 
+        }
+    };
+
+    private void showApproveDialogIfRequired(Intent intent) {
+        if(intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS) != null && intent.getStringExtra(Constants.PAYMENT_REQUEST_AMOUNT) != null) {
             approvePaymentDialog = new ApprovePaymentDialog();
             Bundle args = new Bundle();
             args.putString(Constants.PAYMENT_REQUEST_ADDRESS, intent.getStringExtra(Constants.PAYMENT_REQUEST_ADDRESS));
@@ -609,7 +615,7 @@ public class MainActivity extends AppCompatActivity
             approvePaymentDialog.show(getFragmentManager(), TAG);
             Log.d(TAG, "show new approve dialog");
         }
-    };
+    }
 
     private void registerPaymentRequestReceiver() {
         LocalBroadcastManager.getInstance(this).registerReceiver(approveView,
