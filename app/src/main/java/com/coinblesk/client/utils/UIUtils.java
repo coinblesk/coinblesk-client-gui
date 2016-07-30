@@ -110,7 +110,8 @@ public class UIUtils {
         } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
             result = BtcFormat.getInstance(BtcFormat.MICROCOIN_SCALE).format(coin);
         } else {
-            throw new RuntimeException("Unknown coin scale.");
+            result = BtcFormat.getInstance(BtcFormat.COIN_SCALE).format(coin);
+            Log.e(TAG, "unkown scale, using BTC");
         }
 
         return result;
@@ -169,8 +170,10 @@ public class UIUtils {
             return 100000;
         } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
             return 100;
+        } else {
+            Log.e(TAG, "unknow scale");
+            return 100000000;
         }
-        throw new RuntimeException("unknown scale");
     }
 
     public static BtcFormat formater(Context context) {
@@ -180,8 +183,12 @@ public class UIUtils {
             return BtcFormat.builder().scale(BtcFormat.MILLICOIN_SCALE).build();
         } else if (SharedPrefUtils.isBitcoinScaleMicroBTC(context)) {
             return BtcFormat.builder().scale(BtcFormat.MICROCOIN_SCALE).build();
+        } else {
+            Log.e(TAG, "unknow scale");
+            return BtcFormat.builder().scale(BtcFormat.COIN_SCALE).build();
+
         }
-        throw new RuntimeException("unknown format");
+
     }
 
     public static MonetaryFormat formater2(Context context) {

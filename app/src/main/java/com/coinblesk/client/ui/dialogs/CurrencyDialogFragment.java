@@ -21,6 +21,7 @@ package com.coinblesk.client.ui.dialogs;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -47,6 +48,8 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.w3c.dom.Text;
 
+import java.util.Arrays;
+
 /**
  * Created by ckiller
  */
@@ -64,53 +67,158 @@ public class CurrencyDialogFragment extends DialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         final View view = inflater.inflate(R.layout.fragment_currency_dialog, null);
 
-        final Spinner s = (Spinner) view.findViewById(R.id.currency_spinner);
+        final Spinner spinner = (Spinner) view.findViewById(R.id.currency_spinner);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, Constants.CURRENCIES);
-        s.setAdapter(adapter);
+                R.layout.spinner_item, Constants.CURRENCIES);
+        spinner.setSelection(0, false);
+        spinner.setAdapter(adapter);
+
         final TextView usd = (TextView) view.findViewById(R.id.usd);
         final TextView eur = (TextView) view.findViewById(R.id.eur);
 
-        s.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                        @Override
-                                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                            activateSpinner(s, usd, eur);
-                                        }
 
-                                        @Override
-                                        public void onNothingSelected(AdapterView<?> parent) {
-                                            //activateSpinner(s, usd, eur);
-                                        }
-                                    });
 
-                loadSettings();
+        final TextView btc = (TextView) view.findViewById(R.id.btc);
+        final TextView mbtc = (TextView) view.findViewById(R.id.mbtc);
+        final TextView ubtc = (TextView) view.findViewById(R.id.ubtc);
+
+        final View[] viewsBTC = new View[]{btc, mbtc, ubtc};
+        final View[] viewsFiat = new View[]{usd, eur, spinner};
+
+
 
         final AlertDialog d = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.change_currency)
                 .setView(view)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        saveSettings();
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        broadcastExchangeRateChanged(getContext());
                     }
                 })
-                .setNegativeButton(R.string.cancel, null)
                 .create();
+
+
+        btc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for(View v:viewsBTC) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                view.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "BTC");
+            }
+        });
+
+        mbtc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for(View v:viewsBTC) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                view.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "mBTC");
+            }
+        });
+
+        ubtc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for(View v:viewsBTC) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                view.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "μBTC");
+            }
+        });
+
+        usd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for(View v:viewsFiat) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                view.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setCurrency(getContext(), "USD");
+            }
+        });
+
+        eur.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for(View v:viewsFiat) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                view.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setCurrency(getContext(), "EUR");
+            }
+        });
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position == 0) {
+                    return;
+                }
+                for(View v:viewsFiat) {
+                    v.setBackgroundResource(R.drawable.cell_shape);
+                }
+                spinner.setBackgroundResource(R.drawable.cell_shape_currency);
+                SharedPrefUtils.setCurrency(getContext(), Constants.CURRENCIES[position]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                //activateSpinner(s, usd, eur);
+            }
+        });
+
+        loadSettings(getContext(), btc, mbtc, ubtc, usd, eur, spinner);
+
         return d;
     }
 
-    private void activateSpinner(Spinner s, TextView usd, TextView eur) {
-        s.setBackgroundResource(R.drawable.cell_shape_currency);
-        usd.setBackgroundResource(R.drawable.cell_shape);
-        eur.setBackgroundResource(R.drawable.cell_shape);
+    private void loadSettings(Context context, View... views) {
+        for(View view:views) {
+            view.setBackgroundResource(R.drawable.cell_shape);
+        }
+
+        String bitcoinPrefix = SharedPrefUtils.getBitcoinScalePrefix(context);
+        switch (bitcoinPrefix) {
+            case "BTC":
+                views[0].setBackgroundResource(R.drawable.cell_shape_currency);
+                break;
+            case "mBTC":
+                views[1].setBackgroundResource(R.drawable.cell_shape_currency);
+                break;
+            case "μBTC":
+                views[2].setBackgroundResource(R.drawable.cell_shape_currency);
+                break;
+        }
+
+        String fiat = SharedPrefUtils.getCurrency(context);
+        Spinner spinner = (Spinner) views[5];
+        switch (fiat) {
+            case "USD":
+                views[3].setBackgroundResource(R.drawable.cell_shape_currency);
+                spinner.setSelection(0, false);
+                break;
+            case "EUR":
+                views[4].setBackgroundResource(R.drawable.cell_shape_currency);
+                spinner.setSelection(0, false);
+                break;
+            default:
+                views[5].setBackgroundResource(R.drawable.cell_shape_currency);
+                int pos = Arrays.asList(Constants.CURRENCIES).indexOf(fiat);
+                spinner.setSelection(pos);
+                break;
+        }
+
     }
 
-    private void loadSettings() {
-
-    }
-
-    private void saveSettings() {
-
+    private void broadcastExchangeRateChanged(Context context) {
+        Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(exchangeRateChanged);
     }
 
     /*@Nullable

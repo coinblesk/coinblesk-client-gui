@@ -125,7 +125,7 @@ public final class Constants {
 
     //for x in `curl "http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json" \
     // | grep USD/ | cut -d'/' -f2 | cut -c1-3 | sort`; do echo -n \"$x\",; done
-    public static final String[] CURRENCIES = {"AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF",
+    public static final String[] CURRENCIES = {"---", "AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF",
             "BMD","BND","BOB","BRL","BRX","BSD","BTN","BWP","BYN","BYR","BZD","CAD","CAX","CDF","CHF","CLF","CLP","CNH","CNY","COP","CRC","CUC",
             "CUP","CVE","CYP","CZK","CZX","DEM","DJF","DKK","DKX","DOP","DZD","ECS","EGP","ERN","ETB","EUR","FJD","FKP","FRF","GBP","GEL","GHS",
             "GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HRX","HTG","HUF","HUX","IDR","IEP","ILA","ILS","INR","INX","IQD","IRR","ISK","ISX",

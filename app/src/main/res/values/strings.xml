@@ -407,5 +407,7 @@
     <string name="additional_services_change_success">Password changed success</string>
     <string name="additional_services_change_error">Password change failed</string>
     <string name="change_currency">Change currency settings</string>
+    <string name="bitcoin_representation">Bitcoin representation</string>
+    <string name="fiat_currency">Fiat currency</string>
 
 </resources>

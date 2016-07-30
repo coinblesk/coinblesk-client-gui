@@ -70,7 +70,7 @@
 
                         <TextView
                             android:id="@+id/balance_large_currency"
-                            android:textSize="@dimen/text_size_medium"
+                            android:textSize="@dimen/text_size_xlarge"
                             android:textColor="@color/colorAccent"
                             style="@style/card_view_large_text_view"
                             android:layout_width="wrap_content"

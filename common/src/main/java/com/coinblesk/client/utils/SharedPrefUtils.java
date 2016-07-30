@@ -275,6 +275,8 @@ public final class SharedPrefUtils {
         return true;
     }
 
+
+
     public static boolean setFiatPrimaryBalance(Context context) {
         setString(context,
                 context.getString(R.string.pref_balance_list),
@@ -287,7 +289,13 @@ public final class SharedPrefUtils {
     }
 
     public static String getBitcoinScalePrefix(Context context) {
-        return getString(context, context.getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
+        String prefix = getString(context, context.getString(R.string.pref_bitcoin_rep_list), context.getResources().getStringArray(R.array.pref_bitcoin_rep_values)[1]);
+        Log.d(TAG, "get prefix: "+prefix);
+        return prefix;
+    }
+
+    public static void setBitcoinScalePrefix(Context context, String prefix) {
+        setString(context, context.getString(R.string.pref_bitcoin_rep_list), prefix);
     }
 
     public static boolean isBitcoinScaleBTC(Context context) {
