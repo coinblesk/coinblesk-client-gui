@@ -445,11 +445,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     private void updateAmount() {
 
-        View view = getView();
-        if (view != null) {
-            UIUtils.refreshConnectionIconStatus(getActivity(), view);
-        }
-
+        refreshConnectionIcons();
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView smallTextCurrency = (TextView) this.getView().findViewById(R.id.amount_small_text_currency);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
@@ -762,5 +758,12 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onResume() {
         super.onResume();
         updateAmount();
+    }
+
+    private void refreshConnectionIcons() {
+        final View view = getView();
+        if (view != null) {
+            UIUtils.refreshConnectionIconStatus(getActivity(), view);
+        }
     }
 }
