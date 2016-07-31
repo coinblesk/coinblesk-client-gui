@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity
                 SendDialogFragment.newInstance(
                         bitcoinURI.getAddress(),
                         bitcoinURI.getAmount())
-                        .show(getSupportFragmentManager(), "send-dialog");
+                        .show(getFragmentManager(), "send-dialog");
             } catch (BitcoinURIParseException e) {
                 Log.w(TAG, "Could not parse Bitcoin URI: " + uri);
             }
@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity
         // Get the ViewPager and set its PagerAdapter so that it can display items
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         if (viewPager != null) {
-            viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
+            viewPager.setAdapter(new MainPagerAdapter(getFragmentManager()));
         }
 
         // Give the TabLayout the ViewPager
@@ -390,7 +390,7 @@ public class MainActivity extends AppCompatActivity
             String bitcoinUriStr = BitcoinURI.convertToBitcoinURI(receiveAddress, null, null, null);
             QrDialogFragment
                     .newInstance(new BitcoinURI(bitcoinUriStr))
-                    .show(getSupportFragmentManager(), "qr_dialog_fragment");
+                    .show(getFragmentManager(), "qr_dialog_fragment");
             Log.d(TAG, "showQrDialog - bitcoinUri" + bitcoinUriStr);
         } catch (Exception e) {
             Log.w(TAG, "Error showing QR Code: ", e);

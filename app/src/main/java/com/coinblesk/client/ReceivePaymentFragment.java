@@ -16,13 +16,14 @@
 
 package com.coinblesk.client;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
+
 
 import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
 import com.coinblesk.payments.WalletService;

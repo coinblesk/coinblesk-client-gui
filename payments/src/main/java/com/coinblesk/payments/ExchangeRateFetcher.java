@@ -87,16 +87,9 @@ class ExchangeRateFetcher implements Runnable {
                 // usd: get directly
                 conversionRate = 1.0;
                 break;
-            case "CHF":
-                response = service.chfToUsd().execute();
-                conversionRate = getRate(response);
-                break;
-            case "EUR":
-                response = service.eurToUsd().execute();
-                conversionRate = getRate(response);
-                break;
             default:
-                throw new CoinbleskException("Cannot fetch exchange rate (unknown currency symbol): " + fiatCurrency);
+                response = service.exchangeRate(fiatCurrency).execute();
+                conversionRate = getRate(response);
         }
 
         return conversionRate;

@@ -53,11 +53,8 @@ public interface CoinbleskWebService {
     Call<SignVerifyTO> signVerify(@Body SignVerifyTO signVerify);
 
     // exchange Rate
-    @GET("wallet/exchangeRate/EUR")
-    Call<ExchangeRateTO> eurToUsd();
-
-    @GET("wallet/exchangeRate/CHF")
-    Call<ExchangeRateTO> chfToUsd();
+    @GET("v1/wallet/exchangeRate/{symbol}")
+    Call<ExchangeRateTO> exchangeRate(@Path("symbol") String symbol);
 
     @POST("v1/version")
     Call<VersionTO> version(@Body VersionTO request);

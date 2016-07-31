@@ -16,6 +16,7 @@
 
 package com.coinblesk.client.wallet;
 
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,7 +26,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
@@ -64,12 +64,12 @@ public class Outputs extends Fragment implements OutputsAdapter.OutputItemClickL
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
+        Intent walletServiceIntent = new Intent(getActivity(), WalletService.class);
         getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         adapter = new OutputsAdapter(null, this);
 
-        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getContext());
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
         IntentFilter coinsSentOrReceivedFilter = new IntentFilter();
         coinsSentOrReceivedFilter.addAction(Constants.WALLET_COINS_SENT_ACTION);
         coinsSentOrReceivedFilter.addAction(Constants.WALLET_COINS_RECEIVED_ACTION);
@@ -92,7 +92,7 @@ public class Outputs extends Fragment implements OutputsAdapter.OutputItemClickL
         recyclerView = (RecyclerView) v.findViewById(R.id.wallet_output_list);
         recyclerView.setHasFixedSize(true);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
 
         View empty = v.findViewById(R.id.wallet_output_list_empty);
@@ -142,7 +142,7 @@ public class Outputs extends Fragment implements OutputsAdapter.OutputItemClickL
 
         Transaction parentTx = item.getParentTransaction();
         if (parentTx != null) {
-            TransactionDetailActivity.openTransaction(getContext(), parentTx.getHashAsString());
+            TransactionDetailActivity.openTransaction(getActivity(), parentTx.getHashAsString());
         }
     }
 

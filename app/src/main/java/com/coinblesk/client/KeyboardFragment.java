@@ -16,6 +16,8 @@
 
 package com.coinblesk.client;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.*;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -24,8 +26,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +33,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.coinblesk.client.ui.dialogs.CurrencyDialogFragment;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.client.ui.dialogs.CustomValueDialog;
@@ -80,7 +81,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Log.d(TAG, "onCreate");
-        isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
+        isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getActivity()).equals("bitcoin");
     }
 
     @Override
@@ -98,7 +99,28 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                 break;
         }
 
-        UIUtils.refreshConnectionIconStatus(getContext(), view);
+        TextView t1 = (TextView) view.findViewById(R.id.amount_large_text_view);
+        TextView t2 = (TextView) view.findViewById(R.id.amount_large_text_currency);
+        TextView t3 = (TextView) view.findViewById(R.id.amount_small_text_view);
+        TextView t4 = (TextView) view.findViewById(R.id.amount_small_text_currency);
+
+        View.OnLongClickListener listener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                DialogFragment fragment = CurrencyDialogFragment.newInstance();
+                if (fragment != null) {
+                    fragment.show(KeyboardFragment.this.getFragmentManager(), TAG);
+                }
+                return true;
+            }
+        };
+
+        t1.setOnLongClickListener(listener);
+        t2.setOnLongClickListener(listener);
+        t3.setOnLongClickListener(listener);
+        t4.setOnLongClickListener(listener);
+
+        UIUtils.refreshConnectionIconStatus(getActivity(), view);
 
         return view;
     }
@@ -268,10 +290,10 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
             case R.id.amount_switch_image_view:
                 if(isBitcoinPrimary) {
-                    amountFiat = (long) (amountBTC / (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+                    amountFiat = (long) (amountBTC / (UIUtils.scale(getActivity()) / (double)FIAT_SCALE));
                     this.isBitcoinPrimary = false;
                 } else {
-                    amountBTC = (long) (amountFiat * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+                    amountBTC = (long) (amountFiat * (UIUtils.scale(getActivity()) / (double)FIAT_SCALE));
                     this.isBitcoinPrimary = true;
                 }
                 break;
@@ -294,7 +316,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
                     break;
                 }
                 if(isBitcoinPrimary) {
-                    int scale = UIUtils.scale(getContext());
+                    int scale = UIUtils.scale(getActivity());
                     amountBTC = backspace(amountBTC, scale, digitCounter, dotAtPos);
                 } else {
                     int scale = FIAT_SCALE;
@@ -368,7 +390,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             return Coin.valueOf(amountBTC);
         } else {
             //convert first
-            String  currency = SharedPrefUtils.getCurrency(getContext());
+            String  currency = SharedPrefUtils.getCurrency(getActivity());
             Fiat fiat = Fiat.valueOf(currency, amountFiat);
             Coin retVal = exchangeRate.fiatToCoin(fiat);
             amountBTC = retVal.value;
@@ -381,7 +403,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             //convert first
             return exchangeRate.coinToFiat(Coin.valueOf(amountBTC));
         } else {
-            String  currency = SharedPrefUtils.getCurrency(getContext());
+            String  currency = SharedPrefUtils.getCurrency(getActivity());
             Fiat fiat = Fiat.valueOf(currency, amountFiat);
             return fiat;
         }
@@ -390,7 +412,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     public KeyboardFragment coin(Coin coin) {
         this.amountBTC = coin.value;
         //now we need to calculate the digit and dot counter
-        String formatted = UIUtils.formater2(getContext()).decimalMark('.').noCode().minDecimals(0).optionalDecimals(1,1).format(coin).toString();
+        String formatted = UIUtils.formater2(getActivity()).decimalMark('.').noCode().minDecimals(0).optionalDecimals(1,1).format(coin).toString();
         formatted = trimLeadingZeros(formatted);
         digitCounter = formatted.length();
         dotAtPos = formatted.indexOf(".");
@@ -405,7 +427,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     public KeyboardFragment btcPrimary() {
         if(!isBitcoinPrimary) {
-            amountBTC = (long) (amountFiat * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
+            amountBTC = (long) (amountFiat * (UIUtils.scale(getActivity()) / (double)FIAT_SCALE));
             this.isBitcoinPrimary = true;
             updateAmount();
         }
@@ -422,28 +444,34 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void updateAmount() {
+
+        View view = getView();
+        if (view != null) {
+            UIUtils.refreshConnectionIconStatus(getActivity(), view);
+        }
+
         final TextView smallTextView = (TextView) this.getView().findViewById(R.id.amount_small_text_view);
         final TextView smallTextCurrency = (TextView) this.getView().findViewById(R.id.amount_small_text_currency);
         final TextView largeTextView = (TextView) this.getView().findViewById(R.id.amount_large_text_view);
         final TextView largeTextCurrency = (TextView) this.getView().findViewById(R.id.amount_large_text_currency);
 
-        String formattedBTC = UIUtils.formater(getContext()).format(coinConvert(), 0, 1, 1);
+        String formattedBTC = UIUtils.formater(getActivity()).format(coinConvert(), 0, 1, 1);
         //convert as it is satoshi to get the same format as for BTC
-        long value = (long) (fiat().value * (UIUtils.scale(getContext()) / (double)FIAT_SCALE));
-        String formattedFiat = UIUtils.formater(getContext()).format(Coin.valueOf(value), 0, 1, 1);
+        long value = (long) (fiat().value * (UIUtils.scale(getActivity()) / (double)FIAT_SCALE));
+        String formattedFiat = UIUtils.formater(getActivity()).format(Coin.valueOf(value), 0, 1, 1);
 
         if (largeTextView != null && largeTextCurrency!= null && smallTextView!=null && smallTextCurrency!=null) {
 
             if (isBitcoinPrimary) {
                 largeTextView.setText(formattedBTC);
-                largeTextCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                largeTextCurrency.setText(UIUtils.getMoneyFormat(getActivity()).code());
                 smallTextView.setText(formattedFiat);
                 smallTextCurrency.setText(exchangeRate.fiat.getCurrencyCode());
             } else {
                 largeTextView.setText(formattedFiat);
                 largeTextCurrency.setText(exchangeRate.fiat.getCurrencyCode());
                 smallTextView.setText(formattedBTC);
-                smallTextCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                smallTextCurrency.setText(UIUtils.getMoneyFormat(getActivity()).code());
             }
         }
     }
@@ -463,7 +491,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             return;
         }
         if (isBitcoinPrimary) {
-            int scale = UIUtils.scale(getContext());
+            int scale = UIUtils.scale(getActivity());
             long amount = digit(amountBTC, digit, scale, digitCounter, dotAtPos);
             if(amount < 0) {
                 return;
@@ -576,7 +604,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     };
 
     private void onCustomLong(int customKey) {
-        CustomValueDialog cvd = new CustomValueDialog(getContext(), Integer.toString(customKey));
+        CustomValueDialog cvd = new CustomValueDialog(getActivity(), Integer.toString(customKey));
         cvd.setCustomValueListener(new CustomValueDialog.CustomValueListener() {
             @Override
             public void onSharedPrefsUpdated(String customKey) {
@@ -588,7 +616,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected void initCustomButton(String customKey) {
 
-        List<String> contentList = UIUtils.getCustomButton(getContext(), customKey);
+        List<String> contentList = UIUtils.getCustomButton(getActivity(), customKey);
 
         if (getView() != null && contentList != null) {
             View button = null;
@@ -629,7 +657,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     }
 
     private void initCustomButtons(String customKey) {
-        if (!SharedPrefUtils.isCustomButtonEmpty(getContext(), customKey)) {
+        if (!SharedPrefUtils.isCustomButtonEmpty(getActivity(), customKey)) {
             this.initCustomButton(customKey);
         }
     }
@@ -638,7 +666,12 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
     private final BroadcastReceiver exchangeRateChangeListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            String symbol = intent.getStringExtra(Constants.EXCHANGE_RATE_SYMBOL);
+            if(symbol != null && !symbol.isEmpty()) {
+                walletServiceBinder.setCurrency(symbol);
+            }
             exchangeRate = walletServiceBinder.getExchangeRate();
+
             updateAmount();
         }
     };
@@ -647,7 +680,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         @Override
         public void onReceive(Context context, Intent intent) {
             playNotificationSound();
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.instant_payment_success_message)), Snackbar.LENGTH_LONG).show();
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getActivity(), getResources().getString(R.string.instant_payment_success_message)), Snackbar.LENGTH_LONG).show();
         }
     };
 
@@ -655,14 +688,14 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         @Override
         public void onReceive(Context context, Intent intent) {
             playNotificationSound();
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), getResources().getString(R.string.insufficient_funds)), Snackbar.LENGTH_LONG).show();
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getActivity(), getResources().getString(R.string.insufficient_funds)), Snackbar.LENGTH_LONG).show();
         }
     };
 
     private void playNotificationSound() {
         try {
             Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            Ringtone r = RingtoneManager.getRingtone(getContext(), notification);
+            Ringtone r = RingtoneManager.getRingtone(getActivity(), notification);
             r.play();
         } catch (Exception e) {
             Log.e(TAG, "Error playing notification.", e);
@@ -681,7 +714,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             }
             String msg = getString(R.string.instant_payment_error_message, errMsg);
             Log.d(TAG, msg);
-            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getContext(), msg), Snackbar.LENGTH_LONG)
+            Snackbar.make(getView(), UIUtils.toFriendlySnackbarString(getActivity(), msg), Snackbar.LENGTH_LONG)
                     .show();
         }
     };
@@ -723,5 +756,11 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
 
     protected WalletService.WalletServiceBinder getWalletServiceBinder() {
         return walletServiceBinder;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateAmount();
     }
 }

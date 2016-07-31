@@ -16,13 +16,13 @@
 
 package com.coinblesk.client.wallet;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.*;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -75,7 +75,7 @@ public class WalletAddressList extends Fragment
         params = ((CoinbleskApp)getActivity().getApplication())
                 .getAppConfig()
                 .getNetworkParameters();
-        Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
+        Intent walletServiceIntent = new Intent(getActivity(), WalletService.class);
         getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         setHasOptionsMenu(true);
         adapter = new WalletAddressListAdapter(params);
@@ -90,7 +90,7 @@ public class WalletAddressList extends Fragment
         walletEventFilter.addAction(Constants.WALLET_BALANCE_CHANGED_ACTION);
         walletEventFilter.addAction(Constants.WALLET_SCRIPTS_CHANGED_ACTION);
         LocalBroadcastManager
-                .getInstance(getContext())
+                .getInstance(getActivity())
                 .registerReceiver(walletEventReceiver, walletEventFilter);
     }
 
@@ -98,7 +98,7 @@ public class WalletAddressList extends Fragment
     public void onStop() {
         super.onStop();
         LocalBroadcastManager
-                .getInstance(getContext())
+                .getInstance(getActivity())
                 .unregisterReceiver(walletEventReceiver);
     }
 
@@ -123,7 +123,7 @@ public class WalletAddressList extends Fragment
         recyclerView = (RecyclerView) v.findViewById(R.id.wallet_address_list);
         recyclerView.setHasFixedSize(true);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
 
         View empty = v.findViewById(R.id.wallet_address_list_empty);
@@ -196,7 +196,7 @@ public class WalletAddressList extends Fragment
     }
 
     private void showAmountTooSmallDialog(Coin amount) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent);
         AlertDialog dialog = builder
                 .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override

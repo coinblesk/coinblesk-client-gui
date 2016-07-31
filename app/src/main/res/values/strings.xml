@@ -409,5 +409,8 @@
     <string name="change_currency">Change currency settings</string>
     <string name="bitcoin_representation">Bitcoin representation</string>
     <string name="fiat_currency">Fiat currency</string>
+    <string name="pref_exchange_rate_USD">USD</string>
+    <string name="pref_exchange_rate_EUR">EUR</string>
+    <string name="pref_exchange_rate_default">---</string>
 
 </resources>

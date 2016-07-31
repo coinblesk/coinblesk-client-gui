@@ -16,6 +16,7 @@
 
 package com.coinblesk.client;
 
+import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,7 +25,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.DialogFragment;
+
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -57,11 +58,11 @@ import org.bitcoinj.utils.Fiat;
  * @author Andreas Albrecht
  */
 
-public class CurrentBalanceFragment extends Fragment {
+public class CurrentBalanceFragment extends HistoryFragment {
     private static final String TAG = CurrentBalanceFragment.class.getSimpleName();
     private WalletService.WalletServiceBinder walletService;
 
-    public static Fragment newInstance() {
+    public static CurrentBalanceFragment newInstance() {
         return new CurrentBalanceFragment();
     }
 
@@ -75,6 +76,7 @@ public class CurrentBalanceFragment extends Fragment {
         IntentFilter balanceFilter = new IntentFilter(Constants.WALLET_BALANCE_CHANGED_ACTION);
         balanceFilter.addAction(Constants.EXCHANGE_RATE_CHANGED_ACTION);
         broadcaster.registerReceiver(walletBalanceChangeBroadcastReceiver, balanceFilter);
+        broadcaster.registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
 
         IntentFilter walletProgressFilter = new IntentFilter(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
         walletProgressFilter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
@@ -86,6 +88,7 @@ public class CurrentBalanceFragment extends Fragment {
         super.onResume();
         refreshConnectionIcons();
         refreshTestnetWarning();
+        refreshBalance();
     }
 
     @Override
@@ -95,31 +98,26 @@ public class CurrentBalanceFragment extends Fragment {
         LocalBroadcastManager broadcaster = LocalBroadcastManager.getInstance(getActivity());
         broadcaster.unregisterReceiver(walletBalanceChangeBroadcastReceiver);
         broadcaster.unregisterReceiver(walletProgressBroadcastReceiver);
+        broadcaster.unregisterReceiver(exchangeRateChangeListener);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_balance_current, container, false);
+        super.onCreateView(inflater, container, savedInstanceState);
+        View view = inflater.inflate(R.layout.fragment_balance, container, false);
 
         ImageView switcher  = (ImageView) view.findViewById(R.id.balance_switch_image_view);
         switcher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(SharedPrefUtils.isBitcoinPrimaryBalance(getContext())) {
-                    SharedPrefUtils.setFiatPrimaryBalance(getContext());
+                if(SharedPrefUtils.isBitcoinPrimaryBalance(getActivity())) {
+                    SharedPrefUtils.setFiatPrimaryBalance(getActivity());
                 } else {
-                    SharedPrefUtils.setBitcoinPrimaryBalance(getContext());
+                    SharedPrefUtils.setBitcoinPrimaryBalance(getActivity());
                 }
                 refreshBalance();
             }
         });
-
-
-
-        /*TextView t1 = (TextView) view.findViewById(R.id.amount_large_text_view);
-        TextView t2 = (TextView) view.findViewById(R.id.amount_large_text_currency);
-        TextView t3 = (TextView) view.findViewById(R.id.amount_small_text_view);
-        TextView t4 = (TextView) view.findViewById(R.id.amount_small_text_currency);*/
 
         TextView t1 = (TextView) view.findViewById(R.id.balance_large);
         TextView t2 = (TextView) view.findViewById(R.id.balance_large_currency);
@@ -130,13 +128,10 @@ public class CurrentBalanceFragment extends Fragment {
         View.OnLongClickListener listener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-
                 DialogFragment fragment = CurrencyDialogFragment.newInstance();
                 if (fragment != null) {
-                    fragment.show(getFragmentManager(), "keyboard_dialog_fragment");
+                    fragment.show(CurrentBalanceFragment.this.getFragmentManager(), TAG);
                 }
-
-                Log.d(TAG, "Longpress detected1");
                 return true;
             }
         };
@@ -151,7 +146,7 @@ public class CurrentBalanceFragment extends Fragment {
     private void refreshConnectionIcons() {
         final View view = getView();
         if (view != null) {
-            UIUtils.refreshConnectionIconStatus(getContext(), view);
+            UIUtils.refreshConnectionIconStatus(getActivity(), view);
         }
     }
 
@@ -178,7 +173,8 @@ public class CurrentBalanceFragment extends Fragment {
         if (walletService == null) {
             return;
         }
-
+        //TODO: this may be called twice
+        refreshConnectionIcons();
         Coin coinBalance = walletService.getBalance();
         Fiat fiatBalance = walletService.getExchangeRate().coinToFiat(coinBalance);
         refreshBalance(coinBalance, fiatBalance);
@@ -190,7 +186,7 @@ public class CurrentBalanceFragment extends Fragment {
             return;
         }
 
-        boolean isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getContext()).equals("bitcoin");
+        boolean isBitcoinPrimary = SharedPrefUtils.getPrimaryBalance(getActivity()).equals("bitcoin");
 
         final TextView largeBalance = (TextView) getView().findViewById(R.id.balance_large);
         final TextView largeBalanceCurrency = (TextView) getView().findViewById(R.id.balance_large_currency);
@@ -198,20 +194,31 @@ public class CurrentBalanceFragment extends Fragment {
         final TextView smallBalanceCurrency = (TextView) getView().findViewById(R.id.balance_small_currency);
         if (largeBalance != null && largeBalanceCurrency!= null && smallBalance!=null && smallBalanceCurrency!=null) {
             if(isBitcoinPrimary) {
-                largeBalance.setText(UIUtils.scaleCoin(getContext(), coinBalance));
-                largeBalanceCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                largeBalance.setText(UIUtils.scaleCoin(getActivity(), coinBalance));
+                largeBalanceCurrency.setText(UIUtils.getMoneyFormat(getActivity()).code());
                 smallBalance.setText(fiatBalance.toPlainString());
                 smallBalanceCurrency.setText(fiatBalance.getCurrencyCode());
             } else {
                 largeBalance.setText(fiatBalance.toPlainString());
                 largeBalanceCurrency.setText(fiatBalance.getCurrencyCode());
-                smallBalance.setText(UIUtils.scaleCoin(getContext(), coinBalance));
-                smallBalanceCurrency.setText(UIUtils.getMoneyFormat(getContext()).code());
+                smallBalance.setText(UIUtils.scaleCoin(getActivity(), coinBalance));
+                smallBalanceCurrency.setText(UIUtils.getMoneyFormat(getActivity()).code());
             }
         }
 
         Log.d(TAG, "refresh balance: coin=" + coinBalance.toFriendlyString() + ", fiat=" + fiatBalance.toFriendlyString());
     }
+
+    private final BroadcastReceiver exchangeRateChangeListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String symbol = intent.getStringExtra(Constants.EXCHANGE_RATE_SYMBOL);
+            if(symbol != null && !symbol.isEmpty()) {
+                walletService.setCurrency(symbol);
+            }
+            refreshBalance();
+        }
+    };
 
     private final BroadcastReceiver walletBalanceChangeBroadcastReceiver = new BroadcastReceiver() {
         @Override

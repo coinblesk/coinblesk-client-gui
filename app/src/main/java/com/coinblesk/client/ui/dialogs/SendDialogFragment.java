@@ -18,15 +18,13 @@ package com.coinblesk.client.ui.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -104,7 +102,7 @@ public class SendDialogFragment extends DialogFragment
                 .getAppConfig()
                 .getNetworkParameters();
 
-        Intent walletServiceIntent = new Intent(getContext(), WalletService.class);
+        Intent walletServiceIntent = new Intent(getActivity(), WalletService.class);
         getActivity().bindService(walletServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -131,7 +129,6 @@ public class SendDialogFragment extends DialogFragment
         listener = null;
     }
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_send_dialog, container);
@@ -163,7 +160,7 @@ public class SendDialogFragment extends DialogFragment
 
         final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
         amountEditText = (EditText) view.findViewById(R.id.amount_edit_text);
-        amountEditText.setText(UIUtils.coinFiatSpannable(getContext(), amount, (ExchangeRate)null, true, 0.66f));
+        amountEditText.setText(UIUtils.coinFiatSpannable(getActivity(), amount, (ExchangeRate)null, true, 0.66f));
 
         feeEditText = (EditText) view.findViewById(R.id.fee_edit_text);
         feeEditText.setText(R.string.unknown);
@@ -177,7 +174,6 @@ public class SendDialogFragment extends DialogFragment
     }
 
     @Override
-    @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.setTitle(R.string.fragment_send_dialog_title);
@@ -194,7 +190,7 @@ public class SendDialogFragment extends DialogFragment
                 getDialog().cancel();
                 break;
             case R.id.fragment_send_dialog_qr_scan:
-                IntentIntegrator.forSupportFragment(SendDialogFragment.this).initiateScan();
+                IntentIntegrator.forFragment(SendDialogFragment.this).initiateScan();
                 break;
             case R.id.fragment_send_dialog_address:
                 openAddressList();
@@ -248,7 +244,7 @@ public class SendDialogFragment extends DialogFragment
         ExchangeRate exchangeRate = walletService != null ? walletService.getExchangeRate() : null;
 
         final Coin amount = Coin.valueOf(getArguments().getLong(ARGS_KEY_AMOUNT, 0));
-        amountEditText.setText(UIUtils.coinFiatSpannable(getContext(), amount, exchangeRate, true, 0.66f));
+        amountEditText.setText(UIUtils.coinFiatSpannable(getActivity(), amount, exchangeRate, true, 0.66f));
 
         Address addressTo = null;
         try {
@@ -258,7 +254,7 @@ public class SendDialogFragment extends DialogFragment
         }
         final Coin fee = walletService != null ? walletService.estimateFee(addressTo, amount) : null;
         if (fee != null) {
-            feeEditText.setText(UIUtils.coinFiatSpannable(getContext(), fee, exchangeRate, true, 1.0f));
+            feeEditText.setText(UIUtils.coinFiatSpannable(getActivity(), fee, exchangeRate, true, 1.0f));
         } else {
             feeEditText.setText(R.string.unknown);
         }
@@ -274,12 +270,12 @@ public class SendDialogFragment extends DialogFragment
             }
             dismiss();
         } catch (WrongNetworkException e) {
-            Toast.makeText(getContext(),
+            Toast.makeText(getActivity(),
                     getString(R.string.send_address_wrong_network, params.getId()),
                     Toast.LENGTH_SHORT)
                     .show();
         } catch (AddressFormatException e) {
-            Toast.makeText(getContext(),
+            Toast.makeText(getActivity(),
                     R.string.send_address_parse_error, Toast.LENGTH_SHORT)
                     .show();
         }

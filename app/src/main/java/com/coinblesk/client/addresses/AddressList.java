@@ -18,10 +18,10 @@
 package com.coinblesk.client.addresses;
 
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
@@ -75,7 +75,7 @@ public class AddressList extends DialogFragment {
         Log.d(TAG, "Load addresses from storage.");
         List<AddressBookItem> loadedItems;
         try {
-            loadedItems = SharedPrefUtils.getAddressBookItems(getContext(), params);
+            loadedItems = SharedPrefUtils.getAddressBookItems(getActivity(), params);
             Collections.sort(loadedItems);
         } catch (Exception e) {
             Log.w(TAG, "Could not load addresses: ", e);
@@ -110,7 +110,7 @@ public class AddressList extends DialogFragment {
         recyclerView = (RecyclerView) v.findViewById(R.id.address_list);
         recyclerView.setHasFixedSize(true);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
 
         View empty = v.findViewById(R.id.addresses_empty);
@@ -122,7 +122,7 @@ public class AddressList extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle state) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.AlertDialogAccent);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent);
         View view = getActivity().getLayoutInflater().inflate(R.layout.address_list, null);
         builder.setView(view)
                 .setTitle(R.string.addresses)

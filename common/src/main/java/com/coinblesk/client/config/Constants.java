@@ -31,6 +31,8 @@ import retrofit2.Retrofit;
  */
 public final class Constants {
 
+
+
     private Constants() { /* prevent instances */ }
 
     public static final java.util.logging.Level JAVA_LOGGER_LEVEL = java.util.logging.Level.INFO;
@@ -120,6 +122,7 @@ public final class Constants {
     public static final String PAYMENT_REQUEST_ADDRESS = "com.coinblesk.client.PAYMENT_REQUEST_ADDRESS";
     public static final String PAYMENT_REQUEST_AMOUNT = "com.coinblesk.client.PAYMENT_REQUEST_AMOUNT";
     public static final String PAYMENT_REQUEST_APPROVED = "com.coinblesk.client.PAYMENT_REQUEST_APPROVED";
+    public static final String EXCHANGE_RATE_SYMBOL = "com.coinblesk.client.EXCHANGE_RATE_SYMBOL";
 
     //curl "http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json" | grep USD/ | cut -d'/' -f2 | cut -c1-3 | sort
 

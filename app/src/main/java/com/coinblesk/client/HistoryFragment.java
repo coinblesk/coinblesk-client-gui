@@ -55,6 +55,7 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_history, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.txhistoryview);
         View empty = view.findViewById(R.id.txhistory_emptyview);
@@ -62,7 +63,7 @@ public class HistoryFragment extends Fragment {
         transactionAdapter = new TransactionWrapperRecyclerViewAdapter(new ArrayList<TransactionWrapper>());
         recyclerView.setAdapter(transactionAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-
+        updateTransactions();
         return view;
     }
 
@@ -88,7 +89,7 @@ public class HistoryFragment extends Fragment {
     };
 
     private void updateTransactions() {
-        if (walletServiceBinder == null) {
+        if (walletServiceBinder == null || transactionAdapter == null) {
             return; // service not connected yet.
         }
 

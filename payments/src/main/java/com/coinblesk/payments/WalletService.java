@@ -952,6 +952,7 @@ public class WalletService extends Service {
 
         protected void setExchangeRate(ExchangeRate exchangeRate) {
             WalletService.this.setExchangeRate(exchangeRate);
+            broadcastBalanceChanged();
         }
 
         public String getCurrency() {

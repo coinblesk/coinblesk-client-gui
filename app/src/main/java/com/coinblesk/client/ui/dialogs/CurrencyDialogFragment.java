@@ -21,12 +21,13 @@ package com.coinblesk.client.ui.dialogs;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
+
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Html;
 import android.util.Log;
@@ -68,7 +69,7 @@ public class CurrencyDialogFragment extends DialogFragment {
         final View view = inflater.inflate(R.layout.fragment_currency_dialog, null);
 
         final Spinner spinner = (Spinner) view.findViewById(R.id.currency_spinner);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 R.layout.spinner_item, Constants.CURRENCIES);
         spinner.setSelection(0, false);
         spinner.setAdapter(adapter);
@@ -93,7 +94,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        broadcastExchangeRateChanged(getContext());
+                        broadcastExchangeRateChanged(getActivity());
                     }
                 })
                 .create();
@@ -106,7 +107,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 view.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "BTC");
+                SharedPrefUtils.setBitcoinScalePrefix(getActivity(), "BTC");
             }
         });
 
@@ -117,7 +118,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 view.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "mBTC");
+                SharedPrefUtils.setBitcoinScalePrefix(getActivity(), "mBTC");
             }
         });
 
@@ -128,7 +129,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 view.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setBitcoinScalePrefix(getContext(), "μBTC");
+                SharedPrefUtils.setBitcoinScalePrefix(getActivity(), "μBTC");
             }
         });
 
@@ -139,7 +140,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 view.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setCurrency(getContext(), "USD");
+                SharedPrefUtils.setCurrency(getActivity(), "USD");
             }
         });
 
@@ -150,7 +151,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 view.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setCurrency(getContext(), "EUR");
+                SharedPrefUtils.setCurrency(getActivity(), "EUR");
             }
         });
 
@@ -164,7 +165,7 @@ public class CurrencyDialogFragment extends DialogFragment {
                     v.setBackgroundResource(R.drawable.cell_shape);
                 }
                 spinner.setBackgroundResource(R.drawable.cell_shape_currency);
-                SharedPrefUtils.setCurrency(getContext(), Constants.CURRENCIES[position]);
+                SharedPrefUtils.setCurrency(getActivity(), Constants.CURRENCIES[position]);
             }
 
             @Override
@@ -173,7 +174,7 @@ public class CurrencyDialogFragment extends DialogFragment {
             }
         });
 
-        loadSettings(getContext(), btc, mbtc, ubtc, usd, eur, spinner);
+        loadSettings(getActivity(), btc, mbtc, ubtc, usd, eur, spinner);
 
         return d;
     }
@@ -218,24 +219,8 @@ public class CurrencyDialogFragment extends DialogFragment {
 
     private void broadcastExchangeRateChanged(Context context) {
         Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+        exchangeRateChanged.putExtra(Constants.EXCHANGE_RATE_SYMBOL,SharedPrefUtils.getCurrency(context));
         LocalBroadcastManager.getInstance(context).sendBroadcast(exchangeRateChanged);
-    }
-
-    /*@Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_currency_dialog, null);
-
-        return view;
-    }*/
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        //activity.getResources().getStringArray(com.coinblesk.client.common.R.array.pref_bitcoin_rep_values)
-
-        //SharedPrefUtils.getBitcoinScalePrefix()
     }
 }
 

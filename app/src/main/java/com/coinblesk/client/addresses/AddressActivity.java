@@ -92,7 +92,7 @@ public class AddressActivity extends AppCompatActivity
     }
 
     private void initAddressList() {
-        addressList = (AddressList) getSupportFragmentManager()
+        addressList = (AddressList) getFragmentManager()
                 .findFragmentById(R.id.fragment_address_list);
 
         addressList.setItemClickListener(this);

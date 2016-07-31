@@ -16,6 +16,8 @@
 
 package com.coinblesk.client;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,10 +27,8 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
+
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.MotionEventCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -59,7 +59,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         final View view = super.onCreateView(inflater, container, savedInstanceState);
         assert view != null;
 
-        final ProgressDialog dialog = new ProgressDialog(this.getContext());
+        final ProgressDialog dialog = new ProgressDialog(this.getActivity());
         dialog.setMessage(getString(R.string.fragment_send_dialog_scanning));
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -72,7 +72,7 @@ public class SendPaymentFragment extends KeyboardFragment {
             public void onDismiss(DialogInterface dialog) {
                 getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 LocalBroadcastManager
-                        .getInstance(getContext())
+                        .getInstance(getActivity())
                         .sendBroadcast(new Intent(Constants.STOP_CLIENTS_ACTION));
             }
         });
@@ -127,7 +127,7 @@ public class SendPaymentFragment extends KeyboardFragment {
         if (notEnoughMoney) {
             Snackbar.make(
                     getActivity().findViewById(android.R.id.content),
-                    UIUtils.toFriendlySnackbarString(getContext(), getString(R.string.insufficient_funds)),
+                    UIUtils.toFriendlySnackbarString(getActivity(), getString(R.string.insufficient_funds)),
                     Snackbar.LENGTH_LONG)
                     .show();
             //we need to change to BTC, otherwise the exchange rate may change in the wrong moment

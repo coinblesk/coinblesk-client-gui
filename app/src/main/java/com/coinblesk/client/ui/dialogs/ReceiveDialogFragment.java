@@ -19,10 +19,10 @@ package com.coinblesk.client.ui.dialogs;
 
 
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Html;
 import android.util.Log;
@@ -83,7 +83,7 @@ public class ReceiveDialogFragment extends DialogFragment {
                 public void onClick(View v) {
                     Intent action = new Intent(Constants.START_SERVERS_ACTION);
                     action.putExtra(BITCOIN_URI_KEY, bitcoinUriString);
-                    LocalBroadcastManager.getInstance(getContext()).sendBroadcast(action);
+                    LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(action);
                 }
             });
 

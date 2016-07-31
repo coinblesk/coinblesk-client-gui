@@ -17,12 +17,20 @@
 
 package com.coinblesk.client.utils;
 
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.nfc.NfcAdapter;
+import android.nfc.NfcManager;
 import android.support.annotation.ColorInt;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -31,6 +39,7 @@ import android.text.style.RelativeSizeSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.coinblesk.client.R;
 import com.coinblesk.client.config.Constants;
@@ -67,6 +76,7 @@ public class UIUtils {
 
     private static final Float CONNECTION_ICON_ENABLED = 0.8f;
     private static final Float CONNECTION_ICON_DISABLED = 0.25f;  // see: styles.xml -> card_view_connection_icon
+    private static final Float CONNECTION_ICON_HALF = 0.5f;  // see: styles.xml -> card_view_connection_icon
     private static final String COLOR_MATERIAL_LIGHT_YELLOW_900 = "#F47F1F"; // see: color_material.xml
     private static final String COLOR_COLOR_ACCENT = "#AEEA00";
     private static final String COLOR_WHITE = "#FFFFFF";
@@ -440,39 +450,126 @@ public class UIUtils {
 
     /**
      * Updates the connection icons (enables/disables the icons)
-     * @param context
+     * @param activity
      * @param container root view
      */
-    public static void refreshConnectionIconStatus(Context context, View container) {
+    public static void refreshConnectionIconStatus(final Activity activity, View container) {
         if (container == null) {
             return;
         }
 
+        int stateNFC = hasNFC(activity) ? 0:1;
+        stateNFC += isNFCEnabled(activity) ? 0:1;
         UIUtils.formatConnectionIcon(
-                context,
+                activity,
                 (ImageView) container.findViewById(R.id.nfc_balance),
-                SharedPrefUtils.isConnectionNfcEnabled(context));
-        UIUtils.formatConnectionIcon(
-                context,
-                (ImageView) container.findViewById(R.id.bluetooth_balance),
-                SharedPrefUtils.isConnectionBluetoothLeEnabled(context));
-        UIUtils.formatConnectionIcon(
-                context,
-                (ImageView) container.findViewById(R.id.wifidirect_balance),
-                SharedPrefUtils.isConnectionWiFiDirectEnabled(context));
+                stateNFC);
 
+        if(stateNFC == 1 || stateNFC == 0) {
+            container.findViewById(R.id.nfc_balance).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    enableNFC(activity);
+                }
+            });
+        }
+
+        int stateBLE = hasBluetoothLE(activity) ? 0:1;
+        stateBLE += isBluetoothEnabled(activity) ? (hasBluetoothLEAdvertiser(activity) ? 0:-1):1;
+        UIUtils.formatConnectionIcon(
+                activity,
+                (ImageView) container.findViewById(R.id.bluetooth_balance),
+                stateBLE);
+
+        if(stateBLE == 1) {
+            container.findViewById(R.id.bluetooth_balance).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    enableBluetooth(activity);
+                }
+            });
+        } else if(stateBLE == 0 || stateBLE == -1) {
+            container.findViewById(R.id.bluetooth_balance).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    disableBluetooth(activity);
+                }
+            });
+        }
+    }
+
+    private static boolean hasNFC(Context context) {
+        NfcManager manager = (NfcManager) context.getSystemService(Context.NFC_SERVICE);
+        NfcAdapter adapter = manager.getDefaultAdapter();
+        return adapter != null;
+    }
+
+    private static boolean isNFCEnabled(Context context) {
+        NfcManager manager = (NfcManager) context.getSystemService(Context.NFC_SERVICE);
+        NfcAdapter adapter = manager.getDefaultAdapter();
+        return adapter != null && adapter.isEnabled();
+    }
+
+    private static void enableNFC(Context context) {
+        if (hasNFC(context)) {
+            Toast.makeText(context, "Please activate NFC and press Back to return to the application!", Toast.LENGTH_LONG).show();
+            context.startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+            Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(exchangeRateChanged);
+        }
+    }
+
+    private static boolean hasBluetoothLE(Context context) {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    }
+
+    private static boolean isBluetoothEnabled(Context context) {
+        BluetoothManager bm = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter mBluetoothAdapter = bm.getAdapter();
+        return mBluetoothAdapter != null && mBluetoothAdapter.isEnabled();
+    }
+
+    private static boolean hasBluetoothLEAdvertiser(Context context) {
+        BluetoothManager bm = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter mBluetoothAdapter = bm.getAdapter();
+        return mBluetoothAdapter != null && mBluetoothAdapter.isMultipleAdvertisementSupported();
+    }
+
+    private static void enableBluetooth(Activity activity) {
+        if (!isBluetoothEnabled(activity)) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            activity.startActivityForResult(enableBtIntent, 1);
+            Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(activity).sendBroadcast(exchangeRateChanged);
+        }
+    }
+
+    private static void disableBluetooth(Activity activity) {
+        BluetoothManager bm = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter mBluetoothAdapter = bm.getAdapter();
+        if(mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.disable();
+            Intent exchangeRateChanged = new Intent(Constants.EXCHANGE_RATE_CHANGED_ACTION);
+            LocalBroadcastManager.getInstance(activity).sendBroadcast(exchangeRateChanged);
+        }
     }
 
 
     /* sets the icon style (color and alpha) depending on isEnabled */
-    private static void formatConnectionIcon(Context context, ImageView icon, boolean isEnabled) {
+    private static void formatConnectionIcon(Context context, ImageView icon, int state) {
         if (icon == null) {
             return;
         }
 
-        if (isEnabled) {
+        if (state == -1) {
+            icon.setAlpha(CONNECTION_ICON_HALF);
+            icon.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
+        } else if (state == 0) {
             icon.setAlpha(CONNECTION_ICON_ENABLED);
             icon.setColorFilter(ContextCompat.getColor(context, R.color.colorAccent));
+        } else if (state == 1) {
+            icon.setAlpha(CONNECTION_ICON_HALF);
+            icon.setColorFilter(ContextCompat.getColor(context, R.color.white));
         } else {
             icon.setAlpha(CONNECTION_ICON_DISABLED);
             icon.clearColorFilter();
