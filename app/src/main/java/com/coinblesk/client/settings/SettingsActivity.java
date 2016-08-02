@@ -140,7 +140,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void refreshAppConfigAndRestartWallet(final String network) {
             ((CoinbleskApp) getActivity().getApplication()).refreshAppConfig(network);
-            restartWalletService();
+            walletService.restartWalletService();
         }
 
         private void showServerUrlDialog(final String network) {
@@ -191,14 +191,6 @@ public class SettingsActivity extends AppCompatActivity {
                 }
             });
             dialog.show();
-        }
-
-        private void restartWalletService() {
-            getActivity().unbindService(serviceConnection);
-            walletService = null;
-            getActivity().stopService(new Intent(getActivity(), WalletService.class));
-            getActivity().startService(new Intent(getActivity(), WalletService.class));
-            getActivity().bindService(new Intent(getActivity(), WalletService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         }
 
         private void stopWalletService() {

@@ -120,4 +120,8 @@ public class PaymentRequestReceiveStep extends AbstractStep {
         return null;
     }
 
+    public PaymentRequestTO paymentRequest() {
+        return paymentRequest;
+    }
+
 }
