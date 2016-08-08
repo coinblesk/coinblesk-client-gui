@@ -392,9 +392,13 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             //convert first
             String  currency = SharedPrefUtils.getCurrency(getActivity());
             Fiat fiat = Fiat.valueOf(currency, amountFiat);
-            Coin retVal = exchangeRate.fiatToCoin(fiat);
-            amountBTC = retVal.value;
-            return retVal;
+            if(exchangeRate.fiat.currencyCode.equals(fiat.currencyCode)) {
+                //exchange rate is set from the service, which may not have stared yet
+                Coin retVal = exchangeRate.fiatToCoin(fiat);
+                amountBTC = retVal.value;
+                return retVal;
+            }
+            return Coin.ZERO;
         }
     }
 
