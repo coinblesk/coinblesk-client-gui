@@ -453,8 +453,9 @@ public class WalletService extends Service {
         final ECKey clientECKey = new ECKey();
         final ECKey serverECKey;
 
-        final KeyTO requestTO = new KeyTO();
-        requestTO.publicKey(clientECKey.getPubKey());
+        final KeyTO requestTO = new KeyTO()
+            .currentDate(System.currentTimeMillis())
+            .publicKey(clientECKey.getPubKey());
         Response<KeyTO> response;
         try {
             response = service.keyExchange(requestTO).execute();
@@ -584,10 +585,10 @@ public class WalletService extends Service {
                 multisigServerKey.getPubKey(),
                 nextLockTime);
 
-        final TimeLockedAddressTO request = new TimeLockedAddressTO();
-        request.currentDate(System.currentTimeMillis());
-        request.publicKey(multisigClientKey.getPubKey());
-        request.lockTime(nextLockTime);
+        final TimeLockedAddressTO request = new TimeLockedAddressTO()
+            .currentDate(System.currentTimeMillis())
+            .publicKey(multisigClientKey.getPubKey())
+            .lockTime(nextLockTime);
         SerializeUtils.signJSON(request, multisigClientKey);
 
         Log.d(TAG, "Request new address from server: lockTime=" +

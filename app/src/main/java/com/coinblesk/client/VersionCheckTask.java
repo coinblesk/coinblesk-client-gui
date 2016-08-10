@@ -50,6 +50,7 @@ public class VersionCheckTask extends AsyncTask<Void, Void, VersionTO> {
             CoinbleskWebService service = appConfig.getCoinbleskService();
 
             VersionTO requestTO = new VersionTO()
+                    .currentDate(System.currentTimeMillis())
                     .clientVersion(clientAppVersion)
                     .bitcoinNet(clientNetwork);
             Response<VersionTO> response = service.version(requestTO).execute();

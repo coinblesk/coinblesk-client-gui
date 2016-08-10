@@ -107,7 +107,7 @@ public final class Constants {
 
     /* client to client communication */
     // version of the communication protocol for client to client communication.
-    public static final int CLIENT_COMMUNICATION_PROTOCOL_VERSION = 3;
+    public static final int CLIENT_COMMUNICATION_PROTOCOL_VERSION = 4;
 
     public static final UUID BLUETOOTH_SERVICE_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc2");
     public static final UUID BLUETOOTH_WRITE_CHARACTERISTIC_UUID = UUID.fromString("f36681f8-c73b-4a02-94a6-a87a8a351dc3");

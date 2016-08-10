@@ -17,6 +17,7 @@
 package com.coinblesk.client;
 
 import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,8 +27,8 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
@@ -40,8 +41,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.coinblesk.client.config.Constants;
+import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.client.ui.dialogs.CurrencyDialogFragment;
 import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
+import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
@@ -53,14 +56,23 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.Fiat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author ckiller
  * @author Andreas Albrecht
  */
 
-public class CurrentBalanceFragment extends HistoryFragment {
+public class CurrentBalanceFragment extends Fragment {
     private static final String TAG = CurrentBalanceFragment.class.getSimpleName();
     private WalletService.WalletServiceBinder walletService;
+
+    private RecyclerView recyclerView;
+    private TransactionWrapperRecyclerViewAdapter transactionAdapter;
+
+    private int walletProgressLastRefresh = 0;
+
 
     public static CurrentBalanceFragment newInstance() {
         return new CurrentBalanceFragment();
@@ -81,6 +93,12 @@ public class CurrentBalanceFragment extends HistoryFragment {
         IntentFilter walletProgressFilter = new IntentFilter(Constants.WALLET_DOWNLOAD_PROGRESS_ACTION);
         walletProgressFilter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
         broadcaster.registerReceiver(walletProgressBroadcastReceiver, walletProgressFilter);
+
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Constants.WALLET_CHANGED_ACTION);
+        filter.addAction(Constants.WALLET_DOWNLOAD_DONE_ACTION);
+        broadcaster.registerReceiver(walletChangedBroadcastReceiver, filter);
     }
 
     @Override
@@ -99,12 +117,28 @@ public class CurrentBalanceFragment extends HistoryFragment {
         broadcaster.unregisterReceiver(walletBalanceChangeBroadcastReceiver);
         broadcaster.unregisterReceiver(walletProgressBroadcastReceiver);
         broadcaster.unregisterReceiver(exchangeRateChangeListener);
+        broadcaster.unregisterReceiver(walletChangedBroadcastReceiver);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_balance, container, false);
+
+
+
+
+
+        recyclerView = (RecyclerView) view.findViewById(R.id.txhistoryview);
+        View empty = view.findViewById(R.id.txhistory_emptyview);
+        recyclerView.setEmptyView(empty);
+        transactionAdapter = new TransactionWrapperRecyclerViewAdapter(new ArrayList<TransactionWrapper>());
+        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+        recyclerView.setAdapter(transactionAdapter);
+        updateTransactions();
+
+
+
 
         ImageView switcher  = (ImageView) view.findViewById(R.id.balance_switch_image_view);
         switcher.setOnClickListener(new View.OnClickListener() {
@@ -271,6 +305,7 @@ public class CurrentBalanceFragment extends HistoryFragment {
             }
 
             refreshTestnetWarning();
+            updateTransactions();
         }
 
         @Override
@@ -279,5 +314,36 @@ public class CurrentBalanceFragment extends HistoryFragment {
         }
     };
 
-    /* -------------------- PAYMENTS INTEGRATION ENDS HERE  -------------------- */
+    /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
+    private final BroadcastReceiver walletChangedBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (walletService == null) {
+                return; // service not connected yet.
+            }
+            int currentWalletProgress = walletService.getDownloadProgress();
+            if (!walletService.isDownloadDone()) {
+                // during wallet sync, we prevent updating the tx history for every block
+                // and only update once in a while every x%
+                int progress = currentWalletProgress - walletProgressLastRefresh;
+                if (progress >= 0 && progress < 5) {
+                    return;
+                }
+            }
+            walletProgressLastRefresh = currentWalletProgress;
+            updateTransactions();
+        }
+    };
+
+    private void updateTransactions() {
+        if (walletService == null || transactionAdapter == null) {
+            return; // service not connected yet.
+        }
+
+        List<TransactionWrapper> transactions = walletService.getTransactionsByTime();
+        transactionAdapter.getItems().clear();
+        transactionAdapter.getItems().addAll(transactions);
+        transactionAdapter.notifyDataSetChanged();
+        Log.d(getClass().getName(), "Transaction history updated.");
+    }
 }

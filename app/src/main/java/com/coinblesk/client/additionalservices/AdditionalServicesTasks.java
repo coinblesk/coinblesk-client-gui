@@ -71,9 +71,10 @@ public class AdditionalServicesTasks {
         @Override
         protected Boolean doInBackground(Void... params) {
             CoinbleskWebService coinbleskWebService = AdditionalServiceUtils.coinbleskService();
-            BaseTO b = new BaseTO();
-            b.publicKey(clientKey.getPubKey());
-            Call<UserAccountTO> res = coinbleskWebService.transferToP2SH(b);
+            BaseTO baseTO = new BaseTO()
+                    .currentDate(System.currentTimeMillis())
+                    .publicKey(clientKey.getPubKey());
+            Call<UserAccountTO> res = coinbleskWebService.transferToP2SH(baseTO);
             Intent i = new Intent(AdditionalServicesAdapter.BROADCAST_UI);
             try {
                 UserAccountTO to = res.execute().body();
@@ -109,6 +110,7 @@ public class AdditionalServicesTasks {
             CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
             for(Pair<String,String> pair:pairs) {
                 UserAccountTO to = new UserAccountTO()
+                        .currentDate(System.currentTimeMillis())
                         .email(pair.element0())
                         .password(pair.element1());
                 Call<UserAccountStatusTO> result = coinbleskService.signUp(to);
@@ -176,6 +178,7 @@ public class AdditionalServicesTasks {
             CoinbleskWebService coinbleskService = AdditionalServiceUtils.coinbleskService();
             for(Pair<String,String> pair:pairs) {
                 UserAccountTO to = new UserAccountTO()
+                        .currentDate(System.currentTimeMillis())
                         .email(pair.element0())
                         .password(pair.element1());
                 Call<UserAccountStatusTO> result = coinbleskService.changePassword(to);
