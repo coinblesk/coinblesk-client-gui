@@ -34,11 +34,11 @@
                     android:id="@+id/amount_switch_image_view"
                     style="@style/amount_switch_image_view"
                     android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
+                    android:layout_height="60sp"
                     android:layout_gravity="center_horizontal"
                     android:longClickable="false"
                     android:duplicateParentState="false"
-                    android:layout_weight="1" />
+                    android:scaleType="centerInside" />
 
                 <LinearLayout
                     android:layout_width="fill_parent"
@@ -129,11 +129,11 @@
                     android:id="@+id/amount_backspace_image_view"
                     style="@style/amount_backspace_image_view"
                     android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
+                    android:layout_height="50sp"
                     android:layout_gravity="center_horizontal"
                     android:longClickable="false"
                     android:duplicateParentState="false"
-                    android:layout_weight="1" />
+                    android:scaleType="centerInside" />
 
                 <include layout="@layout/connections" />
 
