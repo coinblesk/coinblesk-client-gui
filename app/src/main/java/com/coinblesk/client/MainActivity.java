@@ -473,13 +473,21 @@ public class MainActivity extends AppCompatActivity
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
             initPeers();
 
-            if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
-                new Multisig2of2ToCltvForwardTask(MainActivity.this,
-                        walletServiceBinder,
-                        walletServiceBinder.getMultisigClientKey(),
-                        walletServiceBinder.getMultisigServerKey())
-                        .execute();
-            }
+
+            walletServiceBinder.onWalletLoaded(new Runnable(){
+                @Override
+                public void run() {
+                    if (SharedPrefUtils.isMultisig2of2ToCltvForwardingEnabled(MainActivity.this)) {
+                        new Multisig2of2ToCltvForwardTask(MainActivity.this,
+                                walletServiceBinder,
+                                walletServiceBinder.getMultisigClientKey(),
+                                walletServiceBinder.getMultisigServerKey())
+                                .execute();
+                    }
+                }
+            });
+
+
 
         }
 

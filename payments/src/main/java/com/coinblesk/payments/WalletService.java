@@ -199,8 +199,12 @@ public class WalletService extends Service {
                         keyExchange();
                         loadKeysIfExist();
                     }
+
                     initAddresses();
 
+                    if(walletLRunnable!=null) {
+                        walletLRunnable.run();
+                    }
                     appKitInitDone = true;
                     broadcastBalanceChanged();
                 } catch (Exception e) {
@@ -1283,7 +1287,20 @@ public class WalletService extends Service {
         public void restartWalletService() {
             WalletService.this.restartWalletService();
         }
+
+
+        public void onWalletLoaded(Runnable walletLRunnable) {
+
+            if(getMultisigClientKey() != null && getMultisigServerKey()!=null) {
+                walletLRunnable.run();
+                WalletService.this.walletLRunnable = null;
+            } else {
+                WalletService.this.walletLRunnable = walletLRunnable;
+            }
+        }
     }
+
+    private Runnable walletLRunnable;
 
     private class CoinbleskWalletEventListener implements WalletCoinsReceivedEventListener,
                                                           WalletCoinsSentEventListener,

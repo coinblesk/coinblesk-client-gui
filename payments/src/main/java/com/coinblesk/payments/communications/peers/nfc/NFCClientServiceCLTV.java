@@ -22,6 +22,7 @@ import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.der.DERObject;
 import com.coinblesk.der.DERParser;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.payments.communications.PaymentError;
 import com.coinblesk.payments.communications.PaymentException;
 import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
@@ -294,7 +295,11 @@ public class NFCClientServiceCLTV extends HostApduService {
             } catch (PaymentException pe) {
                 approveAddress = null;
                 approveAmount = null;
-                broadcastInsufficientBalance();
+                if(pe.getErrorCode() == PaymentError.INSUFFICIENT_FUNDS) {
+                    broadcastInsufficientBalance();
+                } else {
+                    broadcastError();
+                }
                 long duration = System.currentTimeMillis() - processStartTime;
                 Log.d(TAG, "Payment not completed: " + duration + "ms");
                 pe.printStackTrace();
@@ -371,6 +376,13 @@ public class NFCClientServiceCLTV extends HostApduService {
         LocalBroadcastManager
                 .getInstance(NFCClientServiceCLTV.this)
                 .sendBroadcast(insufficientBalance);
+    }
+
+    private void broadcastError() {
+        Intent intent = new Intent(Constants.WALLET_ERROR_ACTION);
+        LocalBroadcastManager
+                .getInstance(NFCClientServiceCLTV.this)
+                .sendBroadcast(intent);
     }
 
     private void broadcastInstantPaymentSuccess() {
