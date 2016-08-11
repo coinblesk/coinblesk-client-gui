@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.coinblesk.client.R;
@@ -105,6 +106,8 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                 .setNeutralButton(isLoggedin? R.string.logout : R.string.signup, null)
                 .create();
 
+
+
         checkBoxForgot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -122,19 +125,31 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             }
         });
 
+
+
+        final ProgressBar infiniteProgressBar = (ProgressBar) view.findViewById(R.id.progressBar2);
+
         final View.OnClickListener okClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                final Button okButton = d.getButton(AlertDialog.BUTTON_POSITIVE);
+                final Button neutralButton = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+                final Button cancelButton = d.getButton(AlertDialog.BUTTON_NEGATIVE);
+
                 if(checkBoxForgot.isChecked()) {
                     //send new password
+                    infiniteProgressBar.setVisibility(View.VISIBLE);
+                    okButton.setEnabled(false);
+                    neutralButton.setEnabled(false);
+                    cancelButton.setEnabled(false);
                     new AdditionalServicesTasks.ForgotTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
                         public void onTaskCompleted(boolean success, String message) {
                             if (success) {
                                 toastAndQuit(R.string.additional_services_forgot_success, d);
                             } else {
-                                toast(R.string.additional_services_forgot_error, message);
+                                toast(R.string.additional_services_forgot_error, message, okButton, neutralButton, cancelButton, infiniteProgressBar);
                             }
                         }
                     }).execute(usernameText.getText().toString());
@@ -146,16 +161,20 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                         checkBoxForgot.setVisibility(View.GONE);
                         d.getButton(AlertDialog.BUTTON_NEUTRAL).setVisibility(View.INVISIBLE);
                     } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
-                        toast(R.string.additional_services_password_mismatch);
+                        toast(R.string.additional_services_password_mismatch, okButton, neutralButton, cancelButton, infiniteProgressBar);
                     }
                     else {
+                        infiniteProgressBar.setVisibility(View.VISIBLE);
+                        okButton.setEnabled(false);
+                        neutralButton.setEnabled(false);
+                        cancelButton.setEnabled(false);
                         new AdditionalServicesTasks.ChangePassword(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                             @Override
                             public void onTaskCompleted(boolean success, String message) {
                                 if (success) {
                                     toastAndQuit(R.string.additional_services_change_success, d);
                                 } else {
-                                    toast(R.string.additional_services_change_error, message);
+                                    toast(R.string.additional_services_change_error, message, okButton, neutralButton, cancelButton, infiniteProgressBar);
                                 }
                             }
                         }).execute(new Pair<String, String>(usernameText.getText().toString(), passwordText.getText().toString()));
@@ -167,6 +186,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                     b.callOnClick();
                 } else {
                     //login
+                    infiniteProgressBar.setVisibility(View.VISIBLE);
+                    okButton.setEnabled(false);
+                    neutralButton.setEnabled(false);
+                    cancelButton.setEnabled(false);
                     new AdditionalServicesTasks.LoginTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                         @Override
                         public void onTaskCompleted(boolean success, String message) {
@@ -174,9 +197,10 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                 toastAndQuit(R.string.additional_services_login_success, d);
                             } else {
                                 if (message == null) {
-                                    toast(R.string.additional_services_login_user_password_incorrect);
+                                    toast(R.string.additional_services_login_user_password_incorrect, okButton, neutralButton, cancelButton, infiniteProgressBar);
+
                                 } else {
-                                    toast(R.string.additional_services_login_error, message);
+                                    toast(R.string.additional_services_login_error, message, okButton, neutralButton, cancelButton, infiniteProgressBar);
                                 }
                             }
                         }
@@ -191,10 +215,18 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             d.setOnShowListener(new DialogInterface.OnShowListener() {
                 @Override
                 public void onShow(DialogInterface dialog) {
-                    Button b = d.getButton(AlertDialog.BUTTON_NEUTRAL);
-                    b.setOnClickListener(new View.OnClickListener() {
+
+                    final Button okButton = d.getButton(AlertDialog.BUTTON_POSITIVE);
+                    final Button neutralButton = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+                    final Button cancelButton = d.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                    neutralButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            infiniteProgressBar.setVisibility(View.VISIBLE);
+                            okButton.setEnabled(false);
+                            neutralButton.setEnabled(false);
+                            cancelButton.setEnabled(false);
                             new AdditionalServicesTasks.LogoutTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                                 @Override
                                 public void onTaskCompleted(boolean success, String message) {
@@ -202,7 +234,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
                                         getArguments().putSerializable("", null);
                                         toastAndQuit(R.string.additional_services_logout_success, d);
                                     } else {
-                                        toast(R.string.additional_services_logout_error, message);
+                                        toast(R.string.additional_services_logout_error, message, okButton, neutralButton, cancelButton, infiniteProgressBar);
                                     }
                                 }
                             }).execute();
@@ -219,26 +251,35 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
             d.setOnShowListener(new DialogInterface.OnShowListener() {
                 @Override
                 public void onShow(DialogInterface dialog) {
-                    Button b = d.getButton(AlertDialog.BUTTON_NEUTRAL);
-                    b.setOnClickListener(new View.OnClickListener() {
+
+                    final Button okButton = d.getButton(AlertDialog.BUTTON_POSITIVE);
+                    final Button neutralButton = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+                    final Button cancelButton = d.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                    neutralButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+
                             isSignup = true;
                             if(layout.getVisibility() == View.GONE) {
                                 layout.setVisibility(View.VISIBLE);
                                 checkBoxSingle.setVisibility(View.GONE);
                                 checkBoxForgot.setVisibility(View.GONE);
                             } else if(!passwordText.getText().toString().equals(passwordText2.getText().toString())) {
-                                toast(R.string.additional_services_password_mismatch);
+                                toast(R.string.additional_services_password_mismatch, okButton, neutralButton, cancelButton, infiniteProgressBar);
                             }
                             else {
+                                infiniteProgressBar.setVisibility(View.VISIBLE);
+                                okButton.setEnabled(false);
+                                neutralButton.setEnabled(false);
+                                cancelButton.setEnabled(false);
                                 new AdditionalServicesTasks.SignupTask(getActivity(), new AdditionalServicesTasks.OnTaskCompleted() {
                                     @Override
                                     public void onTaskCompleted(boolean success, String message) {
                                         if (success) {
                                             toastAndQuit(R.string.additional_services_signup_success, d);
                                         } else {
-                                            toast(R.string.additional_services_signup_error, message);
+                                            toast(R.string.additional_services_signup_error, message, okButton, neutralButton, cancelButton, infiniteProgressBar);
                                         }
                                     }
                                 }).execute(new Pair<String, String>(
@@ -247,8 +288,7 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
 
                         }
                     });
-                    Button b1 = d.getButton(AlertDialog.BUTTON_POSITIVE);
-                    b1.setOnClickListener(okClickListener);
+                    okButton.setOnClickListener(okClickListener);
                 }
             });
             return d;
@@ -266,31 +306,28 @@ public class AdditionalServicesUsernameDialog extends DialogFragment {
         });
     }
 
-    private void toast(final int text) {
+    private void toast(final int text,  final Button ok, final Button neutral,final Button cancel, final ProgressBar infiniteProgressBar) {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                ok.setEnabled(true);
+                neutral.setEnabled(true);
+                cancel.setEnabled(true);
+                infiniteProgressBar.setVisibility(View.INVISIBLE);
                 String resolved = getActivity().getResources().getString(text);
                 Toast.makeText(getActivity(), resolved, Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    private void toastAndQuit(final int text, final String msg, final AlertDialog d) {
+    private void toast(final int text, final String msg, final Button ok, final Button neutral,final Button cancel, final ProgressBar infiniteProgressBar) {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String resolved = getActivity().getResources().getString(text);
-                Toast.makeText(getActivity(), resolved + msg, Toast.LENGTH_LONG).show();
-                d.dismiss();
-            }
-        });
-    }
-
-    private void toast(final int text, final String msg) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+                ok.setEnabled(true);
+                neutral.setEnabled(true);
+                cancel.setEnabled(true);
+                infiniteProgressBar.setVisibility(View.INVISIBLE);
                 String resolved = getActivity().getResources().getString(text);
                 Toast.makeText(getActivity(), resolved + msg, Toast.LENGTH_LONG).show();
             }

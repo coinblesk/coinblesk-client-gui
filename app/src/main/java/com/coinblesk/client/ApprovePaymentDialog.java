@@ -79,7 +79,17 @@ public class ApprovePaymentDialog extends DialogFragment {
                 .setTitle(R.string.request_payment)
                 .setView(view)
                 .setPositiveButton(R.string.ok, null)
-                .setNegativeButton(R.string.cancel, null)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Constants.PAYMENT_REQUEST_APPROVED);
+                        intent.putExtra(Constants.PAYMENT_REQUEST_ADDRESS, (String) null);
+                        intent.putExtra(Constants.PAYMENT_REQUEST_AMOUNT, (String) null);
+                        LocalBroadcastManager
+                                .getInstance(context)
+                                .sendBroadcast(intent);
+                    }
+                })
                 .create();
 
         d.setOnShowListener(new DialogInterface.OnShowListener() {
@@ -102,6 +112,7 @@ public class ApprovePaymentDialog extends DialogFragment {
                         //d.dismiss();
                     }
                 });
+
             }
         });
 

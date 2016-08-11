@@ -77,11 +77,16 @@ public class AdditionalServicesTasks {
             Call<UserAccountTO> res = coinbleskWebService.transferToP2SH(baseTO);
             Intent i = new Intent(AdditionalServicesAdapter.BROADCAST_UI);
             try {
-                UserAccountTO to = res.execute().body();
-                if (to.isSuccess()) {
-                    i.putExtra("", to);
-                    LocalBroadcastManager.getInstance(context).sendBroadcast(i);
+                Response<UserAccountTO> response = res.execute();
+                if(response.isSuccessful()) {
+                    UserAccountTO to = response.body();
+                    if (to.isSuccess()) {
+                        i.putExtra("", to);
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(i);
 
+                    } else {
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(i);
+                    }
                 } else {
                     LocalBroadcastManager.getInstance(context).sendBroadcast(i);
                 }
@@ -116,10 +121,10 @@ public class AdditionalServicesTasks {
                 Call<UserAccountStatusTO> result = coinbleskService.signUp(to);
                 try {
                     Response<UserAccountStatusTO> res =result.execute();
-                    if(res.body().isSuccess()) {
+                    if(res.isSuccessful() && res.body().isSuccess()) {
                         callback.onTaskCompleted(true, null);
                     } else {
-                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        String msg = res.isSuccessful() ? ClientUtils.getMessageByType(activity,  res.body())  :"code:" + res.code();
                         callback.onTaskCompleted(false, msg);
                     }
 
@@ -148,10 +153,10 @@ public class AdditionalServicesTasks {
                 Call<UserAccountStatusTO> result = coinbleskService.forgot(email);
                 try {
                     Response<UserAccountStatusTO> res = result.execute();
-                    if (res.body().isSuccess()) {
+                    if (res.isSuccessful() && res.body().isSuccess()) {
                         callback.onTaskCompleted(true, null);
                     } else {
-                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        String msg = res.isSuccessful() ? ClientUtils.getMessageByType(activity,  res.body())  :"code:" + res.code();
                         callback.onTaskCompleted(false, msg);
                     }
 
@@ -184,10 +189,10 @@ public class AdditionalServicesTasks {
                 Call<UserAccountStatusTO> result = coinbleskService.changePassword(to);
                 try {
                     Response<UserAccountStatusTO> res =result.execute();
-                    if(res.body().isSuccess()) {
+                    if(res.isSuccessful() && res.body().isSuccess()) {
                         callback.onTaskCompleted(true, null);
                     } else {
-                        String msg = ClientUtils.getMessageByType(activity, res.body());
+                        String msg = res.isSuccessful() ? ClientUtils.getMessageByType(activity,  res.body())  :"code:" + res.code();
                         callback.onTaskCompleted(false, msg);
                     }
 
@@ -217,11 +222,12 @@ public class AdditionalServicesTasks {
             Call<UserAccountStatusTO> result = coinbleskService.logout();
             try {
                 Response<UserAccountStatusTO> res =result.execute();
-                if(res.body().isSuccess()) {
+                if(res.isSuccessful() && res.body().isSuccess()) {
                     AdditionalServiceUtils.setSessionID(activity, "");
                     callback.onTaskCompleted(true, null);
                 } else {
-                    callback.onTaskCompleted(false, res.body().message());
+                    String msg = res.isSuccessful() ? ClientUtils.getMessageByType(activity,  res.body())  :"code:" + res.code();
+                    callback.onTaskCompleted(false, msg);
                 }
 
             } catch (IOException e) {
@@ -265,7 +271,4 @@ public class AdditionalServicesTasks {
             return true;
         }
     }
-
-
-
 }

@@ -27,6 +27,7 @@ import com.coinblesk.payments.communications.steps.cltv.PaymentFinalizeStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentRequestReceiveStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentResponseSendCompactStep;
 import com.coinblesk.payments.communications.steps.cltv.PaymentServerSignatureReceiveStep;
+import com.coinblesk.util.Pair;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
@@ -48,7 +49,6 @@ public class NFCClientServiceCLTV extends HostApduService {
 
     private long startTime;
 
-    private ClientSteps nextStep;
     private boolean isProcessing = false;
 
     private byte[] derRequestPayload = new byte[0];
@@ -131,40 +131,44 @@ public class NFCClientServiceCLTV extends HostApduService {
 
         try {
 
-            int derPayloadStartIndex = 0;
-
             /* HANDSHAKE */
             if (NFCUtils.selectAidApdu(commandApdu)) {
                 startAppIfNotRunning();
-                derPayloadStartIndex = 6 + commandApdu[4];
+                int derPayloadStartIndex = 6 + commandApdu[4];
                 Log.d(TAG, "processCommandApdu - handshake (derPayloadStartIndex="+derPayloadStartIndex+")");
                 executeHandshake(commandApdu, derPayloadStartIndex);
                 return NFCUtils.KEEPALIVE;
             }
 
-            if(nextStep == ClientSteps.PAYMENT_REQUEST_RECEIVE && approveAmount != null && bitcoinURI != null) {
+            if(clientTxSignatures == null && approveAmount != null && bitcoinURI != null && !isProcessing) {
                 isProcessing = true;
                 derResponsePayload = new byte[0];
-                Thread processCommand = new Thread(new ProcessCommand(), "NFCClient.ProcessCommand");
+                Thread processCommand = new Thread(new ProcessCommandRequest(), "NFCClient.ProcessCommand");
                 processCommand.start();
+                Log.d(TAG, "process for signig started");
+
             }
 
             /* NEXT FRAGMENT */
             if (hasNextFragment()) {
-                byte[] fragment = getNextFragment();
+                Pair<byte[], byte[]> pair = getNextFragment(derResponsePayload, maxFragmentSize);
+                byte[] fragment = pair.element0();
+                derResponsePayload = pair.element1();
+                if (derResponsePayload.length == 0) {
+                    isProcessing = false;
+                }
                 Log.d(TAG, "has next fragment ready, return payload with length=" + fragment.length);
                 return fragment;
             }
 
             /* PROCESS PAYLOAD */
-            final byte[] payload = Arrays.copyOfRange(commandApdu, derPayloadStartIndex, commandApdu.length);
-            if (NFCUtils.isKeepAlive(payload)) {
+            if (NFCUtils.isKeepAlive(commandApdu)) {
                 Log.d(TAG, "got keep alive, sending it back");
                 return NFCUtils.KEEPALIVE;
             }
 
             /* HANDLE REQUEST (not keepalive) */
-            derRequestPayload = ClientUtils.concatBytes(derRequestPayload, payload);
+            derRequestPayload = ClientUtils.concatBytes(derRequestPayload, commandApdu);
             final int responseLength = DERParser.extractPayloadEndIndex(derRequestPayload);
             Log.d(TAG, "processCommandApdu -  requestPayload - expected length=" + responseLength
                      + ", actual length=" + derRequestPayload.length);
@@ -173,11 +177,16 @@ public class NFCClientServiceCLTV extends HostApduService {
                 // we have an unprocessed request
                 isProcessing = true;
                 derResponsePayload = new byte[0];
-                Thread processCommand = new Thread(new ProcessCommand(), "NFCClient.ProcessCommand");
-                processCommand.start();
+
+                if(clientTxSignatures == null) {
+                    Thread processCommand = new Thread(new ProcessCommandRequest(), "NFCClient.ProcessCommand");
+                    processCommand.start();
+                }
+                else {
+                    handlePaymentFinalize(derRequestPayload);
+                    return DERObject.NULLOBJECT.serializeToDER();
+                }
             }
-
-
 
             Log.d(TAG, "processCommandApdu - Keep alive");
             return NFCUtils.KEEPALIVE;
@@ -196,7 +205,6 @@ public class NFCClientServiceCLTV extends HostApduService {
     private void reset() {
         derRequestPayload = new byte[0];
         derResponsePayload = new byte[0];
-        nextStep = ClientSteps.PAYMENT_REQUEST_RECEIVE;
         isProcessing = false;
         startTime = 0;
 
@@ -221,121 +229,11 @@ public class NFCClientServiceCLTV extends HostApduService {
         return derResponsePayload.length > 0;
     }
 
-    private byte[] getNextFragment() {
+    private static Pair<byte[], byte[]> getNextFragment(byte[] derResponsePayload, int maxFragmentSize) {
         int payloadEnd = Math.min(derResponsePayload.length, maxFragmentSize);
         byte[] fragment = Arrays.copyOfRange(derResponsePayload, 0, payloadEnd);
         derResponsePayload = Arrays.copyOfRange(derResponsePayload, fragment.length, derResponsePayload.length);
-        if (derResponsePayload.length == 0) {
-            isProcessing = false;
-        }
-        return fragment;
-    }
-
-    private class ProcessCommand implements Runnable {
-
-        @Override
-        public void run() {
-            long processStartTime = System.currentTimeMillis();
-            synchronized (LOCK) {
-                while (walletServiceBinder == null) {
-                    //wait until ready
-                    try {
-                        LOCK.wait();
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "interrupted", e);
-                        return;
-                    }
-                }
-            }
-            ClientSteps currentStep = nextStep;
-            final byte[] requestPayload = derRequestPayload;
-            try {
-                derRequestPayload = new byte[0];
-                switch (currentStep) {
-                    case PAYMENT_REQUEST_RECEIVE:
-                        Log.d(TAG, "handle PAYMENT_REQUEST_RECEIVE");
-                        if(handlePaymentRequestReceive(requestPayload, bitcoinURI!=null)) {
-                            nextStep = ClientSteps.SIGNATURES_RECEIVE;
-                        }
-                        break;
-                    case SIGNATURES_RECEIVE:
-                        Log.d(TAG, "handle SIGNATURES_RECEIVE");
-                        handlePaymentFinalize(requestPayload);
-                        Log.d(TAG, "handle PAYMENT_COMPLETED");
-                        handlePaymentCompleted();
-                        nextStep = ClientSteps.NULL;
-                        break;
-                    /*case PAYMENT_COMPLETED:
-                        Log.d(TAG, "handle PAYMENT_COMPLETED");
-                        handlePaymentCompleted();
-                        nextStep = ClientSteps.NULL;
-                        break;*/
-                    default:
-                        Log.w(TAG, "ProcessCommand does not know how to handle current step: " + currentStep);
-                }
-            } catch (PaymentException pe) {
-                approveAddress = null;
-                approveAmount = null;
-                broadcastInsufficientBalance();
-                long duration = System.currentTimeMillis() - processStartTime;
-                Log.d(TAG, "Payment not completed: " + duration + "ms");
-                pe.printStackTrace();
-            }
-            catch (Exception e) {
-                Log.w(TAG, "Exception in processing thread: ", e);
-            } finally {
-                long duration = System.currentTimeMillis() - processStartTime;
-                long totalDuration = System.currentTimeMillis() - startTime;
-                Log.d(TAG, String.format(
-                                "ProcessCommand - %s (%d ms, %d since startTime): bitcoinURI=%s, " +
-                                "request length=%d bytes, response length=%d bytes",
-                                currentStep.toString(), duration, totalDuration, bitcoinURI,
-                                requestPayload.length, derResponsePayload.length));
-            }
-        }
-    }
-
-    private void handlePaymentCompleted() {
-        approveAddress = null;
-        approveAmount = null;
-        walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
-        broadcastInstantPaymentSuccess();
-        long duration = System.currentTimeMillis() - startTime;
-        Log.d(TAG, "Payment completed: total duration " + duration + " ms");
-    }
-
-    private boolean handlePaymentRequestReceive(byte[] requestPayload, boolean resume) throws PaymentException, BitcoinURIParseException {
-        if(!resume) {
-            NetworkParameters params = walletServiceBinder.getNetworkParameters();
-            PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(params);
-            DERObject input = DERParser.parseDER(requestPayload);
-            request.process(input);
-            bitcoinURI = request.getBitcoinURI();
-        }
-
-
-        boolean isPaymentAutoAccepted = SharedPrefUtils.isPaymentAutoAcceptEnabled(NFCClientServiceCLTV.this) && SharedPrefUtils.getPaymentAutoAcceptValue(NFCClientServiceCLTV.this).isGreaterThan(bitcoinURI.getAmount());
-        boolean isPaymentApproved = bitcoinURI.getAddress().toString().equals(approveAddress) && bitcoinURI.getAmount().toString().equals(approveAmount);
-        if(isPaymentAutoAccepted || isPaymentApproved) {
-            Log.d(TAG, "payment approved - isAutoAccepted: " + isPaymentAutoAccepted + ", isApproved: " + isPaymentApproved);
-            PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
-            DERObject result = response.process(DERObject.NULLOBJECT);
-            derResponsePayload = result.serializeToDER();
-            transaction = response.getTransaction();
-            clientTxSignatures = response.getClientTransactionSignatures();
-            return true;
-        } else {
-            Log.d(TAG, "Not yet approved");
-            approveAddress = null;
-            approveAmount = null;
-            Intent intent = new Intent(Constants.PAYMENT_REQUEST);
-            intent.putExtra(Constants.PAYMENT_REQUEST_ADDRESS, bitcoinURI.getAddress().toString());
-            intent.putExtra(Constants.PAYMENT_REQUEST_AMOUNT, bitcoinURI.getAmount().toString());
-            LocalBroadcastManager
-                    .getInstance(NFCClientServiceCLTV.this)
-                    .sendBroadcast(intent);
-            return false;
-        }
+        return new Pair<>(fragment, derResponsePayload);
     }
 
     private void handlePaymentFinalize(byte[] payload) throws PaymentException {
@@ -353,7 +251,100 @@ public class NFCClientServiceCLTV extends HostApduService {
         finalizeStep.process(null);
         transaction = finalizeStep.getTransaction();
         derResponsePayload = DERObject.NULLOBJECT.serializeToDER();
+
+        approveAddress = null;
+        approveAmount = null;
+        walletServiceBinder.maybeCommitAndBroadcastTransaction(transaction);
+        broadcastInstantPaymentSuccess();
+        reset();
+        long duration = System.currentTimeMillis() - startTime;
+        Log.d(TAG, "Payment completed: total duration " + duration + " ms");
     }
+
+    private void waitForWalletReady() {
+        synchronized (LOCK) {
+            while (walletServiceBinder == null) {
+                //wait until ready
+                try {
+                    LOCK.wait();
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "interrupted", e);
+                    return;
+                }
+            }
+        }
+    }
+
+    private class ProcessCommandRequest implements Runnable {
+
+
+        public ProcessCommandRequest() {
+
+        }
+
+        @Override
+        public void run() {
+            long processStartTime = System.currentTimeMillis();
+            waitForWalletReady();
+            final byte[] requestPayload = derRequestPayload;
+            try {
+                derRequestPayload = new byte[0];
+                 Log.d(TAG, "handle PAYMENT_REQUEST_RECEIVE");
+                 handlePaymentRequestReceive(requestPayload, bitcoinURI!=null);
+            } catch (PaymentException pe) {
+                approveAddress = null;
+                approveAmount = null;
+                broadcastInsufficientBalance();
+                long duration = System.currentTimeMillis() - processStartTime;
+                Log.d(TAG, "Payment not completed: " + duration + "ms");
+                pe.printStackTrace();
+            }
+            catch (Exception e) {
+                Log.w(TAG, "Exception in processing thread: ", e);
+            } finally {
+                long duration = System.currentTimeMillis() - processStartTime;
+                long totalDuration = System.currentTimeMillis() - startTime;
+                Log.d(TAG, String.format(
+                                "ProcessCommand - %d ms, %d since startTime): bitcoinURI=%s, " +
+                                "request length=%d bytes, response length=%d bytes",
+                                duration, totalDuration, bitcoinURI,
+                                requestPayload.length, derResponsePayload.length));
+            }
+        }
+
+        private void handlePaymentRequestReceive(byte[] requestPayload, boolean resume) throws PaymentException, BitcoinURIParseException {
+            if(!resume) {
+                NetworkParameters params = walletServiceBinder.getNetworkParameters();
+                PaymentRequestReceiveStep request = new PaymentRequestReceiveStep(params);
+                DERObject input = DERParser.parseDER(requestPayload);
+                request.process(input);
+                bitcoinURI = request.getBitcoinURI();
+            }
+
+
+            boolean isPaymentAutoAccepted = SharedPrefUtils.isPaymentAutoAcceptEnabled(NFCClientServiceCLTV.this) && SharedPrefUtils.getPaymentAutoAcceptValue(NFCClientServiceCLTV.this).isGreaterThan(bitcoinURI.getAmount());
+            boolean isPaymentApproved = bitcoinURI.getAddress().toString().equals(approveAddress) && bitcoinURI.getAmount().toString().equals(approveAmount);
+            if(isPaymentAutoAccepted || isPaymentApproved) {
+                Log.d(TAG, "payment approved - isAutoAccepted: " + isPaymentAutoAccepted + ", isApproved: " + isPaymentApproved);
+                PaymentResponseSendCompactStep response = new PaymentResponseSendCompactStep(bitcoinURI, walletServiceBinder);
+                DERObject result = response.process(DERObject.NULLOBJECT);
+                derResponsePayload = result.serializeToDER();
+                transaction = response.getTransaction();
+                clientTxSignatures = response.getClientTransactionSignatures();
+            } else {
+                Log.d(TAG, "Not yet approved");
+                approveAddress = null;
+                approveAmount = null;
+                Intent intent = new Intent(Constants.PAYMENT_REQUEST);
+                intent.putExtra(Constants.PAYMENT_REQUEST_ADDRESS, bitcoinURI.getAddress().toString());
+                intent.putExtra(Constants.PAYMENT_REQUEST_AMOUNT, bitcoinURI.getAmount().toString());
+                LocalBroadcastManager
+                        .getInstance(NFCClientServiceCLTV.this)
+                        .sendBroadcast(intent);
+            }
+        }
+    }
+
 
     /* ------------------- PAYMENTS INTEGRATION STARTS HERE  ------------------- */
     private WalletService.WalletServiceBinder walletServiceBinder;
@@ -387,11 +378,5 @@ public class NFCClientServiceCLTV extends HostApduService {
         LocalBroadcastManager
                 .getInstance(this)
                 .sendBroadcast(instantPaymentSuccess);
-    }
-
-    private enum ClientSteps {
-        NULL(),
-        PAYMENT_REQUEST_RECEIVE(),
-        SIGNATURES_RECEIVE();
     }
 }
