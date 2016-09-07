@@ -17,22 +17,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
-
-    productFlavors {
-        // Define separate dev and prod product flavors.
-        dev {
-            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
-            // to pre-dex each module and produce an APK that can be tested on
-            // Android Lollipop without time consuming dex merging processes.
-            minSdkVersion 21
-        }
-        prod {
-            // The actual minSdkVersion for the application.
-            minSdkVersion 16
-        }
-    }
+    compileSdkVersion 24
+    buildToolsVersion "24.0.1"
 
     signingConfigs {
         release {
@@ -46,8 +32,8 @@ android {
 
     defaultConfig {
         applicationId "com.coinblesk.client"
-        minSdkVersion 16
-        targetSdkVersion 23
+        minSdkVersion 21
+        targetSdkVersion 24
         version = 4
         //compatibility reasons, this was the previous build number
         versionCode 2420 + version
@@ -108,11 +94,11 @@ dependencies {
     compile 'com.google.zxing:core:3.2.1'
     compile 'com.journeyapps:zxing-android-embedded:3.3.0@aar'
 
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.android.support:recyclerview-v7:23.4.0'
-    compile 'com.android.support:cardview-v7:23.4.0'
-    compile 'com.android.support:support-v13:23.4.0'
-    compile 'com.android.support:design:23.4.0'
+    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.android.support:recyclerview-v7:24.2.0'
+    compile 'com.android.support:cardview-v7:24.2.0'
+    compile 'com.android.support:support-v13:24.2.0'
+    compile 'com.android.support:design:24.2.0'
 
     // bitcoinj forces us to multidex
     //compile 'com.android.support:multidex:1.0.0'
