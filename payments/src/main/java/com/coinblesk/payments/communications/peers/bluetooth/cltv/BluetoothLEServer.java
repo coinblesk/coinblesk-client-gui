@@ -183,7 +183,7 @@ public class BluetoothLEServer extends AbstractServer {
                         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
                         .build(),
                 new AdvertiseData.Builder()
-                        .setIncludeDeviceName(true)
+                        .setIncludeDeviceName(false)
                         .addServiceUuid(new ParcelUuid(uuid))
                         .build(),
                 advertiseCallback
