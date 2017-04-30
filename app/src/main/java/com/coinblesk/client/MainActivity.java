@@ -185,17 +185,12 @@ public class MainActivity extends AppCompatActivity
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 FINE_LOCATION_PERMISSION_REQUEST);
 
-        checkVersionCompatibility(appConfig);
+
     }
 
 
 
-    private void checkVersionCompatibility(AppConfig appConfig) {
-        // message is only displayed if request succeeds and answer from server is negative in order
-        // to av
-        // oid annoying message dialogs. (the client or the server may just be temporary offline).
-        new VersionCheckTask(appConfig, AppUtils.getAppVersion(), this).execute();
-    }
+
 
     private void startWalletService(boolean bindService) {
         Intent walletServiceIntent = new Intent(this, WalletService.class);

@@ -127,3 +127,6 @@
 # keep everything that is serialized
 -keep class com.coinblesk.json.** { *; }
 #-keep class com.coinblesk.payments.models.** { *; }
+
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver

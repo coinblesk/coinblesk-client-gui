@@ -111,7 +111,19 @@
                     android:value="com.coinblesk.client.MainActivity"/>
         </activity>
 
-        <service android:name="com.coinblesk.payments.WalletService">
+        <service android:name="com.coinblesk.payments.WalletService" />
+
+        <service
+            android:name="com.coinblesk.payments.communications.peers.nfc.NFCClientServiceCLTV"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/apduservice"/>
         </service>
 
 
@@ -127,5 +139,19 @@
         </provider>
 
     </application>
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.NFC" />
+
+    <!--permissions for wallet-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE"/>
+
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+
 
 </manifest>

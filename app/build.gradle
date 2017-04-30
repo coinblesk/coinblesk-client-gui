@@ -18,7 +18,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    buildToolsVersion '25.0.0'
 
     signingConfigs {
         release {
@@ -80,12 +80,12 @@ android {
 
 configurations {
     all*.exclude(group: 'org.java-websocket')
+    //http://stackoverflow.com/questions/25295066/android-dependency-is-ignored-for-release
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':payments')
-    compile project(':common')
 
     //needed for nice time formatting
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final' // 4.0.0.Final
@@ -100,6 +100,43 @@ dependencies {
     compile 'com.android.support:support-v13:24.2.0'
     compile 'com.android.support:design:24.2.0'
 
+    compile 'com.coinblesk:coinblesk-shared-resources:1.4.74'
+
+    // requests
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+
+    // needed for broadcasts
+    compile 'com.android.support:appcompat-v7:24.2.0'
+
+    //needed for ECDH
+    compile 'com.madgag.spongycastle:core:1.54.0.0'
+    compile 'com.madgag.spongycastle:prov:1.54.0.0'
+
+    // xchange: market APIs
+    compile ('com.xeiam.xchange:xchange-core:3.1.0') { // 4.0.0
+        exclude(group: 'org.java-websocket')
+    }
+    compile(group: 'com.xeiam.xchange', name: 'xchange-bitstamp', version: '3.1.0') // 4.0.0
+
+
     // bitcoinj forces us to multidex
     //compile 'com.android.support:multidex:1.0.0'
+}
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.1'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
 }

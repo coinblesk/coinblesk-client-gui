@@ -413,4 +413,78 @@
     <string name="pref_exchange_rate_EUR">EUR</string>
     <string name="pref_exchange_rate_default">---</string>
 
+
+    <string name="pref_app_version">pref_app_version</string>
+    <string name="url_github_coinblesk">http://www.github.com/coinblesk</string>
+    <string name="url_bitcoin_csg_website">http://www.bitcoin.csg.uzh.ch</string>
+    <string name="url_uzh_website">http://www.uzh.ch</string>
+    <string name="url_ifi_website">http://www.ifi.uzh.ch</string>
+    <string name="url_twitter_coinblesk">https://twitter.com/coinblesk</string>
+
+    <string name="pref_connection_nfc">nfc-checked</string>
+    <string name="pref_connection_bt_le">bt-le-checked</string>
+    <string name="pref_connection_wifi_direct">wifi-checked</string>
+
+    <string name="pref_network_list">pref_network_list</string>
+    <string name="pref_network_default_value">@string/pref_network_mainnet</string>
+    <string name="pref_network_mainnet">mainnet</string>
+    <string name="pref_network_testnet">testnet</string>
+    <string name="pref_network_localtestnet">localtestnet</string>
+    <string name="pref_network_localtestnet_server_url">pref_network_localtestnet_server_url</string>
+    <string name="pref_network_localtestnet_server_url_default">http://localhost/coinblesk-server/</string>
+
+    <string name="pref_currency_list">pref_currency_list</string>
+    <string name="pref_currency_default_value">EUR</string>
+    <!-- argument: currency symbol, e.g. EUR, CHF, ... -->
+    <string name="pref_exchange_rate">pref_exchange_rate_%1$s</string>
+    <!-- default values - only relevant after install until current rate is fetched -->
+    <string name="pref_exchange_rate_default_key">pref_exchange_rate_default_%1$s</string>
+    <string name="pref_exchange_rate_default_USD">670</string>
+    <string name="pref_exchange_rate_default_EUR">610</string>
+    <string name="pref_exchange_rate_default_CHF">660</string>
+
+    <string name="pref_bitcoin_rep_list">pref_bitcoin_rep_list</string>
+    <string name="pref_bitcoin_rep_default_value">@string/pref_bitcoin_rep_BTC</string>
+    <string name="pref_bitcoin_rep_BTC">BTC</string>
+    <string name="pref_bitcoin_rep_milliBTC">mBTC</string>
+    <string name="pref_bitcoin_rep_microBTC">μBTC</string>
+
+    <string name="pref_balance_list">pref_balance_list</string>
+    <string name="pref_balance_default_value">@string/pref_balance_bitcoin</string>
+    <string name="pref_balance_bitcoin">bitcoin</string>
+    <string name="pref_balance_fiat">fiat</string>
+
+    <string name="pref_wallet_locktime_period">pref_wallet_locktime_period</string>
+    <string name="pref_wallet_locktime_period_default">3</string> <!-- months -->
+
+    <!-- argument: button identifier -->
+    <string name="pref_custom_buttons">pref_custom_buttons_%1$s</string>
+
+    <string name="pref_multisig_2of2_to_cltv">pref_multisig_2of2_to_cltv</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_address_book_items">%1$s_pref_address_book_items</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_client_private_key">%1$s_pref_client_private_key</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_server_public_key">%1$s_pref_server_public_key</string>
+    <string name="pref_server_public_key_url">%1$s_pref_server_public_key_url</string>
+
+    <!-- argument: network identifier -->
+    <string name="pref_address_lock_times">%1$s_pref_address_lock_times</string>
+
+    <string name="pref_instant_transactions">%1$s_pref_instant_transactions</string>
+
+    <string name="error_server_error">Server error: %1$s</string>
+    <string name="error_invalid_email">Invalid email address.</string>
+    <string name="error_password_too_short">Password is too short.</string>
+
+    <string name="pref_payment_auto_accept_enabled">pref_payment_auto_accept_enabled</string>
+    <string name="pref_payment_auto_accept_enabled_default">false</string>
+    <string name="pref_payment_auto_accept_amount">pref_payment_auto_accept_amount</string>
+    <string name="pref_payment_auto_accept_amount_default_value">0.02</string>
+
+
 </resources>

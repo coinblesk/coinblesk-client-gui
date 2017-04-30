@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">coinblesk-client-payments</string>
-    <string name="aiddescription">Coinblesk InstantPayment</string>
-    <string name="servicedesc">Coinblesk InstantPayment Service</string>
-</resources>

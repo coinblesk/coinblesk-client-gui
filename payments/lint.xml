@@ -1,7 +1,0 @@
-<issue id="InvalidPackage">
-    <ignore regexp=".*qos.*" />
-    <ignore regexp=".*okio.*" />
-    <ignore regexp=".*bitstamp.*" />
-    <ignore regexp=".*retrofit.*" />
-    <ignore regexp=".*prov.*" />
-</issue>
