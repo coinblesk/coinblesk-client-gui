@@ -24,16 +24,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 
+import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -43,21 +43,24 @@ import android.widget.TextView;
 import com.coinblesk.client.config.Constants;
 import com.coinblesk.client.models.TransactionWrapper;
 import com.coinblesk.client.ui.dialogs.CurrencyDialogFragment;
-import com.coinblesk.client.ui.dialogs.ReceiveDialogFragment;
 import com.coinblesk.client.ui.widgets.RecyclerView;
 import com.coinblesk.client.utils.ClientUtils;
 import com.coinblesk.client.utils.SharedPrefUtils;
 import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.payments.WalletService;
+import com.coinblesk.util.CoinbleskException;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.uri.BitcoinURI;
-import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import java8.util.concurrent.CompletableFuture;
+import java8.util.function.Consumer;
+import java8.util.function.Supplier;
 
 /**
  * @author ckiller
@@ -76,6 +79,11 @@ public class CurrentBalanceFragment extends Fragment {
 
     public static CurrentBalanceFragment newInstance() {
         return new CurrentBalanceFragment();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -209,9 +217,37 @@ public class CurrentBalanceFragment extends Fragment {
         }
         //TODO: this may be called twice
         refreshConnectionIcons();
-        Coin coinBalance = walletService.getBalance();
-        Fiat fiatBalance = walletService.getExchangeRate().coinToFiat(coinBalance);
-        refreshBalance(coinBalance, fiatBalance);
+        final Coin coinBalance = walletService.getBalance();
+
+        CompletableFuture<Coin> future = CompletableFuture.supplyAsync(new Supplier<Coin>() {
+            @Override
+            public Coin get() {
+                try {
+                    Coin virtualBalance = walletService.virtualBalance();
+                    return coinBalance.add(virtualBalance);
+                } catch (final Exception e) {
+                    Snackbar snackbar = Snackbar.make(getView(), e.getMessage(), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                    e.printStackTrace();
+                }
+                return Coin.ZERO;
+            }
+        });
+
+        future.thenAccept(new Consumer<Coin>() {
+            @Override
+            public void accept(Coin coin) {
+                Fiat fiatBalance = walletService.getExchangeRate().coinToFiat(coin);
+                refreshBalance(coin, fiatBalance);
+            }
+        });
+
+
+
+
+
+
+
     }
 
     private void refreshBalance(Coin coinBalance, Fiat fiatBalance) {

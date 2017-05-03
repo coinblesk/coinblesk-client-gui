@@ -670,7 +670,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
             if(symbol != null && !symbol.isEmpty()) {
                 walletServiceBinder.setCurrency(symbol);
             }
-            exchangeRate = walletServiceBinder.getExchangeRate();
+            //exchangeRate = walletServiceBinder.getExchangeRate();
 
             updateAmount();
         }
@@ -737,7 +737,7 @@ public abstract class KeyboardFragment extends Fragment implements View.OnClickL
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
             walletServiceBinder = (WalletService.WalletServiceBinder) binder;
-            exchangeRate = walletServiceBinder.getExchangeRate();
+            //exchangeRate = walletServiceBinder.getExchangeRate();
             LocalBroadcastManager broadcaster = LocalBroadcastManager.getInstance(getActivity());
             broadcaster.registerReceiver(exchangeRateChangeListener, new IntentFilter(Constants.EXCHANGE_RATE_CHANGED_ACTION));
             broadcaster.registerReceiver(instantPaymentSuccessListener, new IntentFilter(Constants.INSTANT_PAYMENT_SUCCESSFUL_ACTION));

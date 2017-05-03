@@ -44,6 +44,7 @@ import org.bitcoinj.core.NetworkParameters;
 /**
  * @author ckiller
  * @author Andreas Albrecht
+ * @author Thomas Bocek
  */
 
 public class SettingsActivity extends AppCompatActivity {
@@ -145,7 +146,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void showServerUrlDialog(final String network) {
             final View serverUrlView = getActivity().getLayoutInflater().inflate(R.layout.dialog_server_url_input, null);
-            Dialog dialog = new AlertDialog.Builder(getActivity(), R.style.AlertDialogAccent)
+            Dialog dialog = new AlertDialog.Builder(getActivity(), R.style.Theme_AlertDialog)
                     .setTitle("Server URL")
                     .setMessage("Enter the URL of a Coinblesk server.")
                     .setView(serverUrlView)

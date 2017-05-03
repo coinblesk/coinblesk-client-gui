@@ -44,7 +44,6 @@ import com.coinblesk.client.utils.UIUtils;
 import com.coinblesk.payments.WalletService;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
-import com.xeiam.xchange.Exchange;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -54,7 +53,6 @@ import org.bitcoinj.core.WrongNetworkException;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 /**
  * @author ckiller
